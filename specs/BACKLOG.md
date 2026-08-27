@@ -5,7 +5,14 @@ are decisions rather than omissions.
 
 Nothing here blocks Phase 0 validation.
 
-**Status 2026-08-27:** G9-G15 were added by an adversarial pass from the
+**Status 2026-08-27 (later):** the vehicle is decided — a desktop application
+over an open vault, specified in `006-desktop-app`. That closes or specifies G9,
+G10, G11 and G13. **G12 (prompt injection from ingested material) is now the most
+serious thing outstanding**, and it gets worse with an app, not better: an
+application that reads a photographed worksheet and then acts on it, for a user
+who cannot evaluate what it is doing, is exactly the shape this attack wants.
+
+G9-G15 were added by an adversarial pass from the
 teacher's point of view (`docs/adoption-risks.md`). Three of them are more
 serious than anything found before: nobody in the target audience can install
 this, the privacy claim is not enforceable in the current design, and the
@@ -25,11 +32,11 @@ disagreed with it. G3 and G6 remain open.
 | G6 | Agent compatibility matrix | Medium | `docs/compatibility.md` |
 | ~~G7~~ | Stated accessibility target for the output template | **Target stated** 2026-08-27, untested | `templates/base.html` |
 | G8 | Phase 1 modalities (audio, braille-ready, ODT) unspecified | Low, deliberate | New spec, after Phase 0 |
-| G9 | **Delivery vehicle — no teacher can install this** | **Blocks adoption** | [ADR 0005](../docs/decisions/0005-delivery-vehicle.md), open |
-| G10 | Learner names reach the model when the teacher types them | **Blocks the privacy claim** | `adoption-risks.md` §3, needs a vehicle |
-| G11 | Flat `profiles/` does not survive a real caseload | High | Roster + per-learner directories, `adoption-risks.md` §2 |
+| ~~G9~~ | Delivery vehicle | **Decided** 2026-08-27 | ADR 0005 accepted → `006-desktop-app` |
+| ~~G10~~ | Learner names reach the model | **Specified** 2026-08-27 | `006` FR-417…421 |
+| ~~G11~~ | Flat `profiles/` caseload layout | **Specified** 2026-08-27 | `006` FR-412 |
 | G12 | Ingested material is untrusted input; no prompt-injection defence | **Blocks deployment** | New spec |
-| G13 | Output not designed for a black-and-white photocopy | High | `templates/`, render check |
+| ~~G13~~ | Black-and-white photocopy legibility | **Specified** 2026-08-27 | `006` FR-427 |
 | G14 | No plain-language document for the school's data protection officer | High | `docs/` |
 | G15 | Guardrails are norms, not controls — and we do not say so | Medium | `AGENTS.md`, README |
 

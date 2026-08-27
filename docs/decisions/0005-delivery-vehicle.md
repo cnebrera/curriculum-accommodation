@@ -1,6 +1,6 @@
 # 0005 — Delivery vehicle: who can actually run this
 
-**Status:** Proposed · 2026-08-27 · **decision belongs to the project owner**
+**Status:** Accepted · 2026-08-27
 
 ## Context
 
@@ -67,16 +67,23 @@ text), local memory files, name redaction, and corpus versioning — the teacher
 re-downloads to update. What E keeps is the part Phase 0 exists to test: whether
 the adaptations are any good.
 
-## Recommendation (revised twice)
+## Decision
 
-**E first for evidence, because it costs nothing and can be in a teacher's hands
-this week. C (desktop app over an open memory vault) as the real vehicle, and the
-token is not the reason to avoid it.**
+**Build C: a desktop application over an open memory vault, with the teacher's
+own key. Specified in [`specs/006-desktop-app/spec.md`](../../specs/006-desktop-app/spec.md).**
 
-E's advantage is not that it is better — it is that it needs no build, so it can
-answer "are the adaptations any good?" before any vehicle is worth building. That
-question is still unanswered, and it is the one that decides whether the rest
-matters.
+A stays the contributor path and keeps working against the same vault. E remains
+available as a zero-build fallback if the application slips, but it is not the
+plan.
+
+The token is not a reason to avoid C — see the section above. The reasons to
+choose C are that it is the only option that can keep the name-redaction promise,
+and the only one where the teacher's records are hers rather than trapped in a
+provider's project.
+
+**The validating user has never used AI and will be unassisted.** That is written
+into `006` as the pass/fail criterion, not as context: onboarding is the part
+most likely to fail, so it is specified first and hardest.
 
 Reasoning:
 
@@ -168,10 +175,11 @@ low hundreds. For a non-technical first-time user, an OS security warning is a
 worse first impression than any missing feature — and this project gets one first
 impression.
 
-## Consequences if accepted
+## Consequences
 
-- Phase 0 continues on the harness, unchanged. Validation of adaptation quality
-  does not depend on the vehicle.
+- Phase 0's adaptation-quality question is now answered *through* the app, by a
+  cold teacher, rather than separately on the harness. One validation, two
+  questions: is the adaptation good, and can she get to it alone.
 - The README stops presenting the harness as the way teachers will use this, and
   says plainly who it is for today.
 - The redaction guarantee is specified against B, and the README stops implying a

@@ -11,7 +11,7 @@ One decision per file, numbered, never rewritten — superseded instead.
 | [0002](0002-no-clinical-material.md) | No clinical material in the repository | Accepted |
 | [0003](0003-two-entry-points-one-pipeline.md) | Two entry points, one pipeline | Accepted |
 | [0004](0004-memory-is-human-routed.md) | Memory is plain files, routed by the teacher | Accepted |
-| [0005](0005-delivery-vehicle.md) | Delivery vehicle: who can actually run this | **Proposed** |
+| [0005](0005-delivery-vehicle.md) | Delivery vehicle: who can actually run this | Accepted |
 
 ## Specs these decisions drive
 
@@ -21,3 +21,4 @@ One decision per file, numbered, never rewritten — superseded instead.
 | [002](../../specs/002-compose/spec.md) | Compose — generate from objectives | 0003 |
 | [003](../../specs/003-memory/spec.md) | Memory — the system learns from the teacher | 0004 |
 | [004](../../specs/004-handover/spec.md) | Handover — knowledge travels with the learner | 0004 |
+| [006](../../specs/006-desktop-app/spec.md) | The application — a vault she owns, a corpus she doesn't | 0005 |
