@@ -45,10 +45,33 @@ here rather than by the teacher remembering:
 - **Shareable** — practice and corpus material only, with all learner scope
   removed. For a colleague, or for a pull request.
 
+## Forget a learner
+
+`/rampa-memory forget <CODE>` removes a learner completely. Run it when they
+leave, change teacher, or the retention period has passed.
+
+1. **List everything first** — profile, notes, overlay, every job under
+   `material/`, every rendering under `output/`, any handover packet. Show it and
+   wait for confirmation.
+2. **Remove it**, then verify: search the working copy for the code and report
+   that nothing remains.
+3. **Record the removal** as a dated line with **no learner content in it**.
+4. **Say what survives.** De-identified corpus contributions already merged are
+   not withdrawn — they contain nothing about this learner by construction. Say
+   this plainly rather than letting the teacher wonder.
+5. **Say what you cannot reach.** Backups the teacher made themselves are outside
+   the system. They have to delete those.
+
+During consolidation, surface learners with no activity past the retention period
+and ask. **Never delete anything without being told to.**
+
 ## Never
 
 - Promote anything without confirmation.
 - Send learner-scope material upstream, in any form.
-- Delete a journal entry. Archive it.
+- Delete a journal entry. Archive it. (`forget` is the one exception, and only
+  for the learner named.)
+- Delete anything under `forget` without listing it and getting confirmation
+  first.
 - Infer the scope of an item. That question belongs to `/rampa-review` and to the
   human answering it.

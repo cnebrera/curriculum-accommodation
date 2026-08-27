@@ -1,5 +1,6 @@
 ---
 id: conflict-salience-vs-sensory-load
+version: 1
 axes: [ATE>=2, REG>=2]
 scope: [explanation, instruction, exercise]
 conflicts: []

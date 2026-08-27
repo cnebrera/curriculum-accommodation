@@ -1,5 +1,6 @@
 ---
 id: lectura-facil-es
+version: 1
 axes: [DEC>=2, LIN>=2]
 scope: [explanation, example, instruction, exercise]
 conflicts: [exam-access-not-difficulty]

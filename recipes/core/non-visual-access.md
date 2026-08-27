@@ -1,5 +1,6 @@
 ---
 id: non-visual-access
+version: 1
 axes: [PER-V>=2]
 scope: [explanation, example, instruction, exercise, assessment, figure]
 conflicts: []

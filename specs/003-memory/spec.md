@@ -97,6 +97,37 @@ profile and notes with them.
    no learner-scope material at all, enforced by the export rather than by the
    teacher remembering.
 
+---
+
+### User Story 5 - A learner leaves, and their data goes with them (Priority: P1)
+
+A learner moves on. The teacher removes them completely, and the system says
+exactly what it removed and what — if anything — survives.
+
+**Why this priority**: The project claims privacy as a strength and, until this
+exists, learner data accumulates on a teacher's machine indefinitely with no
+stated end. "It is all local" is not an answer to a right of erasure: it is still
+processing, and the teacher is still the one holding it.
+
+**Independent Test**: After `forget`, no file anywhere in the working copy
+contains that learner's code or content, verified by search.
+
+**Acceptance Scenarios**:
+
+1. **Given** a learner code, **When** `/rampa-memory forget <CODE>` runs, **Then**
+   the profile, notes, overlay, jobs and outputs for that learner are listed for
+   confirmation before anything is removed.
+2. **Given** confirmation, **When** removal completes, **Then** nothing remains
+   under `profiles/`, `material/` or `output/` for that code, and the removal is
+   recorded as a dated line with no learner content.
+3. **Given** de-identified corpus contributions already merged upstream, **When**
+   a learner is forgotten, **Then** those are **not** withdrawn, and the flow says
+   so — they contain nothing about the learner by construction. This is correct
+   behaviour and must be stated rather than discovered.
+4. **Given** a retention period has elapsed with no activity for a learner,
+   **When** `/rampa-memory` runs, **Then** it asks whether they should be
+   forgotten. It MUST NOT delete anything on its own.
+
 ### Edge Cases
 
 - **Ambiguous correction** — the agent asks. It never defaults the scope.
@@ -111,6 +142,13 @@ profile and notes with them.
   working.
 - **Two learners' notes in one journal entry** — rejected at capture. One scope
   per entry.
+- **Forget requested for a learner with an outstanding handover packet** — the
+  packet is removed too. Handover does not create a second copy that outlives
+  erasure.
+- **Forget requested mid-job** — the job is removed with everything else. There is
+  no partial state worth preserving.
+- **Backups** — outside the system's reach. The flow tells the teacher plainly
+  that copies they made themselves must be deleted by them.
 
 ## Requirements *(mandatory)*
 
@@ -142,6 +180,18 @@ profile and notes with them.
   shareable one containing no learner-scope material.
 - **FR-214**: `memory/` MUST be git-ignored except `README.md`, enforced by the
   commit hook.
+- **FR-215**: The system MUST provide `/rampa-memory forget <CODE>`, listing
+  everything to be removed and requiring confirmation before removing it.
+- **FR-216**: After removal, no file in the working copy MUST contain that
+  learner's code or content.
+- **FR-217**: Removal MUST be recorded as a dated entry containing no learner
+  content.
+- **FR-218**: The system MUST NOT withdraw de-identified corpus contributions on
+  erasure, and MUST say so during the flow.
+- **FR-219**: The system MUST surface learners inactive beyond a configurable
+  retention period and ask, and MUST NOT delete anything automatically.
+- **FR-220**: The system MUST tell the teacher that backups they made themselves
+  are outside its reach.
 
 ### Key Entities
 
@@ -169,6 +219,10 @@ profile and notes with them.
   a run's memory load does not scale with total journal size.
 - **SC-206**: A teacher can state where their memory lives and how to back it up,
   unprompted, after one session.
+- **SC-207**: After `forget`, a full-text search for the learner's code across the
+  working copy returns nothing.
+- **SC-208**: A teacher can say what happens to a learner's data when they leave,
+  without reading the documentation.
 
 ## Assumptions
 

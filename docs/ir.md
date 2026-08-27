@@ -106,7 +106,7 @@ block it touched.
 
 ```markdown
 ::: {#e4a .exercise data-number="4a" data-response="short"
-     data-from="e4" data-recipe="one-task-per-item" data-axis="COG:3"}
+     data-from="e4" data-recipe="one-task-per-item@1" data-axis="COG:3"}
 Escribe **un** ejemplo de ser vivo autótrofo.
 :::
 ```
@@ -114,7 +114,7 @@ Escribe **un** ejemplo de ser vivo autótrofo.
 | Attribute | Meaning |
 |---|---|
 | `data-from` | Id(s) in the original IR this block derives from |
-| `data-recipe` | Recipe that produced the change |
+| `data-recipe` | Recipe that produced the change, as `id@version`. The version matters: a recipe changes over time, and provenance to a moving target is not provenance |
 | `data-axis` | Axis and level that justified it |
 
 Rules:

@@ -33,6 +33,13 @@ else
     echo "  ✗ pre-commit hook NOT active — run scripts/setup-hooks.sh"
     missing=$((missing+1))
 fi
+echo "Corpus:"
+if bash "$(dirname "$0")/validate-recipes.sh" >/dev/null 2>&1; then
+    echo "  ✓ recipes pass structural validation"
+else
+    echo "  ✗ recipes have structural problems — run scripts/validate-recipes.sh"
+    missing=$((missing+1))
+fi
 echo
 echo "$ok present, $missing missing."
 [ "$missing" -gt 0 ] && echo "Nothing here is fatal. See README.md for what each one enables."

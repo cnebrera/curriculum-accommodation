@@ -26,6 +26,12 @@ Each axis takes a level from 0 to 3.
 | 2 | Moderate — needs adaptation to access the task |
 | 3 | Severe or total — needs an alternative route |
 
+**These four words are not enough to score a child consistently.**
+See [`docs/axis-calibration.md`](axis-calibration.md) for the observable
+behaviour at each level of each axis, and for how to tell the hard pairs apart —
+`DEC` from `LIN`, `COG` from `ATE`. Recipes trigger on these numbers, so a level
+that means something different in each school makes the corpus unportable.
+
 | Axis | Key | What it captures |
 |---|---|---|
 | Visual access | `PER-V` | From low vision to total blindness |

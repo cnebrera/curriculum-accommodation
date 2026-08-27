@@ -1,5 +1,6 @@
 ---
 id: conflict-visual-scaffolding-vs-non-visual-access
+version: 1
 axes: [PER-V>=2, COG>=2]
 scope: [explanation, exercise, figure]
 conflicts: []

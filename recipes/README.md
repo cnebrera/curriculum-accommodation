@@ -20,12 +20,19 @@ If a rule would still be true for material in Finnish, it belongs in `core/`.
 ```yaml
 ---
 id: one-task-per-page
+version: 1                           # bump on any change to what it does
 axes: [COG>=2, ATE>=2]              # when it applies
 scope: [exercise, assessment]        # which IR block classes
 conflicts: [dense-revision-sheet]
 evidence: "UDL 8.3; working-memory load"
 ---
 ```
+
+**Bump `version` whenever you change what the recipe does.** Adapted material
+records `data-recipe: one-task-per-page@1`, and that attribute is the audit
+trail: without a version it points at a moving target, and traceability to a
+moving target is not traceability. Typo fixes do not count; a changed rule or a
+new anti-pattern does.
 
 Then, in this order:
 

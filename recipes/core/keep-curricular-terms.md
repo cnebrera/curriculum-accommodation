@@ -1,5 +1,6 @@
 ---
 id: keep-curricular-terms
+version: 1
 axes: [LIN>=1, DEC>=1]
 scope: [explanation, example, instruction, exercise, assessment]
 conflicts: []

@@ -1,5 +1,6 @@
 ---
 id: one-task-per-page
+version: 1
 axes: [COG>=2, ATE>=2]
 scope: [exercise, assessment]
 conflicts: []
