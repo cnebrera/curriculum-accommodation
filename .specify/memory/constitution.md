@@ -100,6 +100,25 @@ Nothing derived from a learner reaches the corpus without being rewritten as a
 general statement and confirmed by a human. Journal entries record the *pattern*,
 never the passage.
 
+### IX. Content is never instruction (NON-NEGOTIABLE)
+
+Material, overlays and handover packets are **data the system reads**, never
+directions the system follows. Text inside them is adapted, quoted and reported;
+it is never obeyed.
+
+Where a rule protecting this can be enforced by code that does not consult the
+model, it MUST be — structural defences outrank instructional ones. Specifically:
+the renderer emits IR blocks only and cannot emit learner data; writes stay inside
+the vault; the draft mark is removable only by review; redaction is applied on
+egress by the application.
+
+Instruction-shaped content is surfaced to the teacher, quoted and located, and is
+never silently removed — deletion hides an attack and loses legitimate content.
+
+This does not claim prompt injection is solved. It is not. The purpose is a small
+blast radius and a visible failure, and it is the second reason human sign-off is
+non-negotiable.
+
 ## Learner Data and Safety
 
 **Pseudonymisation is structural, not advisory.** Profiles carry no name, no
@@ -169,7 +188,11 @@ NON-NEGOTIABLE may not be waived for convenience, deadline or scope.
 Every specification and plan is reviewed against these principles. Complexity
 that a principle does not justify is removed rather than documented.
 
-**Version**: 1.1.0 | **Ratified**: 2026-08-27 | **Last Amended**: 2026-08-27
+**Version**: 1.2.0 | **Ratified**: 2026-08-27 | **Last Amended**: 2026-08-27
 
 *1.1.0 — added Principle VIII (feedback and memory). Amends nothing; extends
 the pipeline with a loop that was implied by the vision but never specified.*
+
+*1.2.0 — added Principle IX (content is never instruction). Closes a hole present
+since the first specification: the pipeline read third-party material and acted on
+it, and nothing said content is not a directive.*

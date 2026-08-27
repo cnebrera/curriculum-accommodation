@@ -22,3 +22,4 @@ One decision per file, numbered, never rewritten — superseded instead.
 | [003](../../specs/003-memory/spec.md) | Memory — the system learns from the teacher | 0004 |
 | [004](../../specs/004-handover/spec.md) | Handover — knowledge travels with the learner | 0004 |
 | [006](../../specs/006-desktop-app/spec.md) | The application — a vault she owns, a corpus she doesn't | 0005 |
+| [007](../../specs/007-untrusted-content/spec.md) | Content is never instruction | Principle IX |

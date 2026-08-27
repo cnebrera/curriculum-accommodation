@@ -7,10 +7,11 @@ Nothing here blocks Phase 0 validation.
 
 **Status 2026-08-27 (later):** the vehicle is decided — a desktop application
 over an open vault, specified in `006-desktop-app`. That closes or specifies G9,
-G10, G11 and G13. **G12 (prompt injection from ingested material) is now the most
-serious thing outstanding**, and it gets worse with an app, not better: an
-application that reads a photographed worksheet and then acts on it, for a user
-who cannot evaluate what it is doing, is exactly the shape this attack wants.
+G10, G11 and G13. G12 is now specified in `007-untrusted-content` and in Principle IX. The
+remaining open items are G3 (several learners, one worksheet), G6 (agent
+compatibility matrix), G14 (a document for the school's data protection officer)
+and G15 (guardrails are norms, not controls — though `007` converts several of
+them into actual controls).
 
 G9-G15 were added by an adversarial pass from the
 teacher's point of view (`docs/adoption-risks.md`). Three of them are more
@@ -35,7 +36,7 @@ disagreed with it. G3 and G6 remain open.
 | ~~G9~~ | Delivery vehicle | **Decided** 2026-08-27 | ADR 0005 accepted → `006-desktop-app` |
 | ~~G10~~ | Learner names reach the model | **Specified** 2026-08-27 | `006` FR-417…421 |
 | ~~G11~~ | Flat `profiles/` caseload layout | **Specified** 2026-08-27 | `006` FR-412 |
-| G12 | Ingested material is untrusted input; no prompt-injection defence | **Blocks deployment** | New spec |
+| ~~G12~~ | Untrusted ingested material | **Specified** 2026-08-27 | `007-untrusted-content`, Principle IX |
 | ~~G13~~ | Black-and-white photocopy legibility | **Specified** 2026-08-27 | `006` FR-427 |
 | G14 | No plain-language document for the school's data protection officer | High | `docs/` |
 | G15 | Guardrails are norms, not controls — and we do not say so | Medium | `AGENTS.md`, README |
