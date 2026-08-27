@@ -5,7 +5,13 @@ are decisions rather than omissions.
 
 Nothing here blocks Phase 0 validation.
 
-**Status 2026-08-27:** G1, G4, G5 and G7 are closed. G2 is drafted and waiting on
+**Status 2026-08-27:** G9-G15 were added by an adversarial pass from the
+teacher's point of view (`docs/adoption-risks.md`). Three of them are more
+serious than anything found before: nobody in the target audience can install
+this, the privacy claim is not enforceable in the current design, and the
+pipeline reads attacker-controllable content with no defence specified.
+
+G1, G4, G5 and G7 are closed. G2 is drafted and waiting on
 review by a practising teacher — it is not closed until someone who teaches has
 disagreed with it. G3 and G6 remain open.
 
@@ -19,6 +25,13 @@ disagreed with it. G3 and G6 remain open.
 | G6 | Agent compatibility matrix | Medium | `docs/compatibility.md` |
 | ~~G7~~ | Stated accessibility target for the output template | **Target stated** 2026-08-27, untested | `templates/base.html` |
 | G8 | Phase 1 modalities (audio, braille-ready, ODT) unspecified | Low, deliberate | New spec, after Phase 0 |
+| G9 | **Delivery vehicle — no teacher can install this** | **Blocks adoption** | [ADR 0005](../docs/decisions/0005-delivery-vehicle.md), open |
+| G10 | Learner names reach the model when the teacher types them | **Blocks the privacy claim** | `adoption-risks.md` §3, needs a vehicle |
+| G11 | Flat `profiles/` does not survive a real caseload | High | Roster + per-learner directories, `adoption-risks.md` §2 |
+| G12 | Ingested material is untrusted input; no prompt-injection defence | **Blocks deployment** | New spec |
+| G13 | Output not designed for a black-and-white photocopy | High | `templates/`, render check |
+| G14 | No plain-language document for the school's data protection officer | High | `docs/` |
+| G15 | Guardrails are norms, not controls — and we do not say so | Medium | `AGENTS.md`, README |
 
 ---
 

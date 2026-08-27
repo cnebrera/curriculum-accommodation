@@ -11,6 +11,7 @@ One decision per file, numbered, never rewritten — superseded instead.
 | [0002](0002-no-clinical-material.md) | No clinical material in the repository | Accepted |
 | [0003](0003-two-entry-points-one-pipeline.md) | Two entry points, one pipeline | Accepted |
 | [0004](0004-memory-is-human-routed.md) | Memory is plain files, routed by the teacher | Accepted |
+| [0005](0005-delivery-vehicle.md) | Delivery vehicle: who can actually run this | **Proposed** |
 
 ## Specs these decisions drive
 

@@ -16,6 +16,11 @@ No server, no account, no API key, no learner data leaving your computer.
 The teacher always reviews and signs. This removes the mechanical work, not the
 professional judgement.
 
+> **Who this is for today:** developers, and teachers working next to someone
+> technical. Using it currently means cloning a repository and having an agentic
+> AI tool — not a chat subscription. Reaching teachers directly is
+> [ADR 0005](docs/decisions/0005-delivery-vehicle.md), still open.
+>
 > **Status: early. Nothing has been validated with a real teacher yet.** Phase 0
 > exists to answer exactly one question: does a special-education teacher find the
 > output usable with minor edits? See [`docs/ESPECIFICACION-V0.md`](docs/ESPECIFICACION-V0.md).
@@ -93,7 +98,10 @@ See [`recipes/`](recipes/) and [`CONTRIBUTING.md`](CONTRIBUTING.md).
 - **An adapted exam that is also easier is a different exam.** Exam recipes change
   access and response, never what is being assessed.
 - **Learner data stays local.** `profiles/`, `material/` and `output/` are
-  git-ignored and blocked by a commit hook.
+  git-ignored and blocked by a commit hook. Profiles carry no names.
+  **But be clear about the limit:** if you type a learner's name in conversation,
+  it reaches your AI provider like anything else you type. Nothing here can stop
+  that today — see [`docs/adoption-risks.md`](docs/adoption-risks.md) §3.
 - **Source material never enters this repository.** Adapting a work for a person
   with a disability is protected by the Marrakesh Treaty and its national
   implementations. Redistributing it is not.

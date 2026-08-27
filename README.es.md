@@ -17,6 +17,12 @@ alumno salgan de tu ordenador.
 El docente revisa y firma siempre. Esto quita el trabajo mecánico, no el criterio
 profesional.
 
+> **Para quién sirve hoy:** para desarrolladores, y para docentes que trabajen
+> al lado de alguien técnico. Usarlo ahora mismo significa clonar un repositorio
+> y tener una herramienta de IA con acceso a ficheros — no vale una suscripción
+> de chat. Llegar a los docentes directamente es la
+> [ADR 0005](docs/decisions/0005-delivery-vehicle.md), todavía abierta.
+>
 > **Estado: inicial. Todavía no se ha validado con ninguna maestra real.** La
 > Fase 0 existe para responder a una sola pregunta: ¿una PT encuentra el
 > resultado utilizable con retoques menores? Ver
@@ -95,7 +101,11 @@ Ver [`recipes/`](recipes/) y [`CONTRIBUTING.md`](CONTRIBUTING.md).
 - **Un examen adaptado que además es más fácil es otro examen.** Las recetas de
   examen cambian el acceso y la respuesta, nunca lo que se evalúa.
 - **Los datos del alumno se quedan en local.** `profiles/`, `material/` y
-  `output/` están en `.gitignore` y bloqueados por un hook.
+  `output/` están en `.gitignore` y bloqueados por un hook. Los perfiles no
+  llevan nombres. **Pero el límite hay que decirlo:** si escribes el nombre de un
+  alumno en la conversación, llega a tu proveedor de IA como cualquier otra cosa
+  que escribas. Hoy nada de esto lo impide — ver
+  [`docs/adoption-risks.md`](docs/adoption-risks.md) §3.
 - **El material fuente nunca entra en el repositorio.** Adaptar una obra para una
   persona con discapacidad está amparado por el Tratado de Marrakech y el
   art. 31 bis TRLPI. Redistribuirla, no.
