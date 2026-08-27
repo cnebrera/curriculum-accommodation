@@ -16,7 +16,7 @@ being asked for.
 | Layer | Commands | Who uses it | Where it lives |
 |---|---|---|---|
 | **Teacher** | `/rampa-profile`, `/rampa-ingest`, `/rampa-compose`, `/rampa-adapt`, `/rampa-render`, `/rampa-review`, `/rampa-memory` | The teacher adapting material for a learner | `harness/commands/` |
-| **Developer** | `/speckit.*` | Contributors building Rampa itself | `.specify/` |
+| **Developer** | `/speckit-*` | Contributors building Rampa itself | `.specify/` |
 
 If a teacher asks you to adapt material, you are in the teacher layer. Never run
 Spec Kit commands, never edit `.specify/`, and never modify the project's own

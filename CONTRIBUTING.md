@@ -46,7 +46,7 @@ and reject changes on sight:
   behaviour. Scripts must run and be tested offline.
 
 Specifications are managed with [Spec Kit](https://github.com/github/spec-kit).
-Work starts at `/speckit.specify`, not in the editor.
+Work starts at `/speckit-specify`, not in the editor.
 
 Note the two command layers: `/speckit-*` is for people building Rampa,
 `/rampa-*` is for teachers using it. They do not meet.

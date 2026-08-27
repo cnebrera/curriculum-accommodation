@@ -11,6 +11,22 @@ deliberately the smallest slice that answers the only question that matters righ
 now: does a real special-education teacher find the output usable with minor
 edits?
 
+## Dependencies and scope boundary
+
+This spec was written before `002-compose` and `003-memory`. It is **not**
+superseded, but two boundaries must be read explicitly:
+
+- **`/rampa-review` also captures memory.** That behaviour is specified in
+  `003-memory` (FR-201…FR-204), not here. Phase 0 can be validated without it;
+  the time-saving curve it produces cannot.
+- **`/rampa-compose` is a second entry point.** Out of scope here. Phase 0
+  validates the adapt path only.
+- **Per-learner overlays** (`profiles/<CODE>.adaptations.md`) are specified in
+  `003-memory`. A Phase 0 learner may not have one.
+
+Where this spec and 002/003 disagree about `/rampa-review`, 003 wins — it is the
+later decision.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Adapt a worksheet for a learner with high cognitive load (Priority: P1)
