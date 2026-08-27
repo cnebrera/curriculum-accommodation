@@ -26,6 +26,7 @@ lang: es                            # BCP-47; selects recipes/lang/<code>/
 subject: ciencias-naturales
 grade: "5"                          # free text; school systems differ
 kind: worksheet                     # worksheet | lesson | exam | reading
+                                    # or `generated` — see Generated IR below
 extraction:
   method: ocr                       # ocr | text | vision | manual
   verified: false                   # set true only by a human, in /rampa.ingest
@@ -128,6 +129,47 @@ Rules:
 `report.md` is generated from these attributes: grouped by decision, not by
 paragraph, so the teacher reviews about fifteen decisions instead of re-reading
 twelve pages.
+
+## Generated IR
+
+`/rampa-compose` produces the same format from learning objectives rather than
+from source material. Two differences, and nothing else in the pipeline changes.
+
+```yaml
+---
+kind: generated
+lang: es
+objectives:
+  - id: o1
+    text: "Explicar qué es la fotosíntesis y para qué le sirve a la planta"
+  - id: o2
+    text: "Distinguir seres vivos autótrofos y heterótrofos"
+anchor:
+  kind: teacher-notes        # teacher-notes | textbook-summary | official-criteria | approved-reference
+  ref: "material/unit4/source/apuntes-profe.md"
+  approved_by_teacher: true
+---
+```
+
+Blocks carry `data-objective` where adapted blocks carry `data-from`:
+
+```markdown
+::: {#g3 .exercise data-number="3" data-objective="o2" data-response="short"}
+Escribe un ser vivo que fabrique su propio alimento.
+:::
+```
+
+Rules:
+
+- **No anchor, no generation.** `anchor.approved_by_teacher` must be `true`
+  before any curricular content is produced. Composing from the model's own
+  knowledge alone is out of scope.
+- A claim that could not be tied to the anchor is marked `.unsupported` in the
+  material and listed first in the report.
+- `.scaffold` means the same as elsewhere: support, not curricular content.
+
+See `specs/002-compose/spec.md` and
+`docs/decisions/0003-two-entry-points-one-pipeline.md`.
 
 ## Draft marking
 

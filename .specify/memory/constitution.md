@@ -80,6 +80,26 @@ Output is a draft until a human signs it. Rendered material carries a visible
 No feature, flag or convenience may produce material that looks finished without
 human sign-off.
 
+### VIII. Feedback is memory, and a human routes it
+
+Every correction a teacher makes is information. A system that produces the same
+wrong adaptation twice has wasted the only expertise in the loop.
+
+Memory is captured in three scopes, and **the teacher decides which one**, because
+only they know whether a correction is about this learner or about everything:
+
+- **Learner** — updates the profile and its notes. Never leaves the machine.
+- **Practice** — this teacher's or this school's house style. Local by default.
+- **Corpus** — a genuine improvement to a recipe. Goes upstream as a pull request.
+
+Memory MUST be plain files the teacher owns, can read, can back up by copying a
+folder, and can carry to another school. No database, no opaque store, no
+dependency on this repository's history.
+
+Nothing derived from a learner reaches the corpus without being rewritten as a
+general statement and confirmed by a human. Journal entries record the *pattern*,
+never the passage.
+
 ## Learner Data and Safety
 
 **Pseudonymisation is structural, not advisory.** Profiles carry no name, no
@@ -149,4 +169,7 @@ NON-NEGOTIABLE may not be waived for convenience, deadline or scope.
 Every specification and plan is reviewed against these principles. Complexity
 that a principle does not justify is removed rather than documented.
 
-**Version**: 1.0.0 | **Ratified**: 2026-08-27 | **Last Amended**: 2026-08-27
+**Version**: 1.1.0 | **Ratified**: 2026-08-27 | **Last Amended**: 2026-08-27
+
+*1.1.0 — added Principle VIII (feedback and memory). Amends nothing; extends
+the pipeline with a loop that was implied by the vision but never specified.*

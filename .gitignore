@@ -8,6 +8,8 @@
 /profiles/
 /material/
 /output/
+/memory/*
+!/memory/README.md
 
 # Python
 __pycache__/

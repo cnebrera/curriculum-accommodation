@@ -52,9 +52,11 @@ Abre la carpeta con tu agente de IA y ejecuta, en orden:
 |---|---|
 | `/rampa-profile` | Construye un perfil seudonimizado de las barreras del alumno |
 | `/rampa-ingest` | Lee tu material —escaneo, foto, DOCX, texto pegado— y tú lo verificas |
+| `/rampa-compose` | La otra entrada: genera material a partir de lo que el alumno tiene que aprender, cuando no hay nada que adaptar |
 | `/rampa-adapt` | Aplica las recetas y escribe un informe de cada cambio |
 | `/rampa-render` | Genera los formatos que ese alumno necesita |
-| `/rampa-review` | Tu checklist de revisión y la firma |
+| `/rampa-review` | Tu checklist de revisión y la firma — y recoge lo que has corregido |
+| `/rampa-memory` | Cada pocas semanas: consolida lo que ha aprendido de ti |
 
 No hace falta nada más que un agente. `pandoc`, un navegador headless y un TTS
 offline desbloquean un formato de salida cada uno; sin ellos sigues teniendo HTML.

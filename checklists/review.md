@@ -38,13 +38,27 @@ that are invisible in the finished PDF.
 - [ ] Register is age-appropriate — accessible, not infantilised
 - [ ] Response format matches what the learner can actually produce
 
-## 6 · Output
+## 6 · Generated material *(only when `kind: generated`)*
+
+- [ ] Every factual claim is true and traces to the anchor
+- [ ] Unsupported claims are marked and listed
+- [ ] The material actually teaches the stated objectives
+- [ ] No objective was quietly replaced with an easier one
+
+## 7 · Memory
+
+- [ ] Every correction captured, with a scope I chose
+- [ ] Learner-scope items are in the profile and its notes
+- [ ] Journal entries describe the pattern, not the worksheet passage
+- [ ] Nothing about this learner is queued to leave my machine
+
+## 8 · Output
 
 - [ ] Every requested modality generated
 - [ ] Non-visual outputs contain no visual-only instructions
 - [ ] Audio announces item numbers and pauses after questions
 
-## 7 · Sign-off
+## 9 · Sign-off
 
 - [ ] I have looked at the material, not just the report
 - [ ] `review.signed_off` set and files re-rendered without the draft mark

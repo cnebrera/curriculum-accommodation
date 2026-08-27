@@ -10,11 +10,14 @@
 
 set -u
 
-PROTECTED_DIRS='^(profiles|material|output)/'
+# memory/README.md is the only file under these paths that may be committed:
+# it documents the format, and contains no learner data by construction.
+PROTECTED_DIRS='^(profiles|material|output|memory)/'
+ALLOWED='^memory/README\.md$'
 staged=$(git diff --cached --name-only --diff-filter=ACMR)
 [ -z "$staged" ] && exit 0
 
-blocked=$(printf '%s\n' "$staged" | grep -E "$PROTECTED_DIRS" || true)
+blocked=$(printf '%s\n' "$staged" | grep -E "$PROTECTED_DIRS" | grep -Ev "$ALLOWED" || true)
 
 if [ -n "$blocked" ]; then
     cat >&2 <<MSG

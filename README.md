@@ -50,9 +50,11 @@ Then open the folder with your AI agent and run, in order:
 |---|---|
 | `/rampa-profile` | Builds a pseudonymised profile of the learner's barriers |
 | `/rampa-ingest` | Reads your material — scan, photo, DOCX, pasted text — and you verify it |
+| `/rampa-compose` | The other way in: builds material from what the learner must learn, when there is nothing to adapt |
 | `/rampa-adapt` | Applies the recipes, and writes a report of every change |
 | `/rampa-render` | Produces the formats this learner needs |
-| `/rampa-review` | Your checklist, then sign-off |
+| `/rampa-review` | Your checklist, then sign-off — and it captures what you corrected |
+| `/rampa-memory` | Every few weeks: consolidates what it has learned from you |
 
 Nothing is required beyond an agent. `pandoc`, a headless browser and an offline
 TTS each unlock one more output format; without them you still get HTML.

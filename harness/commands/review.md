@@ -19,10 +19,29 @@ reviewing the things that actually go wrong, not proofreading prose.
    - Everything else.
 
 3. **Do not defend your work.** If the teacher says an adaptation is wrong, it is
-   wrong. Fix it, and offer to record it in the profile — a rejected adaptation is
-   profile information (`avoid`, or an axis level that was off).
+   wrong. Fix it.
 
-4. **Record sign-off** in the adapted IR front matter and re-render so the draft
+4. **Capture every correction, and ask where it belongs.** This is the step that
+   makes the system stop repeating itself. For each correction ask one question:
+
+   > Is this about **this learner**, about **how you work in general**, or about
+   > **the recipe itself**?
+
+   | Answer | Where it goes |
+   |---|---|
+   | This learner | `profiles/<CODE>.yaml` (`works`, `avoid`, or an axis level that was wrong) plus a dated note in `profiles/<CODE>.notes.md` |
+   | How I work | `memory/house.md` |
+   | The recipe | a journal entry in `memory/journal/`, tagged with the recipes concerned |
+
+   **Never infer the scope.** Only the teacher knows whether "don't split this"
+   means *not for this child*, *not in this school*, or *never*. Guessing wrong in
+   the third direction sends learner-specific information into shared material.
+
+   Journal entries record the **pattern, never the passage**: describe the shape
+   of what went wrong, never paste the worksheet. It is copyrighted, and it is
+   identifying. See `docs/memory.md`.
+
+5. **Record sign-off** in the adapted IR front matter and re-render so the draft
    mark comes off:
 
    ```yaml
@@ -37,3 +56,6 @@ reviewing the things that actually go wrong, not proofreading prose.
 - Remove the draft mark without explicit sign-off in this step.
 - Sign off on the teacher's behalf, including when they say "it's fine, go ahead"
   without having looked. Ask them to look.
+- Decide the scope of a correction yourself.
+- Let a correction pass without capturing it. A correction not written down will
+  be made again next week, and the teacher will stop believing the tool learns.

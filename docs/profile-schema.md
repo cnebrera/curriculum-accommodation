@@ -89,6 +89,26 @@ notes: |
   example.
 ```
 
+## The three files of a learner
+
+| File | What it is | Written by |
+|---|---|---|
+| `profiles/<CODE>.yaml` | **State.** Axis levels and qualitative fields | `/rampa-profile` |
+| `profiles/<CODE>.notes.md` | **History.** Dated notes from review sessions | `/rampa-review` |
+| `profiles/<CODE>.adaptations.md` | **Overlay.** The learner's official adaptations, when the teaching team has produced them | The teacher, once |
+
+The YAML is what recipes read. The notes are the narrative behind it: when a note
+stabilises, `/rampa-memory` proposes promoting it into the YAML.
+
+The overlay is different in kind. It is **instructions from the teaching team**,
+and it **takes precedence over the corpus** — read it before selecting recipes.
+What it does not cover, the corpus fills. Format in
+[`docs/memory.md`](memory.md).
+
+The one exception to following it: if an overlay statement would breach a hard
+rule — falsifying content, easing an assessment criterion — flag the conflict and
+ask. Never silently obey, never silently refuse.
+
 ## Reading a profile as an agent
 
 - Never infer an axis value that is not written down. Ask the teacher.
@@ -96,3 +116,5 @@ notes: |
   conversation. Record the barrier it produces instead.
 - `works` and `avoid` override recipe defaults. A recipe that contradicts a
   documented working support is not applied.
+- Load the notes and, if present, the overlay alongside the YAML. A profile read
+  without its notes discards everything the teacher has corrected so far.
