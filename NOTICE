@@ -1,0 +1,16 @@
+Rampa
+Copyright 2026 Rampa contributors
+
+This product includes software developed as part of the Rampa project
+(https://github.com/cnebrera/curriculum-accommodation).
+
+Licensing is split by the nature of the content:
+
+  * Source code, scripts and configuration are licensed under the
+    Apache License, Version 2.0. See LICENSE.
+
+  * Recipes, checklists, templates, profile schemas and documentation are
+    licensed under Creative Commons Attribution-ShareAlike 4.0 International
+    (CC BY-SA 4.0). See LICENSE-CONTENT.md.
+
+See LICENSE-CONTENT.md for the exact list of paths each licence covers.

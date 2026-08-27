@@ -1,0 +1,86 @@
+# Contributing to Rampa
+
+The most valuable contribution to this project is not code. It is a special
+education teacher saying "this adaptation is wrong, and here is why".
+
+## Before anything else: what must never enter this repository
+
+**Learner data.** No names, no diagnoses, no real profiles, no anonymised-ish
+profiles that a colleague could de-anonymise. Real profiles live in `profiles/`,
+which is git-ignored and blocked by a commit hook. Run `scripts/setup-hooks.sh`
+after cloning.
+
+**Copyrighted classroom material.** Not the original, and not your adaptation of
+it. Adapting a work for a person with a disability is protected in the EU by the
+Marrakesh Treaty and its national implementations. Redistributing that adaptation
+is not, and the exception does not travel with the file.
+
+If you want to show an example, invent one or use openly licensed material.
+
+## Contributing a recipe
+
+This is the main path, and it needs no programming.
+
+1. Read `recipes/README.md` and an existing recipe.
+2. Copy its shape into `recipes/core/` (if the rule holds in any language) or
+   `recipes/lang/<code>/` (if it does not).
+3. Keep it to **one decision**. A recipe that does three things cannot be
+   selected, conflicted or reviewed properly.
+4. Include a real before/after from material you have actually adapted — with the
+   source material itself left out.
+5. **Include anti-patterns.** A recipe without them will be sent back. They are
+   the part that carries the expertise; the rest an agent could have guessed.
+
+Good anti-patterns are specific and come from having seen them go wrong:
+*"chopping sentences at commas produces fragments that no longer connect"* is
+useful. *"Don't oversimplify"* is not.
+
+## Contributing code
+
+Read `.specify/memory/constitution.md` first. Two principles are non-negotiable
+and reject changes on sight:
+
+- **Adaptation policy never goes in code.** If your patch encodes a rule about
+  *how to adapt*, it belongs in a recipe.
+- **Scripts never call a model.** No API keys, no network, no provider-specific
+  behaviour. Scripts must run and be tested offline.
+
+Specifications are managed with [Spec Kit](https://github.com/github/spec-kit).
+Work starts at `/speckit.specify`, not in the editor.
+
+Note the two command layers: `/speckit-*` is for people building Rampa,
+`/rampa-*` is for teachers using it. They do not meet.
+
+## Contributing a test case
+
+Cases in `cases/` are how we tell whether a change to a recipe improved the
+output or degraded it. A case is openly licensed or invented material, a
+type-profile, and the adaptation we expect.
+
+As the recipe corpus grows this becomes the most important safeguard in the
+project.
+
+## Reporting that an adaptation is wrong
+
+Open an issue with:
+
+- What the recipe produced (paste the adapted block, not the source material).
+- What it should have produced.
+- Why — the pedagogical reason, in your own words.
+
+You do not need to propose a fix, and you do not need to know how the code works.
+
+## Language
+
+Repository structure, code, identifiers and commit messages are in English so the
+project stays usable outside Spain. User-facing documentation is translated;
+Spanish is the first fully populated locale. Recipes are split accordingly:
+`recipes/core/` is language-neutral, `recipes/lang/<code>/` is not.
+
+Write issues in whatever language you are comfortable with.
+
+## Licence of your contribution
+
+By contributing you agree to license your work under the licence covering that
+path: Apache-2.0 for code, CC BY-SA 4.0 for recipes, checklists, templates and
+documentation. See `LICENSE-CONTENT.md`.

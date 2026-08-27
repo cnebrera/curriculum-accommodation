@@ -1,0 +1,31 @@
+# ─────────────────────────────────────────────────────────────────────────────
+#  LEARNER DATA AND SOURCE MATERIAL — NEVER COMMITTED
+#
+#  These directories hold personal data of minors and third-party copyrighted
+#  material. The pre-commit hook in .githooks/pre-commit blocks them as well.
+#  Do not weaken these rules. See LICENSE-CONTENT.md and CONTRIBUTING.md.
+# ─────────────────────────────────────────────────────────────────────────────
+/profiles/
+/material/
+/output/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+
+# Node
+node_modules/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/
+
+# Local agent settings (per-machine, not shared)
+.claude/settings.local.json

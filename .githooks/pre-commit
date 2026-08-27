@@ -1,0 +1,60 @@
+#!/usr/bin/env bash
+#
+# Rampa pre-commit hook — blocks learner data and source material.
+#
+# Install with:  scripts/setup-hooks.sh   (or: git config core.hooksPath .githooks)
+#
+# This hook is a safety net, not a security control. Its job is to stop the
+# ordinary accident: a teacher in a hurry running `git add -A` with a learner
+# profile or a scanned textbook in the working tree.
+
+set -u
+
+PROTECTED_DIRS='^(profiles|material|output)/'
+staged=$(git diff --cached --name-only --diff-filter=ACMR)
+[ -z "$staged" ] && exit 0
+
+blocked=$(printf '%s\n' "$staged" | grep -E "$PROTECTED_DIRS" || true)
+
+if [ -n "$blocked" ]; then
+    cat >&2 <<MSG
+
+  ✋ Commit blocked — protected paths
+
+  These files hold learner data or third-party material and must never leave
+  your computer:
+
+$(printf '%s\n' "$blocked" | sed 's/^/      /')
+
+  Unstage them with:
+
+      git restore --staged <file>
+
+  If you meant to share an example, put an anonymous type-profile in
+  profiles.example/ instead. See CONTRIBUTING.md.
+
+MSG
+    exit 1
+fi
+
+# Second net: obvious personal data in any staged YAML/JSON/Markdown.
+# Deliberately narrow — this warns, it does not try to be a PII detector.
+suspicious=$(printf '%s\n' "$staged" \
+    | grep -E '\.(ya?ml|json|md)$' \
+    | xargs -r grep -ilE '^[[:space:]]*(nombre|apellidos?|surname|full_?name|dni|nie|nuss|expediente)[[:space:]]*:' 2>/dev/null || true)
+
+if [ -n "$suspicious" ]; then
+    cat >&2 <<MSG
+
+  ⚠️  Possible personal data in staged files
+
+$(printf '%s\n' "$suspicious" | sed 's/^/      /')
+
+  A profile must carry no name, surname or identity document. If this is a
+  false positive, commit with --no-verify. If it is not, remove the data first.
+
+MSG
+    exit 1
+fi
+
+exit 0

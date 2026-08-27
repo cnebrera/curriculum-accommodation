@@ -1,0 +1,43 @@
+# Example type-profile. Invented — not a real learner.
+# Copy this shape into profiles/<CODE>.yaml, which is git-ignored.
+# See docs/profile-schema.md.
+
+code: A3
+
+# 0 = no barrier · 1 = mild · 2 = moderate · 3 = severe or total
+# Leave an axis null if you have not observed it. Do NOT default it to 0.
+axes:
+  PER-V: 0      # visual access
+  PER-A: 0      # auditory access
+  DEC: 2        # decoding
+  LIN: 2        # linguistic comprehension
+  COG: 3        # cognitive load
+  ATE: 2        # attention
+  EJE: 3        # executive function
+  MOT: 1        # motor / response
+  REG: 1        # sensory regulation
+  CUR: 1        # curricular gap — significant adaptation only
+
+works:
+  - "One task per page, with blank space around it"
+  - "Numbered steps that can be ticked off"
+  - "First item already worked as an example"
+
+interests: ["dinosaurs", "football"]
+
+avoid:
+  - "Dense pages with several exercises visible at once"
+  - "Timed tasks"
+
+response:
+  default: short
+  writing: "Dictates; an adult transcribes"
+
+language:
+  instruction: es
+
+notes: |
+  Reads aloud accurately but loses the thread on questions with more than one
+  clause. Starts a task much faster when the first step is already done as an
+  example. Rejects worksheets that look "babyish" — keep the register age-
+  appropriate.

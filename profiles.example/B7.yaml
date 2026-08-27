@@ -1,0 +1,39 @@
+# Example type-profile. Invented — not a real learner.
+# A non-visual access profile, to exercise a different branch of the recipes.
+
+code: B7
+
+axes:
+  PER-V: 3      # no functional vision
+  PER-A: 0
+  DEC: 0        # reads braille fluently
+  LIN: 0
+  COG: 1
+  ATE: 1
+  EJE: 1
+  MOT: 1
+  REG: 2        # sound-sensitive; audio needs to be clean and unhurried
+  CUR: 0
+
+works:
+  - "Braille-ready plain text, produced on the school's embosser"
+  - "Audio for long reading passages, at 0.9 speed"
+  - "Tables read row by row with headers repeated"
+
+interests: ["music", "history"]
+
+avoid:
+  - "Instructions that assume seeing the page: 'circle', 'join with arrows'"
+  - "Background music or ambience in audio files"
+
+response:
+  default: long
+  writing: "Types on a braille display"
+
+language:
+  instruction: es
+
+notes: |
+  Curricular level is on par with the year group — the barrier is access, not
+  comprehension. Do not simplify content for this learner; that would be
+  modification without justification.

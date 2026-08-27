@@ -4,7 +4,16 @@
 > la arquitectura. No es todavía una especificación técnica implementable: al final
 > están las preguntas que quedan abiertas.
 >
-> Nombre del proyecto: pendiente. Se usa *Adapta* como provisional.
+> **Actualización (27 ago 2026).** El proyecto se llama **Rampa**. Las
+> especificaciones se gestionan ya con [Spec Kit](https://github.com/github/spec-kit):
+> los principios vinculantes están en `.specify/memory/constitution.md` y la
+> Fase 0 está especificada en `specs/001-phase-0-worksheet/spec.md`.
+> Este documento se mantiene como **visión de producto**, no como especificación
+> ejecutable.
+>
+> Preguntas abiertas de §13 ya cerradas: sintaxis del documento intermedio
+> (`docs/ir.md`), licencia (Apache-2.0 para código, CC BY-SA 4.0 para contenido)
+> e idioma (estructura en inglés, recetas separadas por idioma).
 
 ---
 
@@ -269,19 +278,24 @@ no. De ahí la regla dura del proyecto:
 ## 10. Estructura del repositorio
 
 ```
-adapta/
+rampa/
 ├─ AGENTS.md               # instrucciones raíz, leídas por cualquier agente
-├─ .claude/ .cursor/ …     # adaptadores finos que apuntan a lo mismo
-├─ instrucciones/          # el flujo de los 5 comandos, en markdown
-├─ recetas/                # ← el corazón; lo que aporta la comunidad
-├─ perfiles-tipo/          # perfiles anónimos de ejemplo, para probar sin datos reales
-├─ plantillas/             # HTML/CSS accesible, hojas de estilo por perfil
+├─ CLAUDE.md               # puntero a AGENTS.md
+├─ harness/commands/       # el flujo de los 5 comandos, en markdown
+├─ .claude/skills/         # adaptadores finos que apuntan a harness/commands/
+├─ recipes/core/           # ← el corazón; recetas independientes de idioma
+├─ recipes/lang/<código>/  # recetas específicas de un idioma
 ├─ checklists/             # guías de revisión para el docente
-├─ scripts/                # capa determinista
-├─ casos/                  # material de licencia abierta + salida esperada
-├─ perfiles/    (git-ignored)
+├─ templates/              # HTML/CSS accesible, parametrizado por perfil
+├─ profiles.example/       # perfiles-tipo anónimos, para probar sin datos reales
+├─ scripts/                # capa determinista, sin IA
+├─ cases/                  # material de licencia abierta + salida esperada
+├─ docs/                   # ir.md, profile-schema.md, esta especificación
+├─ .specify/               # Spec Kit: constitución y especificaciones
+├─ .githooks/pre-commit    # bloquea datos de alumno y material
+├─ profiles/    (git-ignored)
 ├─ material/    (git-ignored)
-└─ salidas/     (git-ignored)
+└─ output/      (git-ignored)
 ```
 
 **Agnosticismo real:** las instrucciones y recetas viven una sola vez, en markdown neutro.
