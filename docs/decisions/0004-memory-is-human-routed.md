@@ -21,7 +21,7 @@ work, or about the recipe itself?
 
 | Scope | Where | Leaves the machine? |
 |---|---|---|
-| **Learner** | `profiles/<CODE>.yaml` + `profiles/<CODE>.notes.md` | Never |
+| **Learner** | `profiles/<CODE>/profile.yaml` + `profiles/<CODE>/notes.md` | Never |
 | **Practice** | `memory/house.md` | Only if the school chooses, in their own fork |
 | **Corpus** | a recipe change, proposed upstream | Yes, as a pull request, after de-identification |
 

@@ -13,7 +13,7 @@ Rationale: `docs/decisions/0004-memory-is-human-routed.md`.
 
 2. **Find what repeats.** A note appearing three times is no longer a note, it is
    a rule. Propose promoting it:
-   - repeated learner note → into `profiles/<CODE>.yaml` (`works`, `avoid`, or an
+   - repeated learner note → into `profiles/<CODE>/profile.yaml` (`works`, `avoid`, or an
      axis level that was wrong from the start);
    - repeated practice note → into `memory/house.md`;
    - the same problem across learners → a recipe patch, proposed upstream.

@@ -25,7 +25,7 @@ on the axes in `docs/profile-schema.md`.
 4. **Leave gaps as gaps.** An axis you did not ask about is `null`, not `0`.
    Guessing a zero is worse than leaving it empty: it silently disables recipes.
 
-5. **Write** to `profiles/<CODE>.yaml`. If it exists, show a diff of what you are
+5. **Write** to `profiles/<CODE>/profile.yaml`. If it exists, show a diff of what you are
    changing and confirm before writing.
 
 ## Updating

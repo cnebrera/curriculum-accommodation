@@ -21,7 +21,7 @@ superseded, but two boundaries must be read explicitly:
   the time-saving curve it produces cannot.
 - **`/rampa-compose` is a second entry point.** Out of scope here. Phase 0
   validates the adapt path only.
-- **Per-learner overlays** (`profiles/<CODE>.adaptations.md`) are specified in
+- **Per-learner overlays** (`profiles/<CODE>/adaptations.md`) are specified in
   `003-memory`. A Phase 0 learner may not have one.
 
 Where this spec and 002/003 disagree about `/rampa-review`, 003 wins — it is the

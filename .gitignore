@@ -10,6 +10,7 @@
 /output/
 /memory/*
 !/memory/README.md
+/.rampa/
 
 # Python
 __pycache__/

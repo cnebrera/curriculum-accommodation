@@ -156,8 +156,8 @@ contains that learner's code or content, verified by search.
 
 - **FR-201**: `/rampa-review` MUST ask for the scope of every correction and MUST
   NOT infer it.
-- **FR-202**: Learner-scope corrections MUST update `profiles/<CODE>.yaml` and
-  append a dated entry to `profiles/<CODE>.notes.md`.
+- **FR-202**: Learner-scope corrections MUST update `profiles/<CODE>/profile.yaml` and
+  append a dated entry to `profiles/<CODE>/notes.md`.
 - **FR-203**: Practice-scope corrections MUST update `memory/house.md`.
 - **FR-204**: Corpus-scope corrections MUST create a journal entry tagged with the
   recipes concerned.
@@ -168,7 +168,7 @@ contains that learner's code or content, verified by search.
   recipes it selected.
 - **FR-208**: `memory/house.md` and the subject learner's profile and notes MUST
   always load; the journal MUST NOT load wholesale.
-- **FR-209**: `profiles/<CODE>.adaptations.md`, when present, MUST be read before
+- **FR-209**: `profiles/<CODE>/adaptations.md`, when present, MUST be read before
   recipe selection and MUST take precedence over the corpus.
 - **FR-210**: The system MUST report which memory item suppressed or altered a
   decision, so memory is as traceable as recipes.

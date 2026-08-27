@@ -167,3 +167,49 @@ plan template, and the `/speckit-clarify` de-risking pass — have not been run.
 
 Correction: drive the remaining flow through the commands, starting with
 `/speckit-clarify` on `001` before `/speckit-plan`.
+
+
+---
+
+## Consistency checks
+
+### 2026-08-27 · after `/speckit-plan` on 006
+
+Manual cross-artifact pass. `/speckit-analyze` requires `tasks.md`, which does
+not exist yet, so it runs after `/speckit-tasks` — this pass does not replace it.
+
+**Checked:** requirement-ID collisions across all six specs · vault vocabulary and
+structure across docs, specs, harness and READMEs · command names across
+`harness/commands/`, agent skills and specs · Pandoc assumptions after R12 ·
+markdown link integrity · recipe structural validity.
+
+**Clean:** requirement IDs (each spec owns its hundred; no collisions) · command
+names (identical in all three places) · recipes (8/8) · links (one false positive
+inside a code example in `docs/ir.md`).
+
+**Found and fixed — three, one of them load-bearing:**
+
+1. **`006` used a Spanish vault vocabulary** (`alumnos/`, `materiales/`,
+   `salidas/`) against 16, 11 and 7 files using the established English names.
+   This was not cosmetic: `006`'s own assumptions say the harness keeps working
+   against the same vault, and that is only true if the paths match. The spec
+   contradicted its own assumption. Realigned, and the reasoning is now written
+   into the data model so it does not drift back — **structure in English, interface
+   in Spanish**, because localising paths would break handover between teachers of
+   different languages.
+2. **The profile layout was flat in four documents and nested in two.**
+   `docs/adoption-risks.md` §2 established that a flat vault stops working in week
+   two, but `docs/memory.md`, `docs/profile-schema.md`, `003` and four harness
+   commands were never updated. All now nested: one learner is a directory.
+3. **`memory/index.md` was teacher-facing but is machine-generated.** Moved to
+   `.rampa/`, which `006` had introduced as the machine-owned directory and the
+   only one a teacher is told to ignore. `.gitignore` and `scripts/memory-index.sh`
+   updated; regeneration verified.
+
+**Noted, not a defect:** `harness/commands/render.md` still produces ODT via
+Pandoc. That is correct for the harness and wrong for the application, which
+cannot ship Pandoc (R12). Marked harness-only rather than changed.
+
+**Lesson for the process.** All three defects were introduced by writing a new
+artifact that restated something an older one already defined, instead of pointing
+at it. Cheap to fix now, and they would have surfaced as contradictory tasks.

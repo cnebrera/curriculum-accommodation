@@ -13,7 +13,7 @@ disables another.
 
 Apply in order, stopping at the first that decides:
 
-1. **The overlay wins.** If `profiles/<CODE>.adaptations.md` settles it, that is
+1. **The overlay wins.** If `profiles/<CODE>/adaptations.md` settles it, that is
    the teaching team's decision and it is not reopened here.
 2. **`works` and `avoid` win over any recipe.** Observed reality beats theory.
 3. **Access beats optimisation.** An adaptation the learner physically cannot

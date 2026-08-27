@@ -29,7 +29,7 @@ reviewing the things that actually go wrong, not proofreading prose.
 
    | Answer | Where it goes |
    |---|---|
-   | This learner | `profiles/<CODE>.yaml` (`works`, `avoid`, or an axis level that was wrong) plus a dated note in `profiles/<CODE>.notes.md` |
+   | This learner | `profiles/<CODE>/profile.yaml` (`works`, `avoid`, or an axis level that was wrong) plus a dated note in `profiles/<CODE>/notes.md` |
    | How I work | `memory/house.md` |
    | The recipe | a journal entry in `memory/journal/`, tagged with the recipes concerned |
 

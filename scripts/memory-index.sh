@@ -5,8 +5,9 @@ set -euo pipefail
 
 root="$(cd "$(dirname "$0")/.." && pwd)"
 journal="$root/memory/journal"
-index="$root/memory/index.md"
+index="$root/.rampa/index.md"
 
+mkdir -p "$root/.rampa"
 [ -d "$journal" ] || { echo "No journal yet at memory/journal/ — nothing to index."; exit 0; }
 
 tmp="$(mktemp)"

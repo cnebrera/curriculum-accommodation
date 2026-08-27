@@ -11,7 +11,7 @@ pipeline and no per-modality re-adaptation.
 |---|---|---|
 | `sheet.html` | `scripts/render.sh` with `templates/base.html` | Always |
 | `sheet.pdf` | HTML → PDF, `scripts/html2pdf.sh` | Print |
-| `sheet.odt` | Pandoc | Teacher wants to edit |
+| `sheet.odt` | Pandoc | Teacher wants to edit. **Harness only** — the application cannot ship Pandoc and will write OpenDocument XML instead (`006` R12) |
 | `sheet.txt` | Plain text, braille-ready | `PER-V: 3` |
 | `sheet.mp3` | Offline TTS over the text rendering | `PER-V >= 2` or `DEC: 3` |
 | `report.html` | The adaptation report | Always |

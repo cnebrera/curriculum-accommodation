@@ -50,7 +50,7 @@ recommendation.
 
 ## 2 · Where the learner sits
 
-`profiles/A3.yaml` is flat. A real teacher has fifteen to thirty learners, across
+`profiles/A3.yaml` was flat. A real teacher has fifteen to thirty learners, across
 several classes, sometimes across more than one school, and across years. Flat
 files stop working in week two.
 

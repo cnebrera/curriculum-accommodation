@@ -29,7 +29,7 @@ One pipeline, two entry points, and a precedence rule.
   Front matter carries `kind: generated`; blocks carry `data-objective` where
   adapted blocks carry `data-from`. The back half of the pipeline is unchanged.
 - **Given adaptations** are not a mode. They are a per-learner recipe overlay,
-  `profiles/<CODE>.adaptations.md`, which **takes precedence** over the corpus.
+  `profiles/<CODE>/adaptations.md`, which **takes precedence** over the corpus.
   What it does not cover, the corpus fills.
 
 ## Why compose is easier technically and riskier pedagogically

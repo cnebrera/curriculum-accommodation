@@ -11,7 +11,7 @@ representation that survives pseudonymisation with its usefulness intact.
 
 - **No identity.** No name, no surname, no school, no date of birth, no
   identity-document number, no verbatim clinical diagnosis.
-- The file is named by an opaque code: `profiles/A3.yaml`. The teacher keeps the
+- The file is named by an opaque code: `profiles/A3/profile.yaml`. The teacher keeps the
   mapping to a real learner outside this repository.
 - `profiles/` is git-ignored and blocked by the commit hook.
 
@@ -99,9 +99,9 @@ notes: |
 
 | File | What it is | Written by |
 |---|---|---|
-| `profiles/<CODE>.yaml` | **State.** Axis levels and qualitative fields | `/rampa-profile` |
-| `profiles/<CODE>.notes.md` | **History.** Dated notes from review sessions | `/rampa-review` |
-| `profiles/<CODE>.adaptations.md` | **Overlay.** The learner's official adaptations, when the teaching team has produced them | The teacher, once |
+| `profiles/<CODE>/profile.yaml` | **State.** Axis levels and qualitative fields | `/rampa-profile` |
+| `profiles/<CODE>/notes.md` | **History.** Dated notes from review sessions | `/rampa-review` |
+| `profiles/<CODE>/adaptations.md` | **Overlay.** The learner's official adaptations, when the teaching team has produced them | The teacher, once |
 
 The YAML is what recipes read. The notes are the narrative behind it: when a note
 stabilises, `/rampa-memory` proposes promoting it into the YAML.

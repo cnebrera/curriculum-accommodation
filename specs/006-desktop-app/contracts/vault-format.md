@@ -21,12 +21,12 @@ verbatim — the app is a guest in these files.
 
 ```yaml
 ---
-codigo: A3            # required in perfil.md
-ejes:
+code: A3              # required in profile.yaml
+axes:
   DEC: 2
   LIN: 2
   COG: 3              # 0-3, or omitted. Never write 0 to mean "unknown"
-ejes_confirmados:
+axes_confirmed:
   COG: 2026-09-04
 ---
 ```

@@ -13,7 +13,7 @@ Read `docs/ir.md` and `AGENTS.md` § Hard rules before starting.
 ## Procedure
 
 1. **Load the profile and its memory.** The YAML, the notes, and the overlay
-   (`profiles/<CODE>.adaptations.md`) if it exists. Plus `memory/house.md`.
+   (`profiles/<CODE>/adaptations.md`) if it exists. Plus `memory/house.md`.
    Note which axes are `null` — those recipes stay off.
 
    Reading a profile without its notes throws away every correction the teacher
