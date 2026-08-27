@@ -8,9 +8,9 @@ school*, and they are marked.
 
 | # | Gap | Severity | Where it should live |
 |---|---|---|---|
-| G1 | Retention and erasure of learner data | **Blocks deployment** | `003-memory`, amended |
-| G2 | Axis calibration guidance | **Blocks the corpus** | `docs/profile-schema.md` |
-| G3 | Several learners, one worksheet | High | New spec `004-group` |
+| G1 | Retention and erasure of learner data | **Blocks deployment + 004** | `003-memory`, amended |
+| G2 | Axis calibration guidance | **Blocks the corpus + 004** | `docs/profile-schema.md` |
+| G3 | Several learners, one worksheet | High | New spec `005-group` |
 | G4 | Recipe versioning | High | `docs/ir.md` + `recipes/README.md` |
 | G5 | Corpus validation script | Medium | `scripts/validate-recipes.sh` |
 | G6 | Agent compatibility matrix | Medium | `docs/compatibility.md` |
@@ -19,7 +19,13 @@ school*, and they are marked.
 
 ---
 
-## G1 · Retention and erasure — *blocks deployment*
+> **Update 2026-08-27.** G1 and G2 are now blocking `004-handover`, not merely
+> outstanding. Handover moves learner data between people, which makes retention
+> load-bearing; and it only works if an axis level means the same thing to sender
+> and receiver. They should be done as part of that feature, not before it in a
+> separate pass.
+
+## G1 · Retention and erasure — *blocks deployment and 004*
 
 Nothing in the project says what happens to a learner's profile, notes and
 output when the learner leaves, changes teacher, or finishes the year. Files
@@ -38,7 +44,7 @@ Note the tension worth specifying deliberately: erasure must not silently break
 the corpus contributions that were already de-identified and merged. That is the
 correct behaviour, and it should be stated rather than discovered.
 
-## G2 · Axis calibration — *blocks the corpus*
+## G2 · Axis calibration — *blocks the corpus and 004*
 
 Levels 0–3 are defined once, abstractly ("moderate — needs adaptation to access
 the task"). Two teachers will score the same learner differently, and a third

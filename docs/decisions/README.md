@@ -19,3 +19,4 @@ One decision per file, numbered, never rewritten — superseded instead.
 | [001](../../specs/001-phase-0-worksheet/spec.md) | Phase 0 — adapt one worksheet end to end | 0001, 0002 |
 | [002](../../specs/002-compose/spec.md) | Compose — generate from objectives | 0003 |
 | [003](../../specs/003-memory/spec.md) | Memory — the system learns from the teacher | 0004 |
+| [004](../../specs/004-handover/spec.md) | Handover — knowledge travels with the learner | 0004 |

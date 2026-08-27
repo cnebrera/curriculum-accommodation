@@ -183,3 +183,7 @@ the teacher who is confirming it.
   scope removed. This is what goes to a colleague or upstream.
 
 The distinction is enforced by the export, not by the teacher remembering.
+
+**Handover is more than this export.** Moving the files is the easy half; the
+hard half is the receiving teacher not believing them more than they should.
+Specified in `specs/004-handover/spec.md`.
