@@ -100,6 +100,19 @@ deliberate act.
 user, which is the one thing we cannot afford. OS keychain outside the vault —
 a backup would silently be incomplete. Plaintext — fails FR-417 outright.
 
+**Linux caveat, added with R15.** `safeStorage` is backed by libsecret on Linux —
+gnome-keyring or kwallet. On a machine without one, Electron falls back to
+encryption that is not backed by a real keystore. The app MUST call
+`safeStorage.isEncryptionAvailable()` at first run and, when it is false, say so
+plainly rather than implying a protection it does not have:
+
+> *"En este equipo no puedo guardar los nombres de forma segura. Puedes seguir
+> usando Rampa con los códigos, o instalar un gestor de claves del sistema."*
+
+Offering to continue with codes only is the honest degradation. Silently writing
+weaker ciphertext and calling it encrypted is the failure mode this project spent
+a whole ADR avoiding.
+
 ---
 
 ## R5 · Detecting names we do not know
@@ -223,10 +236,16 @@ nothing and is not infrastructure anyone has to run.** The project's constraint
 has been consistent — no cloud the owner pays for — and this respects it for
 distribution as well as for inference.
 
+**Linux targets: AppImage first, `.deb` alongside.** AppImage needs no installer
+and no administrator rights — download, make executable, run. That makes Linux the
+**only platform where the unsigned experience is not broken**, and the only one
+where a locked-down machine is not an obstacle.
+
 **Alternatives rejected.** `electron-forge` is more modular and officially
 maintained, but signing and notarization need more assembly, and that is the step
 where an unfunded project stalls. A plain zip: no updates, and Windows and macOS
-both treat it as untrusted.
+both treat it as untrusted. Flatpak: better integration, more packaging work,
+and it can come later without changing anything.
 
 ---
 
@@ -284,6 +303,49 @@ Approximate annual costs, to be confirmed at purchase rather than trusted here:
 **This is the project's only unavoidable recurring cost**, and it belongs to the
 owner. Everything else — inference, distribution, hosting — is either the
 teacher's or free.
+
+### Decision (2026-08-27): deferred
+
+**No certificate is bought before the first validation.** The teacher receives a
+locally built application, installed by someone who trusts it.
+
+The cost of that choice is stated rather than hidden: **the validation will not
+have measured the first impression.** SC-401 says "installer to printed worksheet,
+unassisted" and this build cannot test the installer step honestly on Windows or
+macOS. What it does test is everything after it — the connection step, the
+profile, the adaptation, the print — which is where the design risk actually
+lives.
+
+Revisit before any public release. A public unsigned build on Windows or macOS
+would be worse than no release.
+
+---
+
+## R15 · Linux as a supported platform
+
+**Decision: Windows, macOS and Linux are all supported targets. Linux is not
+best-effort.**
+
+**Rationale.** It was going to be a rounding error in effort — Electron and
+`electron-builder` both target it as standard — and it turns out to carry a
+property the other two do not:
+
+**Linux is the only platform where the deferred-signing decision costs nothing.**
+There is no Gatekeeper and no SmartScreen. An AppImage downloads, is made
+executable, and runs. No administrator rights, no installer, no security warning.
+
+That makes Linux the honest answer to the locked-down school laptop, and it makes
+a Linux build the one place where an unsigned public release is defensible.
+
+**Costs, recorded so they are not a surprise.**
+
+1. `safeStorage` may not be backed by a real keystore — see the Linux caveat in
+   R4. This is the significant one, because it touches the promise the app exists
+   to keep.
+2. Printing depends on CUPS being configured, which is more variable than on the
+   other two.
+3. Three platforms to test rather than two. Real, but the automated suite already
+   runs cross-platform in CI.
 
 ---
 

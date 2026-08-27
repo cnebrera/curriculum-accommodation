@@ -40,11 +40,11 @@ are not the implementer's to make.
 | Monorepo | npm workspaces | R13 | Easy |
 | Testing | `vitest` (core, offline) + Playwright (e2e) | R9 | Easy |
 | Providers in v1 | Anthropic + Google (the no-card path) | R6 | Easy — one file each |
-| Platforms | Windows 10+, macOS 12+; Linux best-effort | — | Easy to add, costly to sign |
-| **Code signing** | **Required by FR-426. Not yet purchased** | R14 | **owner** |
-| **Which platform validates first** | **Open** | R14 | **owner** |
+| Platforms | **Windows 10+, macOS 12+ and Linux — all supported** | R15 | Easy |
+| Linux packaging | AppImage + `.deb` | R11, R15 | Easy |
+| Code signing | **Deferred by decision.** Validate on a trusted local build | R14 | Revisit before public release |
 
-The two owner decisions are the only ones blocking. Everything else can start.
+**No decision is blocking. Implementation can start.**
 
 ## Technical Context
 
@@ -63,7 +63,8 @@ Electron `safeStorage`, stored inside the vault.
 Electron end-to-end, with the onboarding flow covered first; injection fixtures
 from `specs/007-untrusted-content` run in CI
 
-**Target Platform**: Windows 10+, macOS 12+. Linux best-effort, unsigned.
+**Target Platform**: Windows 10+, macOS 12+, Linux (AppImage and `.deb`). All
+three supported; see R15.
 
 **Project Type**: Desktop application over a local file vault
 
@@ -186,11 +187,27 @@ surprises:
    OS encryption (R4). Benign — profiles, notes and history survive intact — and
    an explicit export covers the deliberate move. Privacy holds by default.
 
-## Blocked on a decision that is not ours
+## Accepted deviation: FR-426 is not met in the validation build
 
-FR-426 requires signed builds, and R9's human test is worth little if she meets
-*"Windows protected your PC"* before the first screen. **Code-signing
-certificates are an annual cost and a legal identity**, and both belong to the
-project owner. Until that is settled, the human validation runs on a manually
-trusted local build, and the result carries an asterisk: it will not have measured
-the very first impression, which is the one this feature is about.
+FR-426 requires signed builds for Windows and macOS. **The decision is to defer
+the purchase**, not to drop the requirement.
+
+The consequence is stated rather than quietly absorbed: the first validation
+**will not have measured the first impression**. SC-401 reads "installer to
+printed worksheet, unassisted", and a hand-installed build cannot test that
+honestly on Windows or macOS. Everything after the first screen — connection,
+profile, adaptation, print — is tested for real, and that is where the design risk
+concentrates.
+
+Two things follow:
+
+- The validation report must carry the asterisk explicitly. A result that reads
+  as "she got through it fine" while an observer clicked past a security warning
+  for her is a false pass, and it is the kind of false pass that gets discovered
+  by the second user instead of the first.
+- **A public unsigned release on Windows or macOS is worse than no release.**
+  Linux is the exception (R15): an AppImage needs no signature, no installer and
+  no administrator rights, so it is the one platform where an unsigned public
+  build is defensible — and the one honest answer to a locked-down school laptop.
+
+Revisit before any public release beyond Linux.
