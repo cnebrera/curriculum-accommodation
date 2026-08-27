@@ -67,10 +67,16 @@ text), local memory files, name redaction, and corpus versioning — the teacher
 re-downloads to update. What E keeps is the part Phase 0 exists to test: whether
 the adaptations are any good.
 
-## Recommendation (revised)
+## Recommendation (revised twice)
 
-**E first, as the validation and early-adoption vehicle. A stays the contributor
-path. Build B or C only once E has produced evidence that anyone wants this.**
+**E first for evidence, because it costs nothing and can be in a teacher's hands
+this week. C (desktop app over an open memory vault) as the real vehicle, and the
+token is not the reason to avoid it.**
+
+E's advantage is not that it is better — it is that it needs no build, so it can
+answer "are the adaptations any good?" before any vehicle is worth building. That
+question is still unanswered, and it is the one that decides whether the rest
+matters.
 
 Reasoning:
 
@@ -99,19 +105,60 @@ that entails.
 vehicle from assumptions is how the project ends up with a second thing nobody
 can run.
 
-### On the folder-of-files desktop app
+### Two layers, two treatments — the Obsidian model applies to one of them
 
-The Obsidian comparison does not transfer, and it is worth saying why. Obsidian
-works because the notes are useful *without* any model, and because its users are
-already notes people. Rampa's files are machinery: a recipe is useless to a
-teacher who is not running the pipeline. Exposing the folder therefore gives the
-teacher nothing and frightens them.
+An earlier draft of this ADR rejected the Obsidian comparison. That was wrong,
+because it applied one answer to two different things.
 
-This resolves the tension in the original objection — that an app is harder for a
-non-developer to modify. **Teachers should not modify it.** Contributors modify
-recipes in the repository; the app ships them read-only with an update button.
-Two audiences, two interfaces, one corpus. House style and memory get proper UI
-rather than being files the teacher is expected to edit.
+| Layer | What it is | Treatment |
+|---|---|---|
+| **Corpus** — recipes, instructions, templates | Machinery. Useless to a teacher not running the pipeline | Read-only, shipped with the vehicle, updated by a button. Contributors change it in the repository |
+| **Memory** — learners, notes, house style | **The teacher's own notes.** Useful without any model | **An open folder of markdown the teacher owns.** Obsidian-compatible |
+
+The test that separates them is exactly the one that makes Obsidian work: *is the
+file worth anything without the model?* A recipe is not. A teacher's notes on a
+learner are — they are the professional record they already keep in a notebook,
+and they keep their value if this project disappears tomorrow.
+
+So the memory vault is **Obsidian-compatible, not Obsidian-required**: plain
+markdown in a folder, one file per learner plus a house-style file. If the teacher
+uses Obsidian, they get search, backlinks, mobile and sync for free and we build
+none of it. If they use Notepad, it still works. If they use nothing, the vehicle
+provides the UI.
+
+Two consequences for the format:
+
+1. **The files must be prose-first and damage-tolerant.** A teacher will edit them
+   by hand — that is the point — so brittle YAML that breaks the pipeline on a
+   stray indent is a defect. Structure should be light, and the agent should
+   repair and normalise rather than reject.
+2. **Handover becomes shipping a folder**, which is what `004-handover` wanted
+   anyway.
+
+This also resolves the original objection — that an app is harder for a
+non-developer to modify — by scoping it correctly. Teachers do not modify the
+corpus; they modify their own vault, and that is theirs to break.
+
+### On the token barrier
+
+An earlier draft of this ADR treated needing an API key as close to
+disqualifying. That was overstated, and the objection is fair: card-free routes
+to a key exist (Google AI Studio's free tier being the obvious one), aggregators
+offer free tiers, and plenty of non-technical people paste keys into tools every
+day.
+
+What survives is narrower and still true: **the key step is the single biggest
+drop-off point in any bring-your-own-key onboarding**, not because it is hard but
+because none of the vocabulary is familiar. "Create an API key" is five unfamiliar
+words before anything works.
+
+That makes it a design problem, not a reason to avoid the vehicle. The mitigation
+is a good onboarding flow: deep-link to the exact page, show what the screen looks
+like, one paste box, and immediate validation that answers the question the
+teacher is actually asking — *is it working, and what will this cost me?*
+Something like: **"✓ Connected. About 3 cents per worksheet."**
+
+Do that well and the token stops being the reason this fails.
 
 ### The unsigned-app tax
 

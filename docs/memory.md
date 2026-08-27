@@ -39,6 +39,20 @@ memory/                        git-ignored except README.md
 Backup is copying two folders. Both are git-ignored, so updating the repository
 never touches them.
 
+**This is the teacher's vault, and it is Obsidian-compatible by design** — plain
+markdown, one folder, no database. If they open it in Obsidian they get search,
+backlinks, mobile and sync without us building any of it; if they open it in
+Notepad it still reads. The test that earns this treatment is that these files
+are worth something *without* the model: they are the professional record a
+teacher already keeps. The corpus is not, and is not exposed this way.
+
+Two rules follow from a human editing these by hand:
+
+- **Prose first, structure light.** Brittle front matter that breaks the pipeline
+  on a stray indent is a defect, not the teacher's mistake.
+- **Repair, never reject.** The agent normalises what it finds and says what it
+  changed. A teacher's note is never invalid.
+
 ## Journal entry
 
 ```markdown
