@@ -13,9 +13,17 @@ The IR is Markdown with YAML front matter, using Pandoc's
 [fenced divs](https://pandoc.org/MANUAL.html#divs-and-spans) and attribute
 syntax. We are not inventing a format.
 
-Why: Pandoc already converts this to HTML, ODT, PDF and plain text, it round-trips
-without loss, a teacher can read and correct it in any text editor, and `git diff`
-on it is legible — which is what makes the adaptation report honest.
+Why: it round-trips without loss, a teacher can read and correct it in any text
+editor, and `git diff` on it is legible — which is what makes the adaptation
+report honest.
+
+> **Caveat added 2026-08-27.** An earlier version of this section also argued that
+> "Pandoc already converts this to HTML, ODT, PDF and plain text". The application
+> cannot ship Pandoc (`006` FR-425), so it parses the subset directly with
+> `markdown-it` — see `specs/006-desktop-app/research.md` R12. The format still
+> earns its place on the reasons above, but the toolchain argument does not apply
+> where most of the rendering now happens, and ODT will need writing
+> OpenDocument XML rather than a Pandoc call.
 
 ## Front matter
 

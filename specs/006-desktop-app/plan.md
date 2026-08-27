@@ -20,6 +20,32 @@ network.
 
 The highest-risk component is not the pipeline. It is the first ten minutes.
 
+## Technical decisions at a glance
+
+Every choice, with what it would cost to change later. Decisions marked **owner**
+are not the implementer's to make.
+
+| Decision | Choice | Where | Reversible? |
+|---|---|---|---|
+| Language | TypeScript on Node 22 LTS | R1 | Hard. Everything is written in it |
+| Shell | Electron | R1 | **Hard.** Tauri would mean rewriting the shell and re-testing print output |
+| UI framework | React + Vite via `electron-vite` | R10 | Moderate. Six screens, but a full rewrite of the UI package |
+| Styling | Hand-written CSS with custom properties | R10 | Easy |
+| Packaging | `electron-builder` → GitHub Releases | R11 | Easy before release, painful after — installed users track an update channel |
+| Updates | `electron-updater` | R11 | Tied to packaging |
+| Markdown/IR parsing | `markdown-it` + container + attrs | R12 | Moderate |
+| Vault parsing | `gray-matter` wrapped for repair, `zod` | R3 | Easy |
+| File watching | `chokidar` | — | Easy |
+| Name encryption | Electron `safeStorage`, ciphertext in the vault | R4 | **Hard.** Changing it strands existing name maps |
+| Monorepo | npm workspaces | R13 | Easy |
+| Testing | `vitest` (core, offline) + Playwright (e2e) | R9 | Easy |
+| Providers in v1 | Anthropic + Google (the no-card path) | R6 | Easy — one file each |
+| Platforms | Windows 10+, macOS 12+; Linux best-effort | — | Easy to add, costly to sign |
+| **Code signing** | **Required by FR-426. Not yet purchased** | R14 | **owner** |
+| **Which platform validates first** | **Open** | R14 | **owner** |
+
+The two owner decisions are the only ones blocking. Everything else can start.
+
 ## Technical Context
 
 **Language/Version**: TypeScript 5.x on Node 22 LTS

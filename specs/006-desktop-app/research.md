@@ -179,9 +179,118 @@ regressing between the sessions where a person does.
 
 ---
 
+## R10 · UI framework
+
+**Decision: React with Vite, via `electron-vite`.**
+
+**Rationale.** The UI is six screens — onboarding wizard, learner list, profile
+form, adaptation with streaming progress, review, notes browser. Forms-heavy with
+one streaming view. Nothing here is technically demanding, so the deciding factor
+is the same one that chose TypeScript in R1: **this project survives only if other
+people can pick it up.** React reaches an order of magnitude more contributors
+than the alternatives, and consistency with that reasoning matters more than
+elegance in a six-screen app.
+
+`electron-vite` handles main, preload and renderer in one config, which removes
+the Electron build tooling most likely to defeat a new contributor.
+
+**Alternatives rejected.** Svelte would be less code and genuinely nicer here —
+rejected on contributor pool alone, which is an honest trade rather than a
+technical one. Vanilla plus web components avoids a dependency but hands us form
+state and validation to write by hand. Vue sits between React and Svelte on both
+axes and wins on neither.
+
+**Styling: hand-written CSS with custom properties.** No utility framework. The
+output templates already work this way, the app must meet a stated accessibility
+target, and a contributor reading a stylesheet should be able to see what a colour
+does. Tailwind would add build complexity and obscure exactly the properties this
+project cares about.
+
+---
+
+## R11 · Packaging, installer and updates
+
+**Decision: `electron-builder`, distributing through GitHub Releases, updating via
+`electron-updater`.**
+
+**Rationale.** `electron-builder` is the batteries-included option for the part
+that actually hurts: NSIS installer on Windows, DMG on macOS, code signing and
+Apple notarization, and it emits the update metadata `electron-updater` consumes.
+Everything FR-426 needs is configuration rather than scripting.
+
+GitHub Releases is the distribution channel, and it matters that it **costs
+nothing and is not infrastructure anyone has to run.** The project's constraint
+has been consistent — no cloud the owner pays for — and this respects it for
+distribution as well as for inference.
+
+**Alternatives rejected.** `electron-forge` is more modular and officially
+maintained, but signing and notarization need more assembly, and that is the step
+where an unfunded project stalls. A plain zip: no updates, and Windows and macOS
+both treat it as untrusted.
+
+---
+
+## R12 · Rendering the IR without Pandoc
+
+**Decision: `markdown-it` with `markdown-it-container`, `markdown-it-attrs` and a
+math plugin, implementing the IR subset directly.**
+
+**This is a consequence worth stating plainly.** `docs/ir.md` chose Pandoc-flavoured
+markdown partly because "Pandoc already converts this to HTML, ODT, PDF and plain
+text". FR-425 forbids external tooling, and bundling Pandoc is a second large
+binary. So **the app cannot use the toolchain that partly justified the format.**
+
+The format choice still holds on its other merits — it round-trips, a teacher can
+read and correct it, and `git diff` on it is legible, which is what makes the
+adaptation report honest. And the subset the app must parse is small: fenced divs,
+attributes, math. But the argument for the format is now weaker than `docs/ir.md`
+claims, and that document should say so rather than overstate its case.
+
+**Consequence for Phase 1 modalities.** ODT was specified as "via Pandoc". In the
+app there is no Pandoc, so ODT needs another route — most likely writing
+OpenDocument XML directly, which is more work than it sounded. Recorded now so it
+is not discovered as a surprise.
+
+**Alternatives rejected.** Bundling Pandoc: another ~150 MB on top of Chromium,
+for one output format. Shelling out to a Pandoc the teacher installs: violates
+FR-425 and hands her a dependency.
+
+---
+
+## R13 · Monorepo and package manager
+
+**Decision: npm workspaces.**
+
+`npm` ships with Node, so a contributor clones and runs `npm ci`. pnpm is faster
+and stricter and would be the better tool in a team that already has it; here it
+is one more thing to install before anything works, and the dependency graph is
+four packages. Not worth the toll at the front door.
+
+---
+
+## R14 · What a signed build actually costs
+
+FR-426 requires signed builds for Windows and macOS, and R9's human test is worth
+little if she meets *"Windows protected your PC"* before the first screen.
+
+Approximate annual costs, to be confirmed at purchase rather than trusted here:
+
+| | Roughly | Notes |
+|---|---|---|
+| Apple Developer Program | ~$99/yr | Covers signing and notarization for macOS |
+| Windows OV code-signing certificate | ~€200-400/yr | Increasingly requires hardware token or cloud HSM |
+| Windows EV certificate | higher | Buys immediate SmartScreen reputation; OV builds reputation over time and downloads |
+
+**This is the project's only unavoidable recurring cost**, and it belongs to the
+owner. Everything else — inference, distribution, hosting — is either the
+teacher's or free.
+
+---
+
 ## Remaining NEEDS CLARIFICATION
 
 | Item | Why it is open | Who decides |
 |---|---|---|
-| Code-signing certificates for Windows and macOS | Annual cost and legal identity of the holder. FR-426 cannot be met without them, and unsigned builds are a worse first impression than any missing feature | Project owner |
+| Code-signing certificates for Windows and macOS | ~€300-500/yr combined (R14) and a legal identity to hold them. The project's only recurring cost | Project owner |
 | Whether Linux ships at all in v1 | No signing story, small audience, real maintenance cost | Project owner |
+| Which platform to validate on first | Decides whether the first signing purchase is Apple or Windows | Project owner — depends on what the teacher actually uses |
