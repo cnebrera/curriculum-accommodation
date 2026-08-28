@@ -71,6 +71,18 @@ probable nombre que no conoce, **pregunta antes de enviar**.
   instalación y un equipo capaz, y la calidad es menor — pero si el centro no
   autoriza salida de datos, es la única respuesta honesta, y está contemplada.
 
+- **Derechos.** Supresión: la aplicación tiene un borrado completo por alumno que
+  lista lo que va a eliminar, exige confirmación y verifica que no queda nada
+  (las copias de seguridad hechas por la maestra quedan fuera de su alcance, y se
+  lo dice). Portabilidad: la carpeta es texto plano; copiar la carpeta es la
+  exportación.
+- **Propiedad intelectual.** Adaptar una obra para una persona con discapacidad
+  está amparado (Tratado de Marrakech; art. 31 bis TRLPI). Redistribuir la
+  adaptación, no — y por eso ningún material entra jamás en el proyecto público.
+- **Nada es definitivo sin firma.** Todo material sale marcado como borrador
+  hasta que una docente lo revisa y firma. La herramienta propone; la
+  profesional decide y responde.
+
 ### Qué se puede seudonimizar y qué no
 
 Conviene ser exactos, porque es la pregunta que decide el análisis:
@@ -86,17 +98,6 @@ anónimo**. El docente conserva la correspondencia código↔nombre —tiene que
 conservarla, da clase a ese niño—, así que sigue siendo dato personal
 (considerando 26 RGPD) y le siguen aplicando las reglas de transferencia. La
 seudonimización reduce el riesgo de forma real; no hace desaparecer el análisis.
-- **Derechos.** Supresión: la aplicación tiene un borrado completo por alumno que
-  lista lo que va a eliminar, exige confirmación y verifica que no queda nada
-  (las copias de seguridad hechas por la maestra quedan fuera de su alcance, y se
-  lo dice). Portabilidad: la carpeta es texto plano; copiar la carpeta es la
-  exportación.
-- **Propiedad intelectual.** Adaptar una obra para una persona con discapacidad
-  está amparado (Tratado de Marrakech; art. 31 bis TRLPI). Redistribuir la
-  adaptación, no — y por eso ningún material entra jamás en el proyecto público.
-- **Nada es definitivo sin firma.** Todo material sale marcado como borrador
-  hasta que una docente lo revisa y firma. La herramienta propone; la
-  profesional decide y responde.
 
 ## Lista de comprobación para el DPO
 
