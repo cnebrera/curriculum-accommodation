@@ -19,6 +19,25 @@ paste and validate, but say nothing about *choosing* between services or about
 single biggest drop-off point in any bring-your-own-key onboarding, not because
 it is hard but because none of the vocabulary is familiar."*
 
+## Clarifications
+
+### Session 2026-08-28
+
+- Q: How many services ship in the first version? → A: Six — Gemini and Groq (no
+  card), Mistral (EU), Claude (quality), OpenAI (the name she knows), DeepSeek
+  (cheapest). Two jurisdictions, a fallback if Google changes its free tier, and
+  the rest are one Markdown file each afterwards.
+- Q: With a card available, which service is recommended? → A: The one with the
+  highest measured quality (today Claude). The first impression turns on whether
+  the adaptation is good; three cents a worksheet is not a barrier.
+- Q: Is the local-model option (Ollama) built now? → A: No, and it leaves the
+  first version's scope. A mid-range school laptop does not have the power to
+  produce good enough output — an empirical claim, so it is recorded with what
+  would reopen it rather than removed.
+- Q: How are services established outside the EU and the US offered? → A: Always
+  present in the full list with their processing-location row and no judgement
+  from us, but never proposed by the default recommendation.
+
 ## Why this is its own feature
 
 Everything else in this project can be fixed later. **This screen gets one
@@ -92,7 +111,7 @@ the provider list to be configuration rather than compiled-in copy; extended:
 | Google | Gemini |
 | Anthropic | Claude |
 | OpenAI | GPT |
-| **OpenAI-compatible** | xAI (Grok), DeepSeek, Moonshot (Kimi), Mistral, Alibaba (Qwen), Groq, OpenRouter, Together, and local runners (Ollama, LM Studio) |
+| **OpenAI-compatible** | Groq and DeepSeek at first release; then xAI (Grok), Moonshot (Kimi), Alibaba (Qwen), OpenRouter, Together as one file each |
 
 Four adapter files; a dozen or more offers. **Adding a service is one Markdown
 file and no code**, which is what keeps the list current when a cheaper or
@@ -112,9 +131,25 @@ different things:
   actual risk. That stays behind an explicit advanced action, off by default,
   with a warning, and it is the only part that remains deferred.
 
-Local runners are the interesting edge: nothing leaves the machine at all, which
-is the strongest possible answer for a school that will not permit data egress —
-and the one case where "which country" stops being a question.
+Local runners would be the interesting edge — nothing leaves the machine at all —
+and they are **out of scope**; see the non-goal below.
+
+### Non-goal: running the model locally
+
+A local runner (Ollama, LM Studio) would send nothing at all, which is the
+strongest possible answer to a school that forbids data egress
+(`adoption-risks.md` §5). It is **out of scope for the first version**, and the
+reason is hardware rather than principle: **a mid-range school laptop does not
+have the power to produce output good enough to hand to a child.** A weaker
+adaptation is not a privacy win — it is the failure this project exists to
+prevent, arriving by a different door.
+
+That is an empirical claim, so it has a test rather than a verdict. What would
+reopen it: `cases/002-model-floor` measuring a locally-runnable model that clears
+the floor on the hardware a school actually has. If that day comes, the shape is
+already understood — the adapter carries no key, so "validate" means "is it
+running?", which is a different contract and the reason it was never a cheap
+add-on.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -227,28 +262,7 @@ of the actual problems she has.
 
 ---
 
-### User Story 5 - Nothing leaves the machine (Priority: P2)
-
-A teacher whose school forbids sending data anywhere can run a model locally and
-use Rampa with no outbound request at all.
-
-**Why this priority**: Not required for Phase 0, and quality is unproven — but it
-is the only honest answer to a locked-down school, and `docs/adoption-risks.md`
-§5 says that case is real. Specifying it now keeps the adapter surface honest.
-
-**Acceptance Scenarios**:
-
-1. **Given** a local runner, **When** it is offered, **Then** it says plainly:
-   nothing leaves your computer, it needs an install and a capable machine, and
-   the quality is lower.
-2. **Given** a local runner is selected, **When** a job runs, **Then** no request
-   leaves the machine, verifiable in the diagnostics log.
-3. **Given** the local option, **When** its quality has not passed the measured
-   floor, **Then** that is stated before she chooses it.
-
----
-
-### User Story 6 - She can change it later without fear (Priority: P2)
+### User Story 5 - She can change it later without fear (Priority: P2)
 
 The connection is not a one-time gate. She can return, see what is connected,
 replace the key, or switch services, without touching her learners or material.
@@ -277,8 +291,6 @@ replace the key, or switch services, without touching her learners or material.
 - **An aggregator** (OpenRouter and similar) means the request may be routed to
   another vendor again. That must be said: for the data question, an aggregator
   answers "depends", and "depends" is not an answer a school can act on.
-- **A local runner that is not running.** Detected, and the message says "abre
-  Ollama" rather than reporting a failed connection.
 - **She pastes a whole page** instead of the key. Detected by shape and length.
 - **Two services, one key each.** Keys are stored per service; switching does not
   lose the other.
@@ -309,6 +321,22 @@ replace the key, or switch services, without touching her learners or material.
 - **FR-707**: The chooser MUST require exactly one answer — whether she can use a
   payment card — and MUST produce a single recommendation with one sentence of
   reasoning.
+- **FR-707a**: The recommendation rule MUST be: **no card** → the no-card service
+  with the best measured quality that supports photographs; **card** → the service
+  with the best measured quality overall. Quality is the measurement from
+  `cases/002-model-floor`, not an opinion, so the rule survives new services
+  appearing and prices moving.
+  Rationale, recorded because the cheaper rule is tempting: the first impression
+  turns on whether the adaptation is good — one bad worksheet and she does not
+  come back — and three cents a worksheet is not a barrier for anyone. Cost is
+  visible in the comparison for a teacher who wants to optimise it.
+- **FR-707b**: The default recommendation MUST NOT propose a service established
+  outside the EU or the US, however cheap or capable it measures. Those services
+  MUST still appear in the full comparison with their processing-location row and
+  no evaluative language.
+  Rationale: recommending, by omission, where a minor's barrier profile is
+  processed is a decision for the school, not for this project. Presenting the
+  option is disclosure; defaulting to it would be advice.
 - **FR-708**: The data-location question MUST be optional, offered as one line
   beside the recommendation. "No lo sé" MUST be a first-class answer, MUST leave
   her with a working recommendation, and MUST offer
@@ -349,25 +377,14 @@ replace the key, or switch services, without touching her learners or material.
 - **FR-720**: Pasted keys MUST be normalised — whitespace, quotes, `KEY=` prefix
   — before validation.
 - **FR-721**: Validation MUST distinguish, each with its own sentence and next
-  step: malformed, wrong service, expired or unauthorised, no credit, no
-  connection, and (for local runners) not running. "Invalid" MUST NOT be shown
-  alone.
+  step: malformed, wrong service, expired or unauthorised, no credit, and no
+  connection. "Invalid" MUST NOT be shown alone.
 - **FR-722**: A key recognised as another offered service's MUST name it and
   offer the switch.
 - **FR-723**: Validation MUST use the cheapest request the service allows and
   MUST send no learner data and no material.
 - **FR-724**: Success MUST be reported in cost terms, in cents, per worksheet.
 - **FR-725**: Keys MUST be stored per service, encrypted, outside the vault.
-
-### Local models
-
-- **FR-726**: A local runner MUST be offered as its own kind of option, stating
-  that nothing leaves the machine, that it needs an install and a capable
-  computer, and what its quality costs.
-- **FR-727**: With a local runner selected, no request MUST leave the machine,
-  and that MUST be verifiable in the diagnostics log.
-- **FR-728**: A local runner that is not running MUST produce "abre Ollama",
-  never a network error.
 
 ### Living with it
 
@@ -389,21 +406,22 @@ replace the key, or switch services, without touching her learners or material.
 - **SC-704**: She can say which service she chose and one reason why — evidence
   the recommendation was a decision she made rather than one she clicked past.
 - **SC-705**: Every validation failure path produces a distinct, actionable
-  sentence, verified by triggering all six.
+  sentence, verified by triggering all five.
 - **SC-706**: Updating a walkthrough, a cost, a jurisdiction fact or a free-tier
   term requires no code change and no release, verified by editing the corpus.
 - **SC-707**: Adding a service on an existing adapter touches exactly one file.
-- **SC-708**: At least six services are offered at first release, across at least
-  two jurisdictions, including at least one with no payment card.
-- **SC-709**: With a local runner selected, a full adaptation produces zero
-  outbound requests, verified in the log.
+- **SC-708**: Six services are offered at first release — Gemini, Groq, Mistral,
+  Claude, OpenAI, DeepSeek — spanning at least two jurisdictions and including at
+  least two with no payment card.
+
 
 ## Assumptions
 
 - **Adapters at first release: Google, Anthropic, OpenAI, and one
-  OpenAI-compatible adapter.** The compatible one is what makes breadth cheap:
-  xAI, DeepSeek, Moonshot, Mistral, Alibaba, Groq, OpenRouter, Together and local
-  runners are corpus entries behind it.
+  OpenAI-compatible adapter.** Six services ride on them: Gemini, Groq, Mistral,
+  Claude, OpenAI, DeepSeek. The compatible adapter is what makes the rest cheap —
+  xAI, Moonshot, Alibaba, OpenRouter and Together become one corpus file each,
+  with no code.
 - **Cost and jurisdiction facts shipped in the corpus are dated and fallible.**
   Prices fall fast and terms change. `cases/002-model-floor` measures cost and
   quality; jurisdiction and training terms are read off the provider's own
@@ -415,10 +433,9 @@ replace the key, or switch services, without touching her learners or material.
   reviewed; an arbitrary URL a teacher types is not, and that is where the real
   egress risk sits. It stays behind an explicit advanced action, off by default,
   and needs its own warning and data-protection paragraph before it ships.
-- **Local model quality is unproven.** Offered as a specified option and measured
-  by `cases/002-model-floor` like everything else. If it is below the floor it is
-  offered with that said, because for a school that forbids egress the honest
-  choice may still be a weaker model.
+- **Local models are a recorded non-goal, not an oversight.** See the section
+  above: the blocker is the hardware a school actually has, and the reopening
+  condition is a measurement rather than a change of mind.
 - **This feature does not manage billing, quotas or organisation accounts.** If a
   key comes from her school, that is between her and her school; the cost display
   makes usage visible either way.

@@ -66,10 +66,14 @@ probable nombre que no conoce, **pregunta antes de enviar**.
   aprobado.** Esa comprobación es del centro, sobre el proveedor elegido, y ningún
   texto nuestro la sustituye.
 
-- **Hay una opción en la que nada sale del ordenador.** Un modelo local
-  (Ollama y similares) hace que no haya ninguna petición hacia fuera. Necesita
-  instalación y un equipo capaz, y la calidad es menor — pero si el centro no
-  autoriza salida de datos, es la única respuesta honesta, y está contemplada.
+- **Sobre la opción de no enviar nada a ningún sitio.** Un modelo ejecutado en el
+  propio ordenador haría que no hubiera ninguna petición hacia fuera, y sería la
+  respuesta a un centro que no autorice salida de datos. **Hoy no la ofrecemos**,
+  y el motivo es honesto: en un equipo de centro corriente la calidad de la
+  adaptación no da la talla, y una adaptación mala no es una victoria de
+  privacidad — es justo el fallo que este proyecto intenta evitar, entrando por
+  otra puerta. Queda registrado como no-objetivo con la medición que lo
+  reabriría (`specs/009-connect-wizard/spec.md`).
 
 - **Derechos.** Supresión: la aplicación tiene un borrado completo por alumno que
   lista lo que va a eliminar, exige confirmación y verifica que no queda nada
@@ -110,7 +114,6 @@ seudonimización reduce el riesgo de forma real; no hace desaparecer el análisi
 - [ ] Decidido si hay restricción sobre dónde pueden procesarse los datos, y
       comunicado al docente — la aplicación lo pregunta, y «no lo sé» es la
       respuesta más frecuente
-- [ ] Valorado si el caso de uso justifica un modelo local (sin salida de datos)
 - [ ] Periodo de retención decidido y el borrado por alumno probado una vez
 - [ ] Este documento revisado y, donde no encaje, corregido
 
