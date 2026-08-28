@@ -125,7 +125,7 @@ constitutional principles (II and IX) are only real if a test enforces them.
 - [x] T053 [P] [US4] Implement usage accounting in `app/packages/core/src/cost/index.ts` with the bundled price table from R7
 - [x] T054 [US4] Persist per-job and per-month totals to `.rampa/costs.json` in `app/packages/shell/src/ipc/cost.ts`
 - [x] T055 [P] [US4] Build the cost display in `app/ui/src/components/CostBadge.tsx` in cents, never tokens (006 FR-422)
-- [ ] T056 [US4] Warn before an unusually expensive job in `app/ui/src/adapt/CostGate.tsx` *(unbuilt; the `cost:wouldBeUnusual` channel exists — see T091)*
+- [x] T056 [US4] Warn before an unusually expensive job *(done as T091, inside `AdaptScreen` rather than a separate `CostGate.tsx`: the gate belongs at the moment she confirms the material, not as its own screen)*
 
 ---
 
@@ -133,7 +133,7 @@ constitutional principles (II and IX) are only real if a test enforces them.
 
 - [x] T057 [P] [US5] Implement the domain error taxonomy in `app/packages/core/src/errors.ts` and the Spanish message map in `app/ui/src/i18n/errors.ts` — no status codes, no stack traces (006 FR-423) *(message map lives in `i18n/es.ts` under `errors`)*
 - [x] T058 [US5] Implement offline detection and degraded mode in `app/ui/src/hooks/useOnline.ts` so everything except adaptation still works (006 FR-424)
-- [ ] T059 [US5] Implement job recovery in `app/packages/shell/src/jobs/recover.ts` so a crash mid-adaptation leaves material and profile intact *(unbuilt as specified; revisions do keep previous attempts)*
+- [x] T059 [US5] Job recovery *(no `recover.ts` needed — the property holds by construction and is now load-bearing: `runAdaptation` writes nothing to `adapted.md` until the output gate has passed, so a crash mid-stream leaves the previous sheet, every kept revision, the IR and the profile exactly as they were, and a rejected second attempt lands in `adapted.rejected.md` without touching the good file. **Not verified by an actual crash** — that needs the app running.)*
 - [ ] T060 [P] [US5] Write the degradation test in `app/e2e/degradation.spec.ts` for network loss, bad key and rate limit
 
 ---
