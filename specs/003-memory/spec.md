@@ -236,7 +236,10 @@ contains that learner's code or content, verified by search.
 - The teacher runs `/rampa-memory` occasionally. Consolidation is not automatic:
   automatic promotion without confirmation would violate Principle VIII.
 - Practice memory is local by default. A school wanting to share it across a
-  department does so in their own fork; that path is documented, not built.
+  department shares the file — `house.md` is one markdown file, and copying it is
+  the whole mechanism. *(Corrected 2026-08-28: this originally said "in their own
+  fork", a harness-era concept that means nothing to a teacher using the
+  application.)* That path is documented, not built.
 - Corpus contributions travel as pull requests, reviewed like any other recipe
   change. There is no automatic upstream channel, by design.
 - Memory improves consistency and stops repetition. It is not a learning system

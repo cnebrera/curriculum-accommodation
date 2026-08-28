@@ -316,10 +316,33 @@ beyond what `lectura-facil` incidentally covers), and `REG` exists only inside a
 conflict recipe. A profile with `MOT>=2` today selects zero recipes for the
 response route and the model improvises from the hard rules alone.
 
+Also missing, found by the functional-inventory pass of 2026-08-28: the **visual
+support and pictograms** family that the vision document planned (§6) and nothing
+since has mentioned. It carries a technical dimension the other families do not —
+inserting image assets into output — and a licensing one: ARASAAC, the set
+Spanish schools actually use, is **CC BY-NC-SA**, so bundling it with the
+application needs a real look before anyone writes code (local fetch by the
+teacher may be the honest route).
+
 Severity: Medium — the hard rules and the overlay carry some of it, and ADR
 0001's ablation will measure how much recipe coverage actually matters. Home:
 `recipes/core/`. This is also the community's most natural first contribution,
 and should be framed that way when contributions open.
+
+## G17 · One sheet for a mixed group — recorded as a non-goal, deliberately
+
+Found by the functional-inventory pass. A PT's aula de apoyo often holds three or
+four learners with *different* profiles working the same session, and a real
+practice is designing **one** activity accessible to all of them (UDL-style),
+not four parallel sheets. Rampa's whole model — profile-driven, per-learner —
+points the other way, and G3/spec-005 (one worksheet → N *separate* sheets) does
+not cover it either.
+
+Decision: **out of scope, on purpose, until Phase 0 says otherwise.** Designing
+to the intersection of several profiles is exactly the judgement-heavy work where
+a tool's mistakes are least visible, and no learner's file justifies the result.
+If validation teachers ask for it, it comes back as its own spec with its own
+guardrails — recorded here so that reappearance is a decision and not a drift.
 
 **Lesson for the process.** All three defects were introduced by writing a new
 artifact that restated something an older one already defined, instead of pointing

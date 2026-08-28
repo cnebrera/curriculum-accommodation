@@ -11,7 +11,7 @@ Behaviour: `specs/003-memory/spec.md`.
 | Scope | Question it answers | Location | Shareable |
 |---|---|---|---|
 | **Learner** | What does *this* learner need? | `profiles/<CODE>/profile.yaml`, `profiles/<CODE>/notes.md` | Never |
-| **Practice** | How does *this teacher or school* work? | `memory/house.md` | Only in the school's own fork |
+| **Practice** | How does *this teacher or school* work? | `memory/house.md` | Only if the school chooses — it is one file, shared by copying it |
 | **Corpus** | What is true for *everyone*? | a recipe change, upstream | Yes, after de-identification |
 
 The teacher routes every item. The agent never guesses the scope: routing a

@@ -71,6 +71,10 @@ necesita decisión suya — va primero.
 Firma. La marca de BORRADOR desaparece — solo desaparece así. Imprime. El PDF
 sobrevive a la fotocopiadora en blanco y negro.
 
+El tutor de Hugo le pide la ficha para tenerla en clase: le reenvía el PDF ya
+firmado, que por estar firmado no lleva marca de borrador. *(Un camino mejor que
+el correo está registrado como pendiente — adoption-risks §4.10 — no olvidado.)*
+
 *Cubierto por:* 008 (entrada y verificación real) · 001/006 (adaptar, informe,
 firma) · 007 (avisos, procedencia, completitud — FR-512/516/517) · recetas +
 `instructions/` · *medido por:* SC-001, SC-002, SC-005, SC-601…603.
@@ -169,6 +173,46 @@ El IR, los códigos de eje, las recetas seleccionadas, el prompt, los tokens, lo
 reintentos, la redacción de nombres. Ve: sus alumnos por su nombre, sus fichas,
 sus informes, céntimos, y una carpeta de ficheros legibles que es suya aunque
 Rampa desaparezca mañana.
+
+## La foto completa — inventario funcional
+
+*(Añadido 2026-08-28, en el repaso final antes de las clarificaciones.)* Todo lo
+que hace una PT, cruzado con dónde está especificado. Cuatro estados posibles, y
+ninguno es "sin decidir":
+
+**v1** = en el alcance de la Fase 0 · **dif.** = diferido con spec o gap
+numerado · **no-obj.** = no-objetivo registrado con motivo · **fuera** = de otra
+herramienta, dicho explícitamente.
+
+| La función de la PT | Estado | Dónde |
+|---|---|---|
+| Adaptar ficha / lectura / unidad | **v1** | 001, 006, 008, recetas |
+| Adaptar examen sin tocar el criterio | **v1** | `exam-access-not-difficulty`, reglas 4-5 |
+| Crear material desde objetivos, con ancla | dif. | 002, post-Fase 0 por su propia spec |
+| Entrada real: foto, PDF, digital, con verificación | **v1** | 008 |
+| Perfil por barreras + calibración de ejes | **v1** | profile-schema, axis-calibration (G2 espera PT) |
+| Aplicar el documento oficial de adaptaciones (overlay) | **v1** (a mano) | 003 FR-209; UI diferida (tasks F12) |
+| Que las correcciones no se repitan | **v1** | 003, T084-086 |
+| Consolidar lo aprendido, con confirmación | dif. | 003 US3, T093 |
+| Misma ficha, N alumnos (hojas separadas) | dif. | modelo de datos listo (T092b); flujo = spec 005 (G3) |
+| **Una** hoja para un grupo mixto (aula de apoyo, UDL) | **no-obj.** | G17 — vuelve solo si la Fase 0 lo pide |
+| Pictogramas / apoyo visual (ARASAAC) | dif. | G16 ampliado — familia + licencia NC por resolver |
+| Vía de respuesta (MOT), acceso auditivo (PER-A), REG directo | dif. | G16 — primera contribución natural |
+| Salidas: HTML + PDF fotocopiable | **v1** | 006 FR-425/427 |
+| Audio, braille-ready, ODT | dif. | G8, deliberado; el IR ya lo permite sin re-adaptar |
+| Compartir con el tutor / la familia | **v1** (PDF firmado) | camino mejor: 4.10, registrado |
+| Traspaso en junio (export revisado, prosa) | dif. | 004 export; import post-Fase 0 |
+| Borrado completo de un alumno | **v1** | 003 US5 |
+| Cierre de curso, archivo, roster | dif. | tasks F12 (antes del primer verano) |
+| Coste visible y avisado | **v1** | 006 US4, T091/092 |
+| Papel para el director/DPO | **v1** | proteccion-de-datos.md (espera DPO) |
+| Nombres fuera del modelo (con el residuo de la foto dicho) | **v1** | 006 US2, 008 US4 |
+| Material que intenta dar órdenes | **v1** | 007 |
+| Sus ficheros suyos, legibles, portables | **v1** | 006 US3 |
+| Horarios, actas, evaluación continua, DIAC | **fuera** | V0 "Qué NO es"; Additio/Séneca existen |
+
+La regla de mantenimiento: una función nueva entra en esta tabla **antes** de
+entrar en ninguna spec, y una fila nunca se borra — cambia de estado.
 
 ## Qué es "funciona", por fases
 

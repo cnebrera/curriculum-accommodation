@@ -213,6 +213,7 @@ specified behaviour with no task anywhere.
 - **Handover import** (004 US2 — items arrive `unconfirmed`, anti-anchoring): needs two teachers and a real packet; post-Phase 0, after 004's blockers G1/G2 close.
 - **The full group flow** (one worksheet → N learners: shared verification, per-learner runs, a comparative review): its own spec (005), post-Phase 0. T092b lays the data model so it lands without migration.
 - **Overlay authoring UI** (`adaptations.md`): the teaching team's document arrives on paper; for v1 the teacher (or we, beside her) hand-writes the file in the vault — which the vault exists to allow. Revisit after validation.
+- **Year rollover and the roster**: September means new groups, learners advancing, last year moving to `profiles/archive/<year>/` with its retention clock. The data model has all of it; no UI drives it, and the roster's fields (stage, group, subjects, status) are read by nothing yet. Post-Phase 0 — it is a June/September flow and Phase 0 happens mid-term — but it must exist before the app crosses its first summer.
 
 ---
 
