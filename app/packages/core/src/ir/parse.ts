@@ -19,9 +19,11 @@ const KNOWN: BlockClass[] = [
 
 export function createRenderer(): MarkdownIt {
   const md = new MarkdownIt({ html: false, linkify: false, typographer: false });
-  md.use(attrs, { allowedAttributes: [/^data-.*$/, 'id', 'class'] });
-  for (const name of KNOWN) md.use(container, name, {});
-  md.use(container, 'block', {});
+  // Loosely typed on purpose; see types/markdown-it-plugins.d.ts.
+  const use = md.use.bind(md) as (plugin: unknown, ...args: unknown[]) => MarkdownIt;
+  use(attrs, { allowedAttributes: [/^data-.*$/, 'id', 'class'] });
+  for (const name of KNOWN) use(container, name, {});
+  use(container, 'block', {});
   return md;
 }
 

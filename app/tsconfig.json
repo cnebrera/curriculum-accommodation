@@ -1,0 +1,13 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "noEmit": true,
+    "types": ["node"],
+    "paths": {
+      "@rampa/core": ["./packages/core/src/index.ts"],
+      "@rampa/providers": ["./packages/providers/src/index.ts"]
+    }
+  },
+  "include": ["types/**/*.d.ts", "packages/*/src/**/*.ts", "packages/*/test/**/*.ts", "ui/src/**/*.ts", "ui/src/**/*.tsx", "*.ts"]
+}

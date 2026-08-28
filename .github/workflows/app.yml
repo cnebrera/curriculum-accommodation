@@ -1,0 +1,64 @@
+name: app
+
+on:
+  push:
+    branches: ['**']
+    paths: ['app/**', 'recipes/**', 'cases/**', '.github/workflows/app.yml']
+  pull_request:
+    paths: ['app/**', 'recipes/**', 'cases/**']
+
+jobs:
+  verify:
+    # Three platforms because all three are supported targets (research R15).
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    defaults: { run: { working-directory: app } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '22' }
+
+      - run: npm ci
+      - run: npm run bundle:corpus
+
+      # Constitution, Principle II — NON-NEGOTIABLE. This job fails if the
+      # deterministic core can reach the network or the provider layer. Do not
+      # weaken it: if it fails, the principle has been violated.
+      - name: Principle II — the core is model-free
+        run: npm run test:isolation
+
+      - name: Recipes are structurally valid
+        run: bash ../scripts/validate-recipes.sh
+        if: runner.os != 'Windows'
+
+      - name: The vault survives a teacher
+        run: npm run test:vault
+
+      # Includes the two clean controls. A detector that flags a Language
+      # worksheet about the imperative is a defect in its own right.
+      - name: Content is never instruction
+        run: npm run test:injection
+
+      - run: npm run typecheck
+      - run: npm run test:all
+      - run: npm run build
+
+  # Principle I is the weakest gate in the plan: nothing structural stops
+  # adaptation policy leaking out of the corpus and into interface copy. This
+  # cannot be automated honestly, so it is a visible reminder on every run.
+  principle-one:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Reviewer checklist
+        run: |
+          echo "Principle I — pedagogical judgement lives in Markdown, not in code."
+          echo
+          echo "Before approving, check that no string added under app/ tells a"
+          echo "teacher HOW TO ADAPT. That belongs in recipes/, where a teacher"
+          echo "can read and correct it without touching the application."
+          echo
+          echo "Wizard copy and validation messages are where this leaks."

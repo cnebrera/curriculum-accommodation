@@ -4,24 +4,37 @@
   "private": true,
   "description": "Adapt classroom material to the profile of a learner with a disability",
   "license": "Apache-2.0",
-  "engines": { "node": ">=22" },
-  "workspaces": ["packages/*", "ui"],
+  "engines": {
+    "node": ">=22"
+  },
+  "workspaces": [
+    "packages/*",
+    "ui"
+  ],
   "scripts": {
     "bundle:corpus": "node scripts/bundle-corpus.mjs",
-    "test": "npm run test:core && npm run test:isolation && npm run test:vault && npm run test:injection",
-    "test:core": "vitest run --dir packages/core",
+    "test": "npm run typecheck && npm run test:all",
+    "test:core": "vitest run packages/core/test/core.test.ts",
     "test:isolation": "vitest run packages/core/test/isolation.test.ts packages/providers/test/chokepoint.test.ts",
     "test:vault": "vitest run packages/core/test/vault-repair.test.ts packages/core/test/vault-standalone.test.ts",
     "test:injection": "vitest run packages/core/test/injection.test.ts",
     "test:providers": "vitest run --dir packages/providers",
-    "typecheck": "tsc -b packages/core packages/providers",
+    "typecheck": "tsc --noEmit",
     "dev": "npm run bundle:corpus && electron-vite dev",
     "build": "npm run bundle:corpus && electron-vite build",
-    "dist": "npm run build && electron-builder"
+    "dist": "npm run build && electron-builder",
+    "test:all": "vitest run"
   },
   "devDependencies": {
     "@types/node": "^22.10.2",
-    "typescript": "^5.7.2",
+    "@types/react": "^18.3.31",
+    "@types/react-dom": "^18.3.7",
+    "@vitejs/plugin-react": "^4.7.0",
+    "electron": "^33.4.11",
+    "electron-builder": "^25.1.8",
+    "electron-vite": "^2.3.0",
+    "typescript": "^5.9.3",
+    "vite": "^5.4.21",
     "vitest": "^2.1.8"
   }
 }

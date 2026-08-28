@@ -1,0 +1,47 @@
+appId: org.rampa.app
+productName: Rampa
+copyright: Copyright 2026 Rampa contributors
+
+directories:
+  output: release
+  buildResources: build
+
+files:
+  - out/**/*
+  - package.json
+
+extraResources:
+  # The corpus ships read-only. The build fails without both licences —
+  # the app is Apache-2.0 and this content is CC BY-SA 4.0.
+  - from: corpus
+    to: corpus
+
+# Code signing is deliberately unconfigured (research R14): no certificate is
+# bought before the first validation, which runs on a locally built application
+# installed by someone who trusts it. Revisit before any public release beyond
+# Linux — an unsigned public build on Windows or macOS is worse than no release.
+win:
+  target: [nsis]
+  artifactName: Rampa-${version}-windows.${ext}
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  language: 1034   # Spanish
+
+mac:
+  target: [dmg]
+  category: public.app-category.education
+  artifactName: Rampa-${version}-mac.${ext}
+
+# Linux is a supported target, not best-effort (research R15). It is the only
+# platform where deferring signatures costs nothing: an AppImage needs no
+# installer and no administrator rights, which also makes it the honest answer
+# to a locked-down school laptop.
+linux:
+  target: [AppImage, deb]
+  category: Education
+  artifactName: Rampa-${version}-linux.${ext}
+
+publish:
+  provider: github
+  releaseType: release

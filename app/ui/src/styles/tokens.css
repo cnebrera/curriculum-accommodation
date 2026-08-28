@@ -1,0 +1,70 @@
+/* Hand-written CSS with custom properties (research R10). No utility framework:
+   this application states an accessibility target, and a contributor reading a
+   stylesheet should be able to see what a colour does. */
+:root {
+  --paper: #fcfcfa; --surface: #f3f4f1; --surface-2: #eaece8;
+  --ink: #1a2528; --ink-soft: #4a5a5d; --ink-faint: #78878a;
+  --line: #dce0dc; --line-strong: #c3cac5;
+  --accent: #0e6b67; --accent-soft: #e0eeec; --accent-line: #8fc4c0;
+  --warn: #7a3e6b; --warn-soft: #f2e7f0; --warn-line: #c79cbc;
+  --danger: #8a2f2c; --danger-soft: #f7e9e8;
+  --radius: 10px;
+  --step: 8px;
+}
+* { box-sizing: border-box; }
+html, body, #root { height: 100%; }
+body {
+  margin: 0; background: var(--paper); color: var(--ink);
+  font-family: "Atkinson Hyperlegible", Verdana, ui-sans-serif, system-ui, sans-serif;
+  font-size: 16px; line-height: 1.6;
+}
+h1, h2, h3 { line-height: 1.2; margin: 0 0 .4em; text-wrap: balance; }
+h1 { font-size: 1.9rem; } h2 { font-size: 1.35rem; } h3 { font-size: 1.08rem; }
+p { margin: 0 0 1em; max-width: 62ch; }
+button {
+  font: inherit; cursor: pointer; border-radius: var(--radius);
+  border: 1px solid var(--line-strong); background: var(--surface);
+  color: var(--ink); padding: 10px 18px;
+}
+button:hover:not(:disabled) { background: var(--surface-2); }
+button:disabled { opacity: .5; cursor: not-allowed; }
+button.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 700; }
+button.primary:hover:not(:disabled) { filter: brightness(1.1); }
+input[type="text"], input[type="password"], textarea, select {
+  font: inherit; width: 100%; padding: 10px 12px; border-radius: var(--radius);
+  border: 1px solid var(--line-strong); background: var(--paper); color: var(--ink);
+}
+textarea { min-height: 140px; resize: vertical; }
+label { display: block; font-weight: 700; margin-bottom: 6px; }
+a { color: var(--accent); }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+
+.app { display: grid; grid-template-columns: 210px 1fr; height: 100%; }
+.nav { background: var(--surface); border-right: 1px solid var(--line); padding: 20px 12px; }
+.nav h1 { font-size: 1.2rem; padding: 0 10px 14px; }
+.nav button {
+  display: block; width: 100%; text-align: left; border: 0; background: transparent;
+  padding: 9px 10px; margin-bottom: 2px; border-radius: 8px;
+}
+.nav button[aria-current="page"] { background: var(--accent-soft); color: var(--accent); font-weight: 700; }
+.main { padding: 28px 32px 60px; overflow-y: auto; }
+.stack { display: flex; flex-direction: column; gap: 16px; }
+.row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px 20px; }
+.muted { color: var(--ink-soft); }
+.small { font-size: .9rem; }
+.notice { border-radius: var(--radius); padding: 14px 16px; border: 1px solid; }
+.notice.info { background: var(--accent-soft); border-color: var(--accent-line); }
+.notice.warn { background: var(--warn-soft); border-color: var(--warn-line); }
+.notice.danger { background: var(--danger-soft); border-color: var(--danger); }
+.notice blockquote { margin: 8px 0 0; padding-left: 12px; border-left: 3px solid currentColor; font-style: italic; }
+.steps { display: flex; gap: 8px; margin-bottom: 22px; }
+.steps span { flex: 1; height: 5px; border-radius: 3px; background: var(--line); }
+.steps span.done { background: var(--accent); }
+.axis-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; }
+.axis { border: 1px solid var(--line); border-radius: var(--radius); padding: 12px 14px; background: var(--paper); }
+.axis .levels { display: flex; gap: 6px; margin-top: 8px; }
+.axis .levels button { flex: 1; padding: 6px 0; text-align: center; }
+.axis .levels button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
+.badge { font-size: .85rem; padding: 3px 9px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--line-strong); }
+.badge.accent { background: var(--accent-soft); border-color: var(--accent-line); color: var(--accent); }
