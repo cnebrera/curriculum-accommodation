@@ -106,6 +106,11 @@ See [`recipes/`](recipes/) and [`CONTRIBUTING.md`](CONTRIBUTING.md).
   with a disability is protected by the Marrakesh Treaty and its national
   implementations. Redistributing it is not.
 
+## What already exists
+
+A landscape review of comparable tools, and where the gaps are, is in
+[`docs/market-landscape.md`](docs/market-landscape.md).
+
 ## Licence
 
 - Code, scripts, configuration — **Apache-2.0** ([`LICENSE`](LICENSE))

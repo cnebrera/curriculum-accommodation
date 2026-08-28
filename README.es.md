@@ -110,6 +110,11 @@ Ver [`recipes/`](recipes/) y [`CONTRIBUTING.md`](CONTRIBUTING.md).
   persona con discapacidad está amparado por el Tratado de Marrakech y el
   art. 31 bis TRLPI. Redistribuirla, no.
 
+## Qué existe ya
+
+El estudio de herramientas comparables y dónde están los huecos está en
+[`docs/market-landscape.md`](docs/market-landscape.md).
+
 ## Licencia
 
 - Código, scripts, configuración — **Apache-2.0** ([`LICENSE`](LICENSE))
