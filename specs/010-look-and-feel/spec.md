@@ -4,7 +4,7 @@
 
 **Created**: 2026-08-28
 
-**Status**: Clarified 2026-08-28 · ready for `/speckit-plan`
+**Status**: Planned 2026-08-28 · ready for `/speckit-implement`
 
 **Input**: `006` specifies what the interface must *say* (FR-406: her language, no
 jargon) and what the output must survive (FR-427: a black-and-white photocopier).

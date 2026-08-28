@@ -35,7 +35,7 @@ disagreed with it. G3 remains open; G6 is moot.
 | ~~G4~~ | Recipe versioning | **Closed** 2026-08-27 | `data-recipe: id@version` |
 | ~~G5~~ | Corpus validation script | **Closed** 2026-08-27 | `scripts/validate-recipes.sh` |
 | ~~G6~~ | Agent compatibility matrix | **Moot** 2026-08-28 — no harness, no agnosticism claim (ADR 0006) |
-| ~~G7~~ | Stated accessibility target for the output template | **Target stated** 2026-08-27, untested | `app/packages/core/src/render/html.ts` |
+| ~~G7~~ | Stated accessibility target, never tested | **Enforced** 2026-08-28 — `010` T018/T019 put axe in CI, failing the build | `specs/010-look-and-feel` |
 | G8 | Phase 1 modalities (audio, braille-ready, ODT) unspecified | Low, deliberate | New spec, after Phase 0 |
 | ~~G9~~ | Delivery vehicle | **Decided** 2026-08-27 | ADR 0005 accepted → `006-desktop-app` |
 | ~~G10~~ | Learner names reach the model | **Specified** 2026-08-27 | `006` FR-417…421 |
