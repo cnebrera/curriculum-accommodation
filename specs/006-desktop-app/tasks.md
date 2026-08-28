@@ -192,9 +192,29 @@ for the architecture they implement: ADR 0007.
 - [ ] T089 Show the notices (007 FR-503; SC-502). They are computed and thrown away: `runAdaptation` returns a count, and `InjectionNotice.tsx` is never imported. Return the notice list (block, quote, message, kind) and mount the component in `AdaptScreen`'s done stage. Injection, hidden-text and input-bound notices all flow through it.
 - [ ] T090 Ask before sending an unknown probable name, on every channel (006 FR-419; US2-3). Today only pasted worksheet text is checked; notes, house style, journal and corrections are flagged *after* the request is already streaming. Scan the **teacher-authored** segments only (corpus text false-positives on mid-sentence capitals like "Lengua y Literatura") minus known names and a persistent ignore list (`.rampa/names-ignore.json`, written by a `names:ignore` IPC that "No es un nombre" now calls); throw before the first stream read — no request is made. `ScopeQuestion` and `NotesScreen` run `names:check` on save so memory stays clean at the source.
 - [ ] T091 Wire the cost pre-warning (006 US4-3; closes T056). Estimate cents from assembled prompt size before sending; ask `cost:wouldBeUnusual`; confirm in the UI before the job runs.
+- [ ] T092b Per-learner job paths (006 data-model, corrected 2026-08-28; foundation of backlog G3). `material/<job>/adapted.md` carries no learner dimension, so adapting one worksheet for a second learner **overwrites the first**, and `nextRevision` would record learner B's sheet as a revision of A's. Change `jobDir`-derived paths in `app/packages/core/src/vault/paths.ts` to `material/<job>/<CODE>/adapted.md`, `…/report.md` and `output/<job>/<CODE>/`, and thread the learner code through `jobs/adapt.ts` (including revisions and `adapted.rejected.md`), `jobs/print.ts`, `jobs/signoff.ts` and `job:revisions`/`job:isSignedOff` IPC. Sign-off is per (job × learner). No migration needed — no real vaults exist yet; say so in the commit.
+- [ ] T092c Stop the profile editor erasing hand-edited qualitative fields (006 FR-410's spirit: her words are never lost; `docs/profile-schema.md` says these fields outweigh the numbers). `ProfileEditor.save` sends `interests: [], response: {}, language: {…}` unconditionally, so saving from the app deletes whatever the teacher wrote by hand in her vault. Load-preserve-merge on save, and add the missing inputs — intereses, formato de respuesta, lengua — to `app/ui/src/learners/ProfileEditor.tsx`. A core test asserts a round-trip through save loses nothing.
 - [ ] T092 Prompt caching in the Anthropic adapter (ADR 0005's cost table assumes it). Mark `cache_control` breakpoints on the stable prefix — system instructions and recipes — so "unos 3 céntimos por ficha" stops being optimistic by 2-3×. Move the hardcoded EUR rate next to `PRICES` with a dated comment. The adapter already reads `cache_read_input_tokens`; nothing is ever marked cacheable.
 
-**Checkpoint**: the offline suite passes with the new tests; a simulated relaunch resumes; a simulated learner correction changes the next run's prompt; a truncated stub response fails the job with the last good output intact.
+**Checkpoint**: the offline suite passes with the new tests; a simulated relaunch resumes; a simulated learner correction changes the next run's prompt; a truncated stub response fails the job with the last good output intact; two learners adapted from one job coexist.
+
+---
+
+## Phase 12 · Coverage the problem review added (2026-08-28, after Phase 11)
+
+Gaps found by walking a PT's real week through the spec set — not defects, but
+specified behaviour with no task anywhere.
+
+- [ ] T093 Consolidation and retention surfacing (003 US3; FR-211, FR-219, FR-220). Nothing tasks the loop's maintenance half: propose promoting a note that repeats (with the evidence: dates and what happened), propose archiving the promoted and superseded, surface the house-style overflow warning that `houseStyleOverflowing()` already computes, and ask about learners inactive past the retention period. Everything is a proposal; nothing applies without confirmation, and nothing is ever deleted unasked. Home: a "Revisar lo aprendido" section of `NotesScreen`, IPC in `app/packages/shell/src/ipc/memory.ts`, detection logic in `app/packages/core/src/memory/` where the offline suite can hold it.
+- [ ] T094 Fix-two-things-by-hand in review (001's own journey: *"They read the report, fix two things, and take it to class"*). Today her only in-app path is re-running the model — cost, wait, and trust spent on a two-word fix. Minimum honest version: a "corregir a mano" affordance on the review screen that opens `material/<job>/<CODE>/adapted.md` in her editor (`shell.openPath`), plus re-render on the watcher event that edit already fires. Editing in her own editor is the vault promise working, not a workaround.
+
+**Deferred, recorded rather than forgotten:**
+
+- **Handover import** (004 US2 — items arrive `unconfirmed`, anti-anchoring): needs two teachers and a real packet; post-Phase 0, after 004's blockers G1/G2 close.
+- **The full group flow** (one worksheet → N learners: shared verification, per-learner runs, a comparative review): its own spec (005), post-Phase 0. T092b lays the data model so it lands without migration.
+- **Overlay authoring UI** (`adaptations.md`): the teaching team's document arrives on paper; for v1 the teacher (or we, beside her) hand-writes the file in the vault — which the vault exists to allow. Revisit after validation.
+
+---
 
 ---
 

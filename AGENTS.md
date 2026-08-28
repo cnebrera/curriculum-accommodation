@@ -6,6 +6,11 @@ material to the profile of a learner with a disability.
 Read this file before doing anything else in this repository. Everything you need
 is here or linked from here.
 
+**The problem, as one story:** [`docs/escenario.md`](docs/escenario.md) — a PT's
+term with Rampa, moment by moment, each moment naming the spec that covers it.
+Every specification must be pointable-at from that story; when you are unsure
+what something is for, that file is the answer.
+
 ---
 
 ## What this repository is, and is not

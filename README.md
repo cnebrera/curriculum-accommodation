@@ -116,6 +116,13 @@ See [`recipes/`](recipes/) and [`CONTRIBUTING.md`](CONTRIBUTING.md).
   with a disability is protected by the Marrakesh Treaty and its national
   implementations. Redistributing it is not.
 
+## The whole story in one file
+
+What this is for, told as one teacher's term, moment by moment, with the spec
+that covers each moment: [`docs/escenario.md`](docs/escenario.md). It is the
+document every specification is reviewed against, and the script for the Phase 0
+observation.
+
 ## What already exists
 
 A landscape review of comparable tools, and where the gaps are, is in

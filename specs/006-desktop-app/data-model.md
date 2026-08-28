@@ -16,10 +16,11 @@ requirement rather than a simplification: FR-408 says the vault outlives the app
 │   └── archive/2025-26/         closed years; retention clock running
 ├── material/<job>/              teacher-owned
 │   ├── source/                  the teacher's own files
-│   ├── ir.md                    intermediate representation
-│   ├── adapted.md
-│   └── report.md                what changed and why
-├── output/<job>/                HTML, PDF
+│   ├── ir.md                    intermediate representation — ONE per job
+│   └── <CODE>/                  one per learner this job was adapted for
+│       ├── adapted.md           (+ adapted.r<N>.md, kept revisions)
+│       └── report.md            what changed and why, for this learner
+├── output/<job>/<CODE>/         HTML, PDF, per learner
 ├── memory/                      teacher-owned
 │   ├── house.md                 house style
 │   ├── journal/
@@ -43,6 +44,14 @@ outside Spain; the teacher sees "Alumnos" in the application. Localising the pat
 themselves was rejected: it would break handover between teachers of different
 languages, and break every test and document that names a path.
 
+
+**Adaptation is per (job × learner), and the paths say so.** *(Corrected
+2026-08-28.)* The layout previously held one `adapted.md` per job, so adapting
+the same worksheet for a second learner overwrote the first — and the revision
+mechanism would have recorded learner B's sheet as "revision 2" of learner A's.
+One extraction, N adaptations is also the load-bearing half of backlog G3 (one
+worksheet, several learners): the full group flow waits for its own spec, but the
+data model must not have to migrate to receive it.
 
 Everything outside `.rampa/` is prose a person can read. Everything inside it is
 machinery, and it is the only directory the teacher is told to ignore.
@@ -139,6 +148,9 @@ matter:
 FR-215). Erasure removes files; the roster keeps a tombstone with the code and a
 date and nothing else.
 
-**Job**: `ingested` → `verified` (human, gates everything downstream) →
-`adaptado` → `renderizado` → `firmado` (human). The draft mark clears on the last
-transition only, and only the shell can perform it (`007` FR-509).
+**Job**: `ingested` → `verified` (human, gates everything downstream) → then,
+**per learner**: `adaptado` → `renderizado` → `firmado` (human). Ingest and its
+verification happen once per job; everything after happens once per (job ×
+learner), and sign-off for one learner says nothing about another's. The draft
+mark clears on the last transition only, and only the shell can perform it
+(`007` FR-509).

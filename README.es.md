@@ -118,6 +118,13 @@ Ver [`recipes/`](recipes/) y [`CONTRIBUTING.md`](CONTRIBUTING.md).
   persona con discapacidad está amparado por el Tratado de Marrakech y el
   art. 31 bis TRLPI. Redistribuirla, no.
 
+## La historia entera en un fichero
+
+Para qué sirve esto, contado como el trimestre de una maestra, momento a
+momento, con la especificación que cubre cada uno: [`docs/escenario.md`](docs/escenario.md).
+Es el documento contra el que se revisa toda especificación, y el guion de la
+observación de la Fase 0.
+
 ## Qué existe ya
 
 El estudio de herramientas comparables y dónde están los huecos está en

@@ -10,9 +10,12 @@ harness is removed (ADR 0006). The desktop application over an open vault is
 specified in `006-desktop-app`. That closes or specifies G9, G10, G11 and G13, and
 G6 (agent compatibility matrix) is **closed as moot**: there is no longer a claim
 of agent-agnosticism to test, only a provider adapter surface. G12 is now specified in `007-untrusted-content` and in Principle IX. The
-remaining open items are G3 (several learners, one worksheet), G14 (a document for
-the school's data protection officer) and G15 (guardrails are norms, not controls —
-though `007` converts several of them into actual controls).
+remaining open items are G3 (several learners, one worksheet — its data-model
+foundation landed 2026-08-28 as T092b; the flow itself needs spec 005) and G15
+(guardrails are norms, not controls — though `007` converts several of them into
+actual controls). G14 is drafted (`docs/proteccion-de-datos.md`), awaiting a
+practising DPO's review — the same closure rule as G2: not closed until someone
+whose job this is has disagreed with something.
 
 G9-G15 were added by an adversarial pass from the
 teacher's point of view (`docs/adoption-risks.md`). Three of them are more
@@ -39,7 +42,7 @@ disagreed with it. G3 remains open; G6 is moot.
 | ~~G11~~ | Flat `profiles/` caseload layout | **Specified** 2026-08-27 | `006` FR-412 |
 | ~~G12~~ | Untrusted ingested material | **Specified** 2026-08-27 | `007-untrusted-content`, Principle IX |
 | ~~G13~~ | Black-and-white photocopy legibility | **Specified** 2026-08-27 | `006` FR-427 |
-| G14 | No plain-language document for the school's data protection officer | High | `docs/` |
+| ~~G14~~ | No plain-language document for the school's data protection officer | **Drafted** 2026-08-28, awaiting DPO review | `docs/proteccion-de-datos.md` |
 | G15 | Guardrails are norms, not controls — and we do not say so | Medium | `AGENTS.md`, README |
 
 ---
@@ -282,6 +285,41 @@ was converted into specification, not fixed inline: tasks T083-T092 (006 Phase
 The pattern, once more: every defect lives in the seams *between* artifacts —
 spec to code, core to shell, computed to shown. Single artifacts were fine; none
 of this was visible without reading across them.
+
+### 2026-08-28 (later still) · the problem pass, and the scenario
+
+A third pass, spec against the *problem* rather than against the code, using a
+new instrument: `docs/escenario.md`, the canonical narrative of a PT's term with
+Rampa — every specification should be pointable-at from one of its moments, and
+every moment should have a spec. What it added beyond the seams pass:
+
+1. **The data model collided on the classroom's most common case** — one
+   worksheet, several learners. `material/<job>/adapted.md` carried no learner
+   dimension: adapting for a second learner overwrote the first, and the revision
+   mechanism would record B's sheet as a revision of A's. Layout corrected in the
+   006 data model (per job × learner); flow remains spec 005, post-Phase 0 (G3).
+2. **The profile editor erases hand-edited qualitative fields on save** —
+   interests, response, language are sent empty. Her words, lost by us. (T092c)
+3. **The constitution's disclosure MUST had no artifact**, and it was the same
+   hole as G14. Drafted: `docs/proteccion-de-datos.md`.
+4. **Two spec'd behaviours had no task anywhere**: consolidation + retention
+   surfacing (003 US3 → T093) and fix-two-things-by-hand in review (001's own
+   journey sentence → T094). Handover *import* (004 US2) recorded as deliberately
+   deferred rather than silently missing.
+
+## G16 · Corpus families missing for three axes
+
+New gap, found by the problem pass. The corpus has nothing for `MOT`
+(response-route: dictate, type, point — the axis is *how they answer* and no
+recipe answers it), nothing for `PER-A` (auditory access / sign-language-L1
+beyond what `lectura-facil` incidentally covers), and `REG` exists only inside a
+conflict recipe. A profile with `MOT>=2` today selects zero recipes for the
+response route and the model improvises from the hard rules alone.
+
+Severity: Medium — the hard rules and the overlay carry some of it, and ADR
+0001's ablation will measure how much recipe coverage actually matters. Home:
+`recipes/core/`. This is also the community's most natural first contribution,
+and should be framed that way when contributions open.
 
 **Lesson for the process.** All three defects were introduced by writing a new
 artifact that restated something an older one already defined, instead of pointing
