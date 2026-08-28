@@ -1,16 +1,19 @@
 import { useEffect, useState } from 'react';
 import { Notice } from '../components/Notice.js';
+import { ConsolidateSection } from './ConsolidateSection.js';
 
 /** Her notes, over memory/house.md and memory/journal/. */
 export function NotesScreen() {
   const [house, setHouse] = useState('');
   const [index, setIndex] = useState('');
   const [vaultHint, setVaultHint] = useState('');
+  const [names, setNames] = useState<Record<string, string>>({});
 
   useEffect(() => {
     void window.rampa.memory.house().then(setHouse);
     void window.rampa.memory.index().then(setIndex);
-    void window.rampa.vault.defaultPath().then(setVaultHint);
+    void window.rampa.vault.current().then((r: string | null) => setVaultHint(r ?? ''));
+    void window.rampa.names.all().then(setNames);
   }, []);
 
   const save = async () => { await window.rampa.vault.write('memory/house.md', house); };
@@ -38,6 +41,8 @@ export function NotesScreen() {
           <div className="card"><pre style={{ whiteSpace: 'pre-wrap', margin: 0 }}>{index}</pre></div>
         </>
       ) : null}
+
+      <ConsolidateSection names={names} />
 
       {vaultHint ? <p className="small muted">Tus ficheros: <code>{vaultHint}</code></p> : null}
     </div>

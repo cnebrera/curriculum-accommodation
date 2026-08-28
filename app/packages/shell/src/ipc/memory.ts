@@ -2,7 +2,7 @@ import {
   VAULT, loadJournal, writeIndex, houseStyleOverflowing, appendNote, loadLearner,
   saveProfile, buildPacket, packetToMarkdown, toShareable, planForget, executeForget,
   tombstone, listLearners, loadRoster, saveRoster, rosterNameRisk, generateCode, validateCode,
-  rosterSchema, profileSchema, type Profile,
+  rosterSchema, profileSchema, buildProposals, learnerNotes, type Profile,
 } from '@rampa/core';
 import { currentVault } from './vault.js';
 import { handle } from './wrap.js';
@@ -72,6 +72,42 @@ export function registerMemoryIpc(): void {
     ].join('\n'));
     await writeIndex(vault, await loadJournal(vault));
     return { written: path };
+  });
+
+  /**
+   * What has accumulated, and what is worth promoting (003 US3, T093).
+   *
+   * Proposals only. Nothing here writes anything: the applying happens through
+   * `memory:capture` and `memory:archive`, each on her explicit confirmation.
+   */
+  handle('memory:consolidate', async () => {
+    const vault = currentVault();
+    const codes = await listLearners(vault);
+    const learners = await Promise.all(codes.map(async (code) => ({
+      code,
+      notes: (await vault.readRaw(learnerNotes(code))) ?? '',
+    })));
+    return buildProposals({
+      learners,
+      journal: await loadJournal(vault),
+      house: (await vault.readRaw(VAULT.house)) ?? '',
+      today: new Date().toISOString().slice(0, 10),
+    });
+  });
+
+  /** Archive, never delete: provenance matters when a rule is later questioned. */
+  handle('memory:archive', async (path: string) => {
+    const vault = currentVault();
+    const raw = await vault.readRaw(path);
+    if (raw === null) return { archived: false };
+    const name = path.split('/').pop()!;
+    await vault.writeRaw(`${VAULT.journalArchive}/${name}`, raw);
+    await vault.writeRaw(path, '');
+    const { rm } = await import('node:fs/promises');
+    const { resolveInVault } = await import('@rampa/core');
+    await rm(resolveInVault(vault.root, path), { force: true });
+    await writeIndex(vault, await loadJournal(vault));
+    return { archived: true, to: `${VAULT.journalArchive}/${name}` };
   });
 
   handle('memory:index', async () => {

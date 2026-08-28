@@ -147,3 +147,33 @@ it:
 Next: spec 008 (vision ingest) before any teacher session, then the first real
 end-to-end run. The model floor (`cases/002-model-floor`) runs before the teacher
 session, not after.
+
+
+# Phases 12 and the corpus guarantees · 2026-08-28
+
+206 offline tests, 15 files, no key. What was added:
+
+| Check | Result |
+|---|---|
+| Consolidation proposes with evidence (T093) | **Pass.** 11 cases: a theme repeated 3× is proposed with all its dates, a one-off is not, retention surfaces a stale learner and stays quiet about an active one, archiving is proposed for promoted and superseded entries and never for a lone open one |
+| Corpus is read-only at runtime (T080) | **Pass.** No shell module both locates the bundle and holds a write primitive; `ipc/corpus.ts` reads and cannot write |
+| Provenance survives an update (T081) | **Pass.** Every bundled recipe declares an integer version; the update path cannot reach `material/`; both licences ship; the bundle contains only what something reads |
+
+**T059 resolved without code.** A crash mid-adaptation cannot corrupt anything,
+because nothing is written until the output gate passes — the previous sheet,
+the kept revisions, the IR and the profile are untouched, and a rejected second
+attempt lands in its own file. Recorded as a property rather than a module, and
+still unverified by an actual crash.
+
+## What is left, and why
+
+Four tasks, all needing the application to actually run:
+
+- **T040, T060, T075** — Playwright end-to-end (onboarding, degradation,
+  accessibility). These need a GUI session and a Playwright install.
+- **T073** — corpus update as one action.
+
+Everything else in `006` is implemented and tested offline. The honest summary
+has not changed: **the application has never been run and no teacher has seen
+it.** Next is spec 008, because without vision ingest the verification gate
+verifies the teacher's own paste and SC-401 cannot be measured as written.

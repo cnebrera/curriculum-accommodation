@@ -66,6 +66,8 @@ const api = {
     revisions: (id: string, learner: string) => invoke('job:revisions', id, learner),
     render: (id: string, learner: string, signedOff?: boolean) => invoke('job:render', id, learner, signedOff),
     pdf: (id: string, learner: string, signedOff?: boolean) => invoke('job:pdf', id, learner, signedOff),
+    /** Opens the adapted file in her own editor (T094). */
+    openForEditing: (id: string, learner: string) => invoke('job:openForEditing', id, learner),
     /** The only way the draft mark comes off. */
     signOff: (id: string, learner: string, role: string) => invoke('job:signOff', id, learner, role),
     isSignedOff: (id: string, learner: string) => invoke('job:isSignedOff', id, learner),
@@ -80,6 +82,8 @@ const api = {
   memory: {
     capture: (payload: unknown) => invoke('memory:capture', payload),
     index: () => invoke('memory:index'),
+    consolidate: () => invoke('memory:consolidate'),
+    archive: (path: string) => invoke('memory:archive', path),
     house: () => invoke('memory:house'),
     handover: (code: string, year: string, summary: string, shareable: boolean) =>
       invoke('memory:handover', code, year, summary, shareable),

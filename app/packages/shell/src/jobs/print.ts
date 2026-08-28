@@ -1,4 +1,4 @@
-import { BrowserWindow } from 'electron';
+import { BrowserWindow, shell } from 'electron';
 import { renderHTML, parseIR, checkOutput, checkPhotocopy, checkEssentialFigures,
          presentationFor, jobAdapted, outputDir, loadLearner, RampaError, AXES, axisLevelOf } from '@rampa/core';
 import { currentVault } from '../ipc/vault.js';
@@ -39,6 +39,23 @@ async function renderJob(jobId: string, learnerCode: string, signedOff: boolean)
 }
 
 export function registerPrintIpc(): void {
+  /**
+   * Fix two things by hand (T094).
+   *
+   * 001's own journey says *"they read the report, fix two things, and take it to
+   * class"*. Until this existed her only in-app route for a two-word fix was a
+   * full re-run: cost, wait, and a fresh document to re-check. Opening the file
+   * in her own editor is the vault promise doing its job, not a workaround — and
+   * the watcher already reports the change, so a re-render picks it up.
+   */
+  handle('job:openForEditing', async (jobId: string, learnerCode: string) => {
+    const vault = currentVault();
+    const path = resolveInVault(vault.root, jobAdapted(jobId, learnerCode));
+    const problem = await shell.openPath(path);
+    if (problem) throw new RampaError('vault-unreadable', problem);
+    return path;
+  });
+
   handle('job:render', async (jobId: string, learnerCode: string, signedOff: boolean = false) => {
     const vault = currentVault();
     const { html, photocopy } = await renderJob(jobId, learnerCode, signedOff);

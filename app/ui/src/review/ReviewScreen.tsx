@@ -19,6 +19,7 @@ export function ReviewScreen({ jobId, learner, recipes }: { jobId: string; learn
   const [corrections, setCorrections] = useState<Array<{ text: string; scope: 'learner' | 'practice' | 'corpus' }>>([]);
   const [revising, setRevising] = useState(false);
   const [revision, setRevision] = useState(1);
+  const [editedOutside, setEditedOutside] = useState(false);
 
   useEffect(() => {
     void window.rampa.vault.read(`material/${jobId}/${learner}/report.md`)
@@ -27,6 +28,12 @@ export function ReviewScreen({ jobId, learner, recipes }: { jobId: string; learn
     // The checklist is corpus, not code: a teacher can correct what she is asked
     // to check without anyone touching the application.
     void window.rampa.corpus.checklist('review').then(setChecklist).catch(() => setChecklist(''));
+
+    // She may fix two words in her own editor (T094). The vault watcher tells us,
+    // and the report is rebuilt from the file rather than from what we remember.
+    return window.rampa.vault.onChanged((path: string) => {
+      if (path.includes(jobId) && path.endsWith('adapted.md')) setEditedOutside(true);
+    });
   }, [jobId, learner]);
 
   const render = async (signed: boolean) => {
@@ -106,7 +113,16 @@ export function ReviewScreen({ jobId, learner, recipes }: { jobId: string; learn
         </div>
       ) : null}
 
+      {editedOutside ? (
+        <Notice kind="info" title="Has cambiado la ficha a mano">
+          Perfecto: es tu fichero. Vuelve a generar el PDF para que salga con tus cambios.
+        </Notice>
+      ) : null}
+
       <div className="row">
+        <button onClick={() => void window.rampa.job.openForEditing(jobId, learner)}>
+          Corregir a mano
+        </button>
         <button onClick={() => void render(signedOff)}>{es.adapt.print}</button>
         {!signedOff
           ? <button className="primary" onClick={() => void sign()}>{es.review.signOff}</button>
