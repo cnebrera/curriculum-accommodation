@@ -1,0 +1,27 @@
+{
+  "name": "rampa",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Adapt classroom material to the profile of a learner with a disability",
+  "license": "Apache-2.0",
+  "engines": { "node": ">=22" },
+  "workspaces": ["packages/*", "ui"],
+  "scripts": {
+    "bundle:corpus": "node scripts/bundle-corpus.mjs",
+    "test": "npm run test:core && npm run test:isolation && npm run test:vault && npm run test:injection",
+    "test:core": "vitest run --dir packages/core",
+    "test:isolation": "vitest run packages/core/test/isolation.test.ts packages/providers/test/chokepoint.test.ts",
+    "test:vault": "vitest run packages/core/test/vault-repair.test.ts packages/core/test/vault-standalone.test.ts",
+    "test:injection": "vitest run packages/core/test/injection.test.ts",
+    "test:providers": "vitest run --dir packages/providers",
+    "typecheck": "tsc -b packages/core packages/providers",
+    "dev": "npm run bundle:corpus && electron-vite dev",
+    "build": "npm run bundle:corpus && electron-vite build",
+    "dist": "npm run build && electron-builder"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  }
+}

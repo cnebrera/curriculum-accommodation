@@ -1,0 +1,9 @@
+{
+  "name": "@rampa/shell",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/main.ts",
+  "license": "Apache-2.0",
+  "dependencies": { "@rampa/core": "*", "@rampa/providers": "*", "chokidar": "^4.0.3" }
+}
