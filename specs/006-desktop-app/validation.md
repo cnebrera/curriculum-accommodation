@@ -71,3 +71,32 @@ measured honestly today.
 
 Per SC-407, every intervention during that session is a logged defect — including
 the ones where staying silent feels unkind. Those are the most valuable entries.
+
+
+---
+
+# Appendix — what a second review found · 2026-08-28
+
+A line-by-line read of the implementation against specs 003, 006 and 007, done
+before handing implementation to the Spec Kit flow. Method: every FR traced to
+the code that enforces it, every core export traced to a caller. Nothing below
+was caught by the 139-test run above, because every one of them lives between
+tested units — each unit is correct, and the seam is missing.
+
+| Found | Where it landed |
+|---|---|
+| Vault never persisted or reopened; the app breaks on second launch | tasks T083 |
+| Learner notes loaded, then dropped before the prompt; corpus journal entries untagged and unloadable — memory works in 1 of 3 scopes | T084-T086 |
+| No completeness check; truncation repaired into silent loss; the model has no channel into the report it is told to write to | T087-T088 · 007 FR-516/517 · docs/ir.md |
+| `assertProvenance`, `findUnaccountedBlocks`, `assertWithinBounds` exported and never called; `InjectionNotice` never mounted; notices returned as a bare count | T088-T089 |
+| Revise prompt says teacher corrections beat "las reglas" — hard rules included | T084 · instructions/adapt.md §3 |
+| Unknown-name ask-before-send only covers pasted text; notes/house/journal are flagged after the request streams | T090 |
+| No `cache_control` anywhere: the "unos 3 céntimos" promise is optimistic 2-3× | T092 |
+| Cost pre-warning channel exists, UI never calls it | T091 |
+| Photo/PDF ingest absent; the verification gate verifies the teacher's own paste | spec 008 |
+| Pipeline-vs-agent never decided | ADR 0007 |
+
+The line that still matters most is unchanged from the first run of this
+document: **no teacher has seen any of it, and the application has never been
+run.** The list above is why running it first would have been the wrong order —
+three of these would have survived a demo and failed in week two.

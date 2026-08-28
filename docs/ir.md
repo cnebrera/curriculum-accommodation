@@ -131,13 +131,49 @@ Rules:
 - A block with no `data-from` is **new content**, which is only legitimate for
   scaffolding (a worked example, a step list, a word bank) — never for curricular
   content. Mark it `.scaffold`.
-- A dropped block is recorded in `report.md`. Blocks never disappear silently.
+- A dropped block is declared in `.report-notes` (below) and lands in
+  `report.md`. Blocks never disappear silently — and this is checked
+  deterministically, not requested: every source block must be present, derived
+  from via `data-from`, or declared dropped, or the job fails (007 FR-516).
 - **A change with no `data-recipe` and no `data-axis` must not be made.** That is
   the mechanical form of "every change is traceable".
 
 `report.md` is generated from these attributes: grouped by decision, not by
 paragraph, so the teacher reviews about fifteen decisions instead of re-reading
 twelve pages.
+
+## The model's channel into the report: `.report-notes`
+
+*Added 2026-08-28 (ADR 0007). This closes a contradiction the implementation
+review found: the hard rules tell the model "if content must be dropped, say so
+in the report" — and the model does not write the report; the application
+generates it from the attributes above. Everything the model needed to declare
+had nowhere to go.*
+
+The adapted document may end with exactly one block of class `.report-notes`:
+
+```markdown
+::: {#notes .report-notes}
+- [dropped:e5] La tabla no se puede resolver sin visión espacial; necesita
+  sustitución, no descripción.
+- [flag] El ejercicio 7 roza el cambio de criterio; decisión de la maestra.
+- Mantuve el conector "porque" en las tres frases partidas.
+:::
+```
+
+Rules:
+
+- **Never learner-facing.** The renderer excludes it from every output a learner
+  sees; it feeds `report.md` only.
+- **`[dropped:ID]` is machine-parsed.** It is how the completeness check
+  (007 FR-516) distinguishes a declared drop from a silent loss. The exact form
+  — `[dropped:` followed by the block id — is load-bearing.
+- **`[flag]` marks anything needing the teacher's decision** — significant
+  adaptation, an overlay conflict, an essential figure that needs replacing.
+  These are listed first in the report.
+- Anything else in the block is carried into the report as a note.
+- The block is optional: absent means *nothing dropped, nothing to flag*, and the
+  completeness check holds the model to that.
 
 ## Generated IR
 

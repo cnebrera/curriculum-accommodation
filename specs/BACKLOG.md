@@ -248,6 +248,41 @@ The lesson is the same one as the pass above, one level up: **two vehicles
 guarantee restatement.** The three defects in August were artifacts restating each
 other; these were whole layers doing it.
 
+### 2026-08-28 (later) · line-by-line review before the Spec Kit handoff
+
+The implementation was read against specs 003, 006 and 007 requirement by
+requirement, before handing implementation to the Spec Kit flow. Everything found
+was converted into specification, not fixed inline: tasks T083-T092 (006 Phase
+11), FR-516/517 and SC-507 (007), the `.report-notes` channel (docs/ir.md), ADR
+0007, and spec 008. The headlines, so nobody re-finds them:
+
+1. **The app cannot survive a relaunch.** The vault is only ever opened from the
+   onboarding step; nothing persists or reopens it. Second launch: every
+   vault-dependent call throws. (T083)
+2. **The memory loop — the thesis — works in one of its three scopes.** Learner
+   notes are loaded and then dropped before the prompt; corpus journal entries
+   are captured without recipe tags and the recipe-intersection loader never
+   loads them. Only practice scope (house style) actually feeds the next run.
+   (T084-T086)
+3. **Nothing defends against silent content loss**, the project's number-one
+   failure mode: no completeness check, truncated output is "repaired" into a
+   shorter document, and the model is ordered to "say so in the report" while
+   having no channel into a report that code generates. (T087-T088, FR-516/517,
+   ir.md)
+4. **Computed defences that never reach the teacher**: injection notices counted
+   and discarded, `InjectionNotice` never mounted, `assertProvenance` and
+   `findUnaccountedBlocks` never called. (T088-T089)
+5. **The revise prompt inverts the precedence**: it tells the model teacher
+   corrections beat "las reglas" — hard rules included. (T084;
+   instructions/adapt.md §3 now states the order.)
+6. **The architecture question was never asked**: 006 specified a pipeline
+   without ever deciding pipeline-vs-agent. Now decided and recorded as ADR 0007,
+   with the measurement that would reopen it.
+
+The pattern, once more: every defect lives in the seams *between* artifacts —
+spec to code, core to shell, computed to shown. Single artifacts were fine; none
+of this was visible without reading across them.
+
 **Lesson for the process.** All three defects were introduced by writing a new
 artifact that restated something an older one already defined, instead of pointing
 at it. Cheap to fix now, and they would have surfaced as contradictory tasks.

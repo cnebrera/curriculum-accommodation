@@ -191,6 +191,22 @@ provenance to declare.
   the configured model endpoint.
 - **FR-512**: A block without provenance and not marked `.scaffold` MUST fail the
   job, checked deterministically.
+- **FR-516** *(added 2026-08-28, ADR 0007)*: Omissions MUST be caught as
+  deterministically as additions. Every block of the source document MUST be
+  accounted for in the adapted document — present unchanged, derived from via
+  `data-from`, or declared dropped in the `.report-notes` channel
+  (`docs/ir.md`) — or the job fails. FR-512 catches what an injection adds;
+  this catches what a failure removes, which is the project's oldest threat
+  wearing a new coat: silent loss of curricular content.
+- **FR-517** *(added 2026-08-28, ADR 0007)*: A structurally incomplete model
+  output — a truncated document, an unclosed block fence — MUST fail the job
+  rather than being repaired into a shorter document. The vault parser's
+  repair-never-reject rule exists for the teacher's hand-edits; applied to model
+  output it converts truncation into invisible content loss, so the two inputs
+  MUST NOT share that behaviour. On failure, the previous good adapted document
+  MUST remain untouched, and the job MAY be retried automatically exactly once,
+  feeding the detected problems back as corrections, before surfacing a
+  plain-language error.
 - **FR-513**: Input per job MUST be bounded, and reaching the bound MUST be
   reported rather than silently truncated.
 - **FR-514**: Detection MUST be non-blocking. False positives MUST notify, never
@@ -206,6 +222,9 @@ provenance to declare.
 - **SC-503**: Zero instances of learner data in learner-facing output, across all
   fixtures and all attempts.
 - **SC-504**: Zero writes outside the vault across all fixtures.
+- **SC-507** *(added 2026-08-28)*: Zero silent omissions: across all fixtures and
+  cases, every source block is present, derived from, or declared dropped in the
+  report — verified by the deterministic check, not by reading the output.
 - **SC-505**: A teacher shown a flagged notice can say what it means and what to
   do — verified by asking one.
 - **SC-506**: False positives on a clean corpus stay low enough that the notice is
