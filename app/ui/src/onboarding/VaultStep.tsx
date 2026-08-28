@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
-import { es } from '../i18n/es.js';
+import { useStrings } from '../i18n/context.js';
 import { Notice } from '../components/Notice.js';
 
 /** A default she can accept without making a decision (006 FR-402). */
 export function VaultStep({ onDone }: { onDone: (root: string) => void }) {
+  const { t: es } = useStrings();
   const [suggested, setSuggested] = useState('');
   const [busy, setBusy] = useState(false);
   const [encryption, setEncryption] = useState<{ available: boolean; message: string } | null>(null);

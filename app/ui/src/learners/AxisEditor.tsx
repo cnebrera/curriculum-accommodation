@@ -1,4 +1,4 @@
-import { es } from '../i18n/es.js';
+import { useStrings } from '../i18n/context.js';
 
 /**
  * Axes as observable classroom behaviour, from docs/axis-calibration.md — never
@@ -32,6 +32,7 @@ export function AxisEditor({ axes, onChange }: {
   axes: Record<string, number>;
   onChange: (axes: Record<string, number>) => void;
 }) {
+  const { t: es } = useStrings();
   const set = (key: string, level: number) => {
     const next = { ...axes };
     // Clicking the current level clears it: "unobserved" must stay reachable,

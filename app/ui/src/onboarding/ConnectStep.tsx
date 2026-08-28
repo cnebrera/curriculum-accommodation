@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { es } from '../i18n/es.js';
+import { useStrings } from '../i18n/context.js';
 import { Notice } from '../components/Notice.js';
 
 interface P { id: string; label: string; keyUrl: string; requiresPaymentCard: boolean }
@@ -14,6 +14,7 @@ interface P { id: string; label: string; keyUrl: string; requiresPaymentCard: bo
  * this cost me.
  */
 export function ConnectStep({ onDone }: { onDone: (providerId: string) => void }) {
+  const { t: es } = useStrings();
   const [providers, setProviders] = useState<P[]>([]);
   const [chosen, setChosen] = useState<string>('');
   const [key, setKey] = useState('');

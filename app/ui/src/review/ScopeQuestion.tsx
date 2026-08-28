@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { es } from '../i18n/es.js';
+import { useStrings } from '../i18n/context.js';
 import { Notice } from '../components/Notice.js';
 
 /**
@@ -24,6 +24,7 @@ export function ScopeQuestion({ learner, recipes, onCaptured }: {
   /** Receives the correction so the caller can re-run this worksheet with it. */
   onCaptured: (correction: { text: string; scope: Scope }) => void;
 }) {
+  const { t: es } = useStrings();
   const [text, setText] = useState('');
   const [scope, setScope] = useState<Scope | null>(null);
   const [destination, setDestination] = useState<Destination | null>(null);

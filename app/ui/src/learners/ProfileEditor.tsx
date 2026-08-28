@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
-import { es } from '../i18n/es.js';
+import { useStrings } from '../i18n/context.js';
 import { AxisEditor } from './AxisEditor.js';
 import { Notice } from '../components/Notice.js';
 import { RepairNotice } from '../components/RepairNotice.js';
 
 export function ProfileEditor({ code, onSaved }: { code: string | null; onSaved: (code: string) => void }) {
+  const { t: es } = useStrings();
   const [current, setCurrent] = useState<string>(code ?? '');
   const [name, setName] = useState('');
   const [axes, setAxes] = useState<Record<string, number>>({});

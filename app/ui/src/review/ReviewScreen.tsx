@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { es } from '../i18n/es.js';
+import { useStrings } from '../i18n/context.js';
 import { fromWire } from '../../../packages/core/src/errors.js';
 import { Notice } from '../components/Notice.js';
 import { ScopeQuestion } from './ScopeQuestion.js';
@@ -10,6 +10,7 @@ import { ScopeQuestion } from './ScopeQuestion.js';
  * real — and it is where the errors that matter get caught.
  */
 export function ReviewScreen({ jobId, learner, recipes }: { jobId: string; learner: string; recipes?: string[] }) {
+  const { t: es } = useStrings();
   const [report, setReport] = useState('');
   const [checklist, setChecklist] = useState('');
   const [signedOff, setSignedOff] = useState(false);

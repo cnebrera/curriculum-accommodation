@@ -65,13 +65,13 @@ export function App() {
         <div style={{ padding: '14px 10px' }} className="stack">
           <CostBadge />
           {/*
-            The language switch is hidden until the sweep in T095 lands. Most
-            screens still import `es` directly instead of reading this context,
-            so choosing English today produces one screen in two languages —
-            worse than not offering the choice. The scaffolding stays; the
-            promise waits until it is true.
+            Real since T095: every screen reads its strings through this context,
+            so a locale change moves the whole interface. A key missing from a
+            partial locale falls back to Spanish rather than showing blank —
+            which is why offering an incomplete translation is honest, and why
+            offering it *before* the sweep was not.
           */}
-          {false && locales.length > 1 ? (
+          {locales.length > 1 ? (
             <select aria-label="Idioma" value={locale}
                     onChange={(e) => setLocale(e.target.value as typeof locale)}>
               {locales.map((l) => <option key={l.code} value={l.code}>{l.label}</option>)}

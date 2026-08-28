@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { es } from '../i18n/es.js';
+import { useStrings } from '../i18n/context.js';
 import { fromWire } from '../../../packages/core/src/errors.js';
 import { Notice } from '../components/Notice.js';
 import { NameWarning } from '../components/NameWarning.js';
@@ -13,6 +13,7 @@ interface JobNotice { block: string | null; notice: { kind: string; quote: strin
 export function AdaptScreen({ onReview }: {
   onReview: (jobId: string, learner: string, recipes: string[]) => void;
 }) {
+  const { t: es } = useStrings();
   const [learners, setLearners] = useState<string[]>([]);
   const [names, setNames] = useState<Record<string, string>>({});
   const [learner, setLearner] = useState('');
