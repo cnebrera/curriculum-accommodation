@@ -23,6 +23,11 @@ venv/
 # Node
 node_modules/
 
+# Build output. `out/` at the root was committed once by a stray build;
+# electron-vite writes app/out/, and neither belongs in the repository.
+/out/
+/release/
+
 # OS / editor
 .DS_Store
 Thumbs.db

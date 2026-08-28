@@ -13,6 +13,13 @@ does not, and is rebuilt from scratch every September.
 Extends `003-memory`, whose export was specified as a utility. This spec treats
 handover as the feature it actually is.
 
+> **Note added 2026-08-28 ([ADR 0006](../../docs/decisions/0006-one-vehicle.md)).**
+> This spec describes the pipeline in terms of `/rampa-*` commands. Those commands
+> no longer exist: the application is the only vehicle, and the judgement layer
+> they carried is now `instructions/`, read at run time. **The requirements below
+> remain valid** — they specify behaviour, not a vehicle. Read a command name as
+> the step it names.
+
 ## Why this is not a file export
 
 The official file says *significant adaptation in Language*. It does not say

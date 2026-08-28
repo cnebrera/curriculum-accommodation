@@ -1,10 +1,9 @@
-# /rampa-compose — generate material from learning objectives
+# Generating material from learning objectives
 
-**Goal:** produce `material/<job>/ir.md` from what the learner must learn, when
-there is no usable source material to adapt.
+Build material from what the learner must learn, when there is no usable source
+to adapt.
 
-Read `docs/ir.md` and `AGENTS.md` § Hard rules first. Specification:
-`specs/002-compose/spec.md`.
+Read `hard-rules.md` first.
 
 ## The thing to understand before you start
 
@@ -43,8 +42,8 @@ So: **review effort here is higher, not lower.** Say that to the teacher.
    is marked in the material and listed first in the report. Do not quietly drop
    it and do not quietly keep it.
 
-6. **Reuse the learner's conventions.** Check previous jobs and `house.md`: same
-   layout, same response format, terms already introduced reused rather than
+6. **Reuse the learner's conventions.** Check previous jobs and the house style:
+   same layout, same response format, terms already introduced reused rather than
    reintroduced. A learner who meets a new format every week spends their effort
    on the format.
 
@@ -52,7 +51,7 @@ So: **review effort here is higher, not lower.** Say that to the teacher.
    checking whether it is *true* and whether it teaches the objective — a
    different task from reviewing an adaptation, and it comes first.
 
-Then continue with `/rampa-adapt` as normal. The rest of the pipeline does not
+Everything downstream then proceeds as normal. The rest of the pipeline does not
 know or care that this material was generated.
 
 ## Never

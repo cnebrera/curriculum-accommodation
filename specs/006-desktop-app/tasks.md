@@ -6,6 +6,11 @@
 **Tests**: Included. `quickstart.md` defines them as the validation method, and two
 constitutional principles (II and IX) are only real if a test enforces them.
 
+> **Status note, 2026-08-28.** The checkboxes below are stale: most of Phases 1-9
+> is implemented and its tests pass, but nothing here was ticked as it landed.
+> `validation.md` is the reliable record of what has been verified. Do not read an
+> unchecked box as unbuilt work — reconcile against the code first.
+
 **Organization**: By user story. Each phase is an independently testable increment.
 
 ---
@@ -18,7 +23,7 @@ constitutional principles (II and IX) are only real if a test enforces them.
 - [ ] T004 [P] Add `app/.gitignore` for `node_modules`, `dist`, `out`, `release`
 - [ ] T005 Add the `electron-vite` config in `app/electron.vite.config.ts` wiring main, preload and renderer
 - [ ] T006 Add the `electron-builder` config in `app/electron-builder.yml` targeting NSIS (Windows), DMG (macOS), AppImage and deb (Linux), publishing to GitHub Releases, with signing left unconfigured per R14
-- [ ] T007 Add the corpus copy step in `app/scripts/bundle-corpus.mjs` that copies `recipes/`, `harness/commands/`, `checklists/`, `templates/`, `LICENSE` and `LICENSE-CONTENT.md` into `app/corpus/`, and fails the build if either licence file is missing (R8)
+- [ ] T007 Add the corpus copy step in `app/scripts/bundle-corpus.mjs` that copies `recipes/`, `instructions/`, `checklists/`, `LICENSE` and `LICENSE-CONTENT.md` into `app/corpus/`, and fails the build if either licence file is missing (R8). Bundle only what the application reads — see ADR 0006
 
 **Checkpoint**: `npm ci && npm run build` completes and the corpus is bundled with both licences.
 
@@ -35,7 +40,7 @@ constitutional principles (II and IX) are only real if a test enforces them.
 - [ ] T014 Implement provenance validation in `app/packages/core/src/ir/provenance.ts`: a changed block without `data-from`, `data-recipe` and `data-axis`, and not marked `.scaffold`, fails the job (007 FR-512)
 - [ ] T015 [P] Implement recipe loading and selection in `app/packages/core/src/recipes/index.ts`: bundled corpus then vault overrides, axis-condition matching, conflict resolution per `recipes/core/conflicts/README.md`
 - [ ] T016 [P] Implement redaction in `app/packages/core/src/redact/index.ts`: known-name substitution plus the dictionary-and-heuristic probable-name detector from R5, returning flagged spans and never blocking
-- [ ] T017 Implement the HTML renderer in `app/packages/core/src/render/html.ts` taking an IR document **and no profile argument** (007 FR-506), applying `templates/base.html` tokens from `render:` front matter
+- [ ] T017 Implement the HTML renderer in `app/packages/core/src/render/html.ts` taking an IR document **and no profile argument** (007 FR-506), applying presentation tokens derived from axis levels (the Pandoc template it replaced is gone — ADR 0006 — and its WCAG 2.2 AA target is documented in the module)
 - [ ] T018 [P] Implement the print stylesheet and photocopy check in `app/packages/core/src/render/photocopy.ts`: contrast after desaturation, no meaning carried by colour alone (006 FR-427)
 - [ ] T019 [P] Implement report generation in `app/packages/core/src/report/index.ts`, grouping changes by decision from provenance attributes
 - [ ] T020 Implement the output check in `app/packages/core/src/render/check.ts` that fails a render if any learner code or known name appears in learner-facing output (007 FR-507)

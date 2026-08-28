@@ -11,6 +11,13 @@ deliberately the smallest slice that answers the only question that matters righ
 now: does a real special-education teacher find the output usable with minor
 edits?
 
+> **Note added 2026-08-28 ([ADR 0006](../../docs/decisions/0006-one-vehicle.md)).**
+> This spec describes the pipeline in terms of `/rampa-*` commands. Those commands
+> no longer exist: the application is the only vehicle, and the judgement layer
+> they carried is now `instructions/`, read at run time. **The requirements below
+> remain valid** — they specify behaviour, not a vehicle. Read a command name as
+> the step it names.
+
 ## Dependencies and scope boundary
 
 This spec was written before `002-compose` and `003-memory`. It is **not**

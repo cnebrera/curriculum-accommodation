@@ -14,7 +14,10 @@ const appDir = join(dirname(fileURLToPath(import.meta.url)), '..');
 const repoRoot = join(appDir, '..');
 const out = join(appDir, 'corpus');
 
-const DIRS = ['recipes', 'harness/commands', 'checklists', 'templates'];
+// Read at run time: recipes/ selects adaptations, instructions/ carries the
+// judgement layer sent to the model, checklists/ is what the teacher reviews
+// against. Nothing is bundled that nothing reads.
+const DIRS = ['recipes', 'instructions', 'checklists'];
 const LICENCES = ['LICENSE', 'LICENSE-CONTENT.md', 'NOTICE'];
 
 for (const f of LICENCES) {

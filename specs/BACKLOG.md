@@ -5,13 +5,14 @@ are decisions rather than omissions.
 
 Nothing here blocks Phase 0 validation.
 
-**Status 2026-08-27 (later):** the vehicle is decided — a desktop application
-over an open vault, specified in `006-desktop-app`. That closes or specifies G9,
-G10, G11 and G13. G12 is now specified in `007-untrusted-content` and in Principle IX. The
-remaining open items are G3 (several learners, one worksheet), G6 (agent
-compatibility matrix), G14 (a document for the school's data protection officer)
-and G15 (guardrails are norms, not controls — though `007` converts several of
-them into actual controls).
+**Status 2026-08-28:** the vehicle is decided *and* it is the only one — the
+harness is removed (ADR 0006). The desktop application over an open vault is
+specified in `006-desktop-app`. That closes or specifies G9, G10, G11 and G13, and
+G6 (agent compatibility matrix) is **closed as moot**: there is no longer a claim
+of agent-agnosticism to test, only a provider adapter surface. G12 is now specified in `007-untrusted-content` and in Principle IX. The
+remaining open items are G3 (several learners, one worksheet), G14 (a document for
+the school's data protection officer) and G15 (guardrails are norms, not controls —
+though `007` converts several of them into actual controls).
 
 G9-G15 were added by an adversarial pass from the
 teacher's point of view (`docs/adoption-risks.md`). Three of them are more
@@ -21,7 +22,7 @@ pipeline reads attacker-controllable content with no defence specified.
 
 G1, G4, G5 and G7 are closed. G2 is drafted and waiting on
 review by a practising teacher — it is not closed until someone who teaches has
-disagreed with it. G3 and G6 remain open.
+disagreed with it. G3 remains open; G6 is moot.
 
 | # | Gap | Severity | Where it should live |
 |---|---|---|---|
@@ -30,8 +31,8 @@ disagreed with it. G3 and G6 remain open.
 | G3 | Several learners, one worksheet | High | New spec `005-group` |
 | ~~G4~~ | Recipe versioning | **Closed** 2026-08-27 | `data-recipe: id@version` |
 | ~~G5~~ | Corpus validation script | **Closed** 2026-08-27 | `scripts/validate-recipes.sh` |
-| G6 | Agent compatibility matrix | Medium | `docs/compatibility.md` |
-| ~~G7~~ | Stated accessibility target for the output template | **Target stated** 2026-08-27, untested | `templates/base.html` |
+| ~~G6~~ | Agent compatibility matrix | **Moot** 2026-08-28 — no harness, no agnosticism claim (ADR 0006) |
+| ~~G7~~ | Stated accessibility target for the output template | **Target stated** 2026-08-27, untested | `app/packages/core/src/render/html.ts` |
 | G8 | Phase 1 modalities (audio, braille-ready, ODT) unspecified | Low, deliberate | New spec, after Phase 0 |
 | ~~G9~~ | Delivery vehicle | **Decided** 2026-08-27 | ADR 0005 accepted → `006-desktop-app` |
 | ~~G10~~ | Learner names reach the model | **Specified** 2026-08-27 | `006` FR-417…421 |
@@ -133,7 +134,17 @@ Deterministic, so Principle II permits it: a script that checks front matter key
 axis syntax, that referenced recipe ids in `conflicts` exist, and that an
 anti-patterns section is present and non-empty.
 
-## G6 · Agent compatibility matrix
+## G6 · Agent compatibility matrix — *MOOT 2026-08-28*
+
+Closed by ADR 0006, not by being done. With the harness removed there is no
+"which agent does this work in" claim left to test — there is one application and
+a provider adapter surface, and `contracts/provider-adapter.md` is where a new
+provider gets added. What survives of the concern is narrower and still real:
+**adaptation quality differs between models and has been tried on one.** That
+belongs in `cases/`, measured, not in a compatibility table.
+
+*Original text follows.*
+
 
 `docs/ESPECIFICACION-V0.md` §10 promises "una matriz de compatibilidad con lo que
 se ha probado en cada agente". It does not exist. The project claims to be
@@ -209,6 +220,33 @@ inside a code example in `docs/ir.md`).
 **Noted, not a defect:** `harness/commands/render.md` still produces ODT via
 Pandoc. That is correct for the harness and wrong for the application, which
 cannot ship Pandoc (R12). Marked harness-only rather than changed.
+
+### 2026-08-28 · after ADR 0006, one vehicle
+
+The harness is removed. What that pass found, and this one fixed:
+
+1. **The judgement layer had forked and the application had lost.**
+   `harness/commands/` (~400 lines) was bundled into the installer and never
+   read; the application's actual policy was a twelve-line string in
+   `jobs/adapt.ts`. A live violation of Principle I, arriving through the front
+   door rather than through the wizard copy the plan was watching. Fixed:
+   `instructions/`, read at run time. Constitution amended to 1.3.0 with the
+   sentence that would have caught it.
+2. **`checklists/review.md` was bundled and unread**, while `ReviewScreen.tsx`
+   carried a comment claiming it led with the checklist's order. Now read over
+   IPC.
+3. **Two renderers, already diverged.** `templates/base.html` had a per-page
+   print watermark that `core/render/html.ts` never had — so page two of an
+   unreviewed worksheet, separated from page one, announced nothing. Ported, then
+   the template deleted.
+4. **Two index builders**, `scripts/memory-index.sh` and `buildIndex()`. The
+   script is gone.
+5. **Build output was committed** at the repository root (`out/renderer/`), which
+   the root `.gitignore` did not cover. Untracked and ignored.
+
+The lesson is the same one as the pass above, one level up: **two vehicles
+guarantee restatement.** The three defects in August were artifacts restating each
+other; these were whole layers doing it.
 
 **Lesson for the process.** All three defects were introduced by writing a new
 artifact that restated something an older one already defined, instead of pointing

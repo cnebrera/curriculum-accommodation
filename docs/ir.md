@@ -17,13 +17,14 @@ Why: it round-trips without loss, a teacher can read and correct it in any text
 editor, and `git diff` on it is legible — which is what makes the adaptation
 report honest.
 
-> **Caveat added 2026-08-27.** An earlier version of this section also argued that
-> "Pandoc already converts this to HTML, ODT, PDF and plain text". The application
-> cannot ship Pandoc (`006` FR-425), so it parses the subset directly with
-> `markdown-it` — see `specs/006-desktop-app/research.md` R12. The format still
-> earns its place on the reasons above, but the toolchain argument does not apply
-> where most of the rendering now happens, and ODT will need writing
-> OpenDocument XML rather than a Pandoc call.
+> **Caveat.** An earlier version of this section also argued that "Pandoc already
+> converts this to HTML, ODT, PDF and plain text". The application cannot ship
+> Pandoc (`006` FR-425), so it parses the subset directly with `markdown-it` — see
+> `specs/006-desktop-app/research.md` R12 — and since [ADR 0006](decisions/0006-one-vehicle.md)
+> the application is the only thing that renders. So the toolchain argument no
+> longer applies anywhere, and ODT will mean writing OpenDocument XML. The format
+> still earns its place on the three reasons above, which were always the real
+> ones.
 
 ## Front matter
 
@@ -37,12 +38,12 @@ kind: worksheet                     # worksheet | lesson | exam | reading
                                     # or `generated` — see Generated IR below
 extraction:
   method: ocr                       # ocr | text | vision | manual
-  verified: false                   # set true only by a human, in /rampa.ingest
+  verified: false                   # set true only by a human, after checking
 ---
 ```
 
-`extraction.verified` gates the pipeline: `/rampa.adapt` refuses to run while it
-is `false`. An OCR error in step one contaminates all five outputs.
+`extraction.verified` gates the pipeline: adaptation refuses to run while it is
+`false`. An OCR error in step one contaminates all five outputs.
 
 ## Blocks
 
@@ -109,8 +110,8 @@ them speakable for audio and convertible for braille.
 
 ## Adapted IR
 
-`/rampa.adapt` writes `adapted.md`: the same format, plus provenance on every
-block it touched.
+Adaptation writes `adapted.md`: the same format, plus provenance on every block it
+touched.
 
 ```markdown
 ::: {#e4a .exercise data-number="4a" data-response="short"
@@ -140,8 +141,8 @@ twelve pages.
 
 ## Generated IR
 
-`/rampa-compose` produces the same format from learning objectives rather than
-from source material. Two differences, and nothing else in the pipeline changes.
+Composing produces the same format from learning objectives rather than from
+source material. Two differences, and nothing else in the pipeline changes.
 
 ```yaml
 ---
@@ -181,8 +182,8 @@ See `specs/002-compose/spec.md` and
 
 ## Draft marking
 
-Rendered output carries a visible pending-review mark until `/rampa.review`
-records sign-off in the front matter:
+Rendered output carries a visible pending-review mark until sign-off is recorded
+in the front matter, which only the review step can do:
 
 ```yaml
 review:

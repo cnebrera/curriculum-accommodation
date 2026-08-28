@@ -10,6 +10,13 @@
 with." A second entry point into the existing pipeline, per
 [ADR 0003](../../docs/decisions/0003-two-entry-points-one-pipeline.md).
 
+> **Note added 2026-08-28 ([ADR 0006](../../docs/decisions/0006-one-vehicle.md)).**
+> This spec describes the pipeline in terms of `/rampa-*` commands. Those commands
+> no longer exist: the application is the only vehicle, and the judgement layer
+> they carried is now `instructions/`, read at run time. **The requirements below
+> remain valid** — they specify behaviour, not a vehicle. Read a command name as
+> the step it names.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Generate a worksheet from objectives (Priority: P1)

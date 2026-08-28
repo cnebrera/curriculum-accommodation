@@ -39,6 +39,9 @@ const api = {
     version: () => invoke('corpus:version'),
     recipes: () => invoke('corpus:recipes'),
     licences: () => invoke('corpus:licences'),
+    /** The judgement layer, read from the bundle. Never editable from the UI. */
+    instruction: (name: string) => invoke('corpus:instruction', name),
+    checklist: (name: string) => invoke('corpus:checklist', name),
   },
   learners: {
     list: () => invoke('learners:list'),

@@ -3,9 +3,9 @@ name: app
 on:
   push:
     branches: ['**']
-    paths: ['app/**', 'recipes/**', 'cases/**', '.github/workflows/app.yml']
+    paths: ['app/**', 'recipes/**', 'instructions/**', 'checklists/**', 'cases/**', '.github/workflows/app.yml']
   pull_request:
-    paths: ['app/**', 'recipes/**', 'cases/**']
+    paths: ['app/**', 'recipes/**', 'instructions/**', 'checklists/**', 'cases/**']
 
 jobs:
   verify:
@@ -58,7 +58,10 @@ jobs:
           echo "Principle I — pedagogical judgement lives in Markdown, not in code."
           echo
           echo "Before approving, check that no string added under app/ tells a"
-          echo "teacher HOW TO ADAPT. That belongs in recipes/, where a teacher"
-          echo "can read and correct it without touching the application."
+          echo "teacher or a model HOW TO ADAPT. That belongs in recipes/ or"
+          echo "instructions/, where a teacher can read and correct it without"
+          echo "touching the application."
           echo
-          echo "Wizard copy and validation messages are where this leaks."
+          echo "It leaks through wizard copy, validation messages and prompts."
+          echo "The whole adaptation prompt was once a string in jobs/adapt.ts:"
+          echo "see docs/decisions/0006-one-vehicle.md."

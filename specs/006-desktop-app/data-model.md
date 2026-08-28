@@ -31,10 +31,11 @@ requirement rather than a simplification: FR-408 says the vault outlives the app
     └── costs.json               usage accounting
 ```
 
-**The vault layout is deliberately identical to the harness's local directories.**
-That is not tidiness: `006`'s assumptions state that the harness keeps working
-against the same vault, and that assumption is only true if the paths match. A
-divergence here silently breaks the contributor path.
+**The vault layout is stable and changing it needs a migration.** It was drawn to
+match the harness's local directories; the harness is gone
+([ADR 0006](../../docs/decisions/0006-one-vehicle.md)) and the layout stays,
+because it is a good layout, it is Obsidian-compatible, and anything already
+written to a vault would be stranded by a rename.
 
 **Directory names are English, and the interface is Spanish.** The vault is
 structure, and the constitution puts structure in English so the project is usable

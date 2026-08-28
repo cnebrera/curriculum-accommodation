@@ -1,14 +1,14 @@
-# /rampa.review — hand it back to the teacher
+# Handing it back to the teacher
 
-**Goal:** make the teacher's review fast and honest, then record sign-off.
+Make the teacher's review fast and honest, then record sign-off.
 
 The teacher is accountable for this material. Your job is to make sure they are
 reviewing the things that actually go wrong, not proofreading prose.
 
 ## Procedure
 
-1. **Generate the checklist** from `checklists/review.md`, filled in with this
-   job's actual decisions — not the generic list.
+1. **Fill in the review checklist** with this job's actual decisions — not the
+   generic list. The checklist ships with the application.
 
 2. **Lead with the risky items,** in this order:
    - Anything flagged `[UNREADABLE]` during ingest.
@@ -39,10 +39,10 @@ reviewing the things that actually go wrong, not proofreading prose.
 
    Journal entries record the **pattern, never the passage**: describe the shape
    of what went wrong, never paste the worksheet. It is copyrighted, and it is
-   identifying. See `docs/memory.md`.
+   identifying.
 
-5. **Record sign-off** in the adapted IR front matter and re-render so the draft
-   mark comes off:
+5. **Record sign-off** and re-render so the draft mark comes off. Only this step
+   can clear it:
 
    ```yaml
    review:

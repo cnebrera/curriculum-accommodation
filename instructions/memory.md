@@ -1,13 +1,10 @@
-# /rampa-memory — consolidate what the teacher has taught the system
+# Consolidating what the teacher has taught the system
 
-**Goal:** keep memory useful instead of letting it become a log nobody reads.
-
-Format contract: `docs/memory.md`. Specification: `specs/003-memory/spec.md`.
-Rationale: `docs/decisions/0004-memory-is-human-routed.md`.
+Keep memory useful instead of letting it become a log nobody reads.
 
 ## Consolidate (default)
 
-1. **Regenerate the index** — `scripts/memory-index.sh`. A stale index silently
+1. **Regenerate the index** before reading anything. A stale index silently
    drops memory, which is worse than no memory: the teacher believes it is
    working.
 
@@ -37,8 +34,8 @@ Rationale: `docs/decisions/0004-memory-is-human-routed.md`.
 
 ## Export
 
-`/rampa-memory export` produces two variants, and the distinction is enforced
-here rather than by the teacher remembering:
+Export produces two variants, and the distinction is enforced by the export
+rather than by the teacher remembering:
 
 - **Full** — profile, notes and overlay for one learner. For backup, or for
   handover when a learner changes school or teacher.
@@ -47,8 +44,8 @@ here rather than by the teacher remembering:
 
 ## Forget a learner
 
-`/rampa-memory forget <CODE>` removes a learner completely. Run it when they
-leave, change teacher, or the retention period has passed.
+Forgetting a learner removes them completely. It runs when they leave, change
+teacher, or the retention period has passed.
 
 1. **List everything first** — profile, notes, overlay, every job under
    `material/`, every rendering under `output/`, any handover packet. Show it and
@@ -73,5 +70,5 @@ and ask. **Never delete anything without being told to.**
   for the learner named.)
 - Delete anything under `forget` without listing it and getting confirmation
   first.
-- Infer the scope of an item. That question belongs to `/rampa-review` and to the
+- Infer the scope of an item. That question belongs to the review step and to the
   human answering it.

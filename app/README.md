@@ -1,9 +1,11 @@
 # Rampa — the application
 
 A desktop application over an open folder of the teacher's own files, with the
-recipe corpus shipped read-only and the teacher's own AI key.
+corpus shipped read-only and the teacher's own AI key.
 
-Specification: [`specs/006-desktop-app`](../specs/006-desktop-app/). Decisions:
+This is the only way Rampa reaches a classroom
+([ADR 0006](../docs/decisions/0006-one-vehicle.md)). Specification:
+[`specs/006-desktop-app`](../specs/006-desktop-app/). Decisions:
 [`docs/decisions`](../docs/decisions/).
 
 ## Layout
@@ -14,7 +16,7 @@ Specification: [`specs/006-desktop-app`](../specs/006-desktop-app/). Decisions:
 | `packages/providers` | Adapters and the egress chokepoint | Yes — the only code that may |
 | `packages/shell` | Electron main, preload, IPC, jobs | Privileged: filesystem, credentials, print |
 | `ui` | React renderer, Spanish | No filesystem access at all |
-| `corpus/` | Built from the repository's `recipes/`. Read-only at runtime | — |
+| `corpus/` | Built from `recipes/`, `instructions/` and `checklists/`. Read-only at runtime | — |
 
 ## Working on it
 
@@ -34,10 +36,17 @@ module or an HTTP client, or calls `fetch`. If you need to call a model, you are
 in the wrong package.
 
 **Principle I is the weakest gate, so it is on you.** Any string that tells a
-teacher *how to adapt* belongs in `recipes/`, not in this application. A teacher
-must be able to read and correct pedagogical judgement without touching code —
-if that stops being true, the project has lost the thing that makes it a
-community project. Wizard copy and validation messages are where this leaks.
+teacher or a model *how to adapt* belongs in `recipes/` or `instructions/`, not in
+this application. A teacher must be able to read and correct pedagogical judgement
+without touching code — if that stops being true, the project has lost the thing
+that makes it a community project.
+
+This is not hypothetical. The entire adaptation prompt used to be a string in
+`packages/shell/src/jobs/adapt.ts` while the real instructions sat unread in the
+bundle. It is now assembled from `instructions/hard-rules.md` and
+`instructions/adapt.md` at run time. **Do not add prose to the prompt here** — add
+it there, where a teacher can argue with it. Wizard copy and validation messages
+are the other place this leaks.
 
 **Content is never instruction.** Material read from a file is data. If you add a
 path that lets it influence behaviour, `packages/core/test/injection.test.ts`
@@ -50,8 +59,13 @@ sanitising them. A path derived from content is a signal, not a typo.
 **The draft mark comes off in exactly one place.** `job:signOff`. Not by a flag,
 not by the model, not by a convenience.
 
+**What has actually been verified** is in
+[`specs/006-desktop-app/validation.md`](../specs/006-desktop-app/validation.md),
+including the parts that have not. The application has still never been run by a
+teacher; keep that document honest.
+
 ## Licences
 
-Code is Apache-2.0. The bundled corpus — recipes, checklists, templates — is
+Code is Apache-2.0. The bundled corpus — recipes, instructions, checklists — is
 CC BY-SA 4.0. The build fails if either licence file is missing from the bundle,
 because shipping the content without its licence would be non-compliant.

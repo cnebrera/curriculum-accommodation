@@ -108,6 +108,23 @@ describe('rendering', () => {
     expect(renderHTML(doc, { signedOff: true })).not.toContain('BORRADOR');
   });
 
+  /**
+   * The banner is one line on page one. On paper, a worksheet is several sheets
+   * that get separated, and page three on its own has to say it is unreviewed
+   * too — so the mark is also a per-page print watermark.
+   *
+   * This existed only in the Pandoc template until ADR 0006 removed it, which is
+   * how a divergence between two renderers loses a safeguard quietly. Pinned here
+   * so it cannot happen again.
+   */
+  it('watermarks every printed page while unsigned', () => {
+    const draft = renderHTML(doc);
+    expect(draft).toContain('@media print');
+    expect(draft).toContain('main::before');
+    expect(draft).toContain('PENDIENTE DE REVISIÓN');
+    expect(renderHTML(doc, { signedOff: true })).not.toContain('main::before');
+  });
+
   it('preserves the original exercise number the class says out loud', () => {
     expect(renderHTML(doc)).toContain('>4.<');
   });

@@ -11,6 +11,13 @@ in general, in files they own and cannot lose. Per
 [ADR 0004](../../docs/decisions/0004-memory-is-human-routed.md); format contract
 in [`docs/memory.md`](../../docs/memory.md).
 
+> **Note added 2026-08-28 ([ADR 0006](../../docs/decisions/0006-one-vehicle.md)).**
+> This spec describes the pipeline in terms of `/rampa-*` commands. Those commands
+> no longer exist: the application is the only vehicle, and the judgement layer
+> they carried is now `instructions/`, read at run time. **The requirements below
+> remain valid** — they specify behaviour, not a vehicle. Read a command name as
+> the step it names.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - A correction is never made twice (Priority: P1)
@@ -136,7 +143,7 @@ contains that learner's code or content, verified by search.
 - **Overlay contradicts a hard rule** — flag and ask. Never silently obey, never
   silently refuse.
 - **Journal grows large** — never loaded wholesale; entries reach a run only via
-  `memory/index.md` for the recipes actually selected.
+  the generated index for the recipes actually selected.
 - **Index missing or stale** — regenerate before use. A stale index silently
   drops memory, which is worse than no memory because the teacher believes it is
   working.
@@ -162,7 +169,7 @@ contains that learner's code or content, verified by search.
 - **FR-204**: Corpus-scope corrections MUST create a journal entry tagged with the
   recipes concerned.
 - **FR-205**: Journal entries MUST record the pattern, never the source passage.
-- **FR-206**: `memory/index.md` MUST be generated deterministically from journal
+- **FR-206**: The memory index (`.rampa/index.md`) MUST be generated deterministically from journal
   front matter, with no model involved.
 - **FR-207**: A run MUST load only the journal entries whose recipes intersect the
   recipes it selected.

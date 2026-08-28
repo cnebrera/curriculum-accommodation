@@ -66,7 +66,25 @@ export async function allRecipes(): Promise<Recipe[]> {
   return [...byId.values()];
 }
 
+/**
+ * The judgement layer, read from the bundled corpus rather than hardcoded here.
+ *
+ * Principle I: a rule about *how to adapt* that lives in TypeScript is misplaced,
+ * because a teacher cannot read or correct it. The application orchestrates; the
+ * corpus judges. `instructions/README.md` states the boundary.
+ */
+export async function loadInstruction(name: string): Promise<string> {
+  if (!/^[a-z-]+$/.test(name)) throw new Error(`Bad instruction name: ${name}`);
+  return readFile(join(corpusRoot(), 'instructions', `${name}.md`), 'utf8');
+}
+
+export const loadChecklist = async (name: string): Promise<string> =>
+  readFile(join(corpusRoot(), 'checklists', `${name}.md`), 'utf8').catch(() => '');
+
 export function registerCorpusIpc(): void {
+  handle('corpus:instruction', async (name: string) => loadInstruction(name));
+  handle('corpus:checklist', async (name: string) => loadChecklist(name));
+
   handle('corpus:version', async () => {
     try { return JSON.parse(await readFile(join(corpusRoot(), 'CORPUS-VERSION.json'), 'utf8')); }
     catch { return null; }

@@ -2,70 +2,68 @@
 
 # Rampa
 
-**Adapta material de aula al perfil de un alumno con discapacidad, usando el
-agente de IA que ya tienes.**
+**Adapta material de aula al perfil de un alumno con discapacidad.**
 
 Una rampa no lleva a otro sitio. Lleva a la misma puerta, por una vía que la
 persona sí puede recorrer. Eso es lo que hace este proyecto con fichas,
 ejercicios y exámenes.
 
-Rampa es un *harness*: lo clonas, lo abres con tu propio agente de IA y ya está
-preparado — instrucciones, recetas de adaptación, plantillas de salida y
-salvaguardas. Sin servidor, sin cuenta, sin API key, y sin que los datos del
-alumno salgan de tu ordenador.
+Rampa es una aplicación de escritorio. Los ficheros de la maestra se quedan en su
+ordenador, en una carpeta de markdown que es suya; las recetas de adaptación van
+dentro de la aplicación, en markdown que cualquiera puede leer; la cuenta de IA
+es la suya.
 
 El docente revisa y firma siempre. Esto quita el trabajo mecánico, no el criterio
 profesional.
 
-> **Para quién sirve hoy:** para desarrolladores, y para docentes que trabajen
-> al lado de alguien técnico. Usarlo ahora mismo significa clonar un repositorio
-> y tener una herramienta de IA con acceso a ficheros — no vale una suscripción
-> de chat. Llegar a los docentes directamente es la
-> [ADR 0005](docs/decisions/0005-delivery-vehicle.md), todavía abierta.
->
-> **Estado: inicial. Todavía no se ha validado con ninguna maestra real.** La
-> Fase 0 existe para responder a una sola pregunta: ¿una PT encuentra el
-> resultado utilizable con retoques menores? Ver
-> [`docs/ESPECIFICACION-V0.md`](docs/ESPECIFICACION-V0.md).
+> **Estado: inicial, y honesto al respecto.** La aplicación está construida y su
+> suite de tests pasa offline, pero **ninguna maestra la ha usado todavía y no
+> hay instaladores firmados.** La Fase 0 existe para responder a una sola
+> pregunta: ¿una PT encuentra el resultado utilizable con retoques menores?
+> Hasta que eso esté respondido, lo demás no importa. En
+> [`specs/006-desktop-app/validation.md`](specs/006-desktop-app/validation.md)
+> está exactamente qué se ha verificado y qué no.
 
 ## Cómo funciona
 
 ```
-material/          →  DIE  →  DIE adaptado  →  output/
-tus ficheros          ↑            ↑              ↑
-                   ingest        adapt         render
-                      ↑            ↑
-                 tú verificas  perfil + recetas
+tu material     →  leer  →  adaptado  →  impreso
+                     ↑          ↑           ↑
+                tú verificas  perfil     revisas
+                            + recetas   y firmas
+                                            │
+                                    lo que corregiste
+                                            └──→ la próxima vez
 ```
 
 El material se normaliza **una sola vez** a un documento intermedio. Cada salida
-—HTML accesible, PDF imprimible, ODT editable, texto para braille, audio— es un
+—HTML accesible, PDF imprimible y más adelante texto para braille y audio— es un
 renderizado del mismo documento adaptado. Eso es lo que hace abordable cubrir
 discapacidades muy distintas en lugar de cinco proyectos separados.
 
-## Empezar
+La última flecha es lo importante. Una corrección que hagas al revisar se
+recuerda, para que la semana que viene no salga la misma adaptación mal hecha.
+
+## Cómo ejecutarlo
+
+Todavía no hay instaladores firmados, así que hoy significa compilarlo:
 
 ```bash
 git clone https://github.com/cnebrera/curriculum-accommodation.git rampa
-cd rampa
-scripts/setup-hooks.sh     # bloquea commits accidentales de datos del alumno
-scripts/doctor.sh          # te dice qué herramientas opcionales tienes
+cd rampa/app
+npm ci
+npm test        # la suite entera, offline, sin ninguna clave
+npm run dev
 ```
 
-Abre la carpeta con tu agente de IA y ejecuta, en orden:
+`npm run dist` genera instaladores en `release/`. En Windows y macOS irán sin
+firmar y el sistema operativo avisará de ello — por eso las publicaciones
+públicas esperan a los certificados. En Linux el AppImage no necesita instalador,
+ni firma, ni permisos de administrador.
 
-| Comando | Qué hace |
-|---|---|
-| `/rampa-profile` | Construye un perfil seudonimizado de las barreras del alumno |
-| `/rampa-ingest` | Lee tu material —escaneo, foto, DOCX, texto pegado— y tú lo verificas |
-| `/rampa-compose` | La otra entrada: genera material a partir de lo que el alumno tiene que aprender, cuando no hay nada que adaptar |
-| `/rampa-adapt` | Aplica las recetas y escribe un informe de cada cambio |
-| `/rampa-render` | Genera los formatos que ese alumno necesita |
-| `/rampa-review` | Tu checklist de revisión y la firma — y recoge lo que has corregido |
-| `/rampa-memory` | Cada pocas semanas: consolida lo que ha aprendido de ti |
-
-No hace falta nada más que un agente. `pandoc`, un navegador headless y un TTS
-offline desbloquean un formato de salida cada uno; sin ellos sigues teniendo HTML.
+La clave de IA la pones tú. La aplicación te guía y te dice lo que cuesta una
+ficha — unos tres céntimos. Uno de los proveedores soportados tiene capa gratuita
+y no pide tarjeta.
 
 ## Los perfiles describen barreras, no diagnósticos
 
@@ -75,7 +73,8 @@ nombre ni etiqueta clínica.
 
 Dos niños con el mismo diagnóstico necesitan cosas distintas. Además, las
 barreras son la única representación que se puede seudonimizar sin perder
-utilidad. Ver [`docs/profile-schema.md`](docs/profile-schema.md).
+utilidad. Ver [`docs/profile-schema.md`](docs/profile-schema.md) y
+[`docs/axis-calibration.md`](docs/axis-calibration.md).
 
 ## Las recetas son el proyecto
 
@@ -88,24 +87,33 @@ hace mal quien adapta con buena intención. *No sustituyas el término técnico
 sobre el que se va a evaluar al niño.* Esa es la línea que separa una buena
 adaptación de una que le roba el currículo a la ficha sin que se note.
 
+Lo mismo vale para las instrucciones que la aplicación envía al modelo: están en
+[`instructions/`](instructions/), no en TypeScript, por la misma razón.
+
 Ver [`recipes/`](recipes/) y [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
 ## Salvaguardas
 
 - **Nada es definitivo sin una persona.** La salida lleva marca visible de
-  borrador hasta que un docente firma.
+  borrador hasta que un docente firma, y hay exactamente una acción que la quita.
+- **El nombre del alumno no llega al modelo.** Escribes "Lucía" porque así piensas
+  tú; se guarda cifrado en tu ordenador y se sustituye por un código en cada
+  envío. Si escribes un nombre que el sistema no conoce, te pregunta antes de
+  enviar nada.
 - **Cambia la vía, no el contenido.** Sin inventar datos, sin sinónimos fáciles
   para términos curriculares, sin eliminar en silencio.
 - **La adaptación significativa se escala, no se decide.** Cambiar objetivos o
   criterios de evaluación es del equipo docente y del expediente del alumno.
 - **Un examen adaptado que además es más fácil es otro examen.** Las recetas de
   examen cambian el acceso y la respuesta, nunca lo que se evalúa.
-- **Los datos del alumno se quedan en local.** `profiles/`, `material/` y
-  `output/` están en `.gitignore` y bloqueados por un hook. Los perfiles no
-  llevan nombres. **Pero el límite hay que decirlo:** si escribes el nombre de un
-  alumno en la conversación, llega a tu proveedor de IA como cualquier otra cosa
-  que escribas. Hoy nada de esto lo impide — ver
-  [`docs/adoption-risks.md`](docs/adoption-risks.md) §3.
+- **Nada del alumno puede acabar en su propia ficha.** Está garantizado por
+  construcción: el renderizador no tiene acceso al perfil.
+- **El material son datos, nunca instrucciones.** Una ficha con texto dirigido al
+  programa se adapta como contenido, se te avisa, y no se obedece. Ver
+  [`specs/007-untrusted-content`](specs/007-untrusted-content/spec.md).
+- **Tus ficheros son tuyos.** Markdown plano en la carpeta que elijas, legible con
+  cualquier editor o con Obsidian, con copia de seguridad copiando la carpeta, y
+  completo si desinstalas.
 - **El material fuente nunca entra en el repositorio.** Adaptar una obra para una
   persona con discapacidad está amparado por el Tratado de Marrakech y el
   art. 31 bis TRLPI. Redistribuirla, no.
@@ -117,8 +125,8 @@ El estudio de herramientas comparables y dónde están los huecos está en
 
 ## Licencia
 
-- Código, scripts, configuración — **Apache-2.0** ([`LICENSE`](LICENSE))
-- Recetas, checklists, plantillas, documentación — **CC BY-SA 4.0** ([`LICENSE-CONTENT.md`](LICENSE-CONTENT.md))
+- Código — **Apache-2.0** ([`LICENSE`](LICENSE))
+- Recetas, instrucciones, checklists, documentación — **CC BY-SA 4.0** ([`LICENSE-CONTENT.md`](LICENSE-CONTENT.md))
 
 Código permisivo para que un centro, una consejería o una editorial puedan
 integrarlo sin revisión legal. Contenido con ShareAlike para que el común

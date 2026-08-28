@@ -14,6 +14,12 @@
 > Preguntas abiertas de §13 ya cerradas: sintaxis del documento intermedio
 > (`docs/ir.md`), licencia (Apache-2.0 para código, CC BY-SA 4.0 para contenido)
 > e idioma (estructura en inglés, recetas separadas por idioma).
+>
+> **Actualización (28 ago 2026).** El modelo *harness* que describe §1 y §10 ya no
+> existe: hay un solo vehículo, la aplicación de escritorio
+> (`docs/decisions/0006-one-vehicle.md`). Los principios de §3, la arquitectura de
+> §4 y las salvaguardas de §9 siguen vigentes — son de lo que mejor ha aguantado
+> del documento. Lo que ha cambiado es cómo llega al aula.
 
 ---
 

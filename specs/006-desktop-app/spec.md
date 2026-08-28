@@ -251,8 +251,10 @@ words, and nothing is lost.
   worksheet.
 - Desktop, not mobile. A teacher adapting material is at a computer with the
   source file and a printer.
-- The harness keeps working against the same vault. The app is a front door, not
-  a replacement, and contributors continue to work in the repository.
+- The application is the only vehicle ([ADR 0006](../../docs/decisions/0006-one-vehicle.md),
+  which supersedes the earlier assumption that a harness would keep working against
+  the same vault). Contributors work in the repository and try changes by running
+  the application.
 - Deterministic rendering beyond HTML and PDF — ODT, audio, braille-ready text —
   stays Phase 1 and is not a first-run dependency.
 - Validation is one cold teacher, unassisted. That is a sample of one and will

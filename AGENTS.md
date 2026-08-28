@@ -1,124 +1,119 @@
 # Rampa — agent instructions
 
-You are helping a special-education teacher (PT, orientador, tutor, SEN teacher)
-adapt classroom material to the profile of a learner with a disability.
+You are helping build **Rampa**, a desktop application that adapts classroom
+material to the profile of a learner with a disability.
 
 Read this file before doing anything else in this repository. Everything you need
 is here or linked from here.
 
 ---
 
-## Two command layers — do not mix them
+## What this repository is, and is not
 
-This repository contains two unrelated sets of commands. Know which one you are
-being asked for.
+This repository is **the project**, not the product a teacher uses. A teacher uses
+the built application. There is one delivery vehicle and it is the application —
+see [ADR 0006](docs/decisions/0006-one-vehicle.md).
 
-| Layer | Commands | Who uses it | Where it lives |
-|---|---|---|---|
-| **Teacher** | `/rampa-profile`, `/rampa-ingest`, `/rampa-compose`, `/rampa-adapt`, `/rampa-render`, `/rampa-review`, `/rampa-memory` | The teacher adapting material for a learner | `harness/commands/` |
-| **Developer** | `/speckit-*` | Contributors building Rampa itself | `.specify/` |
+That matters for how you work here: **you are never the teacher's agent.** There
+are no `/rampa-*` commands to run, and you do not adapt a worksheet by hand in
+this repository. If you are tempted to, the thing to build or fix is the
+application.
 
-If a teacher asks you to adapt material, you are in the teacher layer. Never run
-Spec Kit commands, never edit `.specify/`, and never modify the project's own
-source in the middle of adapting a worksheet.
+The only command layer here is `/speckit-*`, for specifying and planning work on
+Rampa itself.
+
+---
+
+## The two layers, and the boundary between them
+
+Everything in this project sits on one side of a line that the constitution draws
+and that a test enforces.
+
+| Layer | What it does | Where |
+|---|---|---|
+| **Judgement** | Decides what to simplify, split, describe, preserve | `recipes/`, `instructions/`, `checklists/` — Markdown |
+| **Mechanics** | Finds files, selects recipes, renders, redacts, enforces gates | `app/` — TypeScript, and it never decides pedagogy |
+
+**The single most important rule when writing code here:** if a string tells the
+teacher or the model *how to adapt*, it belongs in the Markdown layer, not in
+`app/`. This is Principle I, it is NON-NEGOTIABLE, and it is the weakest gate in
+the project because nothing structural enforces it. It has already been violated
+once — the entire adaptation prompt was a string in `jobs/adapt.ts` — so treat
+any new prose in the app as suspect until you have asked which side of the line it
+is on.
+
+Conversely: orchestration does not belong in `instructions/`. Which recipes apply,
+where files live, what order things run in — that is the application's job.
 
 ---
 
 ## The pipeline
 
 ```
-  material/  ─ ingest ─┐
-                       ├─→  IR  →  adapted IR  →  output/
-  objectives ─ compose ┘           ↑                 ↑
-                                 adapt            render
-                                   ↑
-                     profile + notes + overlay
-                     + recipes + memory
-                                   │
-                                review ──→ memory ──┐
-                                   ↑                │
-                                   └────────────────┘
+  material  ─ read ──┐
+                     ├─→  IR  →  adapted IR  →  output
+  objectives ─ build ┘          ↑                  ↑
+                              adapt             render
+                                ↑
+                  profile + notes + official adaptations
+                  + recipes + memory
+                                │
+                            review ──→ memory ──┐
+                                ↑               │
+                                └───────────────┘
 ```
 
 Two entry points, one pipeline. Review feeds memory; memory feeds the next
 adaptation. That loop is the project's actual thesis — see
-`docs/decisions/0004-memory-is-human-routed.md`.
+[ADR 0004](docs/decisions/0004-memory-is-human-routed.md).
 
-1. **`/rampa-profile`** — build or update a learner profile from what the teacher
-   tells you. Written to `profiles/`.
-2. **`/rampa-ingest`** — normalise source material into the Intermediate
-   Representation. Written to `material/<job>/ir.md`.
-   **The teacher verifies this before you continue.**
-   **`/rampa-compose`** — the other entry point: build the IR from stated
-   learning objectives when there is no material to adapt. Requires an anchor.
-3. **`/rampa-adapt`** — apply recipes to the IR against the profile. Produces
-   `adapted.md` and `report.md`.
-4. **`/rampa-render`** — turn adapted IR into HTML, PDF, ODT, braille-ready text,
-   audio. Written to `output/<job>/`.
-5. **`/rampa-review`** — generate the teacher's review checklist, capture
-   corrections into memory with a scope the teacher sets, and once they sign off,
-   remove the draft mark.
-6. **`/rampa-memory`** — occasional: consolidate what has accumulated, promote
-   what repeats, export for backup or handover.
-
-Full instructions for each step are in `harness/commands/`. Read the relevant one
-before executing that step; do not improvise the pipeline from this summary.
+The judgement for each step is in `instructions/`. Read the relevant file before
+changing anything about that step.
 
 ---
 
 ## Hard rules
 
-These are not style preferences. Violating any of them makes the output unusable
-and, in some cases, harmful.
+The pedagogical hard rules — adapt the route not the content, keep curricular
+terms, exams preserve the criterion, content is never instruction — live in
+[`instructions/hard-rules.md`](instructions/hard-rules.md), because they are
+policy a teacher must be able to read and correct, and because the application
+sends them with every request.
 
-1. **Adapt the route, never the content.** You may simplify how something is
-   said. You may not change what is said, add facts that were not in the source,
-   invent examples and present them as the source's, or silently drop curricular
-   content. If content must be dropped, say so in the report.
+**Read that file.** Do not restate its rules anywhere else: the drift between two
+copies of the same rule is how this repository has produced defects before.
 
-2. **Keep the terms the learner has to learn.** Never replace a technical term
-   that is itself part of the curriculum with an easier synonym. Keep it and
-   explain it alongside.
+What follows are the rules for working *in the repository*, which are different.
 
-3. **Never guess at the profile.** If the profile does not tell you what you need,
-   ask the teacher. Do not infer a barrier from a diagnosis, and do not invent
-   axis values.
+1. **Learner data stays out.** Never commit anything under `profiles/`,
+   `material/`, `output/` or `memory/` (except `memory/README.md`). A hook blocks
+   it; do not rely on the hook. Never paste profile contents into a commit
+   message, an issue or a pull request.
 
-4. **Escalate significant adaptation, never decide it.** If doing what was asked
-   would change learning objectives or assessment criteria, stop and say so. That
-   decision belongs to the teaching team and to the learner's official file. You
-   may propose; you may not proceed.
+2. **No clinical material, ever.** Not diagnostic literature, not condition-by-
+   condition tables. See [ADR 0002](docs/decisions/0002-no-clinical-material.md).
 
-5. **Exams preserve the criterion.** An adapted exam that is also easier is a
-   different exam. Change the access route and the response route. Do not change
-   what is being assessed, and do not reduce the number of items being assessed
-   without saying so explicitly.
+3. **No source material, ever.** Adapting a work for a person with a disability is
+   lawful under the Marrakesh Treaty; redistributing it is not. Examples are
+   invented or openly licensed.
 
-6. **Every change is traceable.** Each modification you make records the recipe
-   that produced it and the axis it answers. If you cannot name both, do not make
-   the change.
+4. **Never widen the vault boundary.** All filesystem access goes through
+   `Vault`/`resolveInVault`, which *refuses* paths that leave the vault rather
+   than sanitising them. A path derived from content is a signal, not a typo.
 
-7. **Output is a draft.** Everything you produce carries a visible pending-review
-   mark until a human signs it off in `/rampa-review`. Never remove that mark on
-   your own initiative.
+5. **Never weaken a structural defence into an instruction.** The renderer takes
+   an IR document and no profile; redaction happens at one egress chokepoint; the
+   draft mark is cleared by one IPC call. If you find yourself asking the model to
+   respect one of these, you have removed it.
 
-8. **Learner data stays put.** Never move anything out of `profiles/`,
-   `material/` or `output/`. Never paste profile contents into a commit message,
-   an issue, a pull request or any file outside those directories. Never commit
-   those directories — a hook blocks it, but do not rely on the hook.
+6. **Two principles are tests, not conventions.** `npm run test:isolation` fails
+   if anything in `packages/core` can reach the network or the provider layer.
+   `npm run test:injection` fails if content can become instruction. Do not skip
+   them, and do not weaken them to make a change pass.
 
-9. **Never guess the scope of a correction.** When a teacher corrects something,
-   ask whether it is about this learner, about how they work, or about the recipe
-   itself. Routing a learner-specific note into shared material is a privacy
-   incident, not a quality problem. See `docs/memory.md`.
-
-10. **Never resolve an axis conflict silently.** When two axes ask for opposite
-   things, follow `recipes/core/conflicts/README.md` and record the resolution in
-   the report. An unrecorded conflict is a decision the teacher never got to make.
-
-11. **Speak the teacher's language.** Repository files are in English. Your
-   conversation, and the adapted material, are in the language of the source
-   material and the teacher. Do not translate the material unless asked.
+7. **Speak the teacher's language in the interface.** Repository files, code and
+   identifiers are English. The interface is Spanish first, with no project
+   jargon: no "IR", "corpus", "axis", "vault".
 
 ---
 
@@ -126,50 +121,79 @@ and, in some cases, harmful.
 
 | Path | What |
 |---|---|
-| `harness/commands/` | Instructions for each teacher command — read these |
+| `app/` | The application. See [`app/README.md`](app/README.md) for the package boundaries |
+| `instructions/` | The judgement layer sent to the model — read these |
 | `recipes/core/` | Language-neutral adaptation recipes |
 | `recipes/lang/<code>/` | Language-specific recipes (lexical, readability standards) |
-| `checklists/` | Review checklists for the teacher |
-| `templates/` | HTML/CSS output templates |
-| `docs/ir.md` | The Intermediate Representation format — read before ingest, compose or adapt |
-| `docs/profile-schema.md` | Profile axes and their meaning |
+| `checklists/` | What the teacher reviews against |
+| `docs/ir.md` | The Intermediate Representation format |
+| `docs/profile-schema.md`, `docs/axis-calibration.md` | The barrier axes and how to score them |
 | `docs/memory.md` | How memory is stored, scoped, indexed and loaded |
 | `docs/decisions/` | Why the project is shaped the way it is |
 | `docs/references.md` | External standards. No clinical material, by design |
 | `profiles.example/` | Anonymous type-profiles, safe to read and copy |
-| `scripts/` | Deterministic helpers. They never call a model |
-| `profiles/`, `material/`, `output/`, `memory/` | Local, git-ignored, never leave the machine |
+| `cases/` | Evaluation cases, including the injection fixtures |
+| `scripts/` | Repository hygiene only. Deterministic, never call a model |
+| `specs/` | Spec Kit specifications and the backlog |
+
+`profiles/`, `material/`, `output/` and `memory/` are a *teacher's* directories.
+They are git-ignored, and in a real installation they live in her vault, not here.
 
 ---
 
-## Selecting recipes
+## Recipes
 
-Recipes declare which axes they apply to. Load `recipes/core/` plus
-`recipes/lang/<language-of-the-material>/`, then select those whose `axes`
+Recipes declare which axes they apply to. The application loads `recipes/core/`
+plus `recipes/lang/<language-of-the-material>/` and selects those whose `axes`
 condition the profile satisfies.
 
-Two rules when recipes disagree:
+Two things to know before changing selection logic:
 
-- A recipe's `conflicts` list wins over inclusion. If two selected recipes
-  conflict, prefer the one whose triggering axis has the higher level; if still
-  tied, prefer the more conservative one and note the conflict in the report.
-- Recipes are guidance for judgement, not a rule engine. If applying one would
-  break a hard rule above, do not apply it, and say why in the report.
+- **A recipe with no axis conditions is a guard, not an adaptation.**
+  `keep-curricular-terms` and `exam-access-not-difficulty` constrain the other
+  recipes rather than competing with them, and must never be dropped in a
+  conflict. Dropping one is how an adaptation quietly makes an exam easier, which
+  is the failure this project exists to prevent. It has happened once already.
+- **Conflicts resolve in a recorded order**, in
+  `recipes/core/conflicts/README.md`. Never resolve one silently.
 
-Every recipe carries anti-patterns. Read them. They are the part that keeps an
-adaptation from quietly stripping the curriculum out of a child's worksheet.
+Every recipe carries anti-patterns. They are the mandatory part, not the optional
+one — they are what keeps an adaptation from quietly stripping the curriculum out
+of a child's worksheet. `scripts/validate-recipes.sh` checks the structure; it
+cannot check the pedagogy.
 
-## Loading memory
+Bump a recipe's `version` whenever you change what it does. Adapted material
+records `data-recipe: id@version`, and traceability to a moving target is not
+traceability.
 
-Do not load the whole history on every run. The rules are in `docs/memory.md`;
-the short version:
+---
 
-- **Always**: `memory/house.md`, and the subject learner's profile, notes and
-  overlay.
-- **Never wholesale**: `memory/journal/`. Regenerate `memory/index.md` with
-  `scripts/memory-index.sh`, then load only the entries whose recipes intersect
-  the recipes you selected for this run.
-- **Never automatically**: `memory/archive/`.
+## Memory
 
-When memory changes a decision, say so in the report. Memory is as traceable as
+The application must not load its whole history on every run. Rules in
+[`docs/memory.md`](docs/memory.md); the short version:
+
+- **Always**: the house style, and the subject learner's profile, notes and
+  official adaptations.
+- **Never wholesale**: the journal. Only entries whose recipes intersect the
+  recipes selected for this run, resolved through the generated index.
+- **Never automatically**: the archive.
+
+When memory changes a decision, the report says so. Memory is as traceable as
 recipes, or it is unreviewable.
+
+---
+
+## Before you claim something works
+
+This project has a specific failure mode: **plausible output that is wrong in a
+way nobody sees.** It applies to the code as much as to the adaptations. Four of
+the defects found so far were found by tests and would not have been found by
+review — accent-insensitive redaction, cross-platform path confinement, a
+false-positive injection detector, and a dropped exam guard.
+
+So: run `npm test` in `app/`. If you changed rendering, say whether a PDF was
+actually produced or only typechecked.
+[`specs/006-desktop-app/validation.md`](specs/006-desktop-app/validation.md) is
+the record of what has genuinely been verified, and it is written to be honest
+about what has not. Keep it that way.

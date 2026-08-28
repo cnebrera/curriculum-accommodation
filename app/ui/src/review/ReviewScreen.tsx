@@ -11,6 +11,7 @@ import { ScopeQuestion } from './ScopeQuestion.js';
  */
 export function ReviewScreen({ jobId, learner }: { jobId: string; learner: string }) {
   const [report, setReport] = useState('');
+  const [checklist, setChecklist] = useState('');
   const [signedOff, setSignedOff] = useState(false);
   const [pdfPath, setPdfPath] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -23,6 +24,9 @@ export function ReviewScreen({ jobId, learner }: { jobId: string; learner: strin
     void window.rampa.vault.read(`material/${jobId}/report.md`)
       .then((d: { content: string } | null) => setReport(d?.content ?? ''));
     void window.rampa.job.isSignedOff(jobId).then(setSignedOff);
+    // The checklist is corpus, not code: a teacher can correct what she is asked
+    // to check without anyone touching the application.
+    void window.rampa.corpus.checklist('review').then(setChecklist).catch(() => setChecklist(''));
   }, [jobId]);
 
   const render = async (signed: boolean) => {
@@ -76,6 +80,13 @@ export function ReviewScreen({ jobId, learner }: { jobId: string; learner: strin
       ) : null}
 
       {error ? <Notice kind="danger">{error}</Notice> : null}
+
+      {checklist ? (
+        <details>
+          <summary>Lista de comprobación</summary>
+          <div className="card"><pre style={{ whiteSpace: 'pre-wrap', margin: 0 }}>{checklist}</pre></div>
+        </details>
+      ) : null}
 
       <ScopeQuestion learner={learner} onCaptured={(c) => setCorrections((prev) => [...prev, c])} />
 

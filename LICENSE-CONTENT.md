@@ -12,7 +12,7 @@ Canonical legal text: <https://creativecommons.org/licenses/by-sa/4.0/legalcode>
 |---|---|
 | `recipes/**` | CC BY-SA 4.0 |
 | `checklists/**` | CC BY-SA 4.0 |
-| `harness/**` | CC BY-SA 4.0 |
+| `instructions/**` | CC BY-SA 4.0 |
 | `templates/**` | CC BY-SA 4.0 |
 | `profiles.example/**` | CC BY-SA 4.0 |
 | `docs/**` | CC BY-SA 4.0 |

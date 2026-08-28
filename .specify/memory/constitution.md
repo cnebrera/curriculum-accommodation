@@ -1,9 +1,9 @@
 # Rampa Constitution
 
 Rampa adapts classroom material to the profile of a learner with a disability.
-A teacher clones this repository, opens it with their own AI agent, supplies the
-material and a learner profile, and gets adapted material plus a report of what
-changed and why.
+A teacher installs the application, supplies the material and a description of the
+learner's barriers, and gets adapted material plus a report of what changed and
+why. Her files stay on her computer and the AI account is her own.
 
 These principles govern every specification, plan and pull request in this
 repository. Where a plan conflicts with the constitution, the constitution wins.
@@ -18,9 +18,16 @@ instruction in Markdown, readable and editable by a special-education teacher wh
 does not write code.
 
 Code MUST NOT encode adaptation policy. If a rule about *how to adapt* appears in
-a script, it is misplaced and the change is rejected. This is not a stylistic
-preference: a project whose contribution path requires programming excludes
-exactly the people whose expertise it depends on.
+a script, in application code, or in interface copy, it is misplaced and the
+change is rejected. This is not a stylistic preference: a project whose
+contribution path requires programming excludes exactly the people whose expertise
+it depends on.
+
+The Markdown layer MUST be the text the application actually sends, not a parallel
+copy of it. A corpus that ships without being read is decoration, and the code
+that displaced it is the real policy — which is precisely the failure this
+principle exists to prevent. It happened once; see
+`docs/decisions/0006-one-vehicle.md`.
 
 ### II. Code is deterministic and model-free (NON-NEGOTIABLE)
 
@@ -28,9 +35,10 @@ Scripts extract, chunk, render, convert, synthesise speech and validate. They MU
 NOT call a language model, require an API key, or embed provider-specific
 behaviour. Every script MUST be runnable and testable offline.
 
-All inference happens through the teacher's own agent reading the Markdown layer.
-Consequences we are deliberately buying: provider independence, tests that cost
-nothing to run, and no billing relationship between this project and its users.
+All inference happens in one thin provider layer, sending the Markdown layer to
+the teacher's own AI account. Consequences we are deliberately buying: provider
+independence, tests that cost nothing to run, and no billing relationship between
+this project and its users.
 
 ### III. Adapt the *how*, never falsify the *what*
 
@@ -188,7 +196,7 @@ NON-NEGOTIABLE may not be waived for convenience, deadline or scope.
 Every specification and plan is reviewed against these principles. Complexity
 that a principle does not justify is removed rather than documented.
 
-**Version**: 1.2.0 | **Ratified**: 2026-08-27 | **Last Amended**: 2026-08-27
+**Version**: 1.3.0 | **Ratified**: 2026-08-27 | **Last Amended**: 2026-08-28
 
 *1.1.0 — added Principle VIII (feedback and memory). Amends nothing; extends
 the pipeline with a loop that was implied by the vision but never specified.*
@@ -196,3 +204,11 @@ the pipeline with a loop that was implied by the vision but never specified.*
 *1.2.0 — added Principle IX (content is never instruction). Closes a hole present
 since the first specification: the pipeline read third-party material and acted on
 it, and nothing said content is not a directive.*
+
+*1.3.0 — one delivery vehicle (ADR 0006). The preamble and Principle II no longer
+describe a teacher opening this repository with their own agent, because that is no
+longer how anyone uses Rampa. Principle I gains the sentence that would have caught
+the violation it was written to prevent: the Markdown layer must be the text
+actually sent, not a copy of it. **Migration:** the harness is removed;
+`harness/commands/` became `instructions/`, which the application now reads at run
+time. Nothing built against the vault format changes.*

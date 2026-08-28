@@ -99,12 +99,12 @@ notes: |
 
 | File | What it is | Written by |
 |---|---|---|
-| `profiles/<CODE>/profile.yaml` | **State.** Axis levels and qualitative fields | `/rampa-profile` |
-| `profiles/<CODE>/notes.md` | **History.** Dated notes from review sessions | `/rampa-review` |
+| `profiles/<CODE>/profile.yaml` | **State.** Axis levels and qualitative fields | The profile screen |
+| `profiles/<CODE>/notes.md` | **History.** Dated notes from review sessions | The review screen |
 | `profiles/<CODE>/adaptations.md` | **Overlay.** The learner's official adaptations, when the teaching team has produced them | The teacher, once |
 
 The YAML is what recipes read. The notes are the narrative behind it: when a note
-stabilises, `/rampa-memory` proposes promoting it into the YAML.
+stabilises, consolidation proposes promoting it into the YAML.
 
 The overlay is different in kind. It is **instructions from the teaching team**,
 and it **takes precedence over the corpus** — read it before selecting recipes.
@@ -115,7 +115,7 @@ The one exception to following it: if an overlay statement would breach a hard
 rule — falsifying content, easing an assessment criterion — flag the conflict and
 ask. Never silently obey, never silently refuse.
 
-## Reading a profile as an agent
+## Reading a profile
 
 - Never infer an axis value that is not written down. Ask the teacher.
 - Never write a diagnosis into the profile, even if the teacher mentions one in

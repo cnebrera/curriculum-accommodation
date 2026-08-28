@@ -9,6 +9,24 @@ import type { IRDocument, Block } from '../ir/types.js';
  * — not because a check refuses, but because there is no argument to pass
  * (007 FR-506). It is the structural form of the rule, and the strongest one
  * available.
+ *
+ * ## Accessibility target: WCAG 2.2 level AA
+ *
+ * Carried here from the Pandoc template this replaced (ADR 0006), because it is
+ * the project's stated answer to backlog G7 and deleting the file must not delete
+ * the commitment. This project produces material for learners with disabilities;
+ * its own output meeting a stated standard is not optional.
+ *
+ * Any change below must preserve:
+ *
+ *   - contrast >= 4.5:1 for body text at **every** profile-driven colour setting
+ *   - a visible focus state
+ *   - meaningful sequence when styles are stripped
+ *   - text resizable to 200% without loss of content
+ *
+ * `checkPhotocopy()` covers the first of these for the ink/paper pair. The rest
+ * are unverified, and there is still no screen-reader test. See
+ * `docs/references.md`.
  */
 export interface RenderOptions {
   /** Presentation knobs derived from the profile by the caller, never the profile itself. */
@@ -35,7 +53,7 @@ const DEFAULTS: Required<Omit<Presentation, 'font' | 'oneTaskPerPage'>> = {
   ink: '#111', paper: '#fff', accent: '#0b5f5b',
 };
 
-function styles(p: Presentation): string {
+function styles(p: Presentation, signedOff: boolean): string {
   const v = { ...DEFAULTS, ...p };
   return `
 :root{
@@ -65,7 +83,15 @@ h1,h2,h3{line-height:1.25;margin:2em 0 .6em;font-weight:700}
 ${p.oneTaskPerPage ? '.exercise,.assessment{break-after:page;page-break-after:always}' : ''}
 .draft-banner{position:sticky;top:0;z-index:10;background:#8a2f2c;color:#fff;
   padding:.7em 1.2em;font-weight:700;font-size:.9rem;letter-spacing:.04em;text-align:center}
-@media print{.draft-banner{position:static}}
+@media print{
+  .draft-banner{position:static}
+  /* On paper the banner is one line on page one, and pages two onward would
+     carry nothing saying they are unreviewed. The watermark is per-page, so a
+     sheet that got separated from the first one still announces itself. */
+  ${signedOff ? '' : `main::before{content:"BORRADOR — PENDIENTE DE REVISIÓN";
+    position:fixed;top:45%;left:0;right:0;text-align:center;font-size:3rem;
+    color:rgba(138,47,44,.13);transform:rotate(-24deg);pointer-events:none;z-index:-1}`}
+}
 a{color:var(--accent)}
 :focus-visible{outline:3px solid var(--accent);outline-offset:2px}`;
 }
@@ -94,7 +120,7 @@ export function renderHTML(doc: IRDocument, opts: RenderOptions = {}): string {
 <html lang="${esc(lang)}">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${esc(opts.title ?? 'Material adaptado')}</title>
-<style>${styles(presentation)}</style></head>
+<style>${styles(presentation, signedOff)}</style></head>
 <body>
 ${banner}
 <main>
