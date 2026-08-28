@@ -4,12 +4,44 @@
 
 **Created**: 2026-08-28
 
-**Status**: Draft — pending `/speckit-clarify` before `/speckit-plan`
+**Status**: Clarified 2026-08-28 · ready for `/speckit-plan`
 
 **Input**: `006` specifies what the interface must *say* (FR-406: her language, no
 jargon) and what the output must survive (FR-427: a black-and-white photocopier).
 It says nothing about what the application looks like. Six screens exist, built
 from a hand-written token file, and none of them has had a design pass.
+
+## Clarifications
+
+### Session 2026-08-28
+
+Recorded rather than asked: these came out of the design review, which is where
+this particular feature's clarification actually happens — a visual direction
+cannot be settled in prose.
+
+- Q: Density and target screen? → A: Generous, small screen. 17px body, 44px
+  targets, complete at 1366×768, because the machine is a school laptop several
+  years old and she is between classes.
+- Q: Where does the design spend its boldness? → A: **Everywhere.** No screen is
+  a placeholder and none is treated as throwaway. Hierarchy still means some
+  things are quieter than others — that is what makes the prominent ones read,
+  and it is not the same as neglect.
+- Q: How should the draft mark feel? → A: Unmistakable but calm. She will see it
+  on every worksheet before every signature; an alarm would make the product
+  feel permanently broken, and an alarm that always fires stops being seen.
+- Q: An accessibility mode, chosen at first run? → A: **No.** A toggle means the
+  default is the inaccessible one, and it is a question she cannot evaluate at
+  the worst possible moment. What is real is that people differ, so size,
+  contrast, motion and theme are *her preferences* on top of a default that
+  already meets AA.
+- Q: Is a muted palette a consequence of accessibility? → A: **No, and the first
+  proposal was wrong about this.** AA constrains contrast ratios, which are
+  luminance differences; it says nothing about saturation. The rule that makes
+  vivid and accessible the same thing: **bright colours go where they never
+  carry small text** — fills, borders, icons, glows, dark grounds, progress —
+  **and deep saturated colours carry the text.** Depth returns as real
+  elevation tinted with the brand hue rather than black. Approved as v2 of the
+  design system.
 
 ## Scope, stated first
 
@@ -299,11 +331,17 @@ it is a grey box with a text dump inside it.
 
 ## Assumptions
 
-- **The existing palette and typeface are the starting point, not a constraint.**
-  Teal `#0e6b67`, plum for warnings, brick for danger, and Atkinson Hyperlegible —
-  a typeface designed for low-vision reading, in an application about access,
-  which makes the identity mean something rather than decorate. Refining it is the
-  expected path; replacing it needs a reason better than taste.
+- **The palette is v2 of the design system, approved 2026-08-28.** Teal keeps the
+  brand hue but with real chroma, and there are five families each carrying a
+  bright end (fills, borders, icons, glows, dark grounds, progress) and a deep end
+  (anything that carries text). Depth is real elevation tinted with the brand hue.
+  The typeface is Atkinson Hyperlegible — designed for low-vision reading, in an
+  application about access, which makes the identity mean something rather than
+  decorate, and it is what the worksheets already render in.
+- **The component library is the source of truth for the visual system**, and it
+  lives outside `app/` until this feature is implemented. `tokens.css` and
+  `components.css` are lifted from it verbatim; the previews are how a change is
+  reviewed before it reaches a screen.
 - **Craft applies to every screen.** There is no screen where a placeholder is
   acceptable. Hierarchy still means some things are quieter than others — that is
   what makes the prominent things read, and it is not the same as neglect.
