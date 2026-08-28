@@ -13,6 +13,11 @@ disables another.
 
 Apply in order, stopping at the first that decides:
 
+0. **A guard is never dropped.** A recipe with no axis conditions —
+   `keep-curricular-terms`, `exam-access-not-difficulty` — constrains the other
+   recipe rather than competing with it. Both stay, and the constraint is
+   recorded. Dropping a guard in a conflict is how an adaptation quietly makes
+   an exam easier, which is the failure this whole project is built around.
 1. **The overlay wins.** If `profiles/<CODE>/adaptations.md` settles it, that is
    the teaching team's decision and it is not reopened here.
 2. **`works` and `avoid` win over any recipe.** Observed reality beats theory.

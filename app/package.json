@@ -3,6 +3,15 @@
   "version": "0.1.0",
   "private": true,
   "description": "Adapt classroom material to the profile of a learner with a disability",
+  "main": "out/main/main.js",
+  "author": {
+    "name": "Rampa contributors",
+    "email": "cnebrera@users.noreply.github.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cnebrera/curriculum-accommodation.git"
+  },
   "license": "Apache-2.0",
   "engines": {
     "node": ">=22"

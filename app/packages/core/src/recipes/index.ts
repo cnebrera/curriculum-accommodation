@@ -62,6 +62,18 @@ const satisfied = (c: AxisCondition, p: Profile): boolean => {
 export const applies = (r: Recipe, p: Profile): boolean =>
   r.axes.length === 0 || r.axes.every((c) => satisfied(c, p));
 
+/**
+ * A recipe with no axis conditions is a GUARD, not an adaptation.
+ *
+ * `exam-access-not-difficulty` and `keep-curricular-terms` constrain every other
+ * recipe rather than competing with them, so conflict resolution must never drop
+ * one. An earlier version did: it saw a severity of 0 (a guard names no axis) and
+ * kept a simplification recipe over the exam guard — which is precisely the
+ * failure this project is built around, an adaptation quietly making an exam
+ * easier. Caught by the end-to-end test over the real corpus, not by review.
+ */
+export const isGuard = (r: Recipe): boolean => r.axes.length === 0;
+
 export interface Selection {
   selected: Recipe[];
   /** Conflicts resolved, and how — recorded so the teacher can settle them. */
@@ -88,6 +100,18 @@ export function selectRecipes(all: Recipe[], profile: Profile, lang?: string): S
     for (const otherId of r.conflicts) {
       const other = byId.get(otherId);
       if (!other || dropped.has(r.id) || dropped.has(other.id)) continue;
+
+      // Rule 0: a guard is never dropped. It constrains the other recipe rather
+      // than competing with it, so both stay and the constraint is recorded.
+      if (isGuard(r) || isGuard(other)) {
+        const guard = isGuard(r) ? r : other;
+        const constrained = isGuard(r) ? other : r;
+        if (!isGuard(constrained)) {
+          resolved.push({ kept: guard.id, dropped: '', 
+            because: `"${guard.id}" es una guarda: no se descarta, limita a "${constrained.id}"` });
+        }
+        continue;
+      }
 
       let keep = r, lose = other, because = '';
       if (isAccess(other) && !isAccess(r)) { keep = other; lose = r; because = 'el acceso vence a la optimización'; }
