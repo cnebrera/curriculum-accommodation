@@ -26,3 +26,5 @@ One decision per file, numbered, never rewritten — superseded instead.
 | [006](../../specs/006-desktop-app/spec.md) | The application — a vault she owns, a corpus she doesn't | 0005, 0006, 0007 |
 | [007](../../specs/007-untrusted-content/spec.md) | Content is never instruction | Principle IX, 0007 |
 | [008](../../specs/008-vision-ingest/spec.md) | Vision ingest — the material as it actually arrives | 0007 |
+| [009](../../specs/009-connect-wizard/spec.md) | Connecting — choosing a service, and getting the key | 0005 |
+| [010](../../specs/010-look-and-feel/spec.md) | The interface — accessible by default, and finished | — |

@@ -166,7 +166,7 @@ constitutional principles (II and IX) are only real if a test enforces them.
 
 - [ ] T073 [P] Implement corpus update in `app/packages/shell/src/ipc/corpus.ts`, one action, never touching the vault (006 FR-414) *(only version/read IPC exists; the one-action update is unbuilt)*
 - [x] T074 [P] Build the "Acerca de" screen in `app/ui/src/about/AboutScreen.tsx` carrying both licences and corpus attribution (R8)
-- [ ] T075 [P] Add accessibility checks to `app/e2e/a11y.spec.ts` against the WCAG 2.2 AA target for the app's own interface
+- [ ] T075 [P] Add accessibility checks to `app/e2e/a11y.spec.ts` against the WCAG 2.2 AA target for the app's own interface *(moved into `specs/010-look-and-feel` FR-815, where the design system it checks is specified. Stating a target and never testing it had been open since the target was written)*
 - [x] T076 [P] Write `app/README.md` covering build, test and release for contributors
 - [x] T077 Add the CI workflow in `.github/workflows/app.yml` running lint, core, isolation, vault, injection and e2e on all three platforms *(runs, minus the e2e steps: T040/T060/T075 pending)*
 - [x] T078 Run the full `quickstart.md` validation and record the results in `specs/006-desktop-app/validation.md` *(2026-08-27 run; extended by the 2026-08-28 review appendix)*
