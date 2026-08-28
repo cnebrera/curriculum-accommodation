@@ -174,6 +174,7 @@ Rampa desaparezca mañana.
 
 | Fase | La pregunta | Se responde con |
 |---|---|---|
-| **Fase 0** | ¿Los momentos 0-4 le sirven a una PT real, sola, con retoques menores? | SC-401/407, SC-001…006, protocolo del quickstart |
+| **Antes de Fase 0** | ¿Cuál es el modelo mínimo que da calidad suficiente? | `cases/002-model-floor/` — la validación corre sobre ese suelo o por encima |
+| **Fase 0** | ¿Los momentos 0-4 le sirven a una PT real, sola, con retoques menores? | SC-401/407, SC-001…006, protocolo del quickstart — **la PT está identificada** (2026-08-28) |
 | Después | ¿La curva baja? (momento 3 sostenido en el tiempo) | SC-204, cuatro semanas |
 | Después | ¿El grupo (momento 2 cómodo), el import del traspaso, audio/braille? | 005, 004-import, G8 |

@@ -217,6 +217,17 @@ assessment.
   data.
 - Spanish is the validation locale. `recipes/core/` is written to hold for other
   languages but is not yet tested against one.
-- [NEEDS CLARIFICATION: which real teacher or orientation team validates Phase 0,
-  and with which unit of material?] Without this, SC-001 through SC-006 cannot be
-  measured and the phase cannot close.
+- ~~NEEDS CLARIFICATION: which real teacher validates Phase 0~~ **Resolved
+  2026-08-28: a practising PT is identified and willing.** Her context (role,
+  stage, subjects — never identity, per this project's own rules) and the unit of
+  material she brings are recorded with her before the session. The material
+  choice stays hers: it must be what she would really adapt that week, not
+  something picked to flatter the tool.
+- **Which model tier the validation runs on is a measurement, not a choice**
+  (decided 2026-08-28): before the teacher session, the same fixture jobs run
+  across provider tiers to find the minimum tier that passes the deterministic
+  verifiers and a blind quality read — see `cases/002-model-floor/`. Phase 0 then
+  validates on or above that floor, and the floor is recorded in
+  `validation.md` as an experimental condition. Running the validation on an
+  unmeasured free tier would confound two variables: the project's quality and
+  the model's.

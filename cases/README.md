@@ -19,5 +19,14 @@ Cases assert **properties**, not exact strings. "Exercise numbering is preserved
 Byte-identical output is not, and demanding it would make every recipe
 improvement look like a regression.
 
-Empty for now. The first case should come from Phase 0 validation — the real
-worksheet a teacher tries, reduced to something we are allowed to redistribute.
+Current cases:
+
+| Case | Question | Status |
+|---|---|---|
+| `001-corpus-ablation/` | Does the recipe corpus earn its place? (ADR 0001) | Specified, needs material |
+| `002-model-floor/` | What is the cheapest model tier that is still good enough? | Specified 2026-08-28, runs before Phase 0 |
+| `injection/` | Content is never instruction (spec 007) | **Built** — 10 fixtures, running in CI |
+
+The first adaptation-quality material should come from Phase 0 validation — the
+real worksheet a teacher tries, reduced to something we are allowed to
+redistribute.
