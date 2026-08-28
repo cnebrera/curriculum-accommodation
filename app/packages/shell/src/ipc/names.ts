@@ -1,6 +1,7 @@
-import { ipcMain, safeStorage } from 'electron';
+import { safeStorage } from 'electron';
 import { redact, findProbableNames, VAULT } from '@rampa/core';
 import { currentVault } from './vault.js';
+import { handle } from './wrap.js';
 
 /**
  * The name map: stored encrypted, kept inside the vault, and excluded from
@@ -66,9 +67,9 @@ async function save(map: NameMap): Promise<void> {
 export const knownNames = async (): Promise<Map<string, string>> => new Map(Object.entries(await load()));
 
 export function registerNamesIpc(): void {
-  ipcMain.handle('names:status', () => encryptionStatus());
+  handle('names:status', () => encryptionStatus());
 
-  ipcMain.handle('names:set', async (_e, code: string, name: string) => {
+  handle('names:set', async (code: string, name: string) => {
     const map = await load();
     if (name.trim()) map[code] = name.trim(); else delete map[code];
     await save(map);
@@ -76,12 +77,12 @@ export function registerNamesIpc(): void {
   });
 
   /** Display only. Its result must never enter a payload. */
-  ipcMain.handle('names:resolve', async (_e, code: string) => (await load())[code] ?? null);
+  handle('names:resolve', async (code: string) => (await load())[code] ?? null);
 
-  ipcMain.handle('names:all', async () => await load());
+  handle('names:all', async () => await load());
 
   /** Used by the UI to warn before sending, never to rewrite (006 FR-419). */
-  ipcMain.handle('names:check', async (_e, text: string) => {
+  handle('names:check', async (text: string) => {
     const known = await knownNames();
     const r = redact(text, known);
     return { flagged: r.flagged.length ? r.flagged : findProbableNames(text), replaced: r.replaced };

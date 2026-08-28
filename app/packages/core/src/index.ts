@@ -10,6 +10,7 @@
  * anything here can reach the network.
  */
 export * from './errors.js';
+export * from './log.js';
 
 export * from './vault/paths.js';
 export * from './vault/parse.js';

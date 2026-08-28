@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { es } from '../i18n/es.js';
+import { fromWire } from '../../../packages/core/src/errors.js';
 import { Notice } from '../components/Notice.js';
 import { ScopeQuestion } from './ScopeQuestion.js';
 
@@ -14,6 +15,9 @@ export function ReviewScreen({ jobId, learner }: { jobId: string; learner: strin
   const [pdfPath, setPdfPath] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [photocopy, setPhotocopy] = useState<Array<{ message: string }>>([]);
+  const [corrections, setCorrections] = useState<Array<{ text: string; scope: 'learner' | 'practice' | 'corpus' }>>([]);
+  const [revising, setRevising] = useState(false);
+  const [revision, setRevision] = useState(1);
 
   useEffect(() => {
     void window.rampa.vault.read(`material/${jobId}/report.md`)
@@ -28,9 +32,28 @@ export function ReviewScreen({ jobId, learner }: { jobId: string; learner: strin
       setPhotocopy(r.photocopy ?? []);
       setPdfPath(await window.rampa.job.pdf(jobId, learner, signed));
     } catch (e: unknown) {
-      const k = (e as { message?: string }).message ?? '';
-      setError(es.errors[k] ?? k ?? es.errors['unknown']!);
+      const { kind, message } = fromWire(e);
+      setError(es.errors[kind] ?? message ?? es.errors['unknown']!);
     }
+  };
+
+  /**
+   * The loop. She corrects, and the same worksheet comes back with the
+   * correction applied — rather than her waiting until next week to find out
+   * whether it landed. Every previous attempt is kept so she can compare.
+   */
+  const revise = async () => {
+    setRevising(true); setError(null);
+    try {
+      const r = await window.rampa.job.revise(jobId, learner, corrections);
+      setReport(r.report);
+      setRevision(r.revision);
+      setCorrections([]);
+      setSignedOff(false);          // a new version is a new draft
+    } catch (e: unknown) {
+      const { kind, message } = fromWire(e);
+      setError(es.errors[kind] ?? message ?? es.errors['unknown']!);
+    } finally { setRevising(false); }
   };
 
   const sign = async () => {
@@ -41,7 +64,7 @@ export function ReviewScreen({ jobId, learner }: { jobId: string; learner: strin
 
   return (
     <div className="stack">
-      <h1>{es.review.title}</h1>
+      <h1>{es.review.title}{revision > 1 ? ` · versión ${revision}` : ''}</h1>
       <Notice kind="warn">{es.review.lead}</Notice>
 
       <div className="card"><pre style={{ whiteSpace: 'pre-wrap', margin: 0 }}>{report}</pre></div>
@@ -54,7 +77,23 @@ export function ReviewScreen({ jobId, learner }: { jobId: string; learner: strin
 
       {error ? <Notice kind="danger">{error}</Notice> : null}
 
-      <ScopeQuestion learner={learner} onCaptured={() => { /* captured into memory */ }} />
+      <ScopeQuestion learner={learner} onCaptured={(c) => setCorrections((prev) => [...prev, c])} />
+
+      {corrections.length ? (
+        <div className="card stack">
+          <strong>Lo que me has corregido</strong>
+          <ul style={{ margin: 0 }}>{corrections.map((c, i) => <li key={i}>{c.text}</li>)}</ul>
+          <p className="small muted" style={{ margin: 0 }}>
+            Ya lo he apuntado, así que la próxima ficha saldrá teniéndolo en cuenta.
+            Si quieres, rehago <em>esta</em> ahora mismo.
+          </p>
+          <div>
+            <button className="primary" disabled={revising} onClick={() => void revise()}>
+              {revising ? 'Rehaciendo…' : 'Rehacer esta ficha con mis correcciones'}
+            </button>
+          </div>
+        </div>
+      ) : null}
 
       <div className="row">
         <button onClick={() => void render(signedOff)}>{es.adapt.print}</button>

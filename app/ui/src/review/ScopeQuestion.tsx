@@ -12,7 +12,8 @@ import { Notice } from '../components/Notice.js';
  */
 export function ScopeQuestion({ learner, onCaptured }: {
   learner: string;
-  onCaptured: () => void;
+  /** Receives the correction so the caller can re-run this worksheet with it. */
+  onCaptured: (correction: { text: string; scope: 'learner' | 'practice' | 'corpus' }) => void;
 }) {
   const [text, setText] = useState('');
   const [scope, setScope] = useState<'learner' | 'practice' | 'corpus' | null>(null);
@@ -24,8 +25,9 @@ export function ScopeQuestion({ learner, onCaptured }: {
       scope, learner: scope === 'learner' ? learner : undefined,
       heading: text.trim().slice(0, 40), text: text.trim(),
     });
+    const captured = { text: text.trim(), scope };
     setDone(true); setText(''); setScope(null);
-    onCaptured();
+    onCaptured(captured);
   };
 
   if (done) return <Notice kind="info">{es.review.captured}</Notice>;

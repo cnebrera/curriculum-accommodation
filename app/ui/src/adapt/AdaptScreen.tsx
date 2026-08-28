@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { es } from '../i18n/es.js';
+import { fromWire } from '../../../packages/core/src/errors.js';
 import { Notice } from '../components/Notice.js';
 import { NameWarning } from '../components/NameWarning.js';
 import { useOnline } from '../hooks/useOnline.js';
@@ -42,8 +43,10 @@ export function AdaptScreen({ onReview }: { onReview: (jobId: string, learner: s
       setReport(r.report);
       setStage('done');
     } catch (e: unknown) {
-      const kind = (e as { message?: string }).message ?? '';
-      setError(es.errors[kind] ?? kind ?? es.errors['unknown']!);
+      // The kind survives the IPC round trip encoded in the message; decoding it
+      // here is what makes the Spanish error map actually apply.
+      const { kind, message } = fromWire(e);
+      setError(es.errors[kind] ?? message ?? es.errors['unknown']!);
       setStage('verify');
     }
   };

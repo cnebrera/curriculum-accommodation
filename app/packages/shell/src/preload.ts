@@ -54,6 +54,10 @@ const api = {
     create: (id: string, text: string, lang?: string) => invoke('job:create', id, text, lang),
     verify: (id: string) => invoke('job:verify', id),
     adapt: (id: string, learner: string) => invoke('job:adapt', id, learner),
+    /** Re-run with what she just corrected, on this worksheet, now. */
+    revise: (id: string, learner: string, corrections: Array<{ text: string; scope: string }>) =>
+      invoke('job:revise', id, learner, corrections),
+    revisions: (id: string) => invoke('job:revisions', id),
     render: (id: string, learner: string, signedOff?: boolean) => invoke('job:render', id, learner, signedOff),
     pdf: (id: string, learner: string, signedOff?: boolean) => invoke('job:pdf', id, learner, signedOff),
     /** The only way the draft mark comes off. */
@@ -74,6 +78,11 @@ const api = {
       invoke('memory:handover', code, year, summary, shareable),
     forgetPlan: (code: string) => invoke('memory:forgetPlan', code),
     forget: (code: string) => invoke('memory:forget', code),
+  },
+  diagnostics: {
+    path: () => invoke('diagnostics:path'),
+    reveal: () => invoke('diagnostics:reveal'),
+    tail: (lines?: number) => invoke('diagnostics:tail', lines),
   },
   cost: {
     month: () => invoke('cost:month'),

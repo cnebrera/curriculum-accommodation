@@ -1,6 +1,6 @@
-import { ipcMain } from 'electron';
 import { VAULT, formatCost, monthTotal, isUnusuallyExpensive, type CostLedger } from '@rampa/core';
 import { currentVault } from './vault.js';
+import { handle } from './wrap.js';
 
 /** A teacher fearing an unknown bill stops using the tool (006 FR-422). */
 const currentMonth = () => new Date().toISOString().slice(0, 7);
@@ -21,11 +21,11 @@ export async function recordCost(job: string, cents: number): Promise<void> {
 }
 
 export function registerCostIpc(): void {
-  ipcMain.handle('cost:month', async () => {
+  handle('cost:month', async () => {
     const l = await ledger();
     const cents = monthTotal(l);
     return { cents, formatted: formatCost(cents), jobs: l.jobs.length };
   });
-  ipcMain.handle('cost:wouldBeUnusual', async (_e, estimateCents: number) =>
+  handle('cost:wouldBeUnusual', async (estimateCents: number) =>
     isUnusuallyExpensive(estimateCents, await ledger()));
 }

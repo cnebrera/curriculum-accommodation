@@ -21,3 +21,30 @@ export class RampaError extends Error {
 }
 
 export const isRampaError = (e: unknown): e is RampaError => e instanceof RampaError;
+
+/**
+ * Electron serialises an Error across IPC into a string, which loses `kind` —
+ * and the interface maps kind to a Spanish sentence, so without this the mapping
+ * silently never matched and every failure fell through to "algo ha ido mal".
+ *
+ * Encoding the kind into the message keeps one channel and survives the round
+ * trip through any Electron version.
+ */
+const WIRE = /^\[rampa:([a-z-]+)\]\s*/;
+
+export const toWire = (e: unknown): Error => {
+  if (isRampaError(e)) return new Error(`[rampa:${e.kind}] ${e.message}`);
+  return e instanceof Error ? e : new Error(String(e));
+};
+
+export interface WireError { kind: ErrorKind | 'unknown'; message: string }
+
+export function fromWire(e: unknown): WireError {
+  const raw = e instanceof Error ? e.message : String(e);
+  // Electron prefixes "Error invoking remote method 'x':" — strip it first.
+  const cleaned = raw.replace(/^Error invoking remote method '[^']*':\s*/, '')
+                     .replace(/^Error:\s*/, '');
+  const m = WIRE.exec(cleaned);
+  if (m) return { kind: m[1] as ErrorKind, message: cleaned.slice(m[0].length) };
+  return { kind: 'unknown', message: cleaned };
+}

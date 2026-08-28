@@ -1,10 +1,11 @@
-import { ipcMain } from 'electron';
 import {
   VAULT, loadJournal, writeIndex, houseStyleOverflowing, appendNote, loadLearner,
   saveProfile, buildPacket, packetToMarkdown, toShareable, planForget, executeForget,
   tombstone, listLearners, loadRoster, saveRoster, rosterNameRisk, generateCode, validateCode,
+  rosterSchema, profileSchema, type Profile,
 } from '@rampa/core';
 import { currentVault } from './vault.js';
+import { handle } from './wrap.js';
 
 /**
  * Memory: the teacher routes every item (Principle VIII).
@@ -15,7 +16,7 @@ import { currentVault } from './vault.js';
  * quality problem.
  */
 export function registerMemoryIpc(): void {
-  ipcMain.handle('memory:capture', async (_e, payload: {
+  handle('memory:capture', async (payload: {
     scope: 'learner' | 'practice' | 'corpus';
     learner?: string; recipes?: string[]; heading: string; text: string;
   }) => {
@@ -46,24 +47,24 @@ export function registerMemoryIpc(): void {
     return { written: path };
   });
 
-  ipcMain.handle('memory:index', async () => {
+  handle('memory:index', async () => {
     const vault = currentVault();
     await writeIndex(vault, await loadJournal(vault));
     return (await vault.readRaw(VAULT.index)) ?? '';
   });
 
-  ipcMain.handle('memory:house', async () => (await currentVault().readRaw(VAULT.house)) ?? '');
+  handle('memory:house', async () => (await currentVault().readRaw(VAULT.house)) ?? '');
 
-  ipcMain.handle('memory:handover', async (_e, code: string, year: string, summary: string, shareable: boolean) => {
+  handle('memory:handover', async (code: string, year: string, summary: string, shareable: boolean) => {
     const learner = await loadLearner(currentVault(), code);
     const packet = buildPacket(learner, year, summary);
     return packetToMarkdown(shareable ? toShareable(packet) : packet);
   });
 
   /** Lists everything before removing anything (003 FR-215). */
-  ipcMain.handle('memory:forgetPlan', async (_e, code: string) => planForget(currentVault(), code));
+  handle('memory:forgetPlan', async (code: string) => planForget(currentVault(), code));
 
-  ipcMain.handle('memory:forget', async (_e, code: string) => {
+  handle('memory:forget', async (code: string) => {
     const vault = currentVault();
     const plan = await planForget(vault, code);
     const result = await executeForget(vault, plan);
@@ -72,12 +73,14 @@ export function registerMemoryIpc(): void {
     return result;
   });
 
-  ipcMain.handle('learners:list', async () => listLearners(currentVault()));
-  ipcMain.handle('learners:roster', async () => loadRoster(currentVault()));
-  ipcMain.handle('learners:saveRoster', async (_e, roster) => { await saveRoster(currentVault(), roster); return true; });
-  ipcMain.handle('learners:load', async (_e, code: string) => loadLearner(currentVault(), code));
-  ipcMain.handle('learners:save', async (_e, profile) => { await saveProfile(currentVault(), profile); return true; });
-  ipcMain.handle('learners:newCode', async () => generateCode(await listLearners(currentVault())));
-  ipcMain.handle('learners:validateCode', (_e, code: string) => validateCode(code));
-  ipcMain.handle('learners:nameRisk', async () => rosterNameRisk((await loadRoster(currentVault())).roster));
+  handle('learners:list', async () => listLearners(currentVault()));
+  handle('learners:roster', async () => loadRoster(currentVault()));
+  handle('learners:saveRoster', async (roster: unknown) => {
+    await saveRoster(currentVault(), rosterSchema.parse(roster)); return true; });
+  handle('learners:load', async (code: string) => loadLearner(currentVault(), code));
+  handle('learners:save', async (profile: unknown) => {
+    await saveProfile(currentVault(), profileSchema.parse(profile) as Profile); return true; });
+  handle('learners:newCode', async () => generateCode(await listLearners(currentVault())));
+  handle('learners:validateCode', (code: string) => validateCode(code));
+  handle('learners:nameRisk', async () => rosterNameRisk((await loadRoster(currentVault())).roster));
 }

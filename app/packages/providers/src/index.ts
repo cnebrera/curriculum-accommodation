@@ -6,6 +6,7 @@
  */
 export * from './types.js';
 export * from './send.js';
+export * from './resilience.js';
 export { anthropic } from './anthropic.js';
 export { google } from './google.js';
 

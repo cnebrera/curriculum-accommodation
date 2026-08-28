@@ -1,8 +1,8 @@
-import { ipcMain, type BrowserWindow } from 'electron';
+import { type BrowserWindow } from 'electron';
 import {
   Vault, VAULT, jobDir, parseIR, annotateInjection, checkBounds, isVerified,
   selectRecipes, recipeRef, loadLearner, buildReport, loadForRun, RampaError,
-  stringifyFrontMatter, injectionNotices, axisLevelOf, AXES, type Profile,
+  stringifyFrontMatter, injectionNotices, axisLevelOf, AXES, logger,
 } from '@rampa/core';
 import { sendRedacted, providerById } from '@rampa/providers';
 import { currentVault } from '../ipc/vault.js';
@@ -10,6 +10,7 @@ import { knownNames } from '../ipc/names.js';
 import { currentKey } from '../ipc/keys.js';
 import { allRecipes } from '../ipc/corpus.js';
 import { recordCost } from '../ipc/cost.js';
+import { handle } from '../ipc/wrap.js';
 
 /**
  * Orchestration. The judgement lives in the corpus, not here: this assembles
@@ -30,9 +31,21 @@ Devuelve únicamente el documento adaptado en el mismo formato que recibes.`;
 
 export interface AdaptProgress { stage: string; detail?: string; }
 
+/**
+ * A correction the teacher made in review, fed straight back into a re-run.
+ *
+ * This is the loop the whole project rests on. Without it she corrects the same
+ * thing every week and the cost per worksheet never falls — the time saving is a
+ * curve, not a constant, and this is what bends it. Between sessions the same
+ * corrections arrive through memory; within a session she wants to see the fix
+ * now, on this worksheet.
+ */
+export interface Correction { text: string; scope: 'learner' | 'practice' | 'corpus'; }
+
 export async function runAdaptation(
   jobId: string, learnerCode: string, onProgress: (p: AdaptProgress) => void,
-): Promise<{ report: string; notices: number; costCents: number }> {
+  corrections: Correction[] = [],
+): Promise<{ report: string; notices: number; costCents: number; revision: number }> {
   const vault: Vault = currentVault();
 
   onProgress({ stage: 'Leyendo el material' });
@@ -65,6 +78,15 @@ export async function runAdaptation(
 
   onProgress({ stage: 'Adaptando', detail: `${selection.selected.length} reglas` });
 
+  // Keep every previous attempt: a teacher comparing "before I told it" with
+  // "after" is how she decides whether the correction landed, and losing the
+  // earlier version to save a file would take that away.
+  const revision = await nextRevision(vault, jobId);
+  if (revision > 1) {
+    const previous = await vault.readRaw(`${jobDir(jobId)}/adapted.md`);
+    if (previous) await vault.writeRaw(`${jobDir(jobId)}/adapted.r${revision - 1}.md`, previous);
+  }
+
   const prompt = [
     '## Perfil del alumno (barreras, no diagnóstico)',
     AXES.map((a) => `${a}: ${axisLevelOf(learner.profile, a) ?? 'sin observar'}`).join(' · '),
@@ -74,6 +96,11 @@ export async function runAdaptation(
     memory.house.trim() ? `\n## Cómo trabaja esta maestra\n${memory.house}` : '',
     memory.journal.length ? `\n## Lo aprendido antes\n${memory.journal.map((j) => j.body).join('\n---\n')}` : '',
     `\n## Reglas seleccionadas\n${selection.selected.map((r) => `### ${recipeRef(r)}\n${r.body}`).join('\n\n')}`,
+    corrections.length
+      ? `\n## Correcciones de la maestra sobre el intento anterior\n` +
+        `Manda esto por encima de las reglas. Si contradice una regla, gana esto.\n` +
+        corrections.map((c) => `- ${c.text}`).join('\n')
+      : '',
     `\n## Material a adaptar\n${raw}`,
   ].filter(Boolean).join('\n');
 
@@ -99,18 +126,50 @@ export async function runAdaptation(
   await vault.writeRaw(`${jobDir(jobId)}/report.md`, report.markdown);
   await recordCost(jobId, cents);
 
+  logger.info('adapt.finished', {
+    jobId, revision, recipes: selection.selected.length,
+    corrections: corrections.length, costCents: cents,
+  });
+
   return {
     report: report.markdown,
     notices: injectionNotices(doc).length + doc.notices.length + flagged.length,
     costCents: cents,
+    revision,
   };
 }
 
+/** Revision 1 is the first attempt; each re-run after a correction adds one. */
+async function nextRevision(vault: Vault, jobId: string): Promise<number> {
+  const files = await vault.list(jobDir(jobId));
+  const revisions = files
+    .map((f) => /^adapted\.r(\d+)\.md$/.exec(f))
+    .filter((m): m is RegExpExecArray => m !== null)
+    .map((m) => Number(m[1]));
+  const existing = files.includes('adapted.md') ? 1 : 0;
+  return Math.max(existing, ...revisions, 0) + 1;
+}
+
 export function registerAdaptIpc(getWindow: () => BrowserWindow | null): void {
-  ipcMain.handle('job:adapt', async (_e, jobId: string, learnerCode: string) =>
+  handle('job:adapt', async (jobId: string, learnerCode: string) =>
     runAdaptation(jobId, learnerCode, (p) => getWindow()?.webContents.send('job:progress', p)));
 
-  ipcMain.handle('job:create', async (_e, jobId: string, sourceText: string, lang = 'es') => {
+  /**
+   * Re-run this worksheet with what she just corrected. The correction is also
+   * captured into memory by the review screen, so it applies to the NEXT
+   * worksheet too — this handler is what makes it apply to the one in front of
+   * her right now.
+   */
+  handle('job:revise', async (jobId: string, learnerCode: string, corrections: Correction[]) =>
+    runAdaptation(jobId, learnerCode,
+      (p) => getWindow()?.webContents.send('job:progress', p), corrections));
+
+  handle('job:revisions', async (jobId: string) => {
+    const files = await currentVault().list(jobDir(jobId));
+    return files.filter((f) => /^adapted(\.r\d+)?\.md$/.test(f)).sort();
+  });
+
+  handle('job:create', async (jobId: string, sourceText: string, lang = 'es') => {
     const vault = currentVault();
     const fm = { source: 'pegado', lang, kind: 'worksheet', extraction: { method: 'manual', verified: false } };
     const body = `::: {#b1 .explanation}\n${sourceText.trim()}\n:::\n`;
@@ -118,7 +177,7 @@ export function registerAdaptIpc(getWindow: () => BrowserWindow | null): void {
     return jobId;
   });
 
-  ipcMain.handle('job:verify', async (_e, jobId: string) => {
+  handle('job:verify', async (jobId: string) => {
     const vault = currentVault();
     const path = `${jobDir(jobId)}/ir.md`;
     const raw = (await vault.readRaw(path)) ?? '';
@@ -126,5 +185,5 @@ export function registerAdaptIpc(getWindow: () => BrowserWindow | null): void {
     return true;
   });
 
-  ipcMain.handle('job:list', async () => currentVault().list(VAULT.material));
+  handle('job:list', async () => currentVault().list(VAULT.material));
 }

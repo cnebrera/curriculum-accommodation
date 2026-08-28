@@ -9,6 +9,7 @@ import { registerMemoryIpc } from './ipc/memory.js';
 import { registerAdaptIpc } from './jobs/adapt.js';
 import { registerPrintIpc } from './jobs/print.js';
 import { registerSignoffIpc } from './jobs/signoff.js';
+import { startLogging, registerDiagnosticsIpc } from './ipc/diagnostics.js';
 
 let win: BrowserWindow | null = null;
 const getWindow = () => win;
@@ -55,7 +56,9 @@ if (!app.requestSingleInstanceLock()) app.quit();
 else {
   app.on('second-instance', () => { if (win) { if (win.isMinimized()) win.restore(); win.focus(); } });
 
-  void app.whenReady().then(() => {
+  void app.whenReady().then(async () => {
+    await startLogging();
+    registerDiagnosticsIpc();
     registerVaultIpc(getWindow);
     registerNamesIpc();
     registerKeysIpc();

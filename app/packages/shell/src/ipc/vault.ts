@@ -1,8 +1,9 @@
-import { ipcMain, dialog, BrowserWindow } from 'electron';
+import { dialog, BrowserWindow } from 'electron';
 import { watch as chokidarWatch, type FSWatcher } from 'chokidar';
 import { Vault, resolveInVault, RampaError, VAULT } from '@rampa/core';
 import { join } from 'node:path';
 import { homedir } from 'node:os';
+import { handle } from './wrap.js';
 
 /**
  * Every privileged filesystem operation crosses this boundary, which is what
@@ -25,7 +26,7 @@ export const setVault = (root: string): Vault => { vault = new Vault(root); retu
 export const defaultVaultPath = () => join(homedir(), 'Documentos', 'Rampa');
 
 export function registerVaultIpc(getWindow: () => BrowserWindow | null): void {
-  ipcMain.handle('vault:choose', async () => {
+  handle('vault:choose', async () => {
     const win = getWindow();
     const res = win
       ? await dialog.showOpenDialog(win, {
@@ -41,27 +42,27 @@ export function registerVaultIpc(getWindow: () => BrowserWindow | null): void {
     return v.root;
   });
 
-  ipcMain.handle('vault:use', async (_e, root: string) => {
+  handle('vault:use', async (root: string) => {
     const v = setVault(root);
     await bootstrap(v);
     return v.root;
   });
 
-  ipcMain.handle('vault:default', () => defaultVaultPath());
+  handle('vault:default', () => defaultVaultPath());
 
-  ipcMain.handle('vault:read', async (_e, relPath: string) => {
+  handle('vault:read', async (relPath: string) => {
     const doc = await currentVault().readDoc(relPath);
     return doc ? { content: doc.body, data: doc.data, repairs: doc.repairs, exists: doc.exists } : null;
   });
 
-  ipcMain.handle('vault:write', async (_e, relPath: string, content: string) => {
+  handle('vault:write', async (relPath: string, content: string) => {
     // Refusal, not sanitisation: a path derived from content is a signal.
     resolveInVault(currentVault().root, relPath);
     await currentVault().writeRaw(relPath, content);
     return true;
   });
 
-  ipcMain.handle('vault:list', async (_e, relDir: string) => currentVault().list(relDir));
+  handle('vault:list', async (relDir: string) => currentVault().list(relDir));
 }
 
 /** Create the folders once, so a teacher opening the vault sees a shape she can read. */

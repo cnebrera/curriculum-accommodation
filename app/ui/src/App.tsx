@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { es } from './i18n/es.js';
+import { useStrings } from './i18n/context.js';
 import { LearnersScreen } from './learners/LearnersScreen.js';
 import { AdaptScreen } from './adapt/AdaptScreen.js';
 import { ReviewScreen } from './review/ReviewScreen.js';
@@ -14,6 +14,7 @@ import { detectStep, loadState, saveState, type Step } from './onboarding/state.
 type View = 'learners' | 'adapt' | 'review' | 'notes' | 'about';
 
 export function App() {
+  const { t: es, locale, setLocale, locales } = useStrings();
   const [step, setStep] = useState<Step | null>(null);
   const [view, setView] = useState<View>('adapt');
   const [review, setReview] = useState<{ jobId: string; learner: string } | null>(null);
@@ -61,7 +62,15 @@ export function App() {
           {es.nav.notes}</button>
         <button aria-current={view === 'about' ? 'page' : undefined} onClick={() => setView('about')}>
           {es.nav.about}</button>
-        <div style={{ padding: '14px 10px' }}><CostBadge /></div>
+        <div style={{ padding: '14px 10px' }} className="stack">
+          <CostBadge />
+          {locales.length > 1 ? (
+            <select aria-label="Idioma" value={locale}
+                    onChange={(e) => setLocale(e.target.value as typeof locale)}>
+              {locales.map((l) => <option key={l.code} value={l.code}>{l.label}</option>)}
+            </select>
+          ) : null}
+        </div>
       </nav>
       <main className="main">
         {view === 'adapt' && !review

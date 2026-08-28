@@ -1,4 +1,4 @@
-import { ipcMain, BrowserWindow } from 'electron';
+import { BrowserWindow } from 'electron';
 import { renderHTML, parseIR, checkOutput, checkPhotocopy, checkEssentialFigures,
          presentationFor, jobDir, outputDir, loadLearner, RampaError, AXES, axisLevelOf } from '@rampa/core';
 import { currentVault } from '../ipc/vault.js';
@@ -6,6 +6,7 @@ import { knownNames } from '../ipc/names.js';
 import { writeFile, mkdir } from 'node:fs/promises';
 import { dirname } from 'node:path';
 import { resolveInVault } from '@rampa/core';
+import { handle } from '../ipc/wrap.js';
 
 /**
  * HTML and PDF are produced by the application itself (006 FR-425): nothing for
@@ -38,7 +39,7 @@ async function renderJob(jobId: string, learnerCode: string, signedOff: boolean)
 }
 
 export function registerPrintIpc(): void {
-  ipcMain.handle('job:render', async (_e, jobId: string, learnerCode: string, signedOff = false) => {
+  handle('job:render', async (jobId: string, learnerCode: string, signedOff: boolean = false) => {
     const vault = currentVault();
     const { html, photocopy } = await renderJob(jobId, learnerCode, signedOff);
     const htmlPath = resolveInVault(vault.root, `${outputDir(jobId)}/sheet.html`);
@@ -47,7 +48,7 @@ export function registerPrintIpc(): void {
     return { htmlPath, photocopy };
   });
 
-  ipcMain.handle('job:pdf', async (_e, jobId: string, learnerCode: string, signedOff = false) => {
+  handle('job:pdf', async (jobId: string, learnerCode: string, signedOff: boolean = false) => {
     const vault = currentVault();
     const { html } = await renderJob(jobId, learnerCode, signedOff);
 

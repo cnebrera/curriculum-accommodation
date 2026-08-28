@@ -1,5 +1,6 @@
-import { redact, isClean } from '@rampa/core';
+import { redact, isClean, logger } from '@rampa/core';
 import type { Provider, Request, Chunk } from './types.js';
+import { runWithResilience, type Attempt, type RunOptions } from './resilience.js';
 
 /**
  * The egress chokepoint.
@@ -12,6 +13,8 @@ import type { Provider, Request, Chunk } from './types.js';
  * the harness could not: the teacher types "Lucía" because that is how she
  * thinks, and the model never sees it.
  */
+export type { Attempt };
+
 export interface EgressResult {
   stream: AsyncIterable<Chunk>;
   /** Probable names we do not know. The teacher is asked; nothing is rewritten. */
@@ -51,6 +54,7 @@ export function sendRedacted(
   req: Request,
   key: string,
   knownNames: ReadonlyMap<string, string>,
+  opts: RunOptions = {},
 ): EgressResult {
   const { out, flagged, replaced } = redactRequest(req, knownNames);
 
@@ -63,5 +67,12 @@ export function sendRedacted(
     );
   }
 
-  return { stream: provider.send(out, key), flagged, replaced };
+  logger.info('egress.sending', {
+    provider: provider.id,
+    namesReplaced: Object.values(replaced).reduce((a, b) => a + b, 0),
+    flaggedCount: flagged.length,
+    chars: payload.length,
+  });
+
+  return { stream: runWithResilience(() => provider.send(out, key), opts), flagged, replaced };
 }

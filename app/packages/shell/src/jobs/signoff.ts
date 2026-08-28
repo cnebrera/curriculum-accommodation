@@ -1,6 +1,6 @@
-import { ipcMain } from 'electron';
 import { jobDir } from '@rampa/core';
 import { currentVault } from '../ipc/vault.js';
+import { handle } from '../ipc/wrap.js';
 
 /**
  * The ONLY way the draft mark comes off (007 FR-509).
@@ -10,7 +10,7 @@ import { currentVault } from '../ipc/vault.js';
  * it, because the renderer only omits the banner when this has run.
  */
 export function registerSignoffIpc(): void {
-  ipcMain.handle('job:signOff', async (_e, jobId: string, role: string) => {
+  handle('job:signOff', async (jobId: string, role: string) => {
     const vault = currentVault();
     const path = `${jobDir(jobId)}/adapted.md`;
     const raw = (await vault.readRaw(path)) ?? '';
@@ -23,7 +23,7 @@ export function registerSignoffIpc(): void {
     return { signedOff: true, date: stamp };
   });
 
-  ipcMain.handle('job:isSignedOff', async (_e, jobId: string) => {
+  handle('job:isSignedOff', async (jobId: string) => {
     const raw = (await currentVault().readRaw(`${jobDir(jobId)}/adapted.md`)) ?? '';
     return /signed_off:\s*true/.test(raw);
   });

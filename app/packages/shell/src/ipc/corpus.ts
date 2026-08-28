@@ -1,9 +1,10 @@
-import { ipcMain, app } from 'electron';
+import { app } from 'electron';
 import { readFile, readdir, stat } from 'node:fs/promises';
 import { join } from 'node:path';
 import { parseRecipe, type Recipe } from '@rampa/core';
 import { currentVault } from './vault.js';
 import { VAULT } from '@rampa/core';
+import { handle } from './wrap.js';
 
 /**
  * The corpus ships with the application, read-only (006 FR-413).
@@ -66,13 +67,13 @@ export async function allRecipes(): Promise<Recipe[]> {
 }
 
 export function registerCorpusIpc(): void {
-  ipcMain.handle('corpus:version', async () => {
+  handle('corpus:version', async () => {
     try { return JSON.parse(await readFile(join(corpusRoot(), 'CORPUS-VERSION.json'), 'utf8')); }
     catch { return null; }
   });
-  ipcMain.handle('corpus:recipes', async () =>
+  handle('corpus:recipes', async () =>
     (await allRecipes()).map((r) => ({ id: r.id, version: r.version, origin: r.origin, scope: r.scope })));
-  ipcMain.handle('corpus:licences', async () => ({
+  handle('corpus:licences', async () => ({
     code: await readFile(join(corpusRoot(), 'LICENSE'), 'utf8').catch(() => ''),
     content: await readFile(join(corpusRoot(), 'LICENSE-CONTENT.md'), 'utf8').catch(() => ''),
     notice: await readFile(join(corpusRoot(), 'NOTICE'), 'utf8').catch(() => ''),
