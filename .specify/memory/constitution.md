@@ -171,8 +171,25 @@ documentation is translated; Spanish is the first fully populated locale.
 
 ## Development Workflow
 
-Specifications are managed with Spec Kit. Work starts at `/speckit.specify`, not
-at the editor.
+### The flow is a gate, not a preference (NON-NEGOTIABLE)
+
+Specifications are managed with Spec Kit, and every change to the product passes
+through it in order:
+
+```
+/speckit-specify → /speckit-clarify → /speckit-plan → /speckit-tasks → /speckit-implement
+```
+
+Implementation code MUST NOT be written for work that has no numbered task in a
+`specs/<feature>/tasks.md`. A specification and its implementation MUST NOT arrive
+in the same commit: `/speckit-plan` is where the Constitution Check runs and
+`/speckit-clarify` is where the questions are asked, and a commit carrying both
+has skipped both.
+
+This is enforced by `scripts/check-spec-kit.sh` from the pre-commit hook and from
+CI, because it has been violated twice by people who had read it as advice —
+which is precisely Principle IX's argument applied to this project's own process:
+where a rule can be enforced by code, it MUST be.
 
 **Quality gates before a feature is considered done:**
 1. Deterministic scripts have tests that run offline with no network and no key.
@@ -196,7 +213,7 @@ NON-NEGOTIABLE may not be waived for convenience, deadline or scope.
 Every specification and plan is reviewed against these principles. Complexity
 that a principle does not justify is removed rather than documented.
 
-**Version**: 1.3.0 | **Ratified**: 2026-08-27 | **Last Amended**: 2026-08-28
+**Version**: 1.4.0 | **Ratified**: 2026-08-27 | **Last Amended**: 2026-08-28
 
 *1.1.0 — added Principle VIII (feedback and memory). Amends nothing; extends
 the pipeline with a loop that was implied by the vision but never specified.*
@@ -212,3 +229,11 @@ the violation it was written to prevent: the Markdown layer must be the text
 actually sent, not a copy of it. **Migration:** the harness is removed;
 `harness/commands/` became `instructions/`, which the application now reads at run
 time. Nothing built against the vault format changes.*
+
+*1.4.0 — the Spec Kit flow becomes a NON-NEGOTIABLE gate rather than a stated
+preference, enforced by `scripts/check-spec-kit.sh` in the commit hook and in CI.
+Amends nothing about *what* the project builds; it closes the process hole that
+let two features be specified and implemented in one breath, skipping the
+Constitution Check and the clarify pass. **Migration:** none — no existing
+artifact changes. Specs already lacking `plan.md`/`tasks.md` stay listed as
+unplanned by the gate, which is their real state.*

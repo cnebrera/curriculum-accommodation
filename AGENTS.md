@@ -13,6 +13,41 @@ what something is for, that file is the answer.
 
 ---
 
+## STOP — nothing is implemented outside the Spec Kit flow
+
+```
+/speckit-specify → /speckit-clarify → /speckit-plan → /speckit-tasks → /speckit-implement
+```
+
+**You do not write implementation code for work that has no `tasks.md`.** Not a
+"small" version, not a prototype, not "while I am here". If you find yourself
+editing `app/`, `recipes/` or `instructions/` for something that is not a numbered
+task in a `specs/<feature>/tasks.md`, you have left the process — stop and go back
+to the missing step.
+
+Why this is shouted rather than mentioned: **it has been broken twice.** The
+BACKLOG recorded it the first time as a process gap — specifications hand-written
+past the gates. The second time an agent wrote `specs/009` and started coding it
+in the same session. Both times the reasoning was "the spec is right here, the
+work is obvious". Both times the point was missed:
+
+- **`/speckit-plan` is where the Constitution Check runs.** Skipping it means
+  nobody asked whether the design violates a NON-NEGOTIABLE principle. That check
+  has already caught real things: the licensing gap, and the fact that the
+  renderer must not take a profile argument.
+- **`/speckit-clarify` is where the questions get asked.** This project's defects
+  live in what nobody questioned — every single one found so far was in a seam
+  that looked obvious from one side.
+
+`scripts/check-spec-kit.sh` now blocks a commit that carries a specification and
+its implementation together, from the pre-commit hook and from CI. A hook cannot
+make you *think*; it can make skipping visible and expensive. The rest is on you.
+
+Genuine exception (a typo in a spec, say): `RAMPA_SKIP_SPECKIT=1`, and say why in
+the commit message.
+
+---
+
 ## What this repository is, and is not
 
 This repository is **the project**, not the product a teacher uses. A teacher uses

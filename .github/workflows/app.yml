@@ -34,6 +34,13 @@ jobs:
         run: bash ../scripts/validate-recipes.sh
         if: runner.os != 'Windows'
 
+      # The same gate the commit hook runs. A specification and its
+      # implementation arriving together skips the Constitution Check and the
+      # clarify pass, and this repository has done it twice.
+      - name: Spec Kit gate
+        run: bash ../scripts/check-spec-kit.sh origin/main
+        if: runner.os != 'Windows'
+
       - name: The vault survives a teacher
         run: npm run test:vault
 

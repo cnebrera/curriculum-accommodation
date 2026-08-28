@@ -172,7 +172,25 @@ they need no re-adaptation. Recorded so the gap stays a decision.
 
 ---
 
-## Process gap
+## Process gap — *CLOSED STRUCTURALLY 2026-08-28*
+
+Recorded twice, fixed the second time. `scripts/check-spec-kit.sh` now blocks a
+commit carrying a specification and its implementation together, from the
+pre-commit hook and from CI, and the constitution (1.4.0) makes the flow a
+NON-NEGOTIABLE gate rather than a stated preference.
+
+The second occurrence is the instructive one: an agent wrote `specs/009` and
+began implementing it in the same session, having read the instruction not to.
+That is the same argument as Principle IX one level up — **where a rule can be
+enforced by code that does not consult the model, it must be** — and it took two
+failures to apply the project's own doctrine to the project's own process.
+
+What the gate cannot do is make anyone think. `/speckit-clarify` is a
+conversation, not a file, so the gate makes skipping visible and expensive and
+`AGENTS.md` carries the rest.
+
+*Original text follows.*
+
 
 `plan.md` and `tasks.md` do not exist for any spec. The specifications were
 hand-written against the Spec Kit templates rather than produced by

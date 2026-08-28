@@ -47,8 +47,18 @@ and reject changes on sight:
 - **Scripts never call a model.** No API keys, no network, no provider-specific
   behaviour. Scripts must run and be tested offline.
 
-Specifications are managed with [Spec Kit](https://github.com/github/spec-kit).
-Work starts at `/speckit-specify`, not in the editor.
+Specifications are managed with [Spec Kit](https://github.com/github/spec-kit),
+and the flow is a gate rather than a suggestion:
+
+```
+/speckit-specify → /speckit-clarify → /speckit-plan → /speckit-tasks → /speckit-implement
+```
+
+**No implementation without a numbered task**, and a specification never lands in
+the same commit as its implementation — the plan is where the Constitution Check
+runs and clarify is where the questions get asked. `scripts/check-spec-kit.sh`
+enforces it from the commit hook and in CI. Run `scripts/setup-hooks.sh` after
+cloning so it applies to you too.
 
 There is one command layer here, `/speckit-*`, and it is for building Rampa. A
 teacher uses the built application; nobody drives the pipeline by hand in this

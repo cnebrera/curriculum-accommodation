@@ -60,4 +60,13 @@ MSG
     exit 1
 fi
 
+# ── Spec Kit gate ─────────────────────────────────────────────────────────────
+# Structural, because instructional did not hold: this rule has been broken
+# twice by people who had read the reminder. See scripts/check-spec-kit.sh.
+if [ "${RAMPA_SKIP_SPECKIT:-0}" != "1" ]; then
+    bash scripts/check-spec-kit.sh || exit 1
+else
+    echo "  ⚠️  Spec Kit gate skipped by RAMPA_SKIP_SPECKIT=1 — say why in the message." >&2
+fi
+
 exit 0
