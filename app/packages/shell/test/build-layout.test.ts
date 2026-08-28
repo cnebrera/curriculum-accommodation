@@ -55,6 +55,39 @@ describe('the packaged app can find its own renderer', () => {
    * failed to load, `window.rampa` was undefined, and the whole application was
    * a blank window. Found by launching it, which is the only thing that could.
    */
+  /**
+   * T003 — a bundled typeface without its licence is a distribution defect.
+   *
+   * Atkinson Hyperlegible is SIL OFL 1.1, which permits bundling provided the
+   * licence travels with it. This project already fails the build when the
+   * corpus ships without CC BY-SA; a font is the same obligation.
+   */
+  it('the bundled typeface ships with its licence', async () => {
+    const fonts = join('ui', 'src', 'assets', 'fonts');
+    for (const f of ['AtkinsonHyperlegible-Regular.woff2', 'AtkinsonHyperlegible-Bold.woff2']) {
+      expect(await built(join(fonts, f)), `${f} is missing`).toBe(true);
+    }
+    expect(
+      await built(join(fonts, 'OFL.txt')),
+      'the typeface is bundled without SIL OFL 1.1 — that is not distributable',
+    ).toBe(true);
+
+    const ofl = await readFile(join(appRoot, fonts, 'OFL.txt'), 'utf8');
+    expect(ofl).toMatch(/SIL OPEN FONT LICENSE/i);
+    expect(ofl).toMatch(/Braille Institute/i);
+  });
+
+  it('the stylesheet references the faces it bundles', async () => {
+    const css = await readFile(join(appRoot, 'ui', 'src', 'styles', 'tokens.css'), 'utf8');
+    const faces = [...css.matchAll(/url\("([^"]+\.woff2)"\)/g)].map((m) => m[1]!);
+    expect(faces.length, 'no @font-face src found in tokens.css').toBe(2);
+    for (const rel of faces) {
+      // The url is relative to the stylesheet, which lives in ui/src/styles.
+      const resolved = join('ui', 'src', 'styles', rel);
+      expect(await built(resolved), `tokens.css points at ${rel}, which is not there`).toBe(true);
+    }
+  });
+
   it('the preload path in main.ts resolves to the file the build emits', async () => {
     const main = await readFile(join(appRoot, 'packages', 'shell', 'src', 'main.ts'), 'utf8');
     const match = /preload:\s*join\(import\.meta\.dirname,\s*([^)]+)\)/.exec(main);

@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useStrings } from '../i18n/context.js';
 import { fromWire } from '../../../packages/core/src/errors.js';
-import { Notice } from '../components/Notice.js';
+import { Callout } from '../components/Callout.js';
+import { ReportView, type Decision } from './ReportView.js';
+import { DraftMark } from '../components/DraftMark.js';
 import { ScopeQuestion } from './ScopeQuestion.js';
 
 /**
@@ -11,7 +13,10 @@ import { ScopeQuestion } from './ScopeQuestion.js';
  */
 export function ReviewScreen({ jobId, learner, recipes }: { jobId: string; learner: string; recipes?: string[] }) {
   const { t: es } = useStrings();
-  const [report, setReport] = useState('');
+  const [reportData, setReportData] = useState<{
+    decisions: Decision[]; notDone: string[];
+    memoryApplied: Array<{ source: string; effect: string }>;
+  } | null>(null);
   const [checklist, setChecklist] = useState('');
   const [signedOff, setSignedOff] = useState(false);
   const [pdfPath, setPdfPath] = useState<string | null>(null);
@@ -23,8 +28,9 @@ export function ReviewScreen({ jobId, learner, recipes }: { jobId: string; learn
   const [editedOutside, setEditedOutside] = useState(false);
 
   useEffect(() => {
-    void window.rampa.vault.read(`material/${jobId}/${learner}/report.md`)
-      .then((d: { content: string } | null) => setReport(d?.content ?? ''));
+    void window.rampa.job.reportData(jobId, learner)
+      .then(setReportData)
+      .catch(() => setReportData(null));
     void window.rampa.job.isSignedOff(jobId, learner).then(setSignedOff);
     // The checklist is corpus, not code: a teacher can correct what she is asked
     // to check without anyone touching the application.
@@ -58,7 +64,7 @@ export function ReviewScreen({ jobId, learner, recipes }: { jobId: string; learn
     setRevising(true); setError(null);
     try {
       const r = await window.rampa.job.revise(jobId, learner, corrections);
-      setReport(r.report);
+      setReportData(r.reportData ?? null);
       setRevision(r.revision);
       setCorrections([]);
       setSignedOff(false);          // a new version is a new draft
@@ -76,23 +82,34 @@ export function ReviewScreen({ jobId, learner, recipes }: { jobId: string; learn
 
   return (
     <div className="stack">
+      <DraftMark signedOff={signedOff} />
       <h1>{es.review.title}{revision > 1 ? ` · versión ${revision}` : ''}</h1>
-      <Notice kind="warn">{es.review.lead}</Notice>
 
-      <div className="card"><pre style={{ whiteSpace: 'pre-wrap', margin: 0 }}>{report}</pre></div>
+      {reportData
+        ? <ReportView {...reportData} />
+        : <Callout intent="info">Cargando el informe…</Callout>}
 
       {photocopy.length ? (
-        <Notice kind="warn" title="En fotocopia esto se pierde">
+        <Callout intent="decide" title="En fotocopia esto se pierde">
           <ul>{photocopy.map((p, i) => <li key={i}>{p.message}</li>)}</ul>
-        </Notice>
+        </Callout>
       ) : null}
 
-      {error ? <Notice kind="danger">{error}</Notice> : null}
+      {error ? <Callout intent="danger">{error}</Callout> : null}
 
       {checklist ? (
-        <details>
-          <summary>Lista de comprobación</summary>
-          <div className="card"><pre style={{ whiteSpace: 'pre-wrap', margin: 0 }}>{checklist}</pre></div>
+        <details className="card card-plain">
+          <summary style={{ cursor: 'pointer', fontWeight: 700, fontSize: 'var(--text-sm)' }}>
+            Lista de comprobación
+          </summary>
+          <div className="stack gap2" style={{ marginTop: 'var(--s3)' }}>
+            {checklist.split('\n').filter((l) => l.trim().startsWith('- [')).map((l, i) => (
+              <label className="check" key={i}>
+                <input type="checkbox" />
+                <span className="lbl">{l.replace(/^\s*- \[[ xX]\]\s*/, '')}</span>
+              </label>
+            ))}
+          </div>
         </details>
       ) : null}
 
@@ -115,9 +132,9 @@ export function ReviewScreen({ jobId, learner, recipes }: { jobId: string; learn
       ) : null}
 
       {editedOutside ? (
-        <Notice kind="info" title="Has cambiado la ficha a mano">
+        <Callout intent="info" title="Has cambiado la ficha a mano">
           Perfecto: es tu fichero. Vuelve a generar el PDF para que salga con tus cambios.
-        </Notice>
+        </Callout>
       ) : null}
 
       <div className="row">

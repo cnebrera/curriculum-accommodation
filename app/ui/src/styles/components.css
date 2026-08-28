@@ -1,0 +1,360 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   Rampa · components
+   Destination: app/ui/src/styles/components.css · spec 010
+
+   Every value here comes from tokens.css. If a component needs a number that
+   is not in the scale, the scale is wrong — not the component.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Layout helpers ─────────────────────────────────────────────────────── */
+.stack { display: flex; flex-direction: column; }
+.row   { display: flex; align-items: center; flex-wrap: wrap; gap: var(--s3); }
+.gap1 { gap: var(--s1) } .gap2 { gap: var(--s2) } .gap3 { gap: var(--s3) }
+.gap4 { gap: var(--s4) } .gap5 { gap: var(--s5) } .gap6 { gap: var(--s6) }
+.gap7 { gap: var(--s7) } .gap8 { gap: var(--s8) }
+.prose { max-width: var(--measure) }
+.grow { flex: 1 }
+
+/* Visible to a screen reader, not to an eye. Used where a state is carried by
+   colour and a glyph, so the state is still spoken (FR-812). */
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.lede { font-size: 1.2rem; color: var(--ink-soft); }
+.small { font-size: var(--text-sm); color: var(--ink-soft); }
+.meta { font-family: var(--font-mono); font-size: var(--text-xs); color: var(--ink-faint); }
+
+/* ═══ BUTTONS ══════════════════════════════════════════════════════════════
+   Height comes from the token scale, not from padding arithmetic, so a
+   larger text preference grows the control instead of cropping its label.
+   Minimum 44px on the default size (FR-804).
+   ══════════════════════════════════════════════════════════════════════════ */
+.btn {
+  --btn-h: 44px;
+  font: inherit;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  min-height: var(--btn-h);
+  padding: 0 var(--s4);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s2);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-control);
+  background: var(--paper);
+  color: var(--ink);
+  cursor: pointer;
+  transition: background var(--dur) var(--ease), border-color var(--dur) var(--ease),
+              box-shadow var(--dur) var(--ease), transform var(--dur) var(--ease-out);
+  text-decoration: none;
+  white-space: nowrap;
+  box-shadow: var(--shadow-sm);
+}
+.btn:hover:not(:disabled) { background: var(--surface); border-color: var(--n-400); box-shadow: var(--shadow-md); }
+.btn:active:not(:disabled) { background: var(--surface-2); }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* Primary. A gradient that is one stop of the scale — light at the top, as
+   light falls — plus a hue-tinted shadow. v1 banned both, which is how a
+   button ends up looking like a rectangle with a colour in it. */
+.btn-primary {
+  background: linear-gradient(180deg, var(--teal-500) 0%, var(--accent) 62%);
+  border-color: var(--accent-hover);
+  color: var(--on-accent);
+  box-shadow: var(--inset-hi), var(--shadow-accent);
+}
+.btn-primary:hover:not(:disabled) {
+  background: linear-gradient(180deg, var(--teal-400) 0%, var(--teal-500) 62%);
+  border-color: var(--accent);
+  transform: translateY(-1px);
+  box-shadow: var(--inset-hi), 0 4px 12px rgba(0,115,109,.34), 0 12px 28px rgba(0,115,109,.2);
+}
+.btn-primary:active:not(:disabled) {
+  transform: translateY(0);
+  background: var(--accent-hover);
+  box-shadow: inset 0 2px 4px rgba(3,43,41,.35);
+}
+/* A filled button needs the ring to clear its own fill, not just the page. */
+.btn-primary:focus-visible { outline-color: var(--ink); }
+@media (prefers-reduced-motion: reduce) { .btn-primary:hover:not(:disabled) { transform: none } }
+
+.btn-ghost { background: transparent; border-color: transparent; color: var(--accent-ink); box-shadow: none; }
+.btn-ghost:hover:not(:disabled) { background: var(--accent-soft); border-color: transparent; }
+
+.btn-danger { background: var(--paper); border-color: var(--draft-line); color: var(--draft); }
+.btn-danger:hover:not(:disabled) { background: var(--draft-soft); border-color: var(--draft); }
+
+.btn-sm { --btn-h: 34px; font-size: var(--text-xs); padding: 0 var(--s3); }
+.btn-lg { --btn-h: 52px; font-size: var(--text-base); padding: 0 var(--s5); }
+.btn-block { width: 100%; }
+
+/* Loading: the label stays so the width does not jump, and aria-busy carries
+   the state for anyone not looking at the spinner. */
+.btn[aria-busy="true"] { color: transparent; position: relative; pointer-events: none; }
+.btn[aria-busy="true"]::after {
+  content: ""; position: absolute; width: 16px; height: 16px;
+  border: 2px solid currentColor; border-top-color: transparent;
+  border-radius: var(--radius-pill);
+  color: var(--on-accent);
+  animation: spin 700ms linear infinite;
+}
+.btn-primary[aria-busy="true"]::after { border-color: var(--on-accent); border-top-color: transparent; }
+.btn:not(.btn-primary)[aria-busy="true"]::after { border-color: var(--ink); border-top-color: transparent; }
+@keyframes spin { to { transform: rotate(360deg) } }
+@media (prefers-reduced-motion: reduce) {
+  .btn[aria-busy="true"]::after { animation-duration: 2s }
+}
+
+/* ═══ FORMS ════════════════════════════════════════════════════════════════ */
+.field { display: flex; flex-direction: column; gap: var(--s2); }
+.field > label { font-weight: 700; font-size: var(--text-sm); }
+.field .help { font-size: var(--text-sm); color: var(--ink-soft); }
+
+.input, .textarea, .select {
+  font: inherit;
+  font-size: var(--text-base);
+  width: 100%;
+  min-height: 44px;
+  padding: 10px var(--s3);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-control);
+  background: var(--paper);
+  color: var(--ink);
+  transition: border-color var(--dur) var(--ease), background var(--dur) var(--ease),
+              box-shadow var(--dur) var(--ease);
+  box-shadow: inset 0 1px 2px rgba(6,66,63,.06);
+}
+.input::placeholder, .textarea::placeholder { color: var(--ink-faint); }
+.input:hover, .textarea:hover, .select:hover { border-color: var(--n-400); }
+.input:focus-visible, .textarea:focus-visible, .select:focus-visible { border-color: var(--accent); }
+.textarea { min-height: 130px; resize: vertical; line-height: var(--leading-body); }
+.select { appearance: none; padding-right: var(--s7); background-repeat: no-repeat;
+  background-position: right var(--s3) center; background-size: 12px;
+  /* chevron drawn in the ink colour, inline so no asset is fetched */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%2345565a' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E"); }
+.input:disabled, .textarea:disabled, .select:disabled { background: var(--surface); color: var(--ink-faint); cursor: not-allowed; }
+
+/* Error state carries a border, an icon and words — never colour alone. */
+.field[data-state="error"] .input,
+.field[data-state="error"] .textarea { border-color: var(--draft); border-width: 2px; }
+.field[data-state="ok"] .input { border-color: var(--ok); border-width: 2px; }
+.field .msg { display: flex; gap: var(--s2); align-items: flex-start; font-size: var(--text-sm); font-weight: 600; }
+.field[data-state="error"] .msg { color: var(--draft); }
+.field[data-state="ok"] .msg { color: var(--ok); }
+.field .msg .ic { flex: none; font-family: var(--font-mono); }
+
+/* Monospaced for anything she pastes: a key is a machine string, and seeing
+   it in mono makes a truncated paste visible. */
+.input-key { font-family: var(--font-mono); font-size: var(--text-sm); letter-spacing: 0.02em; }
+
+/* Checkbox and radio: drawn, so they look the same on every OS and can meet
+   the 44px target without a 44px box. */
+.check { display: flex; gap: var(--s3); align-items: flex-start; cursor: pointer;
+  min-height: 44px; align-content: center; padding: 6px 0; }
+.check input { appearance: none; flex: none; width: 22px; height: 22px; margin: 0;
+  border: 2px solid var(--line-strong); background: var(--paper); cursor: pointer;
+  border-radius: var(--radius-control); transition: all var(--dur) var(--ease); }
+.check input[type="radio"] { border-radius: var(--radius-pill); }
+.check input:hover { border-color: var(--accent); }
+.check input:checked { background: var(--accent); border-color: var(--accent); }
+.check input[type="checkbox"]:checked {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 14'%3E%3Cpath d='M2 7.5l3.2 3.2L12 4' fill='none' stroke='white' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-size: 15px; background-position: center; background-repeat: no-repeat;
+}
+.check input[type="radio"]:checked { box-shadow: inset 0 0 0 4px var(--paper); }
+.check .lbl { font-size: var(--text-base); }
+.check .lbl .sub { display: block; font-size: var(--text-sm); color: var(--ink-soft); }
+
+/* Segmented control: for two or three exclusive choices where a select would
+   hide the options. Used by the one required question in spec 009. */
+.segmented { display: inline-flex; border: 1px solid var(--line-strong);
+  border-radius: var(--radius-control); overflow: hidden; }
+.segmented button { font: inherit; font-size: var(--text-sm); font-weight: 600;
+  min-height: 44px; padding: 0 var(--s4); border: 0; background: var(--paper);
+  color: var(--ink-soft); cursor: pointer; }
+.segmented button + button { border-left: 1px solid var(--line-strong); }
+.segmented button:hover { background: var(--surface); }
+.segmented button[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent-ink); }
+
+/* ═══ CONTAINERS ═══════════════════════════════════════════════════════════ */
+.card { border: 1px solid var(--line); border-radius: var(--radius-box);
+  background: var(--surface); padding: var(--s4) var(--s5); box-shadow: var(--shadow-sm); }
+.card-plain { background: var(--paper); box-shadow: var(--shadow-md); }
+/* A card that is a button behaves like one. */
+.card-action { cursor: pointer; text-align: left; width: 100%; font: inherit; color: inherit;
+  transition: box-shadow var(--dur) var(--ease), transform var(--dur) var(--ease-out),
+              border-color var(--dur) var(--ease); }
+.card-action:hover { box-shadow: var(--shadow-lg); transform: translateY(-2px); border-color: var(--accent-line); }
+@media (prefers-reduced-motion: reduce) { .card-action:hover { transform: none } }
+.card-head { display: flex; justify-content: space-between; align-items: baseline;
+  gap: var(--s3); padding-bottom: var(--s3); margin-bottom: var(--s4);
+  border-bottom: 1px solid var(--line); }
+
+/* ═══ FEEDBACK ═════════════════════════════════════════════════════════════
+   One shape, four intents, and each states its kind in words as well as in
+   colour (FR-812).
+   ══════════════════════════════════════════════════════════════════════════ */
+.callout { border: 1px solid var(--line); border-left-width: 5px;
+  border-radius: var(--radius-box); padding: var(--s4) var(--s4);
+  display: flex; flex-direction: column; gap: var(--s1);
+  box-shadow: var(--shadow-sm); }
+.callout > strong { font-size: var(--text-sm); }
+.callout p { font-size: var(--text-sm); color: var(--ink-soft); }
+.callout-info { border-left-color: var(--accent-bright); background: var(--accent-soft);
+  border-color: var(--accent-line); }
+.callout-info > strong { color: var(--accent-ink); }
+.callout-decide { border-left-color: var(--decide-bright); background: var(--decide-soft);
+  border-color: var(--decide-line); }
+.callout-decide > strong { color: var(--decide); }
+.callout-danger { border-left-color: var(--draft-bright); background: var(--draft-soft);
+  border-color: var(--draft-line); }
+.callout-danger > strong { color: var(--draft); }
+.callout-ok { border-left-color: var(--ok-bright); background: var(--ok-soft);
+  border-color: var(--ok-line); }
+.callout-ok > strong { color: var(--ok); }
+
+/* ── The draft mark · the most important state in the product ────────────
+   Unmistakable and calm (spec 010 US4). The hatch runs at --ramp-angle, the
+   same 1:12 as the logo, so the product's key signal and its mark share a
+   geometry. Subtle on purpose: texture, not stripes. */
+.draftbar, .signedbar {
+  display: flex; align-items: center; gap: var(--s3);
+  border: 1px solid; border-left-width: 5px;
+  border-radius: var(--radius-box); padding: var(--s3) var(--s4);
+}
+.draftbar {
+  border-color: var(--draft-line); border-left-color: var(--draft);
+  background-color: var(--draft-soft);
+  background-image: repeating-linear-gradient(
+    calc(90deg - var(--ramp-angle)),
+    transparent 0 10px, color-mix(in srgb, var(--draft-bright) 16%, transparent) 10px 12px);
+  box-shadow: var(--shadow-sm);
+}
+.draftbar .dot { width: 11px; height: 11px; flex: none;
+  border-radius: var(--radius-pill); background: var(--draft-bright);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--draft-bright) 22%, transparent); }
+.draftbar .txt { font-size: var(--text-sm); font-weight: 700; color: var(--draft); }
+.signedbar { border-color: var(--ok-line); border-left-color: var(--ok); background: var(--ok-soft); }
+.signedbar .txt { font-size: var(--text-sm); font-weight: 700; color: var(--ok); }
+.draftbar .sub, .signedbar .sub { font-size: var(--text-xs); color: var(--ink-soft); }
+
+/* ── Badges and tags ────────────────────────────────────────────────────── */
+.badge { display: inline-flex; align-items: center; gap: var(--s1);
+  font-family: var(--font-mono); font-size: var(--text-xs); letter-spacing: 0.04em;
+  padding: 3px 8px; border-radius: var(--radius-pill);
+  border: 1px solid var(--line); background: var(--surface-2); color: var(--ink-soft); }
+.badge-accent { border-color: var(--accent-line); background: var(--accent-soft); color: var(--accent-ink); }
+.badge-work { border-color: var(--work-line); background: var(--work-soft); color: var(--work); }
+.badge-decide { border-color: var(--decide-line); background: var(--decide-soft); color: var(--decide); }
+.badge-draft { border-color: var(--draft-line); background: var(--draft-soft); color: var(--draft); }
+.badge-ok { border-color: var(--ok-line); background: var(--ok-soft); color: var(--ok); }
+.tag { font-family: var(--font-mono); font-size: var(--text-xs); padding: 2px 7px;
+  border-radius: 4px; background: var(--surface-2); border: 1px solid var(--line); color: var(--ink-soft); }
+
+/* ── Progress · a real bar, because "adapting" has a shape she can read ─── */
+.progress { height: 6px; background: var(--surface-2); border-radius: var(--radius-pill); overflow: hidden; }
+.progress { box-shadow: inset 0 1px 2px rgba(6,66,63,.09); }
+.progress > i { display: block; height: 100%; border-radius: inherit;
+  background: linear-gradient(90deg, var(--work) 0%, var(--work-bright) 100%);
+  transition: width var(--dur-slow) var(--ease); position: relative; overflow: hidden; }
+.progress > i::after {
+  content: ""; position: absolute; inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.45), transparent);
+  animation: sheen 1.6s var(--ease) infinite;
+}
+@keyframes sheen { from { transform: translateX(-100%) } to { transform: translateX(100%) } }
+@media (prefers-reduced-motion: reduce) { .progress > i::after { animation: none; opacity: 0 } }
+.progress-steps { display: flex; gap: var(--s1); }
+.progress-steps > i { height: 4px; flex: 1; background: var(--surface-2); border-radius: var(--radius-pill); }
+.progress-steps > i[data-done] { background: linear-gradient(90deg, var(--work), var(--work-bright)); }
+
+/* ── Empty state · the first thing she sees, so it is designed (FR-828) ─── */
+.empty { border: 1px dashed var(--line-strong); border-radius: var(--radius-box);
+  padding: var(--s7) var(--s5); text-align: center;
+  display: flex; flex-direction: column; align-items: center; gap: var(--s3); }
+.empty h3 { font-size: var(--text-lg); }
+.empty p { font-size: var(--text-sm); color: var(--ink-soft); max-width: 44ch; }
+
+/* ── Toast ──────────────────────────────────────────────────────────────── */
+.toast { display: flex; align-items: flex-start; gap: var(--s3);
+  border: 1px solid var(--line-strong); border-radius: var(--radius-box);
+  background: var(--paper); padding: var(--s3) var(--s4); max-width: 420px; }
+.toast .ic { flex: none; font-weight: 700; }
+.toast-ok .ic { color: var(--ok) } .toast-danger .ic { color: var(--draft) }
+.toast .body { font-size: var(--text-sm) }
+.toast .body strong { display: block }
+
+/* ═══ THE AXIS STRIP ═══════════════════════════════════════════════════════
+   The one component this product has to invent: ten barriers, 0–3 or
+   unobserved, readable at a glance. Bars AND a number AND a word, because a
+   level shown only as colour is a level she cannot check (FR-812). Unobserved
+   is dashed — it is not zero, and confusing the two silently disables the
+   adaptations a learner needs.
+   ══════════════════════════════════════════════════════════════════════════ */
+.axes { display: flex; gap: var(--s2); flex-wrap: wrap; }
+.axis { min-width: 62px; text-align: center; border: 0; background: none;
+  padding: var(--s1); border-radius: var(--radius-control); cursor: pointer; font: inherit; }
+.axis:hover { background: var(--surface-2); }
+.axis .nm { display: block; font-size: 0.6875rem; color: var(--ink-soft); margin-bottom: 4px; }
+.axis .bars { display: flex; gap: 2px; justify-content: center; }
+.axis .b { width: 12px; height: 24px; border-radius: 2px;
+  background: var(--surface-2); border: 1px solid var(--line-strong); }
+.axis .b[data-on] { border-color: var(--accent-hover);
+  background: linear-gradient(180deg, var(--teal-500), var(--accent));
+  box-shadow: var(--inset-hi); }
+.axis .lv { display: block; font-family: var(--font-mono); font-size: 0.6875rem;
+  color: var(--ink-faint); margin-top: 4px; }
+.axis[data-unobserved] .b { border-style: dashed; background: transparent; }
+.axis[data-unobserved] .lv { font-style: italic; }
+
+/* ═══ NAV RAIL ═════════════════════════════════════════════════════════════ */
+.rail { background: var(--surface); border-right: 1px solid var(--line);
+  padding: var(--s4) var(--s3); display: flex; flex-direction: column; gap: 2px; }
+.rail a { display: flex; align-items: center; min-height: 44px; padding: 0 var(--s2);
+  border-radius: var(--radius-control); color: var(--ink-soft);
+  text-decoration: none; font-size: var(--text-sm); }
+.rail a:hover { background: var(--surface-2); color: var(--ink); }
+.rail a[aria-current] { background: var(--accent-soft); color: var(--accent-ink);
+  font-weight: 700; box-shadow: inset 3px 0 0 var(--accent-bright); }
+
+/* ═══ THE REPORT · where her judgement is the product ══════════════════════ */
+.decision { border-top: 1px solid var(--line); padding: var(--s4) 0;
+  display: flex; flex-direction: column; gap: var(--s2); }
+.decision:first-child { border-top: 0; padding-top: 0; }
+/* The teacher's own material, shown back for verification. Preformatted because
+   line breaks in a worksheet are meaningful, but styled as paper rather than as
+   a terminal — she is checking a worksheet, not reading a log. */
+.material {
+  white-space: pre-wrap; font-family: var(--font-sans); font-size: var(--text-base);
+  line-height: var(--leading-body); background: var(--paper);
+  border: 1px solid var(--line); border-left: 4px solid var(--accent-line);
+  border-radius: var(--radius-box); padding: var(--s4) var(--s5);
+  max-width: var(--measure); box-shadow: var(--shadow-sm);
+}
+
+.quote { margin: 0; padding: var(--s2) var(--s3); border-left: 3px solid var(--draft-line);
+  background: var(--paper); border-radius: 0 var(--radius-control) var(--radius-control) 0;
+  font-family: var(--font-mono); font-size: var(--text-sm); color: var(--ink); }
+
+.decision .why { font-size: var(--text-sm); color: var(--ink-soft); }
+
+/* ── Demo scaffolding for the preview pages only. Not shipped. ──────────── */
+.ds-page { padding: var(--s6); display: flex; flex-direction: column; gap: var(--s6); }
+.ds-group { display: flex; flex-direction: column; gap: var(--s4); }
+.ds-label { font-family: var(--font-mono); font-size: var(--text-xs);
+  letter-spacing: var(--tracking-wide); text-transform: uppercase; color: var(--ink-faint);
+  border-bottom: 1px solid var(--line); padding-bottom: var(--s2); }
+.ds-swatchgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(96px, 1fr)); gap: var(--s2); }
+.ds-sw { border: 1px solid var(--line); border-radius: var(--radius-control); overflow: hidden; }
+.ds-sw .chip { height: 52px }
+.ds-sw .lbl { padding: 6px var(--s2); font-family: var(--font-mono); font-size: 0.6875rem; color: var(--ink-soft); }

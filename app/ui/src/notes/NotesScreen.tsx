@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Notice } from '../components/Notice.js';
+import { Callout } from '../components/Callout.js';
 import { ConsolidateSection } from './ConsolidateSection.js';
 
 /** Her notes, over memory/house.md and memory/journal/. */
@@ -21,10 +21,10 @@ export function NotesScreen() {
   return (
     <div className="stack">
       <h1>Mis notas</h1>
-      <Notice kind="info" title="Esto es tuyo">
+      <Callout intent="info" title="Esto es tuyo">
         Están en tu carpeta, en texto plano. Puedes abrirlas con cualquier editor, o con Obsidian,
         y la copia de seguridad es copiar la carpeta. Si desinstalas Rampa, siguen ahí.
-      </Notice>
+      </Callout>
 
       <h2>Cómo trabajo yo</h2>
       <textarea value={house} onChange={(e) => setHouse(e.target.value)} style={{ minHeight: 240 }} />
@@ -38,7 +38,21 @@ export function NotesScreen() {
       {index.trim() && !index.includes('Todavía no hay') ? (
         <>
           <h2>Lo que he aprendido de ti</h2>
-          <div className="card"><pre style={{ whiteSpace: 'pre-wrap', margin: 0 }}>{index}</pre></div>
+          <div className="stack gap3">
+            {index.split(/\n(?=## )/).filter((s) => s.startsWith('## ')).map((sec, i) => {
+              const [head, ...items] = sec.split('\n');
+              return (
+                <div className="card" key={i}>
+                  <strong style={{ fontSize: 'var(--text-sm)' }}>{(head ?? '').replace(/^##\s*/, '')}</strong>
+                  <ul className="stack gap1" style={{ margin: 'var(--s2) 0 0', paddingLeft: '1.1em' }}>
+                    {items.filter((l) => l.trim().startsWith('-')).map((l, j) => (
+                      <li className="small" key={j}>{l.replace(/^\s*-\s*/, '')}</li>
+                    ))}
+                  </ul>
+                </div>
+              );
+            })}
+          </div>
         </>
       ) : null}
 

@@ -55,6 +55,13 @@ export interface Correction { text: string; scope: 'learner' | 'practice' | 'cor
 
 export interface AdaptResult {
   report: string;
+  /** The structures the review screen renders (spec 010 FR-826). The markdown
+   *  stays for report.md, which she must be able to read without the app. */
+  reportData: {
+    decisions: Array<{ title: string; recipe: string; axis: string; blocks: string[] }>;
+    notDone: string[];
+    memoryApplied: Array<{ source: string; effect: string }>;
+  };
   /** Everything the teacher must be shown, quoted and located (007 FR-503). */
   notices: Array<{ block: string | null; notice: Notice }>;
   costCents: number;
@@ -256,6 +263,11 @@ export async function runAdaptation(
 
   return {
     report: report.markdown,
+    reportData: {
+      decisions: report.decisions,
+      notDone: report.notDone,
+      memoryApplied: memory.journal.map((j) => ({ source: j.path, effect: 'Apliqué lo aprendido antes' })),
+    },
     notices,
     costCents: totalCents,
     revision,
@@ -311,6 +323,19 @@ export function registerAdaptIpc(getWindow: () => BrowserWindow | null): void {
   });
 
   handle('job:list', async () => currentVault().list(VAULT.material));
+
+  /**
+   * The report as structures, for the review screen (spec 010 FR-826).
+   * Rebuilt from the adapted document rather than parsed back out of the
+   * markdown — the markdown is a rendering, not a source.
+   */
+  handle('job:reportData', async (jobId: string, learnerCode: string) => {
+    const vault = currentVault();
+    const raw = await vault.readRaw(jobAdapted(jobId, learnerCode));
+    if (!raw) return null;
+    const report = buildReport({ adapted: parseIR(raw) });
+    return { decisions: report.decisions, notDone: report.notDone, memoryApplied: [] };
+  });
 
   /** Which learners this job has already been adapted for (T092b). */
   handle('job:learners', async (jobId: string) => {

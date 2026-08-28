@@ -1,70 +1,311 @@
-/* Hand-written CSS with custom properties (research R10). No utility framework:
-   this application states an accessibility target, and a contributor reading a
-   stylesheet should be able to see what a colour does. */
-:root {
-  --paper: #fcfcfa; --surface: #f3f4f1; --surface-2: #eaece8;
-  --ink: #1a2528; --ink-soft: #4a5a5d; --ink-faint: #78878a;
-  --line: #dce0dc; --line-strong: #c3cac5;
-  --accent: #0e6b67; --accent-soft: #e0eeec; --accent-line: #8fc4c0;
-  --warn: #7a3e6b; --warn-soft: #f2e7f0; --warn-line: #c79cbc;
-  --danger: #8a2f2c; --danger-soft: #f7e9e8;
-  --radius: 10px;
-  --step: 8px;
+/* ═══════════════════════════════════════════════════════════════════════════
+   Rampa · design tokens · v2
+   Destination: app/ui/src/styles/tokens.css · spec 010
+
+   ── Why v2 ─────────────────────────────────────────────────────────────────
+   v1 was dull, and accessibility was not the reason. Three real causes:
+   an editorial reference followed too literally; shadows banned outright to
+   avoid the AI-default look, which is avoiding a failure rather than pursuing
+   a quality; and — the actual sin — a scale built on an anchor teal with almost
+   no chroma, with three semantic hues all at the same value and saturation, so
+   nothing contrasted with anything.
+
+   AA constrains contrast RATIOS, which are differences in luminance. It says
+   nothing about saturation. The working rule, and it is what makes this
+   palette both vivid and accessible:
+
+       BRIGHT colours go where they never carry small text — large fills,
+       borders, icons, glows, dark grounds, progress, decoration.
+       DEEP saturated colours carry the text.
+
+   Every ratio below is measured, not estimated.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── The typeface, bundled ───────────────────────────────────────────────────
+   It will not be installed on her machine — that is the normal case, not the
+   edge one — so without bundling, the face carrying the whole identity argument
+   is a fallback on every real installation, which makes the argument
+   decorative. SIL OFL 1.1; OFL.txt ships beside it and the build fails without
+   it (research R1). 47 KB for both weights.
+
+   `font-display: block` on purpose: a brief blank beats a flash of Verdana and
+   then a reflow, on a face chosen for legibility. */
+@font-face {
+  font-family: "Atkinson Hyperlegible";
+  src: url("../assets/fonts/AtkinsonHyperlegible-Regular.woff2") format("woff2");
+  font-weight: 400; font-style: normal; font-display: block;
 }
-* { box-sizing: border-box; }
-html, body, #root { height: 100%; }
+@font-face {
+  font-family: "Atkinson Hyperlegible";
+  src: url("../assets/fonts/AtkinsonHyperlegible-Bold.woff2") format("woff2");
+  font-weight: 700; font-style: normal; font-display: block;
+}
+
+:root {
+  /* ── Teal · brand and interaction. Now with chroma ────────────────────── */
+  --teal-50:  #e6faf8;
+  --teal-100: #c2f3ee;
+  --teal-200: #8ae8e0;
+  --teal-300: #4bd9ce;
+  --teal-400: #12c9bc;   /* BRIGHT. 9.1:1 on dark ground. Never small text on light */
+  --teal-500: #00a89f;
+  --teal-600: #00736d;   /* FILL. white text on it = 5.7:1 */
+  --teal-700: #065e59;   /* TEXT on light = 7.4:1 */
+  --teal-800: #05423f;
+  --teal-900: #032b29;
+
+  /* ── Amber · energy, work in progress, highlight. The pencil-and-
+     highlighter colour of the world this product lives in ───────────────── */
+  --amber-50:  #fff6e3;
+  --amber-100: #ffe9ba;
+  --amber-300: #ffc85c;
+  --amber-400: #ffb020;   /* BRIGHT. 10.4:1 on dark */
+  --amber-600: #a25c00;   /* FILL/TEXT. 5.0:1 on paper */
+  --amber-800: #6b3c00;
+
+  /* ── Magenta · "this one is yours to decide" ──────────────────────────── */
+  --mag-50:  #fdeaf5;
+  --mag-100: #fbd3e9;
+  --mag-300: #f88cc8;
+  --mag-400: #f04fa8;    /* BRIGHT. 5.8:1 on dark */
+  --mag-600: #a01f6e;    /* FILL/TEXT. 7.0:1 */
+  --mag-800: #6d1049;
+
+  /* ── Coral · unsigned draft, and error. Warm, present, not a siren ────── */
+  --coral-50:  #ffeeea;
+  --coral-100: #ffdad2;
+  --coral-300: #ff9c85;
+  --coral-400: #ff6b52;  /* BRIGHT. 6.8:1 on dark */
+  --coral-600: #b93222;  /* FILL/TEXT. 5.8:1 */
+  --coral-800: #7d1d10;
+
+  /* ── Green · signed, done ─────────────────────────────────────────────── */
+  --green-50:  #e4fbf0;
+  --green-100: #c0f4dc;
+  --green-300: #6ce4ac;
+  --green-400: #2fd48a;  /* BRIGHT. 9.9:1 on dark */
+  --green-600: #0d7a4f;  /* FILL/TEXT. 5.2:1 */
+  --green-800: #06512f;
+
+  /* ── Neutrals, cooled toward the brand hue ────────────────────────────── */
+  --n-0:   #ffffff;
+  --n-25:  #fbfcfb;
+  --n-50:  #f2f6f5;
+  --n-100: #e6edeb;
+  --n-200: #d5dfdd;
+  --n-300: #7a8c89;   /* control borders. 3.4:1 on paper — SC 1.4.11 */
+  --n-400: #94a5a2;   /* hover border, lighter than line-strong on purpose */
+  --n-500: #5a6a67;   /* metadata. 5.5:1 on paper, 4.8:1 on surface-2 */
+  --n-600: #42534f;   /* 8.0:1 */
+  --n-700: #27352f;
+  --n-800: #18231f;
+  --n-900: #101a19;   /* 17.0:1 */
+
+  /* ── Roles. Components use THESE ──────────────────────────────────────── */
+  --paper:       var(--n-25);
+  --surface:     var(--n-50);
+  --surface-2:   var(--n-100);
+  --ink:         var(--n-900);
+  --ink-soft:    var(--n-600);
+  --ink-faint:   var(--n-500);
+  --line:        var(--n-200);
+  --line-strong: var(--n-300);
+
+  --accent:        var(--teal-600);   /* fills that carry white text */
+  --accent-hover:  var(--teal-700);
+  --accent-bright: var(--teal-400);   /* glows, borders, icons, dark theme */
+  --accent-ink:    var(--teal-700);   /* accent text on light */
+  --accent-soft:   var(--teal-50);
+  --accent-line:   var(--teal-200);
+  --on-accent:     #ffffff;
+
+  --decide:        var(--mag-600);
+  --decide-bright: var(--mag-400);
+  --decide-soft:   var(--mag-50);
+  --decide-line:   var(--mag-100);
+
+  --draft:        var(--coral-600);
+  --draft-bright: var(--coral-400);
+  --draft-soft:   var(--coral-50);
+  --draft-line:   var(--coral-100);
+
+  --ok:        var(--green-600);
+  --ok-bright: var(--green-400);
+  --ok-soft:   var(--green-50);
+  --ok-line:   var(--green-100);
+
+  --work:        var(--amber-600);    /* adapting, streaming, in progress */
+  --work-bright: var(--amber-400);
+  --work-soft:   var(--amber-50);
+  --work-line:   var(--amber-100);
+
+  /* ── Type ─────────────────────────────────────────────────────────────── */
+  --font-sans: "Atkinson Hyperlegible", Verdana, Tahoma, ui-sans-serif, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+
+  --text-xs:   0.8125rem;
+  --text-sm:   0.9375rem;
+  --text-base: 1.0625rem;   /* 17px — school laptop, teacher in a hurry */
+  --text-lg:   1.3125rem;
+  --text-xl:   1.6875rem;
+  --text-2xl:  2.125rem;
+
+  --leading-tight: 1.2;
+  --leading-body:  1.62;
+  --tracking-tight: -0.022em;
+  --tracking-wide:   0.13em;
+
+  /* ── Space · 4px steps ────────────────────────────────────────────────── */
+  --s1: 4px;  --s2: 8px;  --s3: 12px; --s4: 16px;
+  --s5: 24px; --s6: 32px; --s7: 48px; --s8: 64px;
+
+  --radius-control: 7px;
+  --radius-box: 12px;
+  --radius-pill: 999px;
+
+  /* ── Depth · v1 banned shadows, which was over-correction. Real elevation,
+     TINTED with the brand hue rather than black — a black shadow on a warm
+     ground reads as dirt, a hue-matched one reads as light. This is most of
+     what separates expensive-looking UI from flat UI. ───────────────────── */
+  --shadow-sm: 0 1px 2px rgba(6, 66, 63, 0.07), 0 1px 1px rgba(6, 66, 63, 0.04);
+  --shadow-md: 0 2px 4px rgba(6, 66, 63, 0.06), 0 4px 12px rgba(6, 66, 63, 0.08);
+  --shadow-lg: 0 4px 8px rgba(6, 66, 63, 0.07), 0 12px 32px rgba(6, 66, 63, 0.12);
+  --shadow-accent: 0 2px 6px rgba(0, 115, 109, 0.28), 0 8px 20px rgba(0, 115, 109, 0.16);
+  --inset-hi: inset 0 1px 0 rgba(255, 255, 255, 0.22);
+
+  /* Focus: a ring AND a soft glow. The ring is the accessibility requirement;
+     the glow is what makes it feel like software from this decade. */
+  --focus-ring: 3px solid var(--accent);
+  --focus-glow: 0 0 0 6px rgba(18, 201, 188, 0.22);
+  --focus-offset: 2px;
+
+  --ease: cubic-bezier(0.2, 0, 0.2, 1);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --dur: 160ms;
+  --dur-slow: 320ms;
+
+  /* 1:12 — the accessible gradient in building code, and the logo's angle */
+  --ramp-angle: 4.76deg;
+  --measure: 68ch;
+}
+
+/* ── Dark: designed, and this is where the bright end earns its keep ────── */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper:       #0a1211;
+    --surface:     #101b19;
+    --surface-2:   #17251f;
+    --ink:         #eaf2f0;
+    --ink-soft:    #a5b8b5;
+    --ink-faint:   #879b98;   /* 6.0:1 on a dark card */
+    --line:        #1f2e2b;
+    --line-strong: #5b7269;   /* 3.7:1 — SC 1.4.11 */
+
+    --accent:        var(--teal-400);   /* bright fill on dark */
+    --accent-hover:  var(--teal-300);
+    --accent-bright: var(--teal-300);
+    --accent-ink:    var(--teal-300);
+    --accent-soft:   #08302d;
+    --accent-line:   #1c5b56;
+    --on-accent:     var(--teal-900);
+
+    --decide: var(--mag-400);        --decide-bright: var(--mag-300);
+    --decide-soft: #2b0f22;          --decide-line: #5c214a;
+    --draft: var(--coral-400);       --draft-bright: var(--coral-300);
+    --draft-soft: #2d1310;           --draft-line: #63251a;
+    --ok: var(--green-400);          --ok-bright: var(--green-300);
+    --ok-soft: #082418;              --ok-line: #14563a;
+    --work: var(--amber-400);        --work-bright: var(--amber-300);
+    --work-soft: #291b04;            --work-line: #5c3d09;
+
+    /* On dark, elevation is a lighter surface plus a glow, not a shadow */
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5);
+    --shadow-md: 0 2px 6px rgba(0, 0, 0, 0.55), 0 8px 24px rgba(0, 0, 0, 0.35);
+    --shadow-lg: 0 6px 14px rgba(0, 0, 0, 0.6), 0 18px 48px rgba(0, 0, 0, 0.45);
+    --shadow-accent: 0 2px 10px rgba(18, 201, 188, 0.32), 0 8px 28px rgba(18, 201, 188, 0.18);
+    --inset-hi: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    --focus-glow: 0 0 0 6px rgba(75, 217, 206, 0.26);
+  }
+}
+
+:root[data-theme="dark"] {
+  --paper: #0a1211; --surface: #101b19; --surface-2: #17251f;
+  --ink: #eaf2f0; --ink-soft: #a5b8b5; --ink-faint: #879b98;
+  --line: #1f2e2b; --line-strong: #5b7269;
+  --accent: var(--teal-400); --accent-hover: var(--teal-300);
+  --accent-bright: var(--teal-300); --accent-ink: var(--teal-300);
+  --accent-soft: #08302d; --accent-line: #1c5b56; --on-accent: var(--teal-900);
+  --decide: var(--mag-400); --decide-bright: var(--mag-300); --decide-soft: #2b0f22; --decide-line: #5c214a;
+  --draft: var(--coral-400); --draft-bright: var(--coral-300); --draft-soft: #2d1310; --draft-line: #63251a;
+  --ok: var(--green-400); --ok-bright: var(--green-300); --ok-soft: #082418; --ok-line: #14563a;
+  --work: var(--amber-400); --work-bright: var(--amber-300); --work-soft: #291b04; --work-line: #5c3d09;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,.5);
+  --shadow-md: 0 2px 6px rgba(0,0,0,.55), 0 8px 24px rgba(0,0,0,.35);
+  --shadow-lg: 0 6px 14px rgba(0,0,0,.6), 0 18px 48px rgba(0,0,0,.45);
+  --shadow-accent: 0 2px 10px rgba(18,201,188,.32), 0 8px 28px rgba(18,201,188,.18);
+  --inset-hi: inset 0 1px 0 rgba(255,255,255,.12);
+  --focus-glow: 0 0 0 6px rgba(75,217,206,.26);
+}
+:root[data-theme="light"] {
+  --paper: var(--n-25); --surface: var(--n-50); --surface-2: var(--n-100);
+  --ink: var(--n-900); --ink-soft: var(--n-600); --ink-faint: var(--n-500);
+  --line: var(--n-200); --line-strong: var(--n-300);
+  --accent: var(--teal-600); --accent-hover: var(--teal-700);
+  --accent-bright: var(--teal-400); --accent-ink: var(--teal-700);
+  --accent-soft: var(--teal-50); --accent-line: var(--teal-200); --on-accent: #fff;
+  --decide: var(--mag-600); --decide-bright: var(--mag-400); --decide-soft: var(--mag-50); --decide-line: var(--mag-100);
+  --draft: var(--coral-600); --draft-bright: var(--coral-400); --draft-soft: var(--coral-50); --draft-line: var(--coral-100);
+  --ok: var(--green-600); --ok-bright: var(--green-400); --ok-soft: var(--green-50); --ok-line: var(--green-100);
+  --work: var(--amber-600); --work-bright: var(--amber-400); --work-soft: var(--amber-50); --work-line: var(--amber-100);
+}
+
+/* ── Her preferences · adjustments on a default that already meets AA ───── */
+:root[data-text="large"]  { --text-base: 1.25rem; --text-sm: 1.0625rem; --text-lg: 1.5rem;  --text-xl: 1.875rem; }
+:root[data-text="xlarge"] { --text-base: 1.5rem;  --text-sm: 1.25rem;   --text-lg: 1.75rem; --text-xl: 2.125rem; }
+
+/* High contrast pushes toward AAA and drops the decoration — the one place
+   where the palette does get quieter, and only because she asked. */
+:root[data-contrast="high"] {
+  --paper: #fff; --surface: #f6f8f7; --surface-2: #e9edec;
+  --ink: #000; --ink-soft: #1d2926; --ink-faint: #35443f;
+  --line: #93a29e; --line-strong: #64756f;
+  --accent: var(--teal-800); --accent-ink: var(--teal-900);
+  --shadow-sm: none; --shadow-md: none; --shadow-lg: none; --shadow-accent: none;
+}
+:root[data-contrast="high"][data-theme="dark"] {
+  --paper: #000; --surface: #0b1211; --surface-2: #141d1b;
+  --ink: #fff; --ink-soft: #d5e0dd; --ink-faint: #b2c0bc;
+  --line: #44544f; --line-strong: #687974;
+  --accent: var(--teal-200); --accent-ink: var(--teal-100);
+}
+
+@media (prefers-reduced-motion: reduce) { :root { --dur: 0ms; --dur-slow: 0ms } }
+:root[data-motion="reduced"] { --dur: 0ms; --dur-slow: 0ms }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Base
+   ═══════════════════════════════════════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
 body {
   margin: 0; background: var(--paper); color: var(--ink);
-  font-family: "Atkinson Hyperlegible", Verdana, ui-sans-serif, system-ui, sans-serif;
-  font-size: 16px; line-height: 1.6;
+  font-family: var(--font-sans); font-size: var(--text-base);
+  line-height: var(--leading-body); -webkit-font-smoothing: antialiased;
 }
-h1, h2, h3 { line-height: 1.2; margin: 0 0 .4em; text-wrap: balance; }
-h1 { font-size: 1.9rem; } h2 { font-size: 1.35rem; } h3 { font-size: 1.08rem; }
-p { margin: 0 0 1em; max-width: 62ch; }
-button {
-  font: inherit; cursor: pointer; border-radius: var(--radius);
-  border: 1px solid var(--line-strong); background: var(--surface);
-  color: var(--ink); padding: 10px 18px;
-}
-button:hover:not(:disabled) { background: var(--surface-2); }
-button:disabled { opacity: .5; cursor: not-allowed; }
-button.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 700; }
-button.primary:hover:not(:disabled) { filter: brightness(1.1); }
-input[type="text"], input[type="password"], textarea, select {
-  font: inherit; width: 100%; padding: 10px 12px; border-radius: var(--radius);
-  border: 1px solid var(--line-strong); background: var(--paper); color: var(--ink);
-}
-textarea { min-height: 140px; resize: vertical; }
-label { display: block; font-weight: 700; margin-bottom: 6px; }
-a { color: var(--accent); }
-:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+h1, h2, h3, h4 { margin: 0; line-height: var(--leading-tight); text-wrap: balance; }
+h1 { font-size: var(--text-2xl); letter-spacing: var(--tracking-tight); }
+h2 { font-size: var(--text-xl); letter-spacing: -0.015em; }
+h3 { font-size: var(--text-lg); }
+h4 { font-size: var(--text-base); }
+p { margin: 0; }
+a { color: var(--accent-ink); text-underline-offset: 3px; }
+a:hover { color: var(--accent); }
 
-.app { display: grid; grid-template-columns: 210px 1fr; height: 100%; }
-.nav { background: var(--surface); border-right: 1px solid var(--line); padding: 20px 12px; }
-.nav h1 { font-size: 1.2rem; padding: 0 10px 14px; }
-.nav button {
-  display: block; width: 100%; text-align: left; border: 0; background: transparent;
-  padding: 9px 10px; margin-bottom: 2px; border-radius: 8px;
+:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
+  box-shadow: var(--focus-glow);
+  border-radius: var(--radius-control);
 }
-.nav button[aria-current="page"] { background: var(--accent-soft); color: var(--accent); font-weight: 700; }
-.main { padding: 28px 32px 60px; overflow-y: auto; }
-.stack { display: flex; flex-direction: column; gap: 16px; }
-.row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
-.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px 20px; }
-.muted { color: var(--ink-soft); }
-.small { font-size: .9rem; }
-.notice { border-radius: var(--radius); padding: 14px 16px; border: 1px solid; }
-.notice.info { background: var(--accent-soft); border-color: var(--accent-line); }
-.notice.warn { background: var(--warn-soft); border-color: var(--warn-line); }
-.notice.danger { background: var(--danger-soft); border-color: var(--danger); }
-.notice blockquote { margin: 8px 0 0; padding-left: 12px; border-left: 3px solid currentColor; font-style: italic; }
-.steps { display: flex; gap: 8px; margin-bottom: 22px; }
-.steps span { flex: 1; height: 5px; border-radius: 3px; background: var(--line); }
-.steps span.done { background: var(--accent); }
-.axis-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; }
-.axis { border: 1px solid var(--line); border-radius: var(--radius); padding: 12px 14px; background: var(--paper); }
-.axis .levels { display: flex; gap: 6px; margin-top: 8px; }
-.axis .levels button { flex: 1; padding: 6px 0; text-align: center; }
-.axis .levels button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
-.badge { font-size: .85rem; padding: 3px 9px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--line-strong); }
-.badge.accent { background: var(--accent-soft); border-color: var(--accent-line); color: var(--accent); }
+::selection { background: var(--accent-bright); color: var(--teal-900); }
+code, kbd, samp { font-family: var(--font-mono); font-size: 0.9em; }

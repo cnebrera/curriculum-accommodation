@@ -33,14 +33,18 @@
     "build": "npm run bundle:corpus && electron-vite build",
     "dist": "npm run build && electron-builder",
     "test:all": "vitest run",
-    "test:e2e": "npm run build && playwright test"
+    "test:e2e": "npm run build && playwright test",
+    "test:a11y": "npm run build && playwright test a11y",
+    "test:layout": "npm run build && playwright test layout"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
     "@playwright/test": "^1.62.1",
     "@types/node": "^22.10.2",
     "@types/react": "^18.3.31",
     "@types/react-dom": "^18.3.7",
     "@vitejs/plugin-react": "^4.7.0",
+    "axe-core": "^4.13.0",
     "electron": "^33.4.11",
     "electron-builder": "^25.1.8",
     "electron-vite": "^2.3.0",

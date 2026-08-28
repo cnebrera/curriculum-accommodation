@@ -45,6 +45,8 @@ const api = {
     /** The judgement layer, read from the bundle. Never editable from the UI. */
     instruction: (name: string) => invoke('corpus:instruction', name),
     checklist: (name: string) => invoke('corpus:checklist', name),
+    /** Axis descriptors, so the interface never shows an axis code (T014). */
+    axes: () => invoke('corpus:axes'),
   },
   learners: {
     list: () => invoke('learners:list'),
@@ -72,6 +74,7 @@ const api = {
     signOff: (id: string, learner: string, role: string) => invoke('job:signOff', id, learner, role),
     isSignedOff: (id: string, learner: string) => invoke('job:isSignedOff', id, learner),
     list: () => invoke('job:list'),
+    reportData: (id: string, learner: string) => invoke('job:reportData', id, learner),
     learners: (id: string) => invoke('job:learners', id),
     onProgress: (cb: (p: { stage: string; detail?: string }) => void) => {
       const h = (_e: unknown, p: { stage: string; detail?: string }) => cb(p);

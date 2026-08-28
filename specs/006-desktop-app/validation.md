@@ -244,3 +244,71 @@ were a path string on one side not matching a path string on the other.
 - **No teacher has seen any of it.**
 
 Next: spec 008 (vision ingest), then the model floor, then the teacher.
+
+
+---
+
+# Spec 010 · the design system lands · 2026-08-28
+
+232 offline tests (up from 209), 5 e2e on real Electron, typecheck clean.
+
+## The contrast test found two real defects on its first run
+
+It exists for exactly this, and it earned itself in the first minute. Both were
+mine, introduced when I designed the v2 palette by eye:
+
+| Defect | Measured | Required |
+|---|---|---|
+| `--line-strong` on `--paper`, light | **1.79:1** | 3:1 — WCAG 2.2 SC 1.4.11, a border that identifies a control |
+| `--line-strong` on `--paper`, dark | **1.84:1** | 3:1 |
+| `--ink-faint` on `--surface`, light | **4.40:1** | 4.5:1 — passed on paper, failed on a card |
+
+The third is the instructive one: metadata passed against the page background and
+failed against the card background it actually sits on. That is invisible to the
+eye and invisible to review, and it is exactly the class of thing this project
+keeps finding in seams.
+
+The test reads the **shipped** `tokens.css` rather than a copy of the palette,
+across all four palettes — light, dark, high-contrast light, high-contrast dark.
+A duplicated palette in the test would have drifted and then reported success
+while the application failed.
+
+## And a duplication it exposed
+
+`contrastRatio` already existed in `render/photocopy.ts`. Two implementations of
+WCAG luminance arithmetic, neither aware of the other, which collided at the
+export the moment a second one appeared. Now one, shared. This repository's
+recurring defect in its smallest possible form.
+
+## What landed
+
+- **Tokens and components** lifted verbatim from the design project, so the
+  visual system has one source of truth and a change is reviewed as a preview
+  before it reaches a screen.
+- **Atkinson Hyperlegible bundled** — 47 KB for both weights, with the real SIL
+  OFL from the Braille Institute, and a test asserting the licence ships and the
+  stylesheet points at files that exist.
+- **The report is no longer a text dump.** `ReportView` renders `buildReport()`'s
+  structures, grouped by decision, leading with what was not done. This was the
+  least finished thing in the application and it sat on the screen where the
+  teacher's judgement is the product.
+- **The axis descriptors moved to the corpus** (`instructions/axes.md`), closing
+  T096. They were calibration guidance about children living in TypeScript.
+  A test asserts the corpus covers all ten axes, names them in her words, and
+  never writes a bare adjective where a behaviour belongs.
+- **The draft mark** as a component: words as well as colour, hatched at the
+  logo's 1:12.
+- Components: `Callout`, `Field` (label + help + associated message), `Badge`,
+  `Segmented` (no default, because inferring scope is a privacy incident),
+  `EmptyState`, `Progress`, `Logo`.
+
+## NOT done, and named
+
+- **T015 is partial.** `LearnersScreen` and `AboutScreen` have not had their pass.
+- **T016, T017**: onboarding restyle and the 1366×768 layout assertions.
+- **Phase 4 — the axe gate is not written yet**, so the AA claim is enforced by
+  arithmetic but not yet by a rendered-screen check. That is the half that
+  catches a missing label, and it is the next task.
+- **Phases 5–7**: preferences UI, the settings block, polish.
+- **No teacher has seen any of it.** Unchanged, and still the only line that
+  decides anything.

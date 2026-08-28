@@ -1,3 +1,6 @@
+import { luminance, contrastRatio } from '../contrast.js';
+export { contrastRatio };
+
 /**
  * A worksheet reaches a class through a black-and-white photocopier
  * (006 FR-427). Colour-coded structure collapses into identical greys, and a
@@ -7,18 +10,10 @@ export interface PhotocopyIssue { what: string; message: string; }
 
 const HEX = /#([0-9a-f]{3}|[0-9a-f]{6})\b/gi;
 
-const luminance = (hex: string): number => {
-  let h = hex.replace('#', '');
-  if (h.length === 3) h = h.split('').map((c) => c + c).join('');
-  const [r, g, b] = [0, 2, 4].map((i) => parseInt(h.slice(i, i + 2), 16) / 255) as [number, number, number];
-  const lin = (c: number) => (c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4));
-  return 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
-};
-
-export const contrastRatio = (a: string, b: string): number => {
-  const [l1, l2] = [luminance(a), luminance(b)].sort((x, y) => y - x) as [number, number];
-  return (l1 + 0.05) / (l2 + 0.05);
-};
+/* The luminance and ratio arithmetic is shared with ../contrast.ts — it was
+   duplicated here until 010's token test collided with it at the export, which
+   is this repository's recurring defect in its smallest possible form: two
+   implementations of one truth, neither knowing about the other. */
 
 /** Distinct hues that desaturate to near-identical greys are indistinguishable on a copy. */
 export function checkPhotocopy(html: string): PhotocopyIssue[] {

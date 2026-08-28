@@ -2,7 +2,9 @@ import { app } from 'electron';
 import { readFile, readdir, stat } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
-import { parseRecipe, RampaError, type Recipe } from '@rampa/core';
+import {
+  parseRecipe, parseAxisDefs, coversAllAxes, logger, RampaError, type Recipe,
+} from '@rampa/core';
 import { currentVault } from './vault.js';
 import { VAULT } from '@rampa/core';
 import { handle } from './wrap.js';
@@ -125,6 +127,15 @@ export const loadChecklist = async (name: string): Promise<string> =>
 
 export function registerCorpusIpc(): void {
   handle('corpus:instruction', async (name: string) => loadInstruction(name));
+
+  /** The axis descriptors a teacher can correct (spec 010 T014). */
+  handle('corpus:axes', async () => {
+    const defs = parseAxisDefs(await loadInstruction('axes'), 'axes.md');
+    if (!coversAllAxes(defs)) {
+      logger.warn('corpus.axes-incomplete', { found: defs.length });
+    }
+    return defs;
+  });
   handle('corpus:checklist', async (name: string) => loadChecklist(name));
 
   handle('corpus:version', async () => {

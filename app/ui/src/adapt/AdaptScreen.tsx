@@ -1,12 +1,27 @@
 import { useEffect, useState } from 'react';
 import { useStrings } from '../i18n/context.js';
 import { fromWire } from '../../../packages/core/src/errors.js';
-import { Notice } from '../components/Notice.js';
+import { Callout } from '../components/Callout.js';
+import { ReportView, type Decision } from '../review/ReportView.js';
+import { Stages, Stream } from '../components/Progress.js';
 import { NameWarning } from '../components/NameWarning.js';
 import { InjectionNotice } from '../components/InjectionNotice.js';
 import { useOnline } from '../hooks/useOnline.js';
 
 type Stage = 'compose' | 'verify' | 'working' | 'done';
+
+/** The stages the job reports, in order, so progress has a shape she can read. */
+const STAGES = [
+  'Leyendo el material',
+  'Leyendo el perfil y tus notas',
+  'Eligiendo las adaptaciones',
+  'Adaptando',
+  'Guardando',
+] as const;
+const stageIndex = (s?: string): number => {
+  const i = STAGES.findIndex((x) => s?.startsWith(x));
+  return i === -1 ? 0 : i;
+};
 
 interface JobNotice { block: string | null; notice: { kind: string; quote: string; message: string } }
 
@@ -23,7 +38,10 @@ export function AdaptScreen({ onReview }: {
   const [progress, setProgress] = useState<{ stage: string; detail?: string } | null>(null);
   const [flagged, setFlagged] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [report, setReport] = useState<string>('');
+  const [reportData, setReportData] = useState<{
+    decisions: Decision[]; notDone: string[];
+    memoryApplied: Array<{ source: string; effect: string }>;
+  } | null>(null);
   // Computed and discarded was the defect (T089, 007 SC-502): the notices were
   // returned as a bare count and InjectionNotice was never mounted anywhere.
   const [notices, setNotices] = useState<JobNotice[]>([]);
@@ -59,7 +77,7 @@ export function AdaptScreen({ onReview }: {
     try {
       await window.rampa.job.verify(jobId);
       const r = await window.rampa.job.adapt(jobId, learner);
-      setReport(r.report);
+      setReportData(r.reportData ?? null);
       setNotices(r.notices ?? []);
       setRecipes(r.recipes ?? []);
       setRetried(Boolean(r.retried));
@@ -77,7 +95,7 @@ export function AdaptScreen({ onReview }: {
   return (
     <div className="stack">
       <h1>{es.adapt.title}</h1>
-      {!online ? <Notice kind="warn">{es.errors['offline']}</Notice> : null}
+      {!online ? <Callout intent="decide">{es.errors['offline']}</Callout> : null}
 
       {stage === 'compose' ? (
         <div className="stack">
@@ -111,18 +129,18 @@ export function AdaptScreen({ onReview }: {
 
       {stage === 'verify' ? (
         <div className="stack">
-          <Notice kind="warn" title={es.adapt.verifyTitle}>{es.adapt.verifyWhy}</Notice>
-          <div className="card"><pre style={{ whiteSpace: 'pre-wrap', margin: 0 }}>{text}</pre></div>
-          {error ? <Notice kind="danger">{error}</Notice> : null}
+          <Callout intent="decide" title={es.adapt.verifyTitle}>{es.adapt.verifyWhy}</Callout>
+          <div className="material" lang="es">{text}</div>
+          {error ? <Callout intent="danger">{error}</Callout> : null}
 
           {costGate ? (
-            <Notice kind="warn" title="Esta ficha va a costar más de lo normal">
+            <Callout intent="decide" title="Esta ficha va a costar más de lo normal">
               <p>Serían unos {costGate.formatted}, más que tus fichas habituales. Tú decides.</p>
               <div className="row">
                 <button className="primary" onClick={() => void runAdapt(true)}>Adelante</button>
                 <button onClick={() => setCostGate(null)}>Mejor no</button>
               </div>
-            </Notice>
+            </Callout>
           ) : null}
 
           <div className="row">
@@ -133,18 +151,22 @@ export function AdaptScreen({ onReview }: {
       ) : null}
 
       {stage === 'working' ? (
-        <div className="card">
-          <p><strong>{progress?.stage ?? es.adapt.working}…</strong></p>
-          {progress?.detail ? <p className="muted small">{progress.detail}</p> : null}
+        <div className="card stack gap4">
+          <Stages stages={STAGES} current={stageIndex(progress?.stage)} />
+          {/* Once the model is streaming there is no total to divide by, so the
+              bar approaches without ever claiming completion. */}
+          {progress?.detail?.includes('caracteres') && (
+            <Stream label="Adaptando" chars={parseInt(progress.detail, 10) || 0} />
+          )}
         </div>
       ) : null}
 
       {stage === 'done' ? (
         <div className="stack">
-          <Notice kind="info" title="Listo">
+          <Callout intent="ok" title="Listo">
             Está adaptado y sin firmar. Ahora tienes que mirarlo tú.
             {cost !== null ? ` Esta ficha ha costado unos ${cost} céntimo${cost === 1 ? '' : 's'}.` : ''}
-          </Notice>
+          </Callout>
 
           {/* Anything the material tried to do, or that could not be read. */}
           <InjectionNotice
@@ -154,17 +176,19 @@ export function AdaptScreen({ onReview }: {
           />
 
           {retried ? (
-            <Notice kind="warn">
+            <Callout intent="decide">
               El primer intento volvió incompleto y lo he vuelto a pedir. Esta es la
               segunda versión: míratela con calma.
-            </Notice>
+            </Callout>
           ) : null}
 
-          <div className="card"><pre style={{ whiteSpace: 'pre-wrap', margin: 0 }}>{report}</pre></div>
+          {reportData
+            ? <ReportView {...reportData} />
+            : <Callout intent="info">Preparando el informe…</Callout>}
           <div className="row">
             <button className="primary" onClick={() => onReview(jobId, learner, recipes)}>Revisar y firmar</button>
             <button onClick={() => {
-              setStage('compose'); setText(''); setReport('');
+              setStage('compose'); setText(''); setReportData(null);
               setNotices([]); setRecipes([]); setRetried(false); setCost(null);
             }}>Otra ficha</button>
           </div>

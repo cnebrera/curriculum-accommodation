@@ -10,6 +10,7 @@
  * anything here can reach the network.
  */
 export * from './errors.js';
+export * from './contrast.js';
 export * from './log.js';
 
 export * from './vault/paths.js';
@@ -28,6 +29,7 @@ export * from './ir/bounds.js';
 export * from './ir/completeness.js';
 
 export * from './recipes/index.js';
+export * from './axes/parse.js';
 export * from './redact/names.js';
 
 export * from './render/html.js';
