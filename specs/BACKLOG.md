@@ -347,6 +347,21 @@ Severity: Medium — the hard rules and the overlay carry some of it, and ADR
 `recipes/core/`. This is also the community's most natural first contribution,
 and should be framed that way when contributions open.
 
+## G18 · Provenance does not record which service produced the material
+
+Found by `009`'s plan, and deferred there deliberately rather than patched through
+a connection screen.
+
+Adapted material records `data-recipe: id@version` and the axis that justified
+each change (Principle VI). It does not record **which AI service produced it.**
+With one provider that was invisible; with six offered and switching expected, a
+teacher comparing last month's sheets with this month's cannot tell whether a
+difference came from a recipe change, a corrected note, or a different model.
+
+Severity: Medium. It changes the provenance contract in `docs/ir.md`, so it
+belongs to a feature that owns that change — not to the screen that happened to
+notice.
+
 ## G17 · One sheet for a mixed group — recorded as a non-goal, deliberately
 
 Found by the functional-inventory pass. A PT's aula de apoyo often holds three or

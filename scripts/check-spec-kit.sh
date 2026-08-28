@@ -73,10 +73,23 @@ fi
 # The chain must not be left half-built: a plan with no tasks is a plan nobody
 # can execute, and tasks with no plan are tasks nobody reviewed against the
 # constitution.
+#
+# But `/speckit-plan` legitimately produces plan.md before tasks.md exists, so
+# firing on that state would block the flow it is meant to protect — which is
+# what it did on its second run. So: a NEW plan may land on its own (you are
+# mid-flow), and unrelated work may not land while a plan sits without tasks.
 for dir in specs/*/; do
     [ -f "$dir/spec.md" ] || continue
     if [ -f "$dir/plan.md" ] && [ ! -f "$dir/tasks.md" ]; then
-        fail "$dir has plan.md but no tasks.md. Run /speckit-tasks."
+        # $dir carries a trailing slash from the glob, so "$dir/plan.md" would be
+        # specs/x//plan.md and never match a git path. Strip it.
+        plan_path="${dir%/}/plan.md"
+        plan_in_commit=$(printf '%s\n' "$changed" | grep -Fx "$plan_path" || true)
+        if [ -z "$plan_in_commit" ]; then
+            fail "$dir has plan.md but no tasks.md, and this commit is not about that plan.
+  Run /speckit-tasks before moving on — a plan nobody turned into tasks is a
+  plan that gets implemented from memory."
+        fi
     fi
     if [ -f "$dir/tasks.md" ] && [ ! -f "$dir/plan.md" ]; then
         fail "$dir has tasks.md but no plan.md — the Constitution Check never ran."
