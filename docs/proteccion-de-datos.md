@@ -57,10 +57,35 @@ probable nombre que no conoce, **pregunta antes de enviar**.
   responsable; el proveedor de IA actúa bajo el contrato que la maestra o el
   centro ya tienen con él. **Rampa no es parte:** no recibe, no almacena y no
   puede acceder a nada.
-- **El proveedor importa.** No todos los planes de todos los proveedores dan las
-  mismas garantías (retención de datos, uso para entrenamiento, ubicación). Esa
-  comprobación es del centro, sobre el proveedor elegido, y ningún texto nuestro
-  la sustituye.
+- **El proveedor importa, y la aplicación os da los datos para valorarlo.** No
+  todos dan las mismas garantías (retención, uso para entrenamiento, ubicación).
+  La pantalla de conexión muestra, por cada servicio y **con fecha de última
+  comprobación**: si pide tarjeta, lo que cuesta una ficha, dónde se procesa y qué
+  dicen sus términos sobre entrenar con lo que se les envía. Son datos, no un
+  visto bueno: **Rampa no califica a ningún proveedor como conforme, seguro o
+  aprobado.** Esa comprobación es del centro, sobre el proveedor elegido, y ningún
+  texto nuestro la sustituye.
+
+- **Hay una opción en la que nada sale del ordenador.** Un modelo local
+  (Ollama y similares) hace que no haya ninguna petición hacia fuera. Necesita
+  instalación y un equipo capaz, y la calidad es menor — pero si el centro no
+  autoriza salida de datos, es la única respuesta honesta, y está contemplada.
+
+### Qué se puede seudonimizar y qué no
+
+Conviene ser exactos, porque es la pregunta que decide el análisis:
+
+| Qué viaja | Estado |
+|---|---|
+| Perfil de barreras, notas, estilo de casa | **Seudonimizado.** Los nombres conocidos se sustituyen por códigos en un único punto de salida, y si alguno sobreviviera el envío se bloquea |
+| Texto del material | Tal cual. Es la ficha |
+| **Foto de la ficha** | Tal cual, como imagen. **Si lleva el nombre del alumno escrito a mano, ese nombre llega al proveedor** — la aplicación avisa antes y sugiere taparlo o recortarlo, y no puede borrarlo de una imagen |
+
+Y una precisión legal que un DPO aplicará de todas formas: **seudonimizado no es
+anónimo**. El docente conserva la correspondencia código↔nombre —tiene que
+conservarla, da clase a ese niño—, así que sigue siendo dato personal
+(considerando 26 RGPD) y le siguen aplicando las reglas de transferencia. La
+seudonimización reduce el riesgo de forma real; no hace desaparecer el análisis.
 - **Derechos.** Supresión: la aplicación tiene un borrado completo por alumno que
   lista lo que va a eliminar, exige confirmación y verifica que no queda nada
   (las copias de seguridad hechas por la maestra quedan fuera de su alcance, y se
@@ -81,6 +106,10 @@ probable nombre que no conoce, **pregunta antes de enviar**.
 - [ ] Ubicación de la carpeta de trabajo (equipo del centro vs. personal; si hay
       sincronización en nube, valorada como cualquier otro fichero del centro)
 - [ ] Pauta interna comunicada: tapar el nombre en la foto antes de leer material
+- [ ] Decidido si hay restricción sobre dónde pueden procesarse los datos, y
+      comunicado al docente — la aplicación lo pregunta, y «no lo sé» es la
+      respuesta más frecuente
+- [ ] Valorado si el caso de uso justifica un modelo local (sin salida de datos)
 - [ ] Periodo de retención decidido y el borrado por alumno probado una vez
 - [ ] Este documento revisado y, donde no encaje, corregido
 
