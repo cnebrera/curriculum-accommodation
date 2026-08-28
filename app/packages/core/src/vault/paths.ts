@@ -33,8 +33,28 @@ export const learnerDir = (code: string) => join(VAULT.profiles, code);
 export const learnerProfile = (code: string) => join(learnerDir(code), 'profile.yaml');
 export const learnerNotes = (code: string) => join(learnerDir(code), 'notes.md');
 export const learnerOverlay = (code: string) => join(learnerDir(code), 'adaptations.md');
+/**
+ * A job is one piece of material, ingested and verified once. Adaptation is per
+ * (job × learner) and the paths say so (T092b, data-model corrected 2026-08-28).
+ *
+ * The layout previously held one `adapted.md` per job, so adapting the same
+ * worksheet for a second learner overwrote the first — and `nextRevision` would
+ * have recorded learner B's sheet as "revision 2" of learner A's. One
+ * extraction, N adaptations is also the load-bearing half of backlog G3.
+ */
 export const jobDir = (job: string) => join(VAULT.material, job);
-export const outputDir = (job: string) => join(VAULT.output, job);
+export const jobIR = (job: string) => join(jobDir(job), 'ir.md');
+export const jobSourceDir = (job: string) => join(jobDir(job), 'source');
+
+/** Everything downstream of verification lives under the learner's code. */
+export const jobLearnerDir = (job: string, code: string) => join(jobDir(job), code);
+export const jobAdapted = (job: string, code: string) => join(jobLearnerDir(job, code), 'adapted.md');
+export const jobAdaptedRevision = (job: string, code: string, n: number) =>
+  join(jobLearnerDir(job, code), `adapted.r${n}.md`);
+export const jobRejected = (job: string, code: string) =>
+  join(jobLearnerDir(job, code), 'adapted.rejected.md');
+export const jobReport = (job: string, code: string) => join(jobLearnerDir(job, code), 'report.md');
+export const outputDir = (job: string, code: string) => join(VAULT.output, job, code);
 
 /**
  * Resolve a path inside the vault, or refuse.

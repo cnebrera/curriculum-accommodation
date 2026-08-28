@@ -66,6 +66,49 @@ async function save(map: NameMap): Promise<void> {
 
 export const knownNames = async (): Promise<Map<string, string>> => new Map(Object.entries(await load()));
 
+/**
+ * Words she has told us are not names (T090).
+ *
+ * Without this the pre-send gate would ask about the same word on every single
+ * job, and a question asked every time is a question that gets clicked through
+ * — which is FR-514's logic applied to names instead of to injections.
+ */
+const IGNORE_PATH = '.rampa/names-ignore.json';
+
+async function ignored(): Promise<Set<string>> {
+  const raw = await currentVault().readRaw(IGNORE_PATH);
+  if (!raw) return new Set();
+  try { return new Set((JSON.parse(raw) as string[]).map((s) => s.toLowerCase())); }
+  catch { return new Set(); }
+}
+
+async function addIgnored(word: string): Promise<void> {
+  const set = await ignored();
+  set.add(word.toLowerCase());
+  await currentVault().writeRaw(IGNORE_PATH, JSON.stringify([...set], null, 2) + '\n');
+}
+
+/**
+ * Probable unknown names in text SHE wrote, minus what she has already dismissed.
+ *
+ * Scoped to teacher-authored segments on purpose: running the detector over the
+ * corpus or the adapted material produces false positives on every mid-sentence
+ * capital ("Lengua y Literatura"), and a detector that cries wolf protects
+ * nothing.
+ */
+export async function unknownNamesIn(segments: string[]): Promise<string[]> {
+  const known = await knownNames();
+  const skip = await ignored();
+  const found = new Set<string>();
+  for (const segment of segments) {
+    if (!segment?.trim()) continue;
+    for (const candidate of redact(segment, known).flagged) {
+      if (!skip.has(candidate.toLowerCase())) found.add(candidate);
+    }
+  }
+  return [...found];
+}
+
 export function registerNamesIpc(): void {
   handle('names:status', () => encryptionStatus());
 
@@ -81,10 +124,15 @@ export function registerNamesIpc(): void {
 
   handle('names:all', async () => await load());
 
+  /** "No es un nombre" — remembered, so she is not asked again (T090). */
+  handle('names:ignore', async (word: string) => { await addIgnored(word); return true; });
+
   /** Used by the UI to warn before sending, never to rewrite (006 FR-419). */
   handle('names:check', async (text: string) => {
     const known = await knownNames();
     const r = redact(text, known);
-    return { flagged: r.flagged.length ? r.flagged : findProbableNames(text), replaced: r.replaced };
+    const skip = await ignored();
+    const raw = r.flagged.length ? r.flagged : findProbableNames(text);
+    return { flagged: raw.filter((n) => !skip.has(n.toLowerCase())), replaced: r.replaced };
   });
 }

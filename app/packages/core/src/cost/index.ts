@@ -7,12 +7,19 @@
  *
  * Prices are $/million tokens, shipped as data and updated with the corpus.
  */
-export interface Price { input: number; output: number; cachedInput?: number; }
+export interface Price {
+  input: number;
+  output: number;
+  /** Reading a cached prefix: the discount the cost estimate depends on. */
+  cachedInput?: number;
+  /** Writing the cache on the first job of a corpus version. Costs a premium. */
+  cacheWrite?: number;
+}
 
 export const PRICES: Record<string, Price> = {
-  'claude-opus-5':      { input: 5.00, output: 25.00, cachedInput: 0.50 },
-  'claude-sonnet-5':    { input: 2.00, output: 10.00, cachedInput: 0.20 },
-  'claude-haiku-4-5':   { input: 1.00, output:  5.00, cachedInput: 0.10 },
+  'claude-opus-5':      { input: 5.00, output: 25.00, cachedInput: 0.50, cacheWrite: 6.25 },
+  'claude-sonnet-5':    { input: 2.00, output: 10.00, cachedInput: 0.20, cacheWrite: 2.50 },
+  'claude-haiku-4-5':   { input: 1.00, output:  5.00, cachedInput: 0.10, cacheWrite: 1.25 },
   'gemini-free':        { input: 0.00, output:  0.00 },
 };
 
@@ -21,18 +28,26 @@ export interface Usage {
   inputTokens: number;
   outputTokens: number;
   cachedInputTokens?: number;
+  cacheWriteTokens?: number;
 }
 
-const USD_TO_EUR = 0.92;
+/**
+ * Shipped as data with the corpus, not compiled in, so a moving rate is an
+ * update and not a release. Last checked 2026-08-28; it drifts, and the number
+ * the teacher is shown should not quietly drift with it.
+ */
+export const USD_TO_EUR = 0.92;
 
 /** Cents (euro), rounded up so an estimate is never optimistic. */
 export function costCents(u: Usage): number {
   const p = PRICES[u.model] ?? { input: 3, output: 15 };
   const cached = u.cachedInputTokens ?? 0;
-  const fresh = Math.max(0, u.inputTokens - cached);
+  const written = u.cacheWriteTokens ?? 0;
+  const fresh = Math.max(0, u.inputTokens - cached - written);
   const usd =
     (fresh / 1e6) * p.input +
     (cached / 1e6) * (p.cachedInput ?? p.input) +
+    (written / 1e6) * (p.cacheWrite ?? p.input) +
     (u.outputTokens / 1e6) * p.output;
   return Math.ceil(usd * USD_TO_EUR * 100);
 }

@@ -1,6 +1,6 @@
 import { app, BrowserWindow, Menu, shell } from 'electron';
 import { join } from 'node:path';
-import { registerVaultIpc, startWatching, stopWatching } from './ipc/vault.js';
+import { registerVaultIpc, reopenVault, startWatching, stopWatching } from './ipc/vault.js';
 import { registerNamesIpc } from './ipc/names.js';
 import { registerKeysIpc } from './ipc/keys.js';
 import { registerCorpusIpc } from './ipc/corpus.js';
@@ -58,6 +58,9 @@ else {
 
   void app.whenReady().then(async () => {
     await startLogging();
+    // Reopen the vault from the previous session BEFORE anything can ask for it
+    // (T083). Without this the app only worked until its first quit.
+    await reopenVault().catch(() => null);
     registerDiagnosticsIpc();
     registerVaultIpc(getWindow);
     registerNamesIpc();

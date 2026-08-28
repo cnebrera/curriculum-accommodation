@@ -9,7 +9,7 @@ import { ScopeQuestion } from './ScopeQuestion.js';
  * decisions rather than re-reading prose, which is what makes the time saving
  * real — and it is where the errors that matter get caught.
  */
-export function ReviewScreen({ jobId, learner }: { jobId: string; learner: string }) {
+export function ReviewScreen({ jobId, learner, recipes }: { jobId: string; learner: string; recipes?: string[] }) {
   const [report, setReport] = useState('');
   const [checklist, setChecklist] = useState('');
   const [signedOff, setSignedOff] = useState(false);
@@ -21,13 +21,13 @@ export function ReviewScreen({ jobId, learner }: { jobId: string; learner: strin
   const [revision, setRevision] = useState(1);
 
   useEffect(() => {
-    void window.rampa.vault.read(`material/${jobId}/report.md`)
+    void window.rampa.vault.read(`material/${jobId}/${learner}/report.md`)
       .then((d: { content: string } | null) => setReport(d?.content ?? ''));
-    void window.rampa.job.isSignedOff(jobId).then(setSignedOff);
+    void window.rampa.job.isSignedOff(jobId, learner).then(setSignedOff);
     // The checklist is corpus, not code: a teacher can correct what she is asked
     // to check without anyone touching the application.
     void window.rampa.corpus.checklist('review').then(setChecklist).catch(() => setChecklist(''));
-  }, [jobId]);
+  }, [jobId, learner]);
 
   const render = async (signed: boolean) => {
     setError(null);
@@ -61,7 +61,7 @@ export function ReviewScreen({ jobId, learner }: { jobId: string; learner: strin
   };
 
   const sign = async () => {
-    await window.rampa.job.signOff(jobId, 'PT');
+    await window.rampa.job.signOff(jobId, learner, 'PT');
     setSignedOff(true);
     await render(true);
   };
@@ -88,7 +88,7 @@ export function ReviewScreen({ jobId, learner }: { jobId: string; learner: strin
         </details>
       ) : null}
 
-      <ScopeQuestion learner={learner} onCaptured={(c) => setCorrections((prev) => [...prev, c])} />
+      <ScopeQuestion learner={learner} recipes={recipes} onCaptured={(c) => setCorrections((prev) => [...prev, c])} />
 
       {corrections.length ? (
         <div className="card stack">

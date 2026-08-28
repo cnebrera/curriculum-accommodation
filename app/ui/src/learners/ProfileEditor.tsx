@@ -10,16 +10,32 @@ export function ProfileEditor({ code, onSaved }: { code: string | null; onSaved:
   const [axes, setAxes] = useState<Record<string, number>>({});
   const [works, setWorks] = useState('');
   const [avoid, setAvoid] = useState('');
+  const [interests, setInterests] = useState('');
+  const [response, setResponse] = useState('');
+  /**
+   * Everything the schema knows and this form does not (T092c).
+   *
+   * Before this, save() sent `interests: [], response: {}` unconditionally, so
+   * opening a learner in the app and pressing Guardar **deleted** whatever the
+   * teacher had written by hand in her own vault. Her words, lost by us — the
+   * opposite of what FR-410 promises. Anything not surfaced here is carried
+   * through untouched.
+   */
+  const [carried, setCarried] = useState<Record<string, unknown>>({});
   const [repairs, setRepairs] = useState<Array<{ message: string }>>([]);
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
     if (code) {
       void window.rampa.learners.load(code).then((l: any) => {
+        const { code: _c, axes, works, avoid, interests, response, ...rest } = l.profile ?? {};
         setCurrent(l.profile.code);
-        setAxes(l.profile.axes ?? {});
-        setWorks((l.profile.works ?? []).join('\n'));
-        setAvoid((l.profile.avoid ?? []).join('\n'));
+        setAxes(axes ?? {});
+        setWorks((works ?? []).join('\n'));
+        setAvoid((avoid ?? []).join('\n'));
+        setInterests((interests ?? []).join(', '));
+        setResponse(Object.entries(response ?? {}).map(([k, v]) => `${k}: ${v}`).join('\n'));
+        setCarried(rest);
         setRepairs(l.repairs ?? []);
       });
       void window.rampa.names.resolve(code).then((n: string | null) => setName(n ?? ''));
@@ -29,11 +45,23 @@ export function ProfileEditor({ code, onSaved }: { code: string | null; onSaved:
   }, [code]);
 
   const save = async () => {
+    const lines = (s: string) => s.split('\n').map((x) => x.trim()).filter(Boolean);
+    const responseMap: Record<string, string> = {};
+    for (const line of lines(response)) {
+      const at = line.indexOf(':');
+      if (at > 0) responseMap[line.slice(0, at).trim()] = line.slice(at + 1).trim();
+      else responseMap['default'] = line;
+    }
     await window.rampa.learners.save({
+      // Carried fields first so the form's own values win, and nothing the
+      // teacher wrote by hand is dropped just because this form has no input.
+      ...carried,
       code: current, axes,
-      works: works.split('\n').map((s) => s.trim()).filter(Boolean),
-      avoid: avoid.split('\n').map((s) => s.trim()).filter(Boolean),
-      interests: [], response: {}, language: { instruction: 'es' },
+      works: lines(works),
+      avoid: lines(avoid),
+      interests: interests.split(',').map((s) => s.trim()).filter(Boolean),
+      response: responseMap,
+      language: (carried['language'] as Record<string, string>) ?? { instruction: 'es' },
     });
     if (name.trim()) await window.rampa.names.set(current, name.trim());
     setSaved(true);
@@ -69,6 +97,18 @@ export function ProfileEditor({ code, onSaved }: { code: string | null; onSaved:
         <label htmlFor="avoid">{es.learner.avoid}</label>
         <textarea id="avoid" value={avoid} onChange={(e) => setAvoid(e.target.value)}
                   placeholder={'Una cosa por línea\nPor ejemplo: nada con reloj'} />
+      </div>
+
+      <div>
+        <label htmlFor="interests">Le interesa</label>
+        <input id="interests" type="text" value={interests}
+               onChange={(e) => setInterests(e.target.value)}
+               placeholder="Separado por comas. Por ejemplo: dinosaurios, fútbol" />
+      </div>
+      <div>
+        <label htmlFor="response">Cómo puede responder</label>
+        <textarea id="response" value={response} onChange={(e) => setResponse(e.target.value)}
+                  placeholder={'Una por línea, con dos puntos\nPor ejemplo: escritura: dicta y un adulto transcribe'} />
       </div>
 
       <div className="row">

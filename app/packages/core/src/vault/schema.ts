@@ -60,8 +60,43 @@ export const journalEntrySchema = z.object({
 export type JournalEntry = z.infer<typeof journalEntrySchema>;
 
 /**
+ * The keys a schema knows about, or null if it is not an object schema.
+ *
+ * Needed because zod **strips unknown keys silently** on a successful parse.
+ * That default is wrong for this project: the vault format contract promises
+ * *"unknown keys are preserved verbatim — the app is a guest in these files"*,
+ * and a teacher who adds a field of her own by hand must not lose it the next
+ * time she presses Guardar. Found by the T092c round-trip test, which is the
+ * second data-loss defect in the same area — the first was the profile editor
+ * blanking the qualitative fields.
+ */
+function schemaKeys(schema: z.ZodTypeAny): string[] | null {
+  const shape = (schema as unknown as { shape?: Record<string, unknown> }).shape;
+  return shape && typeof shape === 'object' ? Object.keys(shape) : null;
+}
+
+/** Whatever the schema would have thrown away, kept aside untouched. */
+function carriedThrough(
+  schema: z.ZodTypeAny,
+  data: Record<string, unknown>,
+): Record<string, unknown> {
+  const known = schemaKeys(schema);
+  if (!known) return {};
+  const carried: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(data)) {
+    if (!known.includes(k)) carried[k] = v;
+  }
+  return carried;
+}
+
+/**
  * Validate, keeping what does not fit rather than rejecting the file.
  * Returns the parsed value plus repairs describing what was set aside.
+ *
+ * Two different things end up in `unparsed`, and neither is ever dropped:
+ * fields the schema knows but could not read (reported as a repair, because she
+ * may want to fix them), and fields the schema does not know at all (carried
+ * silently — they are hers, and they are not a problem).
  */
 export function validateWithRepair<T extends z.ZodTypeAny>(
   schema: T,
@@ -69,7 +104,7 @@ export function validateWithRepair<T extends z.ZodTypeAny>(
   file?: string,
 ): { value: z.infer<T>; unparsed: Record<string, unknown>; repairs: Repair[] } {
   const repairs: Repair[] = [];
-  const unparsed: Record<string, unknown> = {};
+  const unparsed: Record<string, unknown> = carriedThrough(schema, data);
 
   let attempt = schema.safeParse(data);
   if (attempt.success) return { value: attempt.data, unparsed, repairs };

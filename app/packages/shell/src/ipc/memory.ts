@@ -19,14 +19,35 @@ export function registerMemoryIpc(): void {
   handle('memory:capture', async (payload: {
     scope: 'learner' | 'practice' | 'corpus';
     learner?: string; recipes?: string[]; heading: string; text: string;
+    /** Where a learner-scope item goes in the profile. She chooses; nothing is inferred. */
+    destination?: 'note' | 'avoid' | 'works';
   }) => {
     const vault = currentVault();
     const stamp = new Date().toISOString().slice(0, 10);
 
     if (payload.scope === 'learner') {
       if (!payload.learner) throw new Error('Falta el alumno.');
-      await appendNote(vault, payload.learner, payload.heading, payload.text);
-      return { written: `profiles/${payload.learner}/notes.md` };
+
+      // 003 FR-202: a learner-scope correction updates the profile, not only the
+      // notes. Before T085 only the note was written, so `avoid` and `works` —
+      // the fields the recipes actually consult — never changed, and the
+      // correction had no mechanical effect on the next run.
+      const dest = payload.destination ?? 'note';
+      let promoted = '';
+      if (dest === 'avoid' || dest === 'works') {
+        const learner = await loadLearner(vault, payload.learner);
+        const list = dest === 'avoid' ? learner.profile.avoid : learner.profile.works;
+        if (!list.some((e) => e.trim() === payload.text.trim())) list.push(payload.text.trim());
+        await saveProfile(vault, learner.profile);
+        promoted = dest === 'avoid' ? 'evitar' : 'lo que funciona';
+      }
+
+      await appendNote(vault, payload.learner, payload.heading,
+        promoted ? `${payload.text}\n→ añadido a «${promoted}» del perfil.` : payload.text);
+      return {
+        written: `profiles/${payload.learner}/notes.md`,
+        promoted: promoted || null,
+      };
     }
 
     if (payload.scope === 'practice') {
@@ -36,6 +57,12 @@ export function registerMemoryIpc(): void {
     }
 
     // Corpus scope: pattern, never passage.
+    //
+    // The recipes matter mechanically, not decoratively (T086): `loadForRun`
+    // filters the journal by intersection with the recipes selected for a run,
+    // so an entry written with an empty `recipes:` list is indexed under
+    // "(sin receta)" and **never loaded again**. A corpus correction with no
+    // tags is a correction with no effect, forever.
     const slug = payload.heading.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40);
     const path = `${VAULT.journal}/${stamp}-${slug || 'nota'}.md`;
     await vault.writeRaw(path, [

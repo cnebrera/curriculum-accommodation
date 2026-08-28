@@ -12,6 +12,7 @@ const api = {
     choose: () => invoke('vault:choose'),
     use: (root: string) => invoke('vault:use', root),
     defaultPath: () => invoke('vault:default'),
+    current: () => invoke('vault:current'),
     read: (p: string) => invoke('vault:read', p),
     write: (p: string, c: string) => invoke('vault:write', p, c),
     list: (d: string) => invoke('vault:list', d),
@@ -28,6 +29,8 @@ const api = {
     resolve: (code: string) => invoke('names:resolve', code),
     all: () => invoke('names:all'),
     check: (text: string) => invoke('names:check', text),
+    /** "No es un nombre": remembered, so she is not asked twice. */
+    ignore: (word: string) => invoke('names:ignore', word),
   },
   providers: {
     list: () => invoke('providers:list'),
@@ -60,13 +63,14 @@ const api = {
     /** Re-run with what she just corrected, on this worksheet, now. */
     revise: (id: string, learner: string, corrections: Array<{ text: string; scope: string }>) =>
       invoke('job:revise', id, learner, corrections),
-    revisions: (id: string) => invoke('job:revisions', id),
+    revisions: (id: string, learner: string) => invoke('job:revisions', id, learner),
     render: (id: string, learner: string, signedOff?: boolean) => invoke('job:render', id, learner, signedOff),
     pdf: (id: string, learner: string, signedOff?: boolean) => invoke('job:pdf', id, learner, signedOff),
     /** The only way the draft mark comes off. */
-    signOff: (id: string, role: string) => invoke('job:signOff', id, role),
-    isSignedOff: (id: string) => invoke('job:isSignedOff', id),
+    signOff: (id: string, learner: string, role: string) => invoke('job:signOff', id, learner, role),
+    isSignedOff: (id: string, learner: string) => invoke('job:isSignedOff', id, learner),
     list: () => invoke('job:list'),
+    learners: (id: string) => invoke('job:learners', id),
     onProgress: (cb: (p: { stage: string; detail?: string }) => void) => {
       const h = (_e: unknown, p: { stage: string; detail?: string }) => cb(p);
       ipcRenderer.on('job:progress', h);
@@ -90,6 +94,7 @@ const api = {
   cost: {
     month: () => invoke('cost:month'),
     wouldBeUnusual: (cents: number) => invoke('cost:wouldBeUnusual', cents),
+    estimate: (promptChars: number) => invoke('cost:estimate', promptChars),
   },
 };
 

@@ -100,3 +100,50 @@ The line that still matters most is unchanged from the first run of this
 document: **no teacher has seen any of it, and the application has never been
 run.** The list above is why running it first would have been the wrong order —
 three of these would have survived a demo and failed in week two.
+
+
+---
+
+# Phase 11 implemented · 2026-08-28
+
+All ten review defects closed, with 188 offline tests (up from 139) and no key
+present. Verified by machine:
+
+| Check | Result |
+|---|---|
+| Vault survives a relaunch (T083) | **Pass.** 4 cases: first run, remembered root, folder gone, corrupt settings — all fail safe into onboarding |
+| The prompt carries her notes (T084) | **Pass.** 8 cases. Also pins that corrections beat recipes and **never** the hard rules, and that notes stay bounded by dropping oldest whole sections |
+| Silent content loss (T087, T088) | **Pass.** 11 cases: a vanished block fails, a declared `[dropped:ID]` passes, merges pass, truncation fails, `.report-notes` never renders and is provenance-exempt |
+| Profile round-trip (T092c) | **Pass.** 6 cases, and it found a second defect — see below |
+| Prompt caching arithmetic (T092) | **Pass.** Cached prefix costs less; cache writes counted at their premium; every priced model declares both rates |
+| Everything above, plus the prior suite | **Pass.** 188 tests, 13 files, offline |
+
+## A defect the new tests found
+
+**zod was silently stripping unknown keys.** `contracts/vault-format.md` promises
+*"unknown keys are preserved verbatim — the app is a guest in these files"*, and
+`validateWithRepair` relied on validation *failing* to notice a field. A
+successful parse dropped anything the schema did not declare, so a teacher who
+added a field of her own by hand lost it the next time she pressed Guardar.
+
+That is the second data-loss defect in the same area — the first was the profile
+editor blanking `interests` and `response` outright (T092c). Both were invisible
+to review and both were found by a round-trip test, which is the pattern this
+project keeps re-learning: the seam between two correct units is where the
+defects live.
+
+## Still NOT verified
+
+Unchanged from the first run, and worth repeating because Phase 11 did not touch
+it:
+
+- **The application has still never been run.** No GUI session, no window, no
+  print dialogue. The new code is typechecked and unit-tested, not exercised.
+- **No provider has been called.** Prompt caching is implemented against the
+  documented shape and tested arithmetically; the first real call will tell us
+  whether the breakpoint lands where we think.
+- **No teacher has seen any of it.**
+
+Next: spec 008 (vision ingest) before any teacher session, then the first real
+end-to-end run. The model floor (`cases/002-model-floor`) runs before the teacher
+session, not after.

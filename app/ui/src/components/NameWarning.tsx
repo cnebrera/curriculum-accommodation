@@ -23,7 +23,11 @@ export function NameWarning({ flagged, onAddName, onSendAnyway }: {
         {flagged.map((f) => (
           <button key={f} onClick={() => onAddName(f)}>Es un alumno: {f}</button>
         ))}
-        <button onClick={onSendAnyway}>No es un nombre, sigue</button>
+        <button onClick={() => {
+          // Remembered, so the same word is not queried on every job (T090).
+          for (const f of flagged) void window.rampa.names.ignore(f);
+          onSendAnyway();
+        }}>No es un nombre, sigue</button>
       </div>
     </Notice>
   );

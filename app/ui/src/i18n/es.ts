@@ -70,6 +70,8 @@ export const es = {
     'vault-unreadable': 'No he podido leer ese fichero.',
     'ir-unverified': 'Antes de adaptar, comprueba que he leído bien el material.',
     'ir-no-provenance': 'Algo ha cambiado sin que yo pueda decirte por qué. No te lo enseño así.',
+    'output-incomplete': 'La adaptación ha vuelto incompleta dos veces, así que no te la enseño. Tu última versión buena sigue intacta.',
+    'name-unconfirmed': 'Puede que haya un nombre en tus notas. No he enviado nada: dime si es de un alumno y lo sustituyo por su código.',
     'render-learner-data': 'Iba a aparecer información de tu alumno en su propia ficha. Lo he parado.',
     'render-undescribed': 'Hay una imagen imprescindible sin describir. Sin ella, el ejercicio no se puede resolver.',
     'input-too-large': 'Esta ficha es muy larga. Pártela en dos y lo hacemos por trozos.',

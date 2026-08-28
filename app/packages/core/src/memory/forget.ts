@@ -1,5 +1,5 @@
 import type { Vault } from '../vault/io.js';
-import { VAULT, learnerDir, jobDir, outputDir } from '../vault/paths.js';
+import { VAULT, learnerDir, jobDir, jobLearnerDir, outputDir } from '../vault/paths.js';
 import { rm } from 'node:fs/promises';
 import { resolveInVault } from '../vault/paths.js';
 
@@ -23,9 +23,20 @@ export async function planForget(vault: Vault, code: string): Promise<ForgetPlan
   if (await vault.exists(learnerDir(code))) paths.push(learnerDir(code));
 
   for (const job of await vault.list(VAULT.material)) {
-    const ir = `${jobDir(job)}/ir.md`;
-    const raw = await vault.readRaw(ir);
-    if (raw && raw.includes(code)) { paths.push(jobDir(job)); paths.push(outputDir(job)); }
+    // Adaptations live under the learner's code (T092b), so removing a learner
+    // removes their sheets and leaves any other learner's sheets for the same
+    // worksheet untouched.
+    if (await vault.exists(jobLearnerDir(job, code))) {
+      paths.push(jobLearnerDir(job, code));
+      paths.push(outputDir(job, code));
+
+      // If nobody else was adapted from this job, the shared material left
+      // behind is an orphan: the teacher's own source file and its extraction,
+      // kept for a learner who is gone. Remove the job too, and say so.
+      const siblings = (await vault.list(jobDir(job)))
+        .filter((e) => !e.includes('.') && e !== 'source' && e !== code);
+      if (siblings.length === 0) paths.push(jobDir(job));
+    }
   }
 
   for (const f of await vault.list(VAULT.journal)) {
@@ -39,6 +50,7 @@ export async function planForget(vault: Vault, code: string): Promise<ForgetPlan
     paths: [...new Set(paths)],
     survives: [
       'Las mejoras a las recetas que ya enviaste a la comunidad no se retiran: no contienen nada de este alumno, por construcción.',
+      'Las fichas adaptadas para otros alumnos a partir del mismo material se quedan como están.',
     ],
     outOfReach: [
       'Las copias de seguridad que hayas hecho tú están fuera de mi alcance. Ésas tienes que borrarlas tú.',

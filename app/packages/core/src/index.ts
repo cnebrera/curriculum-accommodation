@@ -25,6 +25,7 @@ export * from './ir/provenance.js';
 export * from './ir/injection.js';
 export * from './ir/hidden.js';
 export * from './ir/bounds.js';
+export * from './ir/completeness.js';
 
 export * from './recipes/index.js';
 export * from './redact/names.js';
@@ -34,6 +35,8 @@ export * from './render/check.js';
 export * from './render/photocopy.js';
 
 export * from './report/index.js';
+export * from './report/notes.js';
+export * from './prompt/adapt.js';
 export * from './cost/index.js';
 
 export * from './memory/index.js';

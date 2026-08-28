@@ -17,7 +17,7 @@ export function App() {
   const { t: es, locale, setLocale, locales } = useStrings();
   const [step, setStep] = useState<Step | null>(null);
   const [view, setView] = useState<View>('adapt');
-  const [review, setReview] = useState<{ jobId: string; learner: string } | null>(null);
+  const [review, setReview] = useState<{ jobId: string; learner: string; recipes: string[] } | null>(null);
 
   useEffect(() => {
     const saved = loadState();
@@ -74,9 +74,11 @@ export function App() {
       </nav>
       <main className="main">
         {view === 'adapt' && !review
-          ? <AdaptScreen onReview={(jobId, learner) => { setReview({ jobId, learner }); setView('review'); }} />
+          ? <AdaptScreen onReview={(jobId, learner, recipes) => { setReview({ jobId, learner, recipes }); setView('review'); }} />
           : null}
-        {view === 'review' && review ? <ReviewScreen jobId={review.jobId} learner={review.learner} /> : null}
+        {view === 'review' && review
+          ? <ReviewScreen jobId={review.jobId} learner={review.learner} recipes={review.recipes} />
+          : null}
         {view === 'learners' ? <LearnersScreen /> : null}
         {view === 'notes' ? <NotesScreen /> : null}
         {view === 'about' ? <AboutScreen /> : null}

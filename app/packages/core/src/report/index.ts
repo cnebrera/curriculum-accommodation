@@ -1,6 +1,7 @@
 import type { IRDocument, Block, Notice } from '../ir/types.js';
 import { parseRecipeRef } from '../ir/provenance.js';
 import type { Selection } from '../recipes/index.js';
+import { parseReportNotes } from './notes.js';
 
 /**
  * The adaptation report, grouped by decision rather than by paragraph.
@@ -57,6 +58,14 @@ export function buildReport(input: ReportInput): Report {
 
   // What was NOT done goes first: it is what the teacher needs to see.
   const notDone: string[] = [];
+
+  // The model's own declarations (T087). Flags first: they are the ones that
+  // need a decision from her, and a decision she never sees is a decision made
+  // for her.
+  const declared = parseReportNotes(adapted);
+  for (const f of declared.flags) notDone.push(`Necesita que lo decidas tú: ${f}`);
+  for (const d of declared.dropped) notDone.push(`Quité el bloque "${d.id}": ${d.why}`);
+
   for (const d of input.dropped ?? []) notDone.push(`Quité el bloque "${d.id}": ${d.why}`);
   for (const f of input.undescribedFigures ?? []) notDone.push(f);
   for (const s of input.flaggedSignificant ?? []) notDone.push(`Adaptación significativa, no la he hecho: ${s}`);
@@ -93,6 +102,12 @@ export function buildReport(input: ReportInput): Report {
     md.push(`## ${d.title}`);
     md.push(`Receta: \`${d.recipe}\` · Barrera: \`${d.axis}\``);
     md.push(`Bloques: ${d.blocks.join(', ')}`);
+    md.push('');
+  }
+
+  if (declared.other.length) {
+    md.push('## Otras notas sobre la adaptación', '');
+    for (const o of declared.other) md.push(`- ${o}`);
     md.push('');
   }
 

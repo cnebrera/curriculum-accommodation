@@ -56,13 +56,25 @@ export const anthropic: Provider = {
     }
     for (const m of req.messages) content.push({ type: 'text', text: m.content });
 
+    /**
+     * Cache the stable prefix (T092).
+     *
+     * ADR 0005's cost table — the one the onboarding quotes as "unos 3 céntimos
+     * por ficha" — assumes prompt caching: *"the corpus is a stable prefix, so
+     * most of the input caches."* Nothing marked it, so the promise was
+     * optimistic by 2-3x. The instructions plus the recipes are identical across
+     * every job for a given corpus version, which is exactly what a cache
+     * breakpoint is for.
+     */
+    const system = [{ type: 'text', text: req.system, cache_control: { type: 'ephemeral' } }];
+
     let res: Response;
     try {
       res = await fetch(API, {
         method: 'POST',
         headers: { 'content-type': 'application/json', 'x-api-key': key, 'anthropic-version': VERSION },
         body: JSON.stringify({
-          model, max_tokens: req.maxTokens ?? 16_000, system: req.system,
+          model, max_tokens: req.maxTokens ?? 16_000, system,
           messages: [{ role: 'user', content }], stream: true,
         }),
       });
@@ -98,6 +110,9 @@ export const anthropic: Provider = {
           if (ev['message']?.['usage']) {
             usage.inputTokens = ev['message']['usage']['input_tokens'] ?? usage.inputTokens;
             usage.cachedInputTokens = ev['message']['usage']['cache_read_input_tokens'] ?? undefined;
+            // Cache writes cost more than fresh input on the first job of a
+            // corpus version; counting them keeps the displayed cost honest.
+            usage.cacheWriteTokens = ev['message']['usage']['cache_creation_input_tokens'] ?? undefined;
           }
           if (ev['usage']?.['output_tokens']) usage.outputTokens = ev['usage']['output_tokens'];
         } catch { /* a partial frame; the next read completes it */ }

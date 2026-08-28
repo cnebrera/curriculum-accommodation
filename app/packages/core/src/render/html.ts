@@ -1,4 +1,4 @@
-import { createRenderer } from '../ir/parse.js';
+import { createRenderer, learnerFacing } from '../ir/parse.js';
 import type { IRDocument, Block } from '../ir/types.js';
 
 /**
@@ -111,7 +111,9 @@ export function renderHTML(doc: IRDocument, opts: RenderOptions = {}): string {
   const lang = opts.lang ?? (typeof doc.frontMatter['lang'] === 'string' ? doc.frontMatter['lang'] : 'es');
   const presentation = opts.presentation ?? {};
   const signedOff = opts.signedOff === true;
-  const body = doc.blocks.map((b) => renderBlock(md, b)).join('\n');
+  // learnerFacing excludes the model's report notes: structural, not a check the
+  // model is asked to respect (007 FR-506's shape applied to T087).
+  const body = doc.blocks.filter(learnerFacing).map((b) => renderBlock(md, b)).join('\n');
 
   const banner = signedOff ? '' :
     `<div class="draft-banner" role="status">BORRADOR — pendiente de revisión docente · no entregar al alumnado</div>`;

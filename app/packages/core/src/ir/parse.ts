@@ -14,7 +14,7 @@ import type { Block, BlockClass, IRDocument } from './types.js';
  */
 const KNOWN: BlockClass[] = [
   'explanation','example','instruction','exercise',
-  'assessment','note','reference','figure','scaffold','unsupported',
+  'assessment','note','reference','figure','scaffold','unsupported','report-notes',
 ];
 
 export function createRenderer(): MarkdownIt {
@@ -98,6 +98,11 @@ export function parseIR(raw: string, file?: string): IRDocument {
   return { frontMatter: data, blocks, notices: [] };
 }
 
-/** Blocks a learner is meant to read, as opposed to metadata. */
+/**
+ * Blocks a learner is meant to read, as opposed to metadata.
+ *
+ * `report-notes` is the model talking to the teacher about the adaptation; it
+ * must never reach the sheet a child holds in a classroom.
+ */
 export const learnerFacing = (b: Block): boolean =>
-  !b.classes.includes('reference');
+  !b.classes.includes('reference') && !b.classes.includes('report-notes');

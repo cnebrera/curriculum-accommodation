@@ -22,12 +22,20 @@ export function clearState(): void {
   try { localStorage.removeItem(KEY); } catch { /* nothing to clean up */ }
 }
 
-/** Where setup actually stands, asked of the system rather than of a flag. */
+/**
+ * Where setup actually stands, asked of the system rather than of a flag.
+ *
+ * The vault comes first and is asked of the main process (T083): before this,
+ * a relaunch never reopened the vault, `learners.list()` threw into its catch,
+ * and the app landed on a broken "first learner" step with no vault behind it.
+ */
 export async function detectStep(): Promise<Step> {
   try {
+    const root = await window.rampa.vault.current();
+    if (!root) return 'vault';
     const provider = await window.rampa.providers.current();
-    const learners = await window.rampa.learners.list().catch(() => [] as string[]);
     if (!provider.configured) return 'connect';
+    const learners = await window.rampa.learners.list();
     if (learners.length === 0) return 'learner';
     return 'done';
   } catch { return 'vault'; }

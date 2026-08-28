@@ -33,6 +33,8 @@ export async function loadLearner(vault: Vault, code: string): Promise<LoadedLea
   repairs.push(...(oDoc?.repairs ?? []));
 
   const profile: Profile = { ...value, code };
+  // Anything the schema did not consume travels with the profile so that saving
+  // it writes it back. The vault is hers; we are a guest in these files.
   if (Object.keys(unparsed).length) profile._unparsed = unparsed;
 
   return {

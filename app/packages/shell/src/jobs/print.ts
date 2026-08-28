@@ -1,6 +1,6 @@
 import { BrowserWindow } from 'electron';
 import { renderHTML, parseIR, checkOutput, checkPhotocopy, checkEssentialFigures,
-         presentationFor, jobDir, outputDir, loadLearner, RampaError, AXES, axisLevelOf } from '@rampa/core';
+         presentationFor, jobAdapted, outputDir, loadLearner, RampaError, AXES, axisLevelOf } from '@rampa/core';
 import { currentVault } from '../ipc/vault.js';
 import { knownNames } from '../ipc/names.js';
 import { writeFile, mkdir } from 'node:fs/promises';
@@ -15,7 +15,7 @@ import { handle } from '../ipc/wrap.js';
  */
 async function renderJob(jobId: string, learnerCode: string, signedOff: boolean) {
   const vault = currentVault();
-  const raw = await vault.readRaw(`${jobDir(jobId)}/adapted.md`);
+  const raw = await vault.readRaw(jobAdapted(jobId, learnerCode));
   if (!raw) throw new RampaError('vault-unreadable', 'Este trabajo todavía no está adaptado.');
 
   const doc = parseIR(raw);
@@ -42,7 +42,7 @@ export function registerPrintIpc(): void {
   handle('job:render', async (jobId: string, learnerCode: string, signedOff: boolean = false) => {
     const vault = currentVault();
     const { html, photocopy } = await renderJob(jobId, learnerCode, signedOff);
-    const htmlPath = resolveInVault(vault.root, `${outputDir(jobId)}/sheet.html`);
+    const htmlPath = resolveInVault(vault.root, `${outputDir(jobId, learnerCode)}/sheet.html`);
     await mkdir(dirname(htmlPath), { recursive: true });
     await writeFile(htmlPath, html, 'utf8');
     return { htmlPath, photocopy };
@@ -59,7 +59,7 @@ export function registerPrintIpc(): void {
         printBackground: true, pageSize: 'A4',
         margins: { top: 0.6, bottom: 0.6, left: 0.6, right: 0.6 },
       });
-      const pdfPath = resolveInVault(vault.root, `${outputDir(jobId)}/sheet.pdf`);
+      const pdfPath = resolveInVault(vault.root, `${outputDir(jobId, learnerCode)}/sheet.pdf`);
       await mkdir(dirname(pdfPath), { recursive: true });
       await writeFile(pdfPath, pdf);
       return pdfPath;

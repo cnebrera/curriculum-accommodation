@@ -1,9 +1,10 @@
-import { dialog, BrowserWindow } from 'electron';
+import { app, dialog, BrowserWindow } from 'electron';
 import { watch as chokidarWatch, type FSWatcher } from 'chokidar';
-import { Vault, resolveInVault, RampaError, VAULT } from '@rampa/core';
+import { Vault, resolveInVault, RampaError, VAULT, logger } from '@rampa/core';
 import { join } from 'node:path';
 import { homedir } from 'node:os';
 import { handle } from './wrap.js';
+import { rememberedVaultRoot, rememberVaultRoot } from './vault-settings.js';
 
 /**
  * Every privileged filesystem operation crosses this boundary, which is what
@@ -22,6 +23,29 @@ export const currentVault = (): Vault => {
 
 export const setVault = (root: string): Vault => { vault = new Vault(root); return vault; };
 
+/**
+ * Reopen the vault remembered from the previous session (T083, 006 US1-3).
+ *
+ * Called from main before the window is created. A missing or moved folder
+ * fails safe: the app opens on the vault step of onboarding instead of
+ * crashing, and nothing is created at the stale path.
+ */
+export async function reopenVault(): Promise<string | null> {
+  const root = await rememberedVaultRoot(app.getPath('userData'));
+  if (!root) return null;
+  const v = setVault(root);
+  await bootstrap(v);
+  logger.info('vault.reopened', { root: '[vault]' });
+  return root;
+}
+
+async function useVault(root: string): Promise<string> {
+  const v = setVault(root);
+  await bootstrap(v);
+  await rememberVaultRoot(app.getPath('userData'), root);
+  return v.root;
+}
+
 /** A default she can accept without making a decision (006 FR-402). */
 export const defaultVaultPath = () => join(homedir(), 'Documentos', 'Rampa');
 
@@ -37,16 +61,13 @@ export function registerVaultIpc(getWindow: () => BrowserWindow | null): void {
         })
       : { canceled: true, filePaths: [] as string[] };
     if (res.canceled || !res.filePaths[0]) return null;
-    const v = setVault(res.filePaths[0]);
-    await bootstrap(v);
-    return v.root;
+    return useVault(res.filePaths[0]);
   });
 
-  handle('vault:use', async (root: string) => {
-    const v = setVault(root);
-    await bootstrap(v);
-    return v.root;
-  });
+  handle('vault:use', async (root: string) => useVault(root));
+
+  /** The root currently open, or null. Onboarding's resume check gates on this. */
+  handle('vault:current', () => vault?.root ?? null);
 
   handle('vault:default', () => defaultVaultPath());
 

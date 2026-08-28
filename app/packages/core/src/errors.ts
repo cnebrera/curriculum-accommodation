@@ -7,6 +7,8 @@ export type ErrorKind =
   | 'vault-unreadable'
   | 'ir-unverified'          // adaptation attempted before human verification
   | 'ir-no-provenance'       // a changed block with nothing justifying it
+  | 'output-incomplete'      // truncated, or content gone without being declared
+  | 'name-unconfirmed'       // a probable name in her own notes, not yet resolved
   | 'render-learner-data'    // learner data reached learner-facing output
   | 'render-undescribed'     // an essential figure with no description
   | 'input-too-large'

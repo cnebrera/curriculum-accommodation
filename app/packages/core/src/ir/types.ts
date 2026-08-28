@@ -1,7 +1,15 @@
-/** Block classes from docs/ir.md. */
+/**
+ * Block classes from docs/ir.md.
+ *
+ * `report-notes` is the model's channel INTO the report (T087). The hard rules
+ * tell it "if content must be dropped, say so in the report" — and the model
+ * does not write the report; `buildReport()` does, from attributes. Without this
+ * block, everything it needed to declare had nowhere to go. Never learner-facing.
+ */
 export type BlockClass =
   | 'explanation' | 'example' | 'instruction' | 'exercise'
-  | 'assessment' | 'note' | 'reference' | 'figure' | 'scaffold' | 'unsupported';
+  | 'assessment' | 'note' | 'reference' | 'figure' | 'scaffold' | 'unsupported'
+  | 'report-notes';
 
 export interface Block {
   id: string;
@@ -15,7 +23,7 @@ export interface Block {
 }
 
 export interface Notice {
-  kind: 'instruction-shaped' | 'hidden-text' | 'unreadable' | 'input-bound';
+  kind: 'instruction-shaped' | 'hidden-text' | 'unreadable' | 'input-bound' | 'incomplete';
   /** Quoted verbatim so the teacher can judge whether it belongs on the page. */
   quote: string;
   message: string;

@@ -17,6 +17,8 @@ export interface ProvenanceIssue {
 }
 
 const isScaffold = (b: Block) => b.classes.includes('scaffold');
+/** The model's note to the teacher, not curricular content. No provenance to declare. */
+const isReportNotes = (b: Block) => b.classes.includes('report-notes');
 const isGeneratedBlock = (b: Block) => typeof b.attrs['data-objective'] === 'string';
 
 export function checkProvenance(doc: IRDocument): ProvenanceIssue[] {
@@ -25,7 +27,7 @@ export function checkProvenance(doc: IRDocument): ProvenanceIssue[] {
   for (const b of doc.blocks) {
     // Scaffolding is new by definition, and generated material is keyed to an
     // objective rather than to a source block. Neither needs `data-from`.
-    if (isScaffold(b) || isGeneratedBlock(b)) continue;
+    if (isScaffold(b) || isGeneratedBlock(b) || isReportNotes(b)) continue;
 
     const from = b.attrs['data-from'];
     const recipe = b.attrs['data-recipe'];
@@ -51,7 +53,7 @@ export function checkProvenance(doc: IRDocument): ProvenanceIssue[] {
 export function findUnaccountedBlocks(original: IRDocument, adapted: IRDocument): Block[] {
   const known = new Set(original.blocks.map((b) => b.id));
   return adapted.blocks.filter((b) => {
-    if (isScaffold(b) || isGeneratedBlock(b)) return false;
+    if (isScaffold(b) || isGeneratedBlock(b) || isReportNotes(b)) return false;
     const from = b.attrs['data-from'];
     if (!from) return !known.has(b.id);
     return !from.split(/[,\s]+/).filter(Boolean).every((id) => known.has(id));
