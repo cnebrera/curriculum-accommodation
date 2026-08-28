@@ -16,6 +16,15 @@ export default defineConfig({
   renderer: {
     root: 'ui',
     plugins: [react()],
-    build: { outDir: '../out/renderer', rollupOptions: { input: resolve('ui/index.html') } },
+    build: {
+      // Absolute, deliberately. A path relative to the renderer `root` resolved
+      // to the REPOSITORY root, two levels above where main.ts loads it from —
+      // so `npm run build` succeeded while the packaged app opened a blank
+      // window, and `npm run dev` hid it by serving from the Vite dev server.
+      // It also explains the stray `out/renderer` that was once committed.
+      // Asserted by packages/shell/test/build-layout.test.ts.
+      outDir: resolve('out/renderer'),
+      rollupOptions: { input: resolve('ui/index.html') },
+    },
   },
 });

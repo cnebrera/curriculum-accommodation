@@ -20,7 +20,13 @@ function createWindow(): void {
     title: 'Rampa',
     backgroundColor: '#fcfcfa',
     webPreferences: {
-      preload: join(import.meta.dirname, 'preload.js'),
+      // electron-vite emits main and preload into SEPARATE directories, so this
+      // must climb out of out/main/. It said 'preload.js' — resolving to
+      // out/main/preload.js, which never existed — so the preload silently
+      // failed to load, window.rampa was undefined, and the packaged app was a
+      // blank window with every IPC call dead. Invisible to typecheck, to the
+      // unit suite, and to `npm run build`, which reported success.
+      preload: join(import.meta.dirname, '..', 'preload', 'preload.js'),
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: false,

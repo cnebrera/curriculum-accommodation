@@ -9,6 +9,7 @@ export type ErrorKind =
   | 'ir-no-provenance'       // a changed block with nothing justifying it
   | 'output-incomplete'      // truncated, or content gone without being declared
   | 'name-unconfirmed'       // a probable name in her own notes, not yet resolved
+  | 'corpus-missing'         // the bundled recipes are not there: broken install
   | 'render-learner-data'    // learner data reached learner-facing output
   | 'render-undescribed'     // an essential figure with no description
   | 'input-too-large'

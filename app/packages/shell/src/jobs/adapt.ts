@@ -11,7 +11,7 @@ import { sendRedacted, providerById } from '@rampa/providers';
 import { currentVault } from '../ipc/vault.js';
 import { knownNames, unknownNamesIn } from '../ipc/names.js';
 import { currentKey } from '../ipc/keys.js';
-import { allRecipes, loadInstruction } from '../ipc/corpus.js';
+import { allRecipes, assertCorpus, loadInstruction } from '../ipc/corpus.js';
 import { recordCost } from '../ipc/cost.js';
 import { handle } from '../ipc/wrap.js';
 
@@ -105,6 +105,9 @@ export async function runAdaptation(
   const learner = await loadLearner(vault, learnerCode);
 
   onProgress({ stage: 'Eligiendo las adaptaciones' });
+  // No recipes means no guards. Adapting anyway would produce plausible output
+  // with the curriculum unprotected, which is worse than not adapting.
+  await assertCorpus();
   const lang = typeof doc.frontMatter['lang'] === 'string' ? doc.frontMatter['lang'] : 'es';
   const selection = selectRecipes(await allRecipes(), learner.profile, lang);
 

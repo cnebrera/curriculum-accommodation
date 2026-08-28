@@ -80,7 +80,7 @@ constitutional principles (II and IX) are only real if a test enforces them.
 - [x] T037 [US1] Implement the adaptation job orchestration in `app/packages/shell/src/jobs/adapt.ts` wiring ingest → verify gate → adapt → render *(gates exist; the deterministic output checks are T088 and real ingest is spec 008)*
 - [x] T038 [US1] Implement PDF export in `app/packages/shell/src/jobs/print.ts` via `webContents.printToPDF()`, with no external tooling (006 FR-425)
 - [x] T039 [US1] Implement the draft mark so only `job.signOff` can clear it, in `app/packages/shell/src/jobs/signoff.ts` (007 FR-509)
-- [ ] T040 [P] [US1] Write the onboarding end-to-end test in `app/e2e/onboarding.spec.ts` driving install → vault → key → learner → adapt → print with a stubbed provider
+- [x] T040 [P] [US1] Onboarding end-to-end in `app/e2e/onboarding.spec.ts`, driving the real application through Playwright's Electron support *(no stubbed provider: adding a path that bypasses the real one would weaken the guarantees this project enforces structurally. It drives the journey to the point a key is needed and asserts the absence of one is reported in her language. **This is the run that found four production defects** — see validation.md)*
 
 **Checkpoint**: the MVP journey runs end to end with a stubbed provider.
 
@@ -134,7 +134,7 @@ constitutional principles (II and IX) are only real if a test enforces them.
 - [x] T057 [P] [US5] Implement the domain error taxonomy in `app/packages/core/src/errors.ts` and the Spanish message map in `app/ui/src/i18n/errors.ts` — no status codes, no stack traces (006 FR-423) *(message map lives in `i18n/es.ts` under `errors`)*
 - [x] T058 [US5] Implement offline detection and degraded mode in `app/ui/src/hooks/useOnline.ts` so everything except adaptation still works (006 FR-424)
 - [x] T059 [US5] Job recovery *(no `recover.ts` needed — the property holds by construction and is now load-bearing: `runAdaptation` writes nothing to `adapted.md` until the output gate has passed, so a crash mid-stream leaves the previous sheet, every kept revision, the IR and the profile exactly as they were, and a rejected second attempt lands in `adapted.rejected.md` without touching the good file. **Not verified by an actual crash** — that needs the app running.)*
-- [ ] T060 [P] [US5] Write the degradation test in `app/e2e/degradation.spec.ts` for network loss, bad key and rate limit
+- [ ] T060 [P] [US5] Degradation for network loss, bad key and rate limit. *Partly covered by `onboarding.spec.ts` — no-key and offline-except-adaptation are asserted. The remaining cases need a way to simulate a provider without a production backdoor: a local endpoint the adapter is pointed at by configuration, which is a design decision, not a test to write.*
 
 ---
 

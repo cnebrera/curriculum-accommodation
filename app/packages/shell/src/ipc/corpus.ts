@@ -1,7 +1,8 @@
 import { app } from 'electron';
 import { readFile, readdir, stat } from 'node:fs/promises';
+import { existsSync } from 'node:fs';
 import { join } from 'node:path';
-import { parseRecipe, type Recipe } from '@rampa/core';
+import { parseRecipe, RampaError, type Recipe } from '@rampa/core';
 import { currentVault } from './vault.js';
 import { VAULT } from '@rampa/core';
 import { handle } from './wrap.js';
@@ -11,11 +12,52 @@ import { handle } from './wrap.js';
  *
  * Bundling it is not the same as preventing writes — the coverage analysis
  * caught exactly that gap (T080). There is no IPC path that writes here, and
- * the check below asserts it.
+ * `packages/shell/test/corpus-guarantees.test.ts` asserts it.
+ *
+ * ## Where the bundle actually is
+ *
+ * `app.getAppPath()` is the directory of the entry script — `out/main` when the
+ * app is started from its built main process — so joining 'corpus' onto it
+ * pointed at a directory that has never existed. The failure was silent and
+ * total: **zero recipes loaded**, so an adaptation would run with no judgement
+ * layer at all and produce plausible output with none of the guards. Found by
+ * launching the app; no typecheck or unit test could see it.
+ *
+ * So: look in the packaged location, then walk up from the entry point. Failing
+ * loudly would be better than failing silently, which is what `assertCorpus`
+ * below is for.
  */
-const corpusRoot = () => (app.isPackaged
-  ? join(process.resourcesPath, 'corpus')
-  : join(app.getAppPath(), 'corpus'));
+function corpusRoot(): string {
+  const candidates = app.isPackaged
+    ? [join(process.resourcesPath, 'corpus')]
+    : [
+        join(app.getAppPath(), 'corpus'),
+        join(app.getAppPath(), '..', 'corpus'),        // out/main -> out
+        join(app.getAppPath(), '..', '..', 'corpus'),  // out/main -> app
+        join(process.cwd(), 'corpus'),
+      ];
+  for (const c of candidates) {
+    if (existsSync(join(c, 'recipes'))) return c;
+  }
+  // Nothing found: return the first candidate so the error names a real path.
+  return candidates[0]!;
+}
+
+/**
+ * A missing corpus is not a degraded mode, it is a broken installation.
+ *
+ * Adapting with no recipes would still produce a document — a plausible one,
+ * with every guard absent. That is the exact failure this project exists to
+ * prevent, so it must stop the job rather than quietly proceed.
+ */
+export async function assertCorpus(): Promise<void> {
+  const recipes = await allRecipes();
+  if (recipes.length === 0) {
+    throw new RampaError('corpus-missing',
+      'No encuentro las reglas de adaptación. Es un problema de la instalación, no tuyo: ' +
+      'vuelve a instalar Rampa.');
+  }
+}
 
 async function walk(dir: string): Promise<string[]> {
   const out: string[] = [];

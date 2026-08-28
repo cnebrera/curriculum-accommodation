@@ -30,14 +30,22 @@ export function stringsFor(code: LocaleCode): Strings {
 
 const KEY = 'rampa.locale';
 
-/** Her choice wins; otherwise the system's language; otherwise Spanish. */
+/**
+ * Her explicit choice, otherwise Spanish (006 FR-406: "Spanish first").
+ *
+ * This used to follow `navigator.language`, which produced a **mixed-language
+ * interface** on any machine not set to Spanish: the screens wired to this
+ * context switched to the partial English locale while the ones importing `es`
+ * directly stayed Spanish. A teacher's first screen read "Let's get you set up"
+ * above "¿Dónde guardo tus cosas?". Following the OS was the bug; Spanish is
+ * the only fully populated locale and the one a real teacher will validate.
+ */
 export function detectLocale(): LocaleCode {
   try {
     const saved = localStorage.getItem(KEY) as LocaleCode | null;
     if (saved && LOCALES.some((l) => l.code === saved)) return saved;
   } catch { /* private mode */ }
-  const nav = (typeof navigator !== 'undefined' ? navigator.language : 'es').slice(0, 2) as LocaleCode;
-  return LOCALES.some((l) => l.code === nav) ? nav : 'es';
+  return 'es';
 }
 
 export function saveLocale(code: LocaleCode): void {

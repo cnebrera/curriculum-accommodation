@@ -64,7 +64,14 @@ export function App() {
           {es.nav.about}</button>
         <div style={{ padding: '14px 10px' }} className="stack">
           <CostBadge />
-          {locales.length > 1 ? (
+          {/*
+            The language switch is hidden until the sweep in T095 lands. Most
+            screens still import `es` directly instead of reading this context,
+            so choosing English today produces one screen in two languages —
+            worse than not offering the choice. The scaffolding stays; the
+            promise waits until it is true.
+          */}
+          {false && locales.length > 1 ? (
             <select aria-label="Idioma" value={locale}
                     onChange={(e) => setLocale(e.target.value as typeof locale)}>
               {locales.map((l) => <option key={l.code} value={l.code}>{l.label}</option>)}

@@ -32,9 +32,11 @@
     "dev": "npm run bundle:corpus && electron-vite dev",
     "build": "npm run bundle:corpus && electron-vite build",
     "dist": "npm run build && electron-builder",
-    "test:all": "vitest run"
+    "test:all": "vitest run",
+    "test:e2e": "npm run build && playwright test"
   },
   "devDependencies": {
+    "@playwright/test": "^1.62.1",
     "@types/node": "^22.10.2",
     "@types/react": "^18.3.31",
     "@types/react-dom": "^18.3.7",

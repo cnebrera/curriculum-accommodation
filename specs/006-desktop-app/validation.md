@@ -177,3 +177,70 @@ Everything else in `006` is implemented and tested offline. The honest summary
 has not changed: **the application has never been run and no teacher has seen
 it.** Next is spec 008, because without vision ingest the verification gate
 verifies the teacher's own paste and SC-401 cannot be measured as written.
+
+
+---
+
+# The application has been run · 2026-08-28
+
+**The line that mattered most in this document is no longer true.** Playwright
+drives the real Electron application: 5 end-to-end tests, plus 209 offline unit
+tests and the isolation gate. `npm run test:e2e`.
+
+## Four production defects, found in the first ninety seconds
+
+Every one of them would have shipped. None was visible to the typecheck, the 206
+unit tests, or `npm run build` — which reported success throughout.
+
+1. **The renderer was built to the wrong directory.** `outDir` was relative to
+   the renderer root and resolved to the *repository* root, two levels above
+   where `main.ts` loads it. `npm run dev` hid it by serving from the Vite dev
+   server. A packaged build would have opened a blank window. (It also explains
+   the stray `out/renderer` that was once committed and that I had dismissed as
+   a stray build.)
+2. **The preload path pointed at a file that never existed.** `main.ts` resolved
+   it to `out/main/preload.js`; electron-vite emits `out/preload/preload.js`. So
+   `window.rampa` was undefined and **every IPC call in the application was
+   dead** — a blank window with a console error nobody had ever read.
+   The first version of the build-layout test *passed* while this was broken: it
+   checked that the emitted file existed and that main.ts had a preload line,
+   never that they were the same path. The test had the same blind spot as the
+   code.
+3. **The corpus could not be found.** `app.getAppPath()` is the entry script's
+   directory (`out/main`), so `corpusRoot()` pointed nowhere. **Zero recipes
+   loaded** — and this one is the worst of the four, because it does not crash:
+   an adaptation would have run with no judgement layer at all and produced
+   plausible output with every guard absent, which is the precise failure this
+   project exists to prevent. Now resolved by search, and `assertCorpus()` stops
+   the job rather than adapting without rules.
+4. **The interface mixed languages.** `detectLocale()` followed
+   `navigator.language`, so on any machine not set to Spanish the screens wired
+   to the i18n context switched to the partial English locale while the ones
+   importing `es` directly stayed Spanish. Her first screen read *"Let's get you
+   set up"* above *"¿Dónde guardo tus cosas?"*. Spanish is now the default per
+   FR-406, and the language switch is hidden until T095 wires the components
+   that bypass the context.
+
+There was also an environment failure worth recording: `npm ci` left Electron
+half-installed — `path.txt` empty and `Electron Framework.framework` missing —
+and the extraction failed silently. Anyone hitting *"Electron failed to install
+correctly"* should extract the cached zip manually into
+`node_modules/electron/dist` and write `path.txt`.
+
+## What this changes about the project's own claims
+
+The pattern is now measured rather than asserted: **every defect found in three
+review passes and this first run lived in a seam** — between two artifacts,
+between two layers, or between the build and the runtime. Three of these four
+were a path string on one side not matching a path string on the other.
+
+## Still NOT verified
+
+- **No provider has been called.** Prompt caching, streaming, vision — all
+  implemented against documented shapes, none exercised. `cases/002-model-floor`
+  is where that happens, and it needs a real key.
+- **`printToPDF` has still not produced a PDF.** The e2e stops before print
+  because printing needs an adapted document, which needs a model.
+- **No teacher has seen any of it.**
+
+Next: spec 008 (vision ingest), then the model floor, then the teacher.
