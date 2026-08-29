@@ -723,9 +723,18 @@ it, which is intentional: a half-present generation path would be worse than non
 
 ## NOT machine-checkable, and not claimed
 
-- **SC-805 — "it does not look unfinished."** There is no test for this and there
-  will not be one. It needs a teacher's first impression, once, in the first ten
-  seconds, and it can only be collected before she has been told what to look at.
+- **SC-805 — "it does not look unfinished." NOT MET, and it did not need a
+  teacher to find out.** Recorded here on 2026-08-29 after Carlos opened the
+  application and said the front end looked terrible. He was right.
+  
+  Every test `010` produced checks a *property* — a contrast ratio, an absence of
+  overflow, a present label, a defined class — and none checks composition. So the
+  suite cannot fail on a page that is correctly coloured, correctly labelled, free
+  of overlap and ugly, which is exactly what was built. The agent never looked at
+  the rendered screen across the whole feature.
+  
+  Diagnosis and decision in [ADR 0009](../../docs/decisions/0009-composition-not-tokens.md);
+  the work is `013`. The tokens are fine and were never composed into a page.
 - **SC-806 — the display preferences are findable without being told** (T029).
   The panel is in the rail under "Cómo se ve", next to the cost badge. Whether
   she finds it is an observation, not an assertion, and writing a test that

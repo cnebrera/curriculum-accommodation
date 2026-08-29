@@ -14,6 +14,8 @@ One decision per file, numbered, never rewritten — superseded instead.
 | [0005](0005-delivery-vehicle.md) | Delivery vehicle: who can actually run this | Accepted, partly superseded by 0006 |
 | [0006](0006-one-vehicle.md) | One vehicle: the application. The harness is removed | Accepted |
 | [0007](0007-orchestrated-pipeline.md) | An orchestrated pipeline, not an autonomous agent | Accepted |
+| [0008](./0008-electron-not-tauri.md) | Electron, not Tauri | Accepted · 2026-08-29 |
+| [0009](./0009-composition-not-tokens.md) | A design system is not a design | Accepted · 2026-08-29 |
 
 ## Specs these decisions drive
 
