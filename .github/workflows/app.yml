@@ -1,11 +1,35 @@
 name: app
 
+# Manual only, for now (2026-08-29). Run it from the Actions tab.
+#
+# Turned off on push at Carlos's request while the work is happening locally.
+# Nothing here is deleted: re-enabling is uncommenting the two blocks below.
+#
+# ── Two things it was failing on when it was switched off ─────────────────
+#
+# Both are CI-only and neither is a product defect, but rediscovering them on
+# the day this is switched back on would waste an afternoon:
+#
+# 1. `validate-recipes.sh` uses `mapfile`, which is bash 4. **macOS ships bash
+#    3.2** and always will, for licensing reasons. It passes on Linux and on any
+#    developer machine with a modern bash on PATH, and fails on the macOS runner.
+#    Fix: replace `mapfile` with a `while read` loop, or run the step on Linux
+#    only as the Spec Kit gate already does.
+#
+# 2. `npm run test:all` runs **before** `npm run build`, and
+#    `build-layout.test.ts` asserts the built preload exists at
+#    `out/preload/preload.js`. Locally the build has always happened first, so it
+#    passes. Fix: move the build above the tests — which is also the honest
+#    order, since that test is about the build's output.
+#
+# on:
+#   push:
+#     branches: ['**']
+#     paths: ['app/**', 'recipes/**', 'instructions/**', 'checklists/**', 'cases/**', '.github/workflows/app.yml']
+#   pull_request:
+#     paths: ['app/**', 'recipes/**', 'instructions/**', 'checklists/**', 'cases/**']
 on:
-  push:
-    branches: ['**']
-    paths: ['app/**', 'recipes/**', 'instructions/**', 'checklists/**', 'cases/**', '.github/workflows/app.yml']
-  pull_request:
-    paths: ['app/**', 'recipes/**', 'instructions/**', 'checklists/**', 'cases/**']
+  workflow_dispatch:
 
 jobs:
   verify:
