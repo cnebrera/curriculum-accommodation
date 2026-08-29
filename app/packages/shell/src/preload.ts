@@ -59,6 +59,8 @@ const api = {
      * field that cannot reach the renderer cannot be rendered by mistake.
      */
     services: () => invoke('corpus:services'),
+    /** Education systems, for the year picker (011). */
+    educationSystems: () => invoke('corpus:educationSystems'),
     recommend: (answers: unknown) => invoke('corpus:recommend', answers),
     /**
      * Opens the key page in her browser. Takes a **service id**, not a URL: the

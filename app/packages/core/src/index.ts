@@ -39,6 +39,8 @@ export * from './providers/catalogue.js';
 export * from './providers/recommend.js';
 export * from './providers/key.js';
 export * from './axes/parse.js';
+export * from './education/parse.js';
+export * from './education/lookup.js';
 export * from './redact/names.js';
 
 export * from './render/html.js';

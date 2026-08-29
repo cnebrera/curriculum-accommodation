@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useStrings } from '../i18n/context.js';
 import { AxisEditor } from './AxisEditor.js';
+import { YearPicker, type Who } from './YearPicker.js';
 import { Notice } from '../components/Notice.js';
 import { RepairNotice } from '../components/RepairNotice.js';
 
@@ -11,6 +12,8 @@ export function ProfileEditor({ code, onSaved }: { code: string | null; onSaved:
   const [axes, setAxes] = useState<Record<string, number>>({});
   const [works, setWorks] = useState('');
   const [avoid, setAvoid] = useState('');
+  /** Who he is (011): age, year and stage, filled by one choice. */
+  const [who, setWho] = useState<Who>({});
   const [interests, setInterests] = useState('');
   const [response, setResponse] = useState('');
   /**
@@ -29,9 +32,11 @@ export function ProfileEditor({ code, onSaved }: { code: string | null; onSaved:
   useEffect(() => {
     if (code) {
       void window.rampa.learners.load(code).then((l: any) => {
-        const { code: _c, axes, works, avoid, interests, response, ...rest } = l.profile ?? {};
+        const { code: _c, axes, works, avoid, interests, response,
+                age, year, stage, age_recorded: _ar, ...rest } = l.profile ?? {};
         setCurrent(l.profile.code);
         setAxes(axes ?? {});
+        setWho({ age, year, stage });
         setWorks((works ?? []).join('\n'));
         setAvoid((avoid ?? []).join('\n'));
         setInterests((interests ?? []).join(', '));
@@ -63,6 +68,12 @@ export function ProfileEditor({ code, onSaved }: { code: string | null; onSaved:
       interests: interests.split(',').map((s) => s.trim()).filter(Boolean),
       response: responseMap,
       language: (carried['language'] as Record<string, string>) ?? { instruction: 'es' },
+      ...who,
+      /*
+       * The date she wrote it, so a stale age is visible rather than drifting
+       * silently. Only stamped when there is an age to stamp.
+       */
+      ...(who.age !== undefined ? { age_recorded: new Date().toISOString().slice(0, 10) } : {}),
     });
     if (name.trim()) await window.rampa.names.set(current, name.trim());
     setSaved(true);
@@ -87,6 +98,13 @@ export function ProfileEditor({ code, onSaved }: { code: string | null; onSaved:
       </div>
 
       <h3>{es.learner.axesTitle}</h3>
+      {/*
+        Before the axes, deliberately. Who he is comes before what he finds hard —
+        both in how a teacher thinks about a child and in what she can answer
+        without stopping to consider.
+      */}
+      <YearPicker value={who} onChange={setWho} />
+
       <AxisEditor axes={axes} onChange={setAxes} />
 
       <div>

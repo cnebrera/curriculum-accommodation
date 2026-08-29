@@ -5,13 +5,14 @@ import {
   selectRecipes, loadLearner, buildReport, loadForRun, RampaError,
   stringifyFrontMatter, injectionNotices, logger, buildAdaptPrompt,
   checkStructurallyComplete, checkCompleteness, completenessNotice,
-  assertProvenance, findUnaccountedBlocks, type Notice, type CompletenessIssue,
+  assertProvenance, findUnaccountedBlocks, divergence, studiesFor,
+  type Notice, type CompletenessIssue,
 } from '@rampa/core';
 import { sendRedacted } from '@rampa/providers';
 import { currentVault } from '../ipc/vault.js';
 import { knownNames, unknownNamesIn } from '../ipc/names.js';
 import { activeProvider } from '../ipc/keys.js';
-import { allRecipes, assertCorpus, loadInstruction } from '../ipc/corpus.js';
+import { allRecipes, assertCorpus, loadInstruction, findYearInCorpus } from '../ipc/corpus.js';
 import { recordCost } from '../ipc/cost.js';
 import { handle } from '../ipc/wrap.js';
 
@@ -85,6 +86,35 @@ function retryCorrections(issues: CompletenessIssue[]): Correction[] {
       'Inclúyelos adaptados, o decláralos con [dropped:ID] y el motivo en el bloque .report-notes.');
   }
   return notes.map((text) => ({ text, scope: 'corpus' as const }));
+}
+
+/**
+ * The learner's age, year and stage, resolved against the education corpus.
+ *
+ * Returns an empty object when nothing is known — no age, no year, or a system
+ * that no longer ships. The prompt then emits no section at all, which is the
+ * point: «edad: desconocida» invites a guess where silence prompts a question.
+ */
+async function whoIsThis(profile: { age?: number; year?: string; stage?: string }): Promise<{
+  age?: number; year?: string; stage?: string;
+  yearInfo?: { typicalAge: number | null; can?: string; studies?: string };
+  divergence?: { years: number; notable: boolean } | null;
+}> {
+  if (profile.age === undefined && !profile.year) return {};
+
+  const found = profile.year ? await findYearInCorpus(profile.year) : null;
+  return {
+    age: profile.age,
+    // Her label, from the corpus where it is still there, and what the profile
+    // recorded where it is not — a system withdrawn from the corpus must not
+    // blank a learner's year.
+    year: found?.year.label ?? profile.year,
+    stage: found?.stage.label ?? profile.stage,
+    yearInfo: found
+      ? { typicalAge: found.year.typicalAge, can: found.year.can, studies: studiesFor(found) }
+      : undefined,
+    divergence: found ? divergence(profile.age, found.year) : null,
+  };
 }
 
 export async function runAdaptation(
@@ -176,6 +206,9 @@ export async function runAdaptation(
   const attempt = async (extra: Correction[]): Promise<{ out: string; cents: number; flagged: string[] }> => {
     const { prompt, notesOmitted } = buildAdaptPrompt({
       profile: learner.profile,
+      // Who he is (011). Resolved here against the education corpus so the prompt
+      // builder stays free of any knowledge about school systems.
+      ...(await whoIsThis(learner.profile)),
       notes: learner.notes,
       overlay: learner.overlay,
       house: memory.house,

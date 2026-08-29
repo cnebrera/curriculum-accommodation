@@ -17,39 +17,6 @@ export type Axis = (typeof AXES)[number];
  * assertion. Confusing the two silently disables adaptations a learner needs,
  * which is a safety issue rather than a nicety — see docs/axis-calibration.md.
  */
-const axisLevel = z.union([z.literal(0), z.literal(1), z.literal(2), z.literal(3)]);
-
-export const profileSchema = z.object({
-  code: z.string().min(1),
-  axes: z.record(z.string(), axisLevel).default({}),
-  axes_confirmed: z.record(z.string(), z.string()).optional(),
-  works: z.array(z.string()).default([]),
-  avoid: z.array(z.string()).default([]),
-  interests: z.array(z.string()).default([]),
-  response: z.record(z.string(), z.string()).default({}),
-  language: z.record(z.string(), z.string()).default({}),
-});
-export type Profile = z.infer<typeof profileSchema> & {
-  _unparsed?: Record<string, unknown>;
-  notes?: string;
-};
-
-export const rosterEntrySchema = z.object({
-  code: z.string().min(1),
-  stage: z.string().optional(),
-  year_group: z.string().optional(),
-  group: z.string().optional(),
-  subjects: z.array(z.string()).default([]),
-  status: z.enum(['active', 'archived', 'forgotten']).default('active'),
-});
-
-export const rosterSchema = z.object({
-  academic_year: z.string().optional(),
-  setting: z.string().optional(),
-  learners: z.array(rosterEntrySchema).default([]),
-});
-export type Roster = z.infer<typeof rosterSchema>;
-
 /**
  * A date as it arrives from YAML front matter.
  *
@@ -72,6 +39,55 @@ export type Roster = z.infer<typeof rosterSchema>;
  */
 const yamlDate = z.union([z.string(), z.date()])
   .transform((v) => (v instanceof Date ? v.toISOString().slice(0, 10) : v));
+
+const axisLevel = z.union([z.literal(0), z.literal(1), z.literal(2), z.literal(3)]);
+
+export const profileSchema = z.object({
+  code: z.string().min(1),
+  axes: z.record(z.string(), axisLevel).default({}),
+  axes_confirmed: z.record(z.string(), z.string()).optional(),
+  works: z.array(z.string()).default([]),
+  avoid: z.array(z.string()).default([]),
+  interests: z.array(z.string()).default([]),
+  response: z.record(z.string(), z.string()).default({}),
+  language: z.record(z.string(), z.string()).default({}),
+
+  /**
+   * Who he is (011). All optional, all **absent rather than guessed** — the same
+   * rule as an unobserved axis, and for the same reason: a guessed age is acted
+   * on.
+   *
+   * `stage` is stored as a label rather than derived on read, because the vault
+   * must be readable without this application (006 FR-410). A profile saying
+   * `stage: Primaria` is legible to anyone; one saying only `year: es:primaria-5`
+   * needs the corpus to decode.
+   */
+  age: z.number().int().min(3).max(99).optional(),
+  age_recorded: yamlDate.optional(),
+  year: z.string().optional(),
+  stage: z.string().optional(),
+});
+export type Profile = z.infer<typeof profileSchema> & {
+  _unparsed?: Record<string, unknown>;
+  notes?: string;
+};
+
+export const rosterEntrySchema = z.object({
+  code: z.string().min(1),
+  stage: z.string().optional(),
+  year_group: z.string().optional(),
+  group: z.string().optional(),
+  subjects: z.array(z.string()).default([]),
+  status: z.enum(['active', 'archived', 'forgotten']).default('active'),
+});
+
+export const rosterSchema = z.object({
+  academic_year: z.string().optional(),
+  setting: z.string().optional(),
+  learners: z.array(rosterEntrySchema).default([]),
+});
+export type Roster = z.infer<typeof rosterSchema>;
+
 
 export const journalEntrySchema = z.object({
   date: yamlDate,

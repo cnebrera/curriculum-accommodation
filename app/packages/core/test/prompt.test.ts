@@ -101,3 +101,106 @@ describe('notes stay bounded without losing the newest (T084)', () => {
     expect(r.text.startsWith('## ')).toBe(true);
   });
 });
+
+/* ── Who the learner is (011 T013-T017) ──────────────────────────────────── */
+
+describe('the prompt says who the learner is', () => {
+  const base = {
+    profile: {
+      code: 'PER-abc', axes: { COG: 3 }, works: [], avoid: [], interests: [],
+      response: {}, language: { instruction: 'es' },
+    } as never,
+    recipes: [],
+    material: 'texto',
+  };
+
+  it('says nothing at all when nothing is known', () => {
+    /*
+     * Never «edad: desconocida». An absent field invites a question; a field
+     * saying "unknown" invites a guess, and the guess is what this feature exists
+     * to remove.
+     */
+    const { prompt } = buildAdaptPrompt(base);
+    expect(prompt).not.toContain('Quién es este alumno');
+    expect(prompt).not.toMatch(/desconocid/i);
+  });
+
+  it('carries the age and the year in her words', () => {
+    const { prompt } = buildAdaptPrompt({
+      ...base, age: 10, year: '5.º de Primaria', stage: 'Primaria',
+    });
+    expect(prompt).toContain('Quién es este alumno');
+    expect(prompt).toContain('Tiene 10 años');
+    expect(prompt).toContain('5.º de Primaria');
+  });
+
+  /**
+   * The case the whole feature is for.
+   *
+   * A fourteen-year-old in 5.º de Primaria is not an error to correct — it is the
+   * most useful thing the model could know, because register and curricular
+   * demand have come apart and each has to be pitched separately.
+   */
+  it('states a two-year divergence in words, and says which way to pitch each thing', () => {
+    const { prompt } = buildAdaptPrompt({
+      ...base, age: 14, year: '5.º de Primaria', stage: 'Primaria',
+      yearInfo: { typicalAge: 10 },
+      divergence: { years: 4, notable: true },
+    });
+    expect(prompt).toMatch(/le lleva 4 años/);
+    expect(prompt).toContain('El registro va por la edad');
+    expect(prompt).toContain('la exigencia curricular, por el curso');
+    // And the concrete instruction, because the abstract one is easy to nod at.
+    expect(prompt).toMatch(/No le hables como a un niño de 10/);
+  });
+
+  it('says nothing about a one-year difference', () => {
+    // A summer birthday, a late start, an ordinary repetition. A sentence that
+    // fires on most learners stops being read, taking the real case with it.
+    const { prompt } = buildAdaptPrompt({
+      ...base, age: 11, year: '5.º de Primaria',
+      yearInfo: { typicalAge: 10 },
+      divergence: { years: 1, notable: false },
+    });
+    expect(prompt).not.toMatch(/Ojo:/);
+  });
+
+  it('works the other way too, for a learner younger than his year', () => {
+    const { prompt } = buildAdaptPrompt({
+      ...base, age: 8, year: '5.º de Primaria',
+      yearInfo: { typicalAge: 10 },
+      divergence: { years: -2, notable: true },
+    });
+    expect(prompt).toMatch(/le faltan 2 años/);
+  });
+
+  it('labels the orientation as orientation, where the model reads it', () => {
+    /*
+     * FR-914. Saying it only in the corpus file would mean the model reads a
+     * confident table and never the caveat attached to it.
+     */
+    const { prompt } = buildAdaptPrompt({
+      ...base, age: 10, year: '5.º de Primaria',
+      yearInfo: { typicalAge: 10, can: 'Lee párrafos de tres o cuatro frases.',
+                  studies: 'Fracciones y decimales.' },
+    });
+    expect(prompt).toContain('Lee párrafos de tres o cuatro frases');
+    expect(prompt).toContain('mínimos del Estado');
+    expect(prompt).toContain('lo escribió un programa');
+    expect(prompt).toContain('Lo que diga la maestra manda sobre esto');
+  });
+
+  it('adds no caveat when there is no orientation to caveat', () => {
+    const { prompt } = buildAdaptPrompt({ ...base, age: 10, year: '5.º de Primaria' });
+    expect(prompt).not.toContain('mínimos del Estado');
+  });
+
+  it('puts the learner before the material, and after the barriers', () => {
+    const { prompt } = buildAdaptPrompt({ ...base, age: 10, year: '5.º de Primaria' });
+    const barriers = prompt.indexOf('Perfil del alumno');
+    const who = prompt.indexOf('Quién es este alumno');
+    const material = prompt.indexOf('Material a adaptar');
+    expect(barriers).toBeLessThan(who);
+    expect(who).toBeLessThan(material);
+  });
+});

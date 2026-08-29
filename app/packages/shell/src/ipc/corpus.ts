@@ -5,6 +5,7 @@ import { join } from 'node:path';
 import {
   parseRecipe, parseAxisDefs, coversAllAxes, logger, RampaError, type Recipe,
   loadCatalogue, freshness, monthsSince, recommend, type ServiceEntry,
+  loadEducationSystems, findYear, type FoundYear,
   type Answers, type Jurisdiction,
 } from '@rampa/core';
 import { ADAPTER_IDS, checkForUpdate } from '@rampa/providers';
@@ -151,6 +152,29 @@ export async function loadServices(today = new Date()): Promise<ServiceEntry[]> 
   return catalogue;
 }
 
+/**
+ * One year, across every system the corpus ships (011).
+ *
+ * Ids are namespaced by system (`es:primaria-5`), so a scan across systems cannot
+ * return the wrong country's year — and a profile keeps working when a second
+ * system is added.
+ */
+export async function findYearInCorpus(yearId: string): Promise<FoundYear | null> {
+  const dir = join(corpusRoot(), 'instructions', 'education');
+  const files = await walk(dir);
+  const raw = await Promise.all(
+    files.filter((f) => !f.endsWith('README.md')).map(async (f) => ({
+      path: f.slice(corpusRoot().length + 1),
+      raw: await readFile(f, 'utf8'),
+    })),
+  );
+  for (const system of loadEducationSystems(raw)) {
+    const found = findYear(system, yearId);
+    if (found) return found;
+  }
+  return null;
+}
+
 export const loadChecklist = async (name: string): Promise<string> =>
   readFile(join(corpusRoot(), 'checklists', `${name}.md`), 'utf8').catch(() => '');
 
@@ -277,6 +301,26 @@ export function registerCorpusIpc(): void {
    * construction, because this handler has no vault reference at all.
    */
   handle('corpus:checkForUpdate', async () => checkForUpdate(app.getVersion()));
+
+  /**
+   * The education systems she can choose from (011 T010).
+   *
+   * Read from the bundle like the axis descriptors and the provider catalogue.
+   * A malformed file is simply not in the list, having already logged.
+   */
+  handle('corpus:educationSystems', async () => {
+    const dir = join(corpusRoot(), 'instructions', 'education');
+    const files = await walk(dir);
+    const raw = await Promise.all(
+      files.filter((f) => !f.endsWith('README.md')).map(async (f) => ({
+        path: f.slice(corpusRoot().length + 1),
+        raw: await readFile(f, 'utf8'),
+      })),
+    );
+    const systems = loadEducationSystems(raw);
+    if (systems.length === 0) logger.error('corpus.education-empty', { dir, filesFound: files.length });
+    return systems;
+  });
 
   handle('corpus:licences', async () => ({
     code: await readFile(join(corpusRoot(), 'LICENSE'), 'utf8').catch(() => ''),

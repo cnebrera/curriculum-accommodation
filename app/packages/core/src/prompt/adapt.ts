@@ -28,6 +28,19 @@ export interface Correction {
 
 export interface AdaptPromptInput {
   profile: Profile;
+  /**
+   * Who the learner is (011). Resolved by the caller against the education
+   * corpus, so this module stays free of any knowledge about school systems —
+   * it renders a paragraph, it does not know what Bachillerato is.
+   */
+  age?: number;
+  /** The year as she reads it: «5.º de Primaria». */
+  year?: string;
+  stage?: string;
+  /** What the corpus says about that year. Orientation, labelled as such. */
+  yearInfo?: { typicalAge: number | null; can?: string; studies?: string };
+  /** Past two years, and therefore worth a sentence (FR-905). */
+  divergence?: { years: number; notable: boolean } | null;
   /** The learner's accumulated notes. Bounded here, never silently dropped. */
   notes?: string;
   /** The teaching team's official adaptations. Takes precedence over recipes. */
@@ -85,12 +98,72 @@ const section = (title: string, body: string): string => `\n## ${title}\n${body}
  * assessment guard. Corrections beat recipes and memory. They never beat the
  * hard rules; those escalate.
  */
+/**
+ * The learner in one short paragraph, or nothing at all.
+ *
+ * Three deliberate choices, all of them about what *not* to say:
+ *
+ * - Absent fields produce no line, not a line saying they are absent.
+ * - The divergence is stated in words rather than left to arithmetic the model
+ *   may or may not do — and only past two years, because one is ordinary and a
+ *   sentence that fires on most learners stops being read.
+ * - The orientation says it is orientation, where the model reads it rather than
+ *   only in the corpus file it came from (FR-914).
+ */
+function whoIsThis(input: AdaptPromptInput): string | null {
+  const { age, year, stage, yearInfo, divergence } = input;
+  const lines: string[] = [];
+
+  const facts: string[] = [];
+  if (age !== undefined) facts.push(`Tiene ${age} años`);
+  if (year) facts.push(facts.length ? `está en ${year}` : `Está en ${year}`);
+  if (stage && stage !== year) facts.push(`etapa: ${stage}`);
+  if (facts.length) lines.push(`${facts.join(' y ')}.`);
+
+  if (divergence?.notable) {
+    const older = divergence.years > 0;
+    const n = Math.abs(divergence.years);
+    lines.push(
+      `\nOjo: le ${older ? 'lleva' : 'faltan'} ${n} año${n === 1 ? '' : 's'} `
+      + `${older ? 'a' : 'para'} la edad habitual de ese curso. `
+      + 'El registro va por la edad; la exigencia curricular, por el curso. '
+      + `No le hables como a un niño de ${yearInfo?.typicalAge ?? 'otro curso'}.`);
+  }
+
+  if (yearInfo?.can) lines.push(`\nLo que suele poder un alumno de este curso: ${yearInfo.can}`);
+  if (yearInfo?.studies) lines.push(`Lo que se suele dar: ${yearInfo.studies}`);
+
+  if (yearInfo?.can || yearInfo?.studies) {
+    lines.push(
+      '\nEsto último es orientación de los mínimos del Estado, no el currículo de '
+      + 'su comunidad, y lo escribió un programa. Lo que diga la maestra manda sobre esto.');
+  }
+
+  return lines.length ? lines.join('\n') : null;
+}
+
 export function buildAdaptPrompt(input: AdaptPromptInput): { prompt: string; notesOmitted: number } {
   const { profile, recipes, material } = input;
   const out: string[] = [];
 
   out.push(section('Perfil del alumno (barreras, no diagnóstico)',
     AXES.map((a) => `${a}: ${axisLevelOf(profile, a) ?? 'sin observar'}`).join(' · ')));
+
+  /**
+   * Who he is (011 T013-T017, FR-903/905).
+   *
+   * Before this, the model received barriers and nothing else — so it adapted
+   * identically for a seven-year-old and a fifteen-year-old with the same
+   * profile, and the register of every sheet was a guess. A fourteen-year-old
+   * handed something that reads as if written for a seven-year-old has been
+   * labelled, which is the harm Principle V exists to prevent, arriving on every
+   * sheet rather than once a year.
+   *
+   * **No fields means no section** — never «edad: desconocida», which invites a
+   * guess where absence would have prompted a question.
+   */
+  const who = whoIsThis(input);
+  if (who) out.push(section('Quién es este alumno', who));
 
   if (profile.works.length) {
     out.push(section('Lo que ya funciona con este alumno',
