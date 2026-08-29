@@ -1,6 +1,6 @@
 # 0008 — Electron, not Tauri
 
-**Status:** Accepted · 2026-08-29
+**Status:** Accepted · 2026-08-29 · **revised the same day, after being challenged**
 
 ## Context
 
@@ -8,90 +8,106 @@
 option as **"Tauri/Electron"** — one row in a table, never split. `006` research
 R11 then chose `electron-builder`, which presupposes Electron.
 
-So the choice was made by implication and never argued, which is how a decision
-gets relitigated every six months by whoever is looking at it that day. It was
-relitigated on 2026-08-29, correctly, by someone looking at an ugly screen and
-reasonably wondering whether the framework was to blame.
+The choice was therefore made by implication and never argued, which is how a
+decision gets relitigated by whoever is looking at it that day. It was relitigated
+on 2026-08-29 by someone looking at an ugly screen and reasonably asking whether
+the framework was to blame.
 
-**It was not.** The screen was ugly because a design system was built and never
-composed into a page — recorded separately in [ADR 0009](./0009-composition-not-tokens.md).
-But the question deserved a real answer, and there was none written down.
+It was not — see [ADR 0009](./0009-composition-not-tokens.md). But the question was
+fair and had no written answer.
 
-## The numbers, measured
+**This ADR was written once, challenged, and rewritten.** The first version gave
+three reasons; two of them were overstated and are corrected below, because an ADR
+with a bad argument in it is worse than no ADR — it gets quoted.
+
+## The numbers, measured on this machine
 
 | | Electron | Tauri |
 |---|---|---|
 | Download | ~110 MB | ~10 MB |
-| Resident memory | ~400 MB (dev; production lower) | ~120 MB |
+| Resident memory | **383 MB**, production build, measured | ~120 MB |
 | Our own code | 1.1 MB | 1.1 MB |
 
-Tauri wins on both, by a lot, and neither number is close. Any argument for
-Electron has to be worth **ten times the download** on a school's wifi.
+The first draft blamed the memory figure on dev mode. It did not: a production
+build measured 383 MB against 398 MB in dev. **The numbers favour Tauri and are
+not close**, and nothing below softens that.
 
-## What decides it
+## What moving would actually cost
 
-Three things, all specific to this project rather than general:
+Also worth measuring rather than asserting. Only one package is tied to Electron:
 
-### 1 · Print fidelity is the product
+| | Lines | Survives a move? |
+|---|---|---|
+| `packages/core` | 4,476 src · 4,898 test | **Yes** — platform-agnostic TypeScript |
+| `packages/providers` | 867 · 1,050 | **Yes** — `fetch` |
+| `ui` | 4,344 | **Yes** |
+| `packages/shell` | **3,035** · 739 | No. This is the Electron edge |
 
-What leaves this application is a sheet a child holds — printed, and photocopied
-in black and white by a machine nobody maintains. `checkPhotocopy` exists;
-`printToPDF` is the render path.
+So it is ~3,000 lines plus the PDF problem, not a rewrite. The first draft implied
+otherwise.
 
-**Electron ships one Chromium on all three platforms.** What she prints is what we
-tested, once.
+## Two arguments the first draft got wrong
 
-**Tauri uses the system webview**: WebKit on macOS, WebView2 on Windows, WebKitGTK
-on Linux. Three engines, three print outputs, and the one we cannot test is the
-one on her machine. A single guarantee becomes three, of which we would verify
-one — and the failure would be invisible until a sheet came out of a photocopier
-wrong.
+**"Three webview engines mean three print outputs."** Overstated.
+`checkPhotocopy` operates on the **HTML string**, not on rendered pixels, so it is
+engine-independent. The engine matters for the PDF and for nothing else.
 
-### 2 · The privileged side is TypeScript, and it is where the guarantees live
+**"The privileged side must be TypeScript, or the security posture collapses."**
+Overstated. Tauri v2 has capability scoping that could enforce vault paths, and
+`isolation.test.ts` walks a TypeScript import graph that survives any host. The
+redaction chokepoint is a property of the code, not of the process boundary.
 
-667 tests cover vault path resolution, IR parsing, recipe selection, name
-redaction and the egress chokepoint. All of it runs in the main process, in Node.
+## The one argument that decides it
 
-In Tauri the privileged side is Rust. Two options, both bad:
+**Tauri has no programmatic HTML-to-PDF, and this application's output is a PDF
+file that a teacher sends to a colleague.**
 
-- **Rewrite it in Rust.** Not a discussion.
-- **Move it into the webview.** Then the renderer has file access — and
-  `resolveInVault`, "the renderer never composes a path" (`009`), and the
-  single-chokepoint redaction guarantee (`007` FR-510) *all* assume a privileged
-  process the renderer cannot reach. The security posture is not a layer on top
-  of the architecture; it **is** the architecture.
+Not "a different engine" — none. The available paths are:
 
-### 3 · The isolation guarantee is a module-graph test
+1. **A `wkhtmltopdf` sidecar.** A per-platform binary of an archived project, and
+   `006` **FR-425 forbids it by specification**: *"MUST render HTML and PDF itself,
+   with no external tooling."* Not a matter of taste.
+2. **`window.print()` and a dialog.** She saves-as by hand, differently on each
+   platform, and there is no file to attach until she has. WebView2 has
+   `PrintToPdfAsync`; Tauri does not expose it.
+3. **Lay the PDF out ourselves** with `pdf-lib` or similar: rebuild text wrapping,
+   page breaks and tables — for a document whose entire purpose is careful
+   typographic presentation for a learner with reading difficulties.
+4. **Rasterise the HTML into an image.** Kills text selection and PDF
+   accessibility. For material aimed at learners who may need a screen reader or
+   reflow, that is a regression aimed precisely at the people this exists for.
 
-`isolation.test.ts` fails the build if anything in `@rampa/core` can reach the
-network. It is 48 assertions over a TypeScript import graph, and it is how
-Principle II is enforced rather than requested.
-
-Across a Rust/JS boundary that check does not exist in the same form.
+And the PDF is not merely how she prints. `docs/escenario.md`: *"El tutor de Hugo
+le pide la ficha para tenerla en clase: le reenvía el PDF ya firmado."* It is the
+artefact that leaves her hands.
 
 ## Decision
 
-**Electron.** The ten-times download is paid for by one rendering engine, a
-privileged process that speaks the same language as the guarantees, and a module
-graph a test can walk.
+**Electron**, on that one reason. The ten-times download and three-times memory buy
+a programmatic, identical-everywhere HTML-to-PDF that the product's output depends
+on, and there is no equivalent.
 
-## What this does not fix
-
-- **The unsigned installer still warns** on Windows and macOS (`006` R14). That is
-  a certificate problem, not a framework one, and Tauri would carry it identically.
-- **~400 MB resident** on the laptop on the trolley — 1366×768, probably 4–8 GB —
-  is noticeable. Survivable because it is one application and Chrome with three
-  tabs is worse, but **measured on a developer's machine and not on hers.**
+**And the decision is made cheap to reverse.** `packages/shell` is already the
+boundary; `013` tightens it so that a future move is a known 3,000 lines rather
+than an unknown. That is the honest response to a decision whose numbers point the
+other way: not to defend it harder, but to keep the exit affordable.
 
 ## What would reopen this
 
-Either of these, and both are measurable the day there is a teacher:
+1. **Tauri gains programmatic HTML-to-PDF.** [tauri#12284](https://github.com/tauri-apps/tauri/issues/12284)
+   and [wry#707](https://github.com/tauri-apps/wry/issues/707) are the issues to
+   watch. If that lands, this ADR has no argument left and should be revisited on
+   the numbers, which favour Tauri.
+2. **A teacher does not install it because it is 110 MB.**
+3. **The trolley laptop is unusable with it open** — 1366×768, probably 4–8 GB.
+   383 MB is one application's worth, and Chrome with three tabs is worse, but it
+   is measured on a developer's machine and not on hers.
 
-1. **A teacher does not install it because it is 110 MB.** Download size becoming
-   the barrier, rather than the vocabulary, would change what "cheapest vehicle
-   that reaches teachers" means (ADR 0005's own test).
-2. **The trolley laptop is unusable with it open.** Not slow — unusable, alongside
-   whatever else the school makes her run.
+None of 2 or 3 is measured. Until one is, this stands on the PDF path alone.
 
-Neither is measured. Until one is, this ADR stands on the three reasons above and
-not on the numbers, which favour the other option.
+## Sources
+
+- [tauri-apps/tauri#12284 — PDF generation programmatically](https://github.com/tauri-apps/tauri/issues/12284)
+- [tauri-apps/wry#707 — print webview to pdf silently](https://github.com/tauri-apps/wry/issues/707)
+- [tauri-apps/tauri#4917 — Provide print API](https://github.com/tauri-apps/tauri/issues/4917)
+- [tauri-apps discussion #2591 — How to print to pdf?](https://github.com/tauri-apps/tauri/discussions/2591)
