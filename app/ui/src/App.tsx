@@ -95,7 +95,12 @@ export function App() {
         <button aria-current={view === 'about' ? 'page' : undefined} onClick={() => setView('about')}>
           {es.nav.about}</button>
         <div className="grow" />
-        <div className="stack gap2" style={{ padding: 'var(--s3) var(--s2) 0' }}>
+        {/*
+          T006 · a composed block, not two controls pinned to the floor.
+          Separated by a rule rather than by a void, so it reads as the rail's
+          foot rather than as things that fell down there.
+        */}
+        <div className="rail-foot">
           <CostBadge />
           <DisplayPreferences />
           {/*

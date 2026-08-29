@@ -10,18 +10,18 @@ regressions loudly. What this feature adds is not a test — it is **looking**
 
 ## Phase 1 · Look first
 
-- [ ] T001 Take and keep screenshots of every screen at 1366×768, before anything changes. The success criterion of this feature is visual, so the baseline is the deliverable that makes the change reviewable rather than asserted (SC-1105)
+- [x] T001 Take and keep screenshots of every screen at 1366×768, before anything changes. The success criterion of this feature is visual, so the baseline is the deliverable that makes the change reviewable rather than asserted (SC-1105) *(done: `docs/screenshots/013-before/`, and `app/scripts/screenshot.mjs` makes it one command from now on.)*
 
 ---
 
 ## Phase 2 · The shell, built by fixing the worst screen with it
 
-- [ ] T002 Write `ui/src/styles/composition.css`: three spacing levels, the measure applied to controls, and the middle of the type scale. Separate from `components.css`, which stays about what a thing looks like rather than where it sits
-- [ ] T003 Build `ui/src/shell/Page.tsx` per the contract — title, lede, max width, rhythm — with the `wide` and `canvas` variants the two screens that need them
-- [ ] T004 [P] Build `Section`, `Field` and `Actions`. `Actions` enforces one primary control (FR-1105)
-- [ ] T005 Recompose **the adapt screen** with it. Worst screen, and the one a teacher opens first — a shell designed in the abstract fits nothing, so it is designed against this
-- [ ] T006 Fix the rail's foot: a composed block rather than two controls pinned to the floor (FR-1106)
-- [ ] T007 **Screenshot and look.** If the adapt screen is not visibly better, the shell is wrong and Phase 2 is not done
+- [x] T002 Write `ui/src/styles/composition.css`: three spacing levels, the measure applied to controls, and the middle of the type scale. Separate from `components.css`, which stays about what a thing looks like rather than where it sits *(done. Three named rhythms and the measure. **Tightened after looking**: the first version pushed the primary action below the fold on 1366×768, which is the machine this is for — a rhythm that puts «Continuar» off the bottom is worse than the crush it replaced.)*
+- [x] T003 Build `ui/src/shell/Page.tsx` per the contract — title, lede, max width, rhythm — with the `wide` and `canvas` variants the two screens that need them *(done, with the `wide` and `canvas` variants.)*
+- [x] T004 [P] Build `Section`, `Field` and `Actions`. `Actions` enforces one primary control (FR-1105) *(done. `Actions` takes a singular `primary` prop, which is how FR-1105 is enforced rather than requested.)*
+- [x] T005 Recompose **the adapt screen** with it. Worst screen, and the one a teacher opens first — a shell designed in the abstract fits nothing, so it is designed against this *(done. Fields are a field wide, the file button dropped to secondary weight, and the disabled primary now says **why** it is disabled instead of just looking broken.)*
+- [x] T006 Fix the rail's foot: a composed block rather than two controls pinned to the floor (FR-1106) *(done: a rule and a block, not two controls pinned to the floor.)*
+- [x] T007 **Screenshot and look.** If the adapt screen is not visibly better, the shell is wrong and Phase 2 is not done *(**done, and it was a real gate.** The first pass looked better and put «Continuar» below the fold; the section heading was also nearly the size of the page title, so the page read as two titles. Both found by looking, neither by any test.)*
 
 ---
 

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useStrings } from '../i18n/context.js';
 import { fromWire } from '../../../packages/core/src/errors.js';
 import { Callout } from '../components/Callout.js';
+import { Page, Section, Field, Actions } from '../shell/Page.js';
 import { ReportView, type Decision } from '../review/ReportView.js';
 import { Stages, Stream } from '../components/Progress.js';
 import { NameWarning } from '../components/NameWarning.js';
@@ -101,37 +102,42 @@ export function AdaptScreen({ onReview, onChooseFile, presetJobId }: {
   };
 
   return (
-    <div className="stack">
-      <h1>{es.adapt.title}</h1>
+    <Page title={es.adapt.title}
+          lede="Trae la ficha como la tengas y dime para quién es.">
       {!online ? <Callout intent="decide">{es.errors['offline']}</Callout> : null}
 
       {stage === 'compose' ? (
-        <div className="stack">
-          <div>
-            <label htmlFor="who">{es.adapt.forWhom}</label>
-            <select className="select" id="who" value={learner} onChange={(e) => setLearner(e.target.value)}>
-              {learners.map((c) => <option key={c} value={c}>{names[c] ?? c}</option>)}
-            </select>
-          </div>
-          {onChooseFile ? (
-            <div className="card card-action stack gap2" role="group">
-              <span className="small"><strong>¿La ficha está en un fichero o en una foto?</strong></span>
-              <p className="small" style={{ margin: 0 }}>
-                Si la tienes en la plataforma de la editorial y no se puede descargar,
-                hazle una foto. Es lo normal.
-              </p>
-              <div className="row">
-                <button className="btn btn-primary" onClick={onChooseFile}>
-                  Traer una foto, un PDF o un Word
-                </button>
-              </div>
-            </div>
-          ) : null}
+        <>
+          <Section>
+            <Field label={es.adapt.forWhom} htmlFor="who">
+              <select className="select" id="who" value={learner} onChange={(e) => setLearner(e.target.value)}>
+                {learners.map((c) => <option key={c} value={c}>{names[c] ?? c}</option>)}
+              </select>
+            </Field>
+          </Section>
 
-          <div>
-            <label htmlFor="text">{es.adapt.paste}</label>
-            <textarea className="textarea" id="text" value={text} onChange={(e) => { setText(e.target.value); setFlagged([]); }} />
-          </div>
+          <Section title="¿De dónde sacamos la ficha?">
+            {/*
+              Two doors, and the file one is the common case: the worksheet lives
+              on a publisher's platform with no export, so what she has is a
+              photograph. It reads first for that reason.
+            */}
+            {onChooseFile ? (
+              <Field help="Si la tienes en la plataforma de la editorial y no se puede descargar, hazle una foto. Es lo normal.">
+                <div className="row">
+                  <button className="btn" onClick={onChooseFile}>
+                    Traer una foto, un PDF o un Word
+                  </button>
+                </div>
+              </Field>
+            ) : null}
+
+            <Field label={es.adapt.paste} htmlFor="text" canvas
+                   help="O pégalo aquí si ya lo tienes en texto.">
+              <textarea className="textarea" id="text" value={text} onChange={(e) => { setText(e.target.value); setFlagged([]); }} />
+            </Field>
+          </Section>
+
           <NameWarning
             flagged={flagged}
             onAddName={async (n) => {
@@ -142,12 +148,23 @@ export function AdaptScreen({ onReview, onChooseFile, presetJobId }: {
             }}
             onSendAnyway={() => setFlagged([])}
           />
-          <div>
-            <button className="btn btn-primary" disabled={!text.trim() || !learner || !online} onClick={() => void startJob()}>
-              Continuar
-            </button>
-          </div>
-        </div>
+
+          {/*
+            One primary control on the screen (FR-1105). The file button above is
+            secondary weight now — before this, both were the same heavy slab and
+            neither told her which was the way forward.
+          */}
+          <Actions
+            primary={
+              <button className="btn btn-primary btn-lg"
+                      disabled={!text.trim() || !learner || !online}
+                      onClick={() => void startJob()}>
+                Continuar
+              </button>
+            }
+            note={!text.trim() && learner ? 'Trae la ficha o pega el texto para seguir.' : undefined}
+          />
+        </>
       ) : null}
 
       {stage === 'verify' ? (
@@ -208,15 +225,19 @@ export function AdaptScreen({ onReview, onChooseFile, presetJobId }: {
           {reportData
             ? <ReportView {...reportData} />
             : <Callout intent="info">Preparando el informe…</Callout>}
-          <div className="row">
-            <button className="btn btn-primary" onClick={() => onReview(jobId, learner, recipes)}>Revisar y firmar</button>
+          <Actions
+            primary={
+              <button className="btn btn-primary btn-lg" onClick={() => onReview(jobId, learner, recipes)}>
+                Revisar y firmar
+              </button>
+            }>
             <button className="btn" onClick={() => {
               setStage('compose'); setText(''); setReportData(null);
               setNotices([]); setRecipes([]); setRetried(false); setCost(null);
             }}>Otra ficha</button>
-          </div>
+          </Actions>
         </div>
       ) : null}
-    </div>
+    </Page>
   );
 }

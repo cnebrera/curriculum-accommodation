@@ -35,6 +35,7 @@
     "test:all": "vitest run",
     "test:e2e": "npm run build && playwright test",
     "test:a11y": "npm run build && playwright test a11y",
+    "shots": "npm run build && node scripts/screenshot.mjs",
     "test:layout": "npm run build && playwright test layout"
   },
   "devDependencies": {

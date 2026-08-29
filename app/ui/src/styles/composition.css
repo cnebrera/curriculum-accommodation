@@ -1,0 +1,149 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   COMPOSITION · spec 013
+
+   Where things sit. `components.css` stays about what a thing looks like.
+
+   This file exists because 010 produced a good token system and no page. Every
+   test it wrote checks a property — a contrast ratio, an absence of overflow, a
+   present label — and none checks composition, so the suite passed on screens
+   that were correctly coloured, correctly labelled and ugly. See ADR 0009.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── The three rhythms ────────────────────────────────────────────────────
+   Named rather than chosen by eye, which is how the rhythm was lost: every
+   screen reached for `stack gap4` and the page had no structure above it.
+
+   Between sections, between fields, within a field. If a fourth is needed, it
+   is a fact about the shell and belongs here, not inline on a screen. */
+:root {
+  /* Tightened after looking: the first version pushed the primary action below
+     the fold on a 1366×768 screen, which is the machine this is for. A rhythm
+     that puts "Continuar" off the bottom is worse than the crush it replaced. */
+  --rhythm-section: var(--s6);   /* one idea to the next */
+  --rhythm-field:   var(--s4);   /* one question to the next */
+  --rhythm-inline:  var(--s2);   /* a label to its control */
+
+  /* A field is a field's width. A 1000px input is not a design decision — it
+     is the absence of one, and it was on every screen. */
+  --measure-field: 30rem;
+  --measure-prose: 62ch;
+}
+
+/* ── The page ─────────────────────────────────────────────────────────────── */
+
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--rhythm-section);
+  /* Wide enough for a table, narrow enough that nothing strands at the left of
+     a 1366px window. */
+  max-width: 60rem;
+}
+
+/* Two columns where the comparison IS the feature (008's verification screen).
+   A variant, not an exception: a screen escaping the shell is a fact about the
+   shell. */
+.page-wide { max-width: none; }
+
+.page-head {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+  /* The head gets more air beneath it than between its own parts, so the title
+     reads as a title rather than as the first line of the content. */
+  margin-bottom: calc(var(--rhythm-section) - var(--rhythm-section));
+}
+
+.page-head h1 { margin: 0; }
+
+/* The lede uses the middle of the type scale, which existed and no screen used:
+   every page went from a very large h1 straight to 15px body. */
+.page-lede {
+  margin: 0;
+  font-size: var(--text-base);
+  line-height: var(--leading-body);
+  color: var(--ink-soft);
+  max-width: var(--measure-prose);
+}
+
+/* ── Sections and fields ──────────────────────────────────────────────────── */
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--rhythm-field);
+}
+
+/* A section heading is a step down from the page title, not a rival to it. The
+   first version used the same weight and nearly the same size, so the page read
+   as two titles. */
+.section > h2 {
+  margin: 0;
+  font-size: var(--text-lg);
+  letter-spacing: -0.01em;
+}
+
+.section-lede {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--ink-soft);
+  max-width: var(--measure-prose);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--rhythm-inline);
+  /* The measure, applied where 010 never applied it. */
+  max-width: var(--measure-field);
+}
+
+/* A surface she fills rather than a field she completes: the paste box, the
+   house-style editor. Wide on purpose, and the only thing that is. */
+.field-canvas { max-width: var(--measure-prose); }
+
+.field > label { font-weight: 600; font-size: var(--text-sm); }
+.field-help { margin: 0; font-size: var(--text-sm); color: var(--ink-soft); }
+
+/* Anything inside a field fills it, so a control never has to say how wide it
+   is and no screen has to remember. */
+.field > .input,
+.field > .select,
+.field > .textarea { width: 100%; }
+
+/* ── Actions ──────────────────────────────────────────────────────────────
+   One primary control per screen. Emphasis that is everywhere is emphasis
+   nowhere — and before this, every button was the same heavy gradient slab, so
+   nothing on the page told her what to do next. */
+.actions {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+  flex-wrap: wrap;
+  padding-top: var(--s2);
+}
+
+.actions-note { font-size: var(--text-sm); color: var(--ink-soft); }
+
+/* ── The rail's foot ──────────────────────────────────────────────────────
+   Was two controls pinned to the floor with a `grow` above them. Now a block
+   that reads as one thing, separated by a rule rather than by a void. */
+.rail-foot {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+  padding: var(--s4) var(--s2) 0;
+  margin-top: var(--s4);
+  border-top: 1px solid var(--line);
+}
+
+.rail-foot .select { font-size: var(--text-xs); min-height: 34px; }
+
+/* ── Density ──────────────────────────────────────────────────────────────
+   At the largest text scale the rhythms would push a form off a 768px-tall
+   screen. They compress; the measure does not, because a longer line is exactly
+   what large type does not want. */
+:root[data-text="xlarge"] {
+  --rhythm-section: var(--s6);
+  --rhythm-field: var(--s4);
+}
