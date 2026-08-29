@@ -4,7 +4,7 @@
 
 **Created**: 2026-08-27
 
-**Status**: Draft
+**Status**: **Deferred post-Phase-0, deliberately** — see the note below
 
 **Input**: "I need her to learn these three things — make me material she can work
 with." A second entry point into the existing pipeline, per
@@ -16,6 +16,34 @@ with." A second entry point into the existing pipeline, per
 > they carried is now `instructions/`, read at run time. **The requirements below
 > remain valid** — they specify behaviour, not a vehicle. Read a command name as
 > the step it names.
+
+> ## Why there is no plan for this spec
+>
+> *(Recorded 2026-08-28, while every other spec was being planned and closed.)*
+>
+> **This is a decision, not an omission.** `docs/escenario.md`'s functional
+> inventory marks composing new material as `dif.` — deferred, with this spec as
+> where it will happen — and Phase 0's question is deliberately narrower: *does a
+> real special-education teacher find the adaptation of an existing worksheet
+> usable with minor edits?*
+>
+> Composing material from objectives is a different and larger problem. It has no
+> source document, so it has **no anchor**: adaptation can be checked against the
+> original — numbering preserved, nothing dropped undeclared, provenance on every
+> changed block — and composition cannot. Every structural defence this project
+> relies on assumes there is something to compare the output with.
+>
+> Building it before Phase 0 has been validated would mean building the harder
+> half of the product on top of an unanswered question, and adding a generation
+> path with none of the guarantees that make the adaptation path trustworthy.
+>
+> **What has to happen first:** `001`'s SC-001, measured with a real teacher. If
+> she does not find an adapted worksheet usable, composing new ones is not the
+> next problem.
+>
+> Nothing in this spec has been implemented, and no part of the application
+> gestures at it. That is intentional: a half-present generation path would be
+> worse than none.
 
 ## User Scenarios & Testing *(mandatory)*
 

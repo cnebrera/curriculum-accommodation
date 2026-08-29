@@ -4,7 +4,7 @@
 
 **Created**: 2026-08-28
 
-**Status**: Draft — pending `/speckit-clarify` before `/speckit-plan`
+**Status**: Clarified 2026-08-28 — planned, tasked, in implementation
 
 **Input**: The application accepts only pasted text, and the specification's own
 journey starts from a photographed worksheet (006 US1-5, SC-401). The adoption
@@ -38,6 +38,46 @@ Until this feature exists, the verification gate is theatre — the teacher
 Both produce the same IR (`docs/ir.md`); nothing downstream knows which path ran.
 The digital path is preferred when available — cheaper and more faithful — and
 the vision path is the required baseline because it is the common case.
+
+## Clarifications
+
+### Session 2026-08-28
+
+> **Resolved by the implementing agent, not by the project owner.** Carlos asked
+> for the work to continue without blocking on him. Each answer below carries the
+> reasoning that produced it precisely so he can overturn any of them on reading;
+> none is a coin toss and none is silent. The three that would be expensive to
+> reverse are marked **(load-bearing)**.
+
+- Q: What renders a PDF page to an image, reads a DOCX, and decodes HEIC? → A:
+  Pure-JS and WASM only — `pdfjs-dist` for PDF, `mammoth` for DOCX,
+  `libheif-js` for HEIC. **(load-bearing)** A native module means `electron-rebuild`
+  on three platforms and a class of installer failure that presents to a teacher
+  as "the app won't open". This project already carries an unsigned-installer
+  problem (`006` R14); it cannot also carry a native-build problem.
+- Q: What shape does the model return for an extracted page? → A: JSON validated
+  against a schema, converted to IR deterministically in the core.
+  **(load-bearing)** FR-602 requires code validation before acceptance, and
+  validating Pandoc-flavoured markdown with fenced divs means writing a parser
+  whose failures are indistinguishable from a model's. JSON has one obvious
+  failure mode. The IR stays the interchange format; it is just not what crosses
+  the wire.
+- Q: Where do the loop's budgets live — attempts per page, pages per job, image
+  size? → A: Front matter in `instructions/ingest.md`, read at run time. The spec's
+  own assumption says these numbers will move with real material and moving them
+  must not be a release; front matter puts them beside the instructions they
+  govern, where a contributor changing one sees the other.
+- Q: How is the name-in-photo warning "not fired on every job once acknowledged"
+  (FR-609)? → A: An acknowledgement flag in the settings file outside the vault,
+  alongside the display preferences. Not in the vault: it is a fact about this
+  teacher on this machine, and a handover packet must not carry it. Not
+  per-learner either — the warning is about her workflow, not about a child.
+- Q: What is the fixture set, given no copyrightable textbook material may be
+  used? → A: Worksheets written for the purpose, printed, and photographed badly
+  on purpose — skewed, shadowed, one page half in shade — with a ground-truth IR
+  written by hand beside each. Openly licensed as project content (CC BY-SA 4.0)
+  and committed, because SC-601 and SC-602 are unmeasurable without them and an
+  unmeasurable success criterion is decoration.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -207,6 +247,19 @@ what the residual is.
   reaching it MUST be reported, never silently truncated.
 - **FR-613**: Everything above MUST hold identically for material later fed to
   compose as an anchor. An anchor is ingested material; it takes no shortcut.
+- **FR-614**: Page rendering, DOCX reading and HEIC decoding MUST use pure-JS or
+  WASM implementations. A native module would require a per-platform rebuild, and
+  its failure mode is an application that does not start — which a teacher cannot
+  diagnose and this project cannot support.
+- **FR-615**: The extraction call MUST return JSON validated against a declared
+  schema; conversion to IR MUST be deterministic and MUST live in the core. The
+  model never emits IR directly.
+- **FR-616**: Images MUST be downscaled before send, to a bound read from the
+  corpus. A full-resolution phone photograph is several times the cost of a
+  legible one and buys no accuracy.
+- **FR-617**: The loop's budgets — attempts per page, pages per job, image size —
+  MUST be read from `instructions/ingest.md` front matter at run time, never
+  hardcoded.
 
 ## Success Criteria *(mandatory)*
 
@@ -221,6 +274,9 @@ what the residual is.
   text, and the asterisk is written down, not discovered).
 - **SC-605**: For digital-PDF fixtures with hidden text, 100% raise the notice
   (007 SC-502 extended to ingest).
+- **SC-606**: The application installs and starts on all three platforms with no
+  compilation step. Measured by the existing CI matrix: `npm ci` followed by the
+  build, with no `electron-rebuild` and no native toolchain.
 
 ## Assumptions
 
