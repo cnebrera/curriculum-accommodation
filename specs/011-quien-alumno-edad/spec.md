@@ -183,6 +183,19 @@ costs a rewrite.
   the vault settings. It MUST NOT be inferred from the operating system's language.
 - **FR-912**: A year for which a typical age is meaningless MUST be able to say so,
   and the application MUST then fill nothing rather than guess.
+- **FR-913**: Each year MAY carry orientation about what a learner at that point
+  can typically do and, broadly, what is studied. This MUST be labelled as
+  orientation and MUST NOT be presented as curriculum.
+- **FR-914**: The teacher's own statement MUST always outrank the orientation, and
+  the corpus MUST say so where the model reads it.
+- **FR-915**: Years MUST support an optional modality, because Bachillerato's
+  content depends on it and a sixteen-year-old's material depends on which.
+- **FR-916**: The Spanish file MUST state, in its own text, that it is the
+  state-level minimum and that autonomous communities develop their own curriculum
+  on top of it.
+- **FR-917**: The orientation MUST carry a check date, and it MUST NOT be treated
+  as reviewed until a practising teacher has disagreed with it — the same status as
+  `docs/axis-calibration.md` and backlog G2.
 - **FR-909**: Age MUST be stored as a number plus the date it was recorded, never
   as a date of birth.
 - **FR-910**: These fields MUST NOT appear in learner-facing output, and the
@@ -197,6 +210,11 @@ costs a rewrite.
 - **SC-903**: Creating a learner does not get slower: the year is one choice and
   everything else is filled.
 - **SC-904**: No learner age, year or stage ever appears on a sheet a child holds.
+- **SC-905**: For a learner with no material and only an objective, the orientation
+  is enough to keep the output age-appropriate — measured when `002` exists, and
+  named here because that is what this half of the corpus is for.
+- **SC-906**: A practising teacher reads the Spanish orientation and disagrees with
+  it somewhere. Until that has happened it is unreviewed, and the file says so.
 
 ## Assumptions
 
