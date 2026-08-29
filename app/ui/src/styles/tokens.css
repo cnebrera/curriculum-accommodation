@@ -234,6 +234,15 @@
 /* ── Dark: designed, and this is where the bright end earns its keep ────── */
 @media (prefers-color-scheme: dark) {
   :root {
+    /* The ground and the rail. Added to `:root` with the panel work and added
+       nowhere else, so in dark mode the rail kept the LIGHT `#dde6e3` under
+       dark-mode `--ink-soft` and the navigation became unreadable — a serious
+       axe contrast failure on every screen. A token added to one theme is a
+       token missing from the others, and nothing says so.
+
+       Dark inverts the relationship rather than the colours: the panel is raised,
+       so the ground goes below `--paper` instead of above it. */
+    --ground: #050b0a; --rail-ground: #0b1413;
     --paper:       #0a1211;
     --surface:     #101b19;
     --surface-2:   #17251f;
@@ -277,6 +286,15 @@
 }
 
 :root[data-theme="dark"] {
+  /* The ground and the rail. Added to `:root` with the panel work and added
+     nowhere else, so in dark mode the rail kept the LIGHT `#dde6e3` under
+     dark-mode `--ink-soft` and the navigation became unreadable — a serious
+     axe contrast failure on every screen. A token added to one theme is a
+     token missing from the others, and nothing says so.
+
+     Dark inverts the relationship rather than the colours: the panel is raised,
+     so the ground goes below `--paper` instead of above it. */
+  --ground: #050b0a; --rail-ground: #0b1413;
   --paper: #0a1211; --surface: #101b19; --surface-2: #17251f;
   --ink: #eaf2f0; --ink-soft: #a5b8b5; --ink-faint: #879b98;
   --line: #1f2e2b; --line-strong: #5b7269;
@@ -341,6 +359,9 @@
   --sheen: none;
 }
 :root[data-contrast="high"][data-theme="dark"] {
+  /* Same again for the austere dark mode: black ground, black panel, and the
+     border does the separating that depth does elsewhere. */
+  --ground: #000; --rail-ground: #0b1211;
   --paper: #000; --surface: #0b1211; --surface-2: #141d1b;
   --ink: #fff; --ink-soft: #d5e0dd; --ink-faint: #b2c0bc;
   --line: #44544f; --line-strong: #687974;

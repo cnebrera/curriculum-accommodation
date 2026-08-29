@@ -22,21 +22,20 @@ export function AboutScreen() {
     void window.rampa.corpus.licences().then(setLic);
   }, []);
 
+  /*
+   The wordmark used to be marked up as this screen's `<h1>`, because at the
+   time the screen had no other heading and its sections started at `<h2>`.
+   Since T009 the page shell supplies the `<h1>`, so keeping this one gave the
+   document two — which is what a screen reader reports first when it
+   announces the page, and which the a11y suite catches.
+
+   So it goes back to being what it looks like: a mark above the title, in the
+   shell's banner slot. The heading is the title.
+  */
   return (
-    <Page title="Acerca de Rampa">
-      <div className="stack gap4">
-        {/*
-          The wordmark is this screen's heading, so it is marked up as one. It
-          was a bare <span>, which left the page with no h1 and its headings
-          starting at h2 — invisible on screen, and the first thing a screen
-          reader reports when it announces the document.
-        */}
-        <h1 style={{ margin: 0 }}><Wordmark size={28} /></h1>
-        <p className="lede">
-          Adapta material de aula al perfil de un alumno con discapacidad. Tú
-          revisas y firmas siempre: esto quita el trabajo mecánico, no el criterio.
-        </p>
-      </div>
+    <Page title="Acerca de Rampa"
+          banner={<Wordmark size={28} />}
+          lede="Adapta material de aula al perfil de un alumno con discapacidad. Tú revisas y firmas siempre: esto quita el trabajo mecánico, no el criterio.">
 
       <section className="stack gap3">
         <h2>Lo que hace, y lo que no</h2>

@@ -61,6 +61,15 @@
    more than the frame does. */
 :root[data-text="xlarge"] .page { padding: var(--s5); }
 
+/* And the same is true of a narrow window, for the same reason and by the same
+   arithmetic — `--s7` on both sides of a 380px column is a fifth of it. Asked of
+   the page container so the rail is already subtracted (FR-1116); at `xlarge`
+   this and the rule above agree, which is what you want from two rules that are
+   the same thought. */
+@container page (max-width: 34em) {
+  .page { padding: var(--s5) var(--s4) var(--s6); border-radius: var(--radius-box); }
+}
+
 .page-head {
   display: flex;
   flex-direction: column;
@@ -160,6 +169,29 @@
 }
 
 .rail-foot .select { font-size: var(--text-xs); min-height: 34px; }
+
+/* And the same block turned ninety degrees, for the strip layout the shell
+   collapses to on a narrow window (013 FR-1115). Vertically it is a block under
+   a rule; horizontally a top border would cut the strip in half, so the rule
+   becomes a left border and the foot sits at the right-hand end of whichever
+   line it lands on.
+
+   It lives here rather than beside the rest of the strip rules in
+   components.css because composition.css is imported last: written there, it
+   loses the cascade to the column rule above at equal specificity, and loses it
+   without any error. */
+@container window (max-width: 52em) {
+  .rail-foot {
+    flex-direction: row;
+    align-items: center;
+    gap: var(--s3);
+    margin-top: 0;
+    margin-left: auto;
+    padding: 0 0 0 var(--s3);
+    border-top: 0;
+    border-left: 1px solid var(--line);
+  }
+}
 
 /* ── Density ──────────────────────────────────────────────────────────────
    At the largest text scale the rhythms would push a form off a 768px-tall

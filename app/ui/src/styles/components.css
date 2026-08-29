@@ -373,8 +373,26 @@ button, [role="button"], input[type="checkbox"], input[type="radio"] {
    Restored after the v2 rewrite dropped them: `.app` and `.main` were used by
    App.tsx and defined nowhere, so the whole application had no layout at all.
    `ui/test/styles.test.tsx` is now what stops that happening again. */
+/* ── Two containers, and the reason there are two (FR-1116) ──────────────
+   `window` is the body: its inline size *is* the window, so asking it about the
+   shell — rail beside the page, or rail above it — is asking the right thing.
+   `page` is `.main`: by the time a component is inside it, a 248px rail and the
+   panel's own padding sit between it and the window, so the window has stopped
+   being the right question and only the column's own width will do.
+
+   Both are queried in `em`, and that is the point rather than a detail. Both
+   elements inherit `font-size: var(--text-base)`, which the text scale moves —
+   so `52em` is 884px at the normal size (`--text-base` is 17px) and 1248px at
+   `xlarge`. A rule written
+   in pixels cannot see that the same window holds a third less text when a
+   teacher turns the type up, and this application has a control that does
+   exactly that (FR-1117). The `:root[data-text="xlarge"] .verify-pair` override
+   that used to live further down this file was this mechanism, hand-built for
+   one selector. */
+body { container: window / inline-size; }
+
 .app { display: grid; grid-template-columns: minmax(200px, 248px) 1fr;
-  min-height: 100vh; align-items: stretch;
+  height: 100vh; align-items: stretch;
   /* The ground. Everything else sits on it. */
   background: var(--ground); }
 
@@ -392,21 +410,13 @@ button, [role="button"], input[type="checkbox"], input[type="radio"] {
    made it white and capped it at 1100px, which left the ground showing as a thin
    strip on the right and read as an accident rather than a decision. */
 .main { padding: var(--s6);
-  height: 100vh; overflow-y: auto;
+  min-height: 0; overflow-y: auto;
   /* min-width: 0 is what stops a long unbroken string in the material from
      widening the grid column and pushing the page sideways. */
-  min-width: 0; overflow-x: hidden; }
-
-@media (max-width: 900px) {
-  /* The rail becomes a strip along the top. Below this width she is on a
-     tablet, and a 232px column is a third of her screen. */
-  .app { grid-template-columns: 1fr; }
-  .rail { flex-direction: row; flex-wrap: wrap; border-right: 0;
-    border-bottom: 1px solid var(--line); padding: var(--s3) var(--s4); }
-  .rail button, .rail a { width: auto; }
-  .rail-brand { padding: 0 var(--s3) 0 0; }
-  .main { padding: var(--s5) var(--s4); }
-}
+  min-width: 0; overflow-x: hidden;
+  /* The second container. Everything a screen renders asks this, not the
+     window — see the note above `.app`. */
+  container: page / inline-size; }
 
 .rail-brand { padding: 0 var(--s2) var(--s4); }
 .rail button { font: inherit; text-align: left; border: 0; background: transparent;
@@ -427,6 +437,49 @@ button, [role="button"], input[type="checkbox"], input[type="radio"] {
 .rail a[aria-current] { background: var(--accent); color: var(--on-accent);
   font-weight: 700; box-shadow: var(--shadow-sm); }
 
+@container window (max-width: 52em) {
+  /* The rail becomes a strip along the top. Below this width the column is a
+     third of her screen, and at the larger text scales it is more than that,
+     which is why the threshold is in `em`.
+
+     Every declaration here undoes one from the column layout, and the reason
+     this block is written that way is that the previous version did not: it
+     changed `flex-direction` and left `height: 100vh` and `position: sticky`
+     behind. A rail that is a row and is also the full height of the window
+     stretches its wrap lines across that height, so the navigation filled the
+     viewport and the page was somewhere below the fold. The rule was correct
+     for the layout it was written for and was never rendered in the layout it
+     was written *in* — which is this feature's whole thesis, arriving one more
+     time (ADR 0009). */
+  .app { grid-template-columns: 1fr; grid-template-rows: auto minmax(0, 1fr); }
+  .rail { flex-direction: row; flex-wrap: wrap; align-items: center;
+    align-content: start; gap: var(--s1) var(--s2);
+    height: auto; position: static;
+    border-right: 0; border-bottom: 1px solid var(--line);
+    padding: var(--s2) var(--s4);
+    /* The one case this cannot lay out flat: 560px wide with the text scale at
+       `xlarge`, where five labels genuinely do not fit in two rows. It scrolls
+       rather than growing, because a navigation that takes half the window has
+       stopped being navigation. Never reached at the normal scale. */
+    max-height: 45vh; overflow-y: auto; overflow-x: visible; }
+  .rail button, .rail a { width: auto; }
+  .rail-brand { padding: 0 var(--s3) 0 0; }
+  /* `grow` is a spacer that pushes the foot to the bottom of a column. In a
+     wrapping row it claims a whole flex line to itself, which sends the last
+     section to a second row and leaves the foot stranded in the gap — which is
+     precisely what the first version of this looked like. `margin-left: auto`
+     does the same job without occupying anything: the foot goes to the right of
+     whichever line it lands on. */
+  .rail .grow { display: none; }
+  /* `.rail-foot` turns ninety degrees too, but that rule is in composition.css
+     beside the one it overrides — it belongs there and it only *works* there.
+     composition.css is imported after this file, so an equal-specificity rule
+     written here loses the cascade silently: the foot stayed a column and the
+     strip grew a second row to hold it. Found by looking at a screenshot, which
+     is the only thing that could have found it. */
+  .main { padding: var(--s5) var(--s4); }
+}
+
 /* ═══ VERIFYING AN EXTRACTION · spec 008 ═════════════════════════════════
    The hardest layout in the application: a page image beside a column of
    editable blocks, at 1366×768, with the text scale turned up. Side by side
@@ -436,12 +489,15 @@ button, [role="button"], input[type="checkbox"], input[type="radio"] {
 .verify-pair { display: grid; gap: var(--s5); grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   align-items: start; }
 
-@media (max-width: 1100px) {
+/* Two columns need roughly 45 characters each to stop being a word ladder, and
+   `em` is how you say "45 characters" in CSS. Asked of the page column, so the
+   rail and the panel padding are already subtracted, and asked in `em`, so the
+   text scale is already counted — which is what the hand-written
+   `:root[data-text="xlarge"]` override below this used to do for one property
+   on one selector. */
+@container page (max-width: 52em) {
   .verify-pair { grid-template-columns: 1fr; }
 }
-/* And at the largest text scale, side by side leaves ~28 characters a line,
-   which is unreadable however wide the window is. */
-:root[data-text="xlarge"] .verify-pair { grid-template-columns: 1fr; }
 
 .page-image {
   width: 100%; height: auto; display: block;
@@ -451,7 +507,9 @@ button, [role="button"], input[type="checkbox"], input[type="radio"] {
      Only where there is room: stacked, sticking it would cover the text. */
   position: sticky; top: var(--s4);
 }
-@media (max-width: 1100px) { .page-image { position: static; } }
+/* Same threshold, and it has to be: once the pair has stacked, a sticky
+   photograph sits on top of the text it is meant to be compared against. */
+@container page (max-width: 52em) { .page-image { position: static; } }
 
 .verify-block { min-height: 5.5em; font-size: var(--text-sm);
   line-height: var(--leading-body); }

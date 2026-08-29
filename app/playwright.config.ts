@@ -12,6 +12,8 @@ import { defineConfig } from '@playwright/test';
  */
 export default defineConfig({
   testDir: './e2e',
+  // Never against a stale `out/`. See e2e/build.setup.ts.
+  globalSetup: './e2e/build.setup.ts',
   // A window has to appear, so serialise: parallel Electron instances fighting
   // over the same user-data directory is a flake factory.
   workers: 1,

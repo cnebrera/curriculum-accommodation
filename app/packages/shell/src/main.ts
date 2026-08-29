@@ -17,7 +17,19 @@ const getWindow = () => win;
 
 function createWindow(): void {
   win = new BrowserWindow({
-    width: 1180, height: 820, minWidth: 900, minHeight: 640,
+    width: 1180, height: 820,
+    /*
+     * The floor was 900×640, which is not a size chosen for a teacher — it is
+     * the width below which the layout used to fall apart, promoted to a
+     * constraint on her. She wants Rampa beside her register on a 1280 laptop,
+     * and 900 does not leave room for the register.
+     *
+     * 560 is now the floor because the layout works there (013 FR-1115, and the
+     * width sweep in `e2e/layout.spec.ts` says so at every width from here up).
+     * A minimum window size should be a statement about what is usable, not a
+     * fence around what was never rendered.
+     */
+    minWidth: 560, minHeight: 480,
     title: 'Rampa',
     backgroundColor: '#fcfcfa',
     webPreferences: {

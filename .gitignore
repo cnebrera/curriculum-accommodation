@@ -37,3 +37,8 @@ Thumbs.db
 
 # Local agent settings (per-machine, not shared)
 .claude/settings.local.json
+
+# Playwright leaves failure artifacts here. They are output, not record —
+# the record is docs/screenshots/, which is committed on purpose.
+app/test-results/
+app/playwright-report/

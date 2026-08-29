@@ -60,5 +60,48 @@ await page.locator('.card-action').first().click();
 await page.waitForTimeout(900);
 await page.screenshot({ path: join(out, '6-perfil.png'), fullPage: true });
 
+/*
+ * And the same screen at the widths the window can actually be (013 T027,
+ * FR-1118).
+ *
+ * `minWidth` in main.ts is 560, so these are not hypothetical sizes — they are
+ * the range a teacher can drag the frame across. The record needs more than one
+ * of them because the narrow layout had a breakpoint, a review and a merge, and
+ * the first time anybody rendered it was the day Carlos dragged the window and
+ * found the navigation filling the screen.
+ *
+ * 880 and 892 straddle 52em — 884px, because `--text-base` is 17px, not 16 —
+ * so they are the last strip and the first column, which is where a shell breaks
+ * if it is going to.
+ */
+await page.getByRole('button', { name: 'Adaptar una ficha' }).click();
+await page.waitForTimeout(400);
+for (const width of [560, 700, 880, 892, 1024, 1280, 1920]) {
+  await page.setViewportSize({ width, height: 800 });
+  await page.waitForTimeout(400);
+  await page.screenshot({ path: join(out, `w-${width}.png`) });
+}
+await page.setViewportSize({ width: 1366, height: 768 });
+
+/*
+ * And the two modes, because the panel work claims the mode mechanism finally
+ * does something — dark is a designed palette, high contrast is the austere one
+ * the default used to be. Both are claims about how it looks, so both belong in
+ * the record rather than in a sentence.
+ *
+ * The dark shot is here because it had to be: `--ground` and `--rail-ground`
+ * were added to `:root` and to no other theme, so the rail kept a pale green
+ * under pale text and the navigation was unreadable. Nothing looked at it.
+ */
+for (const [attr, value, file] of [
+  ['data-theme', 'dark', 'm-oscuro.png'],
+  ['data-contrast', 'high', 'm-alto-contraste.png'],
+]) {
+  await page.evaluate(([a, v]) => document.documentElement.setAttribute(a, v), [attr, value]);
+  await page.waitForTimeout(400);
+  await page.screenshot({ path: join(out, file) });
+  await page.evaluate((a) => document.documentElement.removeAttribute(a), attr);
+}
+
 await app.close();
 console.log(`Capturas en ${out}`);

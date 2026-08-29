@@ -27,12 +27,26 @@ regressions loudly. What this feature adds is not a test — it is **looking**
 
 ## Phase 3 · Outward
 
-- [ ] T008 [P] Recompose `LearnersScreen` and `ProfileEditor`
-- [ ] T009 [P] Recompose `NotesScreen` and `AboutScreen`
-- [ ] T010 [P] Recompose `ConnectionScreen` and the onboarding steps
-- [ ] T011 Recompose `IngestScreen`, and `VerifyScreen` on the `wide` variant — **the verification screen's two columns are the feature**, so the shell must serve it rather than flatten it
-- [ ] T012 Recompose `ReviewScreen`, and check the draft mark is still the loudest thing on it. A calmer page invites calming the one element whose job is to be unmissable
-- [ ] T013 Screenshot every screen again and put both sets in the record
+- [x] T008 [P] Recompose `LearnersScreen` and `ProfileEditor` *(done. `ProfileEditor` keeps its own long form; the shell gave it a title and a lede and took its hand-rolled width away.)*
+- [x] T009 [P] Recompose `NotesScreen` and `AboutScreen` *(done — and `AboutScreen` needed a real fix: it carried its own `<h1>` around the wordmark from before the shell existed, so the recomposed page had two. The wordmark moved to the shell's `banner` slot and the title became the heading.)*
+- [x] T010 [P] Recompose `ConnectionScreen` and the onboarding steps *(done.)*
+- [x] T011 Recompose `IngestScreen`, and `VerifyScreen` on the `wide` variant — **the verification screen's two columns are the feature**, so the shell must serve it rather than flatten it *(done, on `variant="wide"`. The pair still stacks when it must, but the threshold is now a container query — see T026.)*
+- [x] T012 Recompose `ReviewScreen`, and check the draft mark is still the loudest thing on it. A calmer page invites calming the one element whose job is to be unmissable *(done. `Page` gained a `banner` slot so the draft mark stays **above** the title: Principle VII says a draft announces itself before anything else does, including the page.)*
+- [x] T013 Screenshot every screen again and put both sets in the record *(done: `docs/screenshots/013-before/` and `013-after/`, and `npm run shots` is one command. The after set now also carries seven widths and both modes.)*
+
+---
+
+## Phase 7 · The window is a size nobody chose
+
+Added after Carlos dragged the frame narrow and the application became its own
+navigation. Not a new feature — the same finding as the rest of 013, at the one
+scale nobody had rendered.
+
+- [x] T025 Write the width sweep in `e2e/layout.spec.ts` **first**: every screen at every width from the window's minimum to 1920, asserting no sideways scroll and that neither region of the shell swallows the other (SC-1106) *(done, and it failed on the first run at 560px exactly as reported.)*
+- [x] T026 Replace the shell's media queries with container queries in `em` (FR-1116/1117) — `body` is the `window` container, `.main` is the `page` container, and the `:root[data-text="xlarge"] .verify-pair` override disappears because the mechanism now covers it *(done. `--text-base` is 17px, so 52em is 884px at the normal scale and 1248px at `xlarge` — the same window, a third less text.)*
+- [x] T027 Fix the strip layout it exposed, and lower `minWidth` from 900 to 560 *(done. Three separate defects, and two of them were cascade order, not CSS: `.rail button { width: 100% }` came **after** the narrow block and won; `.rail-foot`'s column rule is in composition.css, which is imported **after** components.css, so the strip override written beside its siblings lost silently. The second was invisible to every test and was found by looking at a screenshot.)*
+- [x] T028 Make a stale build impossible: `playwright test` builds first, via `globalSetup`, not via remembering the longer npm script *(done, and it immediately surfaced two defects committed green against an old `out/` — see the Phase 3 notes and the dark-mode ground tokens.)*
+- [x] T029 Put the widths and the two modes in the record (FR-1118) *(done: `w-*.png` and `m-*.png` in `docs/screenshots/013-after/`.)*
 
 ---
 

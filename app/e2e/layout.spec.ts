@@ -229,3 +229,116 @@ test.describe('layout at 1366×768', () => {
     await app.close();
   });
 });
+
+/**
+ * The width sweep (013 T025, FR-1115, SC-1106).
+ *
+ * Carlos dragged the window narrow and the application became its own
+ * navigation: the rail filled the viewport and the page was below the fold.
+ *
+ * There *was* a breakpoint. It had been written, reviewed and merged, and it
+ * turned the rail into a row while leaving `height: 100vh` behind from the
+ * column layout — so the wrap lines stretched across the whole window. Nothing
+ * caught it because every layout test above this one runs at exactly 1366×768,
+ * which is the one width the narrow rules never apply at. A breakpoint that is
+ * only ever exercised on the side of the boundary it does nothing on is not
+ * tested; it is merely present.
+ *
+ * So: every width the window can actually be, on every screen. 560 is the new
+ * floor in `main.ts`; the old floor of 900 was not a judgement about what a
+ * teacher needs, it was the width below which this bug became visible.
+ */
+const WIDTHS = [
+  560,   // the window's minimum — she has dragged it as narrow as it goes
+  640,
+  880,   // just inside 52em at the normal scale (17px base): still the strip
+  892,   // and just outside it: the column. A boundary is worth two tests
+  1024,
+  1280,  // Rampa beside her register, which is why the floor moved
+  1366,  // the trolley laptop
+  1920,
+];
+
+test.describe('every width the window can be', () => {
+  /**
+   * The regression, stated as a property rather than as a pixel count: the two
+   * regions of the shell divide the window, and neither eats the other. The
+   * defect was `.rail` taking all 800px of an 800px window.
+   */
+  async function regionsShareTheWindow(page: Page): Promise<string[]> {
+    return page.evaluate(() => {
+      const out: string[] = [];
+      const rail = document.querySelector<HTMLElement>('.rail');
+      const main = document.querySelector<HTMLElement>('.main');
+      if (!rail || !main) return ['the shell has no rail or no main'];
+      const h = window.innerHeight;
+      const r = rail.getBoundingClientRect(), m = main.getBoundingClientRect();
+      // A column rail is the height of the window on purpose, so the rule is
+      // about the strip: navigation stacked above the page must not take half
+      // of it. Stated per-layout rather than as one number, because the first
+      // version of this check said "the rail is never more than 60% tall" and
+      // failed the column layout, which is the layout that was never broken.
+      const strip = getComputedStyle(rail).flexDirection === 'row';
+      if (strip && r.height > h * 0.5) out.push(`the strip is ${Math.round(r.height)}px of a ${h}px window`);
+      if (r.height > h + 1) out.push(`the rail is ${Math.round(r.height)}px, taller than the ${h}px window`);
+      // The foot turns ninety degrees with the rest of the strip. Asserted
+      // because it did not: its column rule lives in composition.css, which is
+      // imported after components.css, so the strip override written beside the
+      // other strip rules lost the cascade at equal specificity and lost it
+      // silently. The strip grew an extra row to stand the foot up in.
+      const foot = document.querySelector<HTMLElement>('.rail-foot');
+      if (strip && foot && getComputedStyle(foot).flexDirection !== 'row') {
+        out.push('the rail foot is still a column inside the strip');
+      }
+      if (m.top > h * 0.5) out.push(`the page starts ${Math.round(m.top)}px down a ${h}px window`);
+      if (m.height < h * 0.35) out.push(`the page is ${Math.round(m.height)}px of a ${h}px window`);
+      // The heading of whatever screen she is on is the thing she came to read.
+      const h1 = document.querySelector<HTMLElement>('.main h1');
+      if (h1 && h1.getBoundingClientRect().top > h) out.push('the page title is below the fold');
+      return out;
+    });
+  }
+
+  test('the shell holds, and nothing scrolls sideways', async () => {
+    const { app, page, vault } = await launch();
+    await seed(page, vault);
+
+    for (const width of WIDTHS) {
+      await page.setViewportSize({ width, height: 800 });
+      for (const label of SCREENS) {
+        await page.getByRole('button', { name: label }).click();
+        await checkLayout(page, `${label} @ ${width}px`);
+        expect(await regionsShareTheWindow(page), `${label} @ ${width}px: the shell`).toEqual([]);
+      }
+    }
+    await app.close();
+  });
+
+  /**
+   * FR-1117. The same window is a narrower window when the text is bigger, and
+   * that is why the thresholds are containers measured in `em` rather than media
+   * queries measured in pixels: at `xlarge` the shell collapses at 1248px, not
+   * at 832px, without a second rule saying so.
+   */
+  test('the text scale moves the thresholds, because it moves how much fits', async () => {
+    const { app, page, vault } = await launch();
+    await seed(page, vault);
+    await page.setViewportSize({ width: 1100, height: 800 });
+
+    const railIsAStrip = () => page.evaluate(() =>
+      getComputedStyle(document.querySelector('.rail')!).flexDirection === 'row');
+
+    expect(await railIsAStrip(), 'at 1100px and normal text the rail is a column').toBe(false);
+
+    await page.evaluate(() => document.documentElement.setAttribute('data-text', 'xlarge'));
+    await page.waitForTimeout(180);
+    expect(await railIsAStrip(), 'at 1100px and xlarge text the same window is too narrow for a column').toBe(true);
+
+    for (const label of SCREENS) {
+      await page.getByRole('button', { name: label }).click();
+      await checkLayout(page, `${label} @ 1100px · xlarge`);
+      expect(await regionsShareTheWindow(page), `${label} @ 1100px · xlarge: the shell`).toEqual([]);
+    }
+    await app.close();
+  });
+});
