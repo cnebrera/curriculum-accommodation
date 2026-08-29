@@ -4,7 +4,7 @@
 
 **Created**: 2026-08-27
 
-**Status**: **Deferred post-Phase-0, deliberately** — see the note below
+**Status**: Clarified 2026-08-29 — specified in full, sequenced after `001`'s SC-001
 
 **Input**: "I need her to learn these three things — make me material she can work
 with." A second entry point into the existing pipeline, per
@@ -17,33 +17,53 @@ with." A second entry point into the existing pipeline, per
 > remain valid** — they specify behaviour, not a vehicle. Read a command name as
 > the step it names.
 
-> ## Why there is no plan for this spec
+> ## Where this sits, and a correction
 >
-> *(Recorded 2026-08-28, while every other spec was being planned and closed.)*
+> *(2026-08-29. Carlos: "a veces no tiene nada y lo que quiere es que aprenda algo
+> concreto… por ejemplo a multiplicar con llevadas.")*
 >
-> **This is a decision, not an omission.** `docs/escenario.md`'s functional
-> inventory marks composing new material as `dif.` — deferred, with this spec as
-> where it will happen — and Phase 0's question is deliberately narrower: *does a
-> real special-education teacher find the adaptation of an existing worksheet
-> usable with minor edits?*
+> **He is right that this is part of the job, and I was wrong about why it could
+> wait.** Yesterday I deferred this spec arguing that "composition has no anchor,
+> so none of this project's structural defences apply". That was an argument about
+> a specification I had not read carefully: US1 already **requires** an approved
+> anchor source and refuses to generate from the model's own knowledge alone. The
+> anchor is the whole design, and it was there before I claimed it was missing.
 >
-> Composing material from objectives is a different and larger problem. It has no
-> source document, so it has **no anchor**: adaptation can be checked against the
-> original — numbering preserved, nothing dropped undeclared, provenance on every
-> changed block — and composition cannot. Every structural defence this project
-> relies on assumes there is something to compare the output with.
+> What remains true is the **sequencing**: `001`'s SC-001 asks whether a teacher
+> finds an adapted worksheet usable, and building the harder half on an unanswered
+> question is still the wrong order. That is a smaller and more honest claim than
+> the one I made.
 >
-> Building it before Phase 0 has been validated would mean building the harder
-> half of the product on top of an unanswered question, and adding a generation
-> path with none of the guarantees that make the adaptation path trustworthy.
->
-> **What has to happen first:** `001`'s SC-001, measured with a real teacher. If
-> she does not find an adapted worksheet usable, composing new ones is not the
-> next problem.
->
-> Nothing in this spec has been implemented, and no part of the application
-> gestures at it. That is intentional: a half-present generation path would be
-> worse than none.
+> Two specs now feed this one, and both landed after it was written:
+> **`011`** gives the level anchor — where multiplying with carrying sits, what
+> comes before it, what a learner that age can already do — and **`012`** gives the
+> kind, because generated material is a worksheet or a problem sheet and carries
+> the same prohibitions.
+
+
+## Clarifications
+
+### Session 2026-08-29
+
+- Q: Is "composing" one thing? → A: **No, and the spec had only modelled one of
+  them.** *Content composition* — «un texto sobre los ecosistemas» — needs an
+  anchor because the facts have to come from somewhere, and US1 already requires
+  one. *Skill practice* — «multiplicar con llevadas» — is different: the content is
+  generated exercises, and the risk is not factual hallucination but **arithmetic
+  that is wrong and a level that is off**. Carlos's own example is the second kind
+  and the spec did not have it.
+- Q: What anchors skill practice, if not a source document? → A: **The education
+  corpus (`011`) for the level, and a deterministically verified answer key for the
+  content.** Where the domain allows checking — and arithmetic is the clearest case
+  in the whole of primary education — the application computes the answers itself
+  and refuses to emit an exercise it cannot verify. That is a stronger defence than
+  any anchor document: code checks, the model does not get a vote.
+- Q: Does generated material get a material kind (`012`)? → A: Yes, and it is asked
+  the same way. A generated problem sheet is bound by `problems`' prohibition on
+  changing quantities as soon as it is revised.
+- Q: Sequencing? → A: **After `001` SC-001 is answered.** Not because of the anchor
+  argument, which was wrong, but because validating the harder half before the
+  easier one is unsound whatever the architecture says.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -128,6 +148,39 @@ format every time spends effort on the format instead of the content.
 - **Objectives given as official curriculum criteria** — treat the criterion text
   as the objective and preserve its wording in the report.
 
+### User Story 5 - Practise a skill, with the arithmetic checked (Priority: P1)
+
+*(Added 2026-08-29.)* The teacher says «que aprenda a multiplicar con llevadas».
+There is no source document and there does not need to be: she gets a worksheet of
+exercises at the right level, with an answer key the application **computed
+itself** rather than asked for.
+
+**Why this priority**: It is what Carlos described a PT actually wanting, and it is
+the case with the sharpest available defence — most of primary numeracy is
+checkable by code.
+
+**Independent Test**: Ask for multiplication with carrying for a 10-year-old. Every
+exercise exercises carrying, every answer is verified in code, and one seeded
+wrong answer is refused before she sees it.
+
+**Acceptance Scenarios**:
+
+1. **Given** a skill and a learner with an age and year (`011`), **When** compose
+   runs, **Then** the level comes from the education corpus and not from the
+   model's sense of what a ten-year-old can do.
+2. **Given** generated arithmetic, **When** the worksheet is built, **Then** the
+   answers are **computed by the application**, and an exercise whose stated answer
+   disagrees is refused rather than corrected — a model that got the arithmetic
+   wrong got something else wrong too.
+3. **Given** a skill the application cannot verify — a writing task, a
+   comprehension — **When** compose runs, **Then** it says so plainly and the
+   review checklist leads with content verification.
+4. **Given** an exercise that does not exercise the skill — a multiplication with
+   no carrying — **Then** it is rejected: «multiplicar con llevadas» is a
+   constraint, not a topic.
+
+---
+
 ## Requirements *(mandatory)*
 
 ### Functional Requirements
@@ -160,6 +213,21 @@ format every time spends effort on the format instead of the content.
   notes, a textbook contents page, official criteria, an approved reference.
 - **Generated IR** — same format as ingested IR, `kind: generated`, blocks keyed
   to objectives instead of source blocks.
+
+### Added 2026-08-29
+
+- **FR-121**: Composition MUST distinguish **content** (needs an anchor source)
+  from **skill practice** (needs a level and a verifiable answer key).
+- **FR-122**: For skill practice, the level MUST come from the education corpus
+  (`011`), never from the model's own sense of the learner's age.
+- **FR-123**: Where the domain admits deterministic checking, the application MUST
+  compute the answer key itself and MUST refuse an exercise whose stated answer
+  disagrees. It MUST NOT correct it silently.
+- **FR-124**: An exercise that does not exercise the stated skill MUST be rejected.
+- **FR-125**: Where the domain does not admit checking, the application MUST say so
+  plainly, and the review checklist MUST lead with content verification.
+- **FR-126**: Generated material MUST carry a material kind (`012`) and MUST be
+  bound by that kind's prohibitions from the moment it is first revised.
 
 ## Success Criteria *(mandatory)*
 
