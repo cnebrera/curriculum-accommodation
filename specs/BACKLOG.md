@@ -44,6 +44,7 @@ disagreed with it. G3 remains open; G6 is moot.
 | ~~G13~~ | Black-and-white photocopy legibility | **Specified** 2026-08-27 | `006` FR-427 |
 | ~~G14~~ | No plain-language document for the school's data protection officer | **Drafted** 2026-08-28, awaiting DPO review | `docs/proteccion-de-datos.md` |
 | G15 | Guardrails are norms, not controls — and we do not say so | Medium | `AGENTS.md`, README |
+| G16 | `instructions/education/es.md` is unreviewed and partly wrong | Medium | `011` T026 — see below |
 
 ---
 
@@ -380,3 +381,27 @@ guardrails — recorded here so that reappearance is a decision and not a drift.
 **Lesson for the process.** All three defects were introduced by writing a new
 artifact that restated something an older one already defined, instead of pointing
 at it. Cheap to fix now, and they would have surfaced as contradictory tasks.
+
+## G16 · The Spanish education file is unreviewed
+
+`instructions/education/es.md` was written by a language model from general
+knowledge on 2026-08-29 and **parts of it are wrong**. It ships with
+`reviewed_by_teacher: false` and a test asserts that flag stays false.
+
+Not a blocker: it is orientation, the teacher's word outranks it everywhere it is
+used, and the alternative is the model's own unwritten assumptions about what a
+ten-year-old knows. Good enough to work with while we find out whether any of this
+is useful at all.
+
+Where I am least confident, so a reviewer knows where to look first:
+
+- **FP Grado Básico** — typical ages 15/16 are a guess; real entry is often later.
+- **4.º de ESO** — left vague because LOMLOE changed the académicas/aplicadas
+  split. Possibly too vague to be useful.
+- **Bachillerato General** — the newest modality and the one I know least.
+- **ESPA** — two levels is right; the mapping to ESO years I would not defend.
+- **Every `studies` line** — state minimum only, and seventeen communities develop
+  their own curriculum on top.
+
+Closed when a practising teacher has **disagreed** with something specific — not
+when one has read it and nodded. Same standard as G2.
