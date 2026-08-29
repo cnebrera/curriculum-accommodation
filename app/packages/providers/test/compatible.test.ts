@@ -45,7 +45,7 @@ const collect = async (s: AsyncIterable<Chunk>) => {
 const spec = (over: Partial<Parameters<typeof compatibleProvider>[0]> = {}) => compatibleProvider({
   id: 'test', label: 'Servicio de prueba', endpoint: 'https://example.test/v1/chat/completions',
   model: 'm', keyUrl: 'https://example.test/keys', requiresPaymentCard: false,
-  keyPrefix: 'tk_', vision: true, quirks: [], ...over,
+  keyPrefixes: ['tk_'], vision: true, quirks: [], ...over,
 });
 
 const REQ = { system: 'sys', messages: [{ role: 'user' as const, content: 'hola' }] };
@@ -256,7 +256,7 @@ describe('validation before anything is stored', () => {
     // `sk-` and `sk-ant-` both match an Anthropic key. Shortest-match would
     // send her to DeepSeek's page with a confident, wrong, sentence.
     const p = spec({
-      keyPrefix: 'sk-',
+      keyPrefixes: ['sk-'],
       otherServices: [{ prefix: 'sk-ant-', label: 'Claude (Anthropic)' }],
     });
     expect((await p.validateKey('sk-ant-api03-x')).message).toContain('Claude (Anthropic)');

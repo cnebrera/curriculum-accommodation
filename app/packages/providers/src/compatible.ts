@@ -27,7 +27,7 @@ export interface CompatibleSpec {
   model: string;
   keyUrl: string;
   requiresPaymentCard: boolean;
-  keyPrefix?: string;
+  keyPrefixes?: readonly string[];
   vision: boolean;
   quirks: readonly CompatibleQuirk[];
   /** For the wrong-service message. Prefix → the service it belongs to. */
@@ -58,8 +58,9 @@ export function compatibleProvider(spec: CompatibleSpec): Provider {
       const owner = [...(spec.otherServices ?? [])]
         .filter((o) => trimmed.startsWith(o.prefix))
         .sort((a, b) => b.prefix.length - a.prefix.length)[0];
-      if (owner && (!spec.keyPrefix || !trimmed.startsWith(spec.keyPrefix)
-                    || owner.prefix.length > spec.keyPrefix.length)) {
+      const ourLongest = Math.max(0, ...(spec.keyPrefixes ?? [])
+        .filter((p) => trimmed.startsWith(p)).map((p) => p.length));
+      if (owner && owner.prefix.length > ourLongest) {
         return {
           ok: false, reason: 'wrong-provider',
           message: `Esa clave es de ${owner.label}, no de ${spec.label}. `
@@ -67,14 +68,15 @@ export function compatibleProvider(spec: CompatibleSpec): Provider {
         };
       }
 
-      if (spec.keyPrefix && !trimmed.startsWith(spec.keyPrefix)) {
-        return {
-          ok: false, reason: 'malformed',
-          message: `Las claves de ${spec.label} empiezan por "${spec.keyPrefix}". `
-            + 'Comprueba que la has copiado entera.',
-        };
-      }
-
+      /*
+       * No "must start with X" check.
+       *
+       * It used to reject anything not matching the declared prefix, and Google
+       * changing its key format from `AIza…` to `AQ.…` — announced to nobody —
+       * turned a perfectly good key into «comprueba que la has copiado entera».
+       * The provider decides whether its own key is valid; we do not, and being
+       * wrong costs her the whole setup while saving us one round trip.
+       */
       try {
         // The cheapest real call the dialect allows: one token, no streaming.
         const res = await fetch(spec.endpoint, {

@@ -103,10 +103,42 @@ describe('providers', () => {
     expect(g.message).toContain('Anthropic');
   });
 
-  it('rejects a malformed key without touching the network', async () => {
-    const r = await providerById('anthropic')!.validateKey('pegado a medias');
+  it('refuses an empty box without touching the network', async () => {
+    const r = await providerById('anthropic')!.validateKey('   ');
     expect(r.ok).toBe(false);
     expect(r.reason).toBe('malformed');
+    expect(r.message).toMatch(/No has pegado nada/);
+  });
+
+  /**
+   * This test used to assert that a badly-shaped key was refused locally. That
+   * behaviour was **removed on purpose**, and this records why rather than
+   * quietly deleting the case.
+   *
+   * Google changed its key format from `AIza…` to `AQ.…` and told nobody. The
+   * first person to run this application with a real key was answered «las
+   * claves de Google empiezan por "AIza". Comprueba que la has copiado entera» —
+   * a good key, rejected, with the blame pointed at his copy-paste.
+   *
+   * The provider is the authority on whether its own key is valid. A shape check
+   * we invented saves one network round trip and costs the whole setup the day a
+   * provider changes format, which they do without announcement.
+   *
+   * What still runs offline is in `@rampa/core`'s `checkKeyShape`: empty, a
+   * pasted page, another service's key, and a truncated copy. Those are claims
+   * about *her paste*, not about the provider's format.
+   */
+  it('no longer guesses at a provider format it cannot know', () => {
+    // Comments stripped: both files *quote* the old message while explaining why
+    // it is gone, and a test that reads prose would fail on its own explanation.
+    const read = (f: string) =>
+      readFileSync(join(dirname(new URL(import.meta.url).pathname), '..', 'src', f), 'utf8')
+        .replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
+
+    expect(read('anthropic.ts')).not.toMatch(/empiezan por/);
+    expect(read('google.ts')).not.toMatch(/empiezan por/);
+    // The wrong-service hint stays: it is high-confidence and genuinely useful.
+    expect(read('google.ts')).toMatch(/Esa clave es de Anthropic/);
   });
 });
 

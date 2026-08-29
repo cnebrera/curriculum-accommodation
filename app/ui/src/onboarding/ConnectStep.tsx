@@ -113,7 +113,6 @@ export function ConnectStep({ onDone }: { onDone: (providerId: string) => void }
             shape.kind === 'empty' ? c.errEmpty
             : shape.kind === 'page' ? c.errPage
             : shape.kind === 'wrong-service' && owner ? c.errWrongService(owner.label, service.label)
-            : shape.kind === 'bad-prefix' && service.keyPrefix ? c.errBadPrefix(service.keyPrefix)
             : shape.kind === 'too-short' ? c.errTooShort
             : c.errUnknown,
         });

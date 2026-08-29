@@ -33,7 +33,15 @@ export interface ServiceEntry {
   freeTier?: string;
   vision: boolean;
   keyUrl: string;
-  keyPrefix?: string;
+  /**
+   * Prefixes this service's keys are known to start with.
+   *
+   * A **list**, because a provider can have more than one format live at once —
+   * Google issues both `AIza…` and `AQ.…` — and because it is used only to
+   * recognise a key pasted from the *wrong* service. It is never a reason to
+   * reject a key: see `checkKeyShape`.
+   */
+  keyPrefixes: string[];
   costCents: number;
   costMeasured: boolean;
   processedIn: string;
@@ -73,6 +81,13 @@ const str = (v: unknown): string | undefined =>
 
 const bool = (v: unknown, fallback: boolean): boolean =>
   typeof v === 'boolean' ? v : typeof v === 'string' ? /^(true|yes|sí|si)$/i.test(v) : fallback;
+
+/** `AIza` or `[AIza, AQ.]` — one format or several, both spellings accepted. */
+function prefixList(v: unknown): string[] {
+  if (Array.isArray(v)) return v.map((x) => String(x).trim()).filter(Boolean);
+  const s = str(v);
+  return s ? [s] : [];
+}
 
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -195,7 +210,7 @@ export function parseServiceEntry(raw: string, path: string): ServiceEntry | nul
     freeTier: str(data['free_tier']),
     vision: bool(data['vision'], false),
     keyUrl: keyUrl!,
-    keyPrefix: str(data['key_prefix']),
+    keyPrefixes: prefixList(data['key_prefix']),
     costCents: Number(data['cost_cents'] ?? 0) || 0,
     costMeasured: bool(data['cost_measured'], false),
     processedIn: str(data['processed_in']) ?? 'no consta',

@@ -86,10 +86,12 @@ export function identifyKey(
   const key = normaliseKey(raw);
 
   let best: ServiceEntry | undefined;
+  let bestLength = 0;
   for (const s of catalogue) {
-    if (!s.keyPrefix) continue;
-    if (!key.startsWith(s.keyPrefix)) continue;
-    if (!best || s.keyPrefix.length > (best.keyPrefix?.length ?? 0)) best = s;
+    for (const prefix of s.keyPrefixes) {
+      if (!key.startsWith(prefix)) continue;
+      if (prefix.length > bestLength) { best = s; bestLength = prefix.length; }
+    }
   }
 
   return {
@@ -101,7 +103,7 @@ export function identifyKey(
 
 export type ShapeVerdict =
   | { ok: true; key: string }
-  | { ok: false; kind: 'empty' | 'page' | 'wrong-service' | 'bad-prefix' | 'too-short'; ownerId?: string };
+  | { ok: false; kind: 'empty' | 'page' | 'wrong-service' | 'too-short'; ownerId?: string };
 
 /**
  * The check that runs before any network call.
@@ -121,9 +123,19 @@ export function checkKeyShape(
   const id = identifyKey(raw, catalogue, service.id);
   if (id.belongsToAnother) return { ok: false, kind: 'wrong-service', ownerId: id.serviceId };
 
-  if (service.keyPrefix && !id.key.startsWith(service.keyPrefix)) {
-    return { ok: false, kind: 'bad-prefix' };
-  }
+  /*
+   * A prefix we do not recognise is **not** a reason to reject the key.
+   *
+   * This used to return `bad-prefix` and stop her dead with «las claves de este
+   * servicio empiezan por "AIza", comprueba que la has copiado entera» — blaming
+   * her copy-paste for a key that was perfectly good. Google now issues keys
+   * starting `AQ.`, and told nobody.
+   *
+   * The provider is the authority on whether a key is valid; we are not, and the
+   * cost of being wrong is entirely one-sided. A prefix is worth having only to
+   * recognise a key pasted from *another* service, which is high-confidence and
+   * genuinely useful — and that check is above this comment, not below it.
+   */
   // Short enough to be a truncated copy rather than a credential. Every service
   // in the catalogue issues keys far longer than this.
   if (id.key.length < 20) return { ok: false, kind: 'too-short' };

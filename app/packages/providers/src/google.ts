@@ -25,10 +25,17 @@ export const google: Provider = {
       return { ok: false, reason: 'wrong-provider',
         message: 'Esa clave es de Anthropic, no de Google. Elige Claude arriba o pega la clave de Google.' };
     }
-    if (!trimmed.startsWith('AIza')) {
-      return { ok: false, reason: 'malformed',
-        message: 'Las claves de Google empiezan por "AIza". Comprueba que la has copiado entera.' };
-    }
+    /*
+     * No "must start with AIza" check any more.
+     *
+     * Google now issues keys beginning `AQ.`, and announced it to nobody. The
+     * first person to run this application with a real key got «las claves de
+     * Google empiezan por "AIza". Comprueba que la has copiado entera» — a good
+     * key, rejected, with the blame pointed at his copy-paste.
+     *
+     * The provider is the authority on whether its own key is valid. Checking a
+     * shape we invented saved one round trip and cost the entire setup.
+     */
     try {
       const res = await fetch(`${BASE}?key=${encodeURIComponent(trimmed)}`);
       if (res.ok) return { ok: true };

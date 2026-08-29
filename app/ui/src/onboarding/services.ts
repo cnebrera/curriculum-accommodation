@@ -14,7 +14,7 @@ export interface Service {
   freeTier?: string;
   vision: boolean;
   keyUrl: string;
-  keyPrefix?: string;
+  keyPrefixes: string[];
   costCents: number;
   costMeasured: boolean;
   processedIn: string;

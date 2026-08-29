@@ -141,15 +141,48 @@ describe('the offline shape check', () => {
     if (v.ok) expect(v.key).toBe(ANTHROPIC);
   });
 
-  it('distinguishes all five failures rather than answering "no válida" five times', () => {
+  it('distinguishes each failure rather than answering "no válida" every time', () => {
     const kinds = [
       checkKeyShape('', svc('anthropic'), catalogue),
       checkKeyShape('<html>Your API keys page</html>', svc('anthropic'), catalogue),
       checkKeyShape(GOOGLE, svc('anthropic'), catalogue),
-      checkKeyShape('nonsense-but-long-enough-to-pass-length', svc('anthropic'), catalogue),
       checkKeyShape('sk-ant-x', svc('anthropic'), catalogue),
     ].map((v) => (v.ok ? 'ok' : v.kind));
-    expect(kinds).toEqual(['empty', 'page', 'wrong-service', 'bad-prefix', 'too-short']);
+    expect(kinds).toEqual(['empty', 'page', 'wrong-service', 'too-short']);
+  });
+
+  /**
+   * The defect the first real user hit, on the first real run.
+   *
+   * Carlos pasted a Google key that starts `AQ.` — Google's newer format, which
+   * they shipped without telling anyone — and the application answered «las
+   * claves de Google empiezan por "AIza", comprueba que la has copiado entera».
+   * A perfectly good key, and a sentence blaming his copy-paste for it.
+   *
+   * The lesson is bigger than the prefix: **the provider is the authority on
+   * whether its own key is valid.** Checking a shape we invented saves one round
+   * trip and costs the entire setup when a provider changes format, which they do
+   * without announcement. So an unrecognised prefix passes through to validation.
+   */
+  it('accepts a key whose shape we do not recognise, and lets the provider decide', () => {
+    for (const unknownShape of [
+      'AQ.Ab8RN6K7xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxIZRA',  // Google's newer format
+      'gsk-something-entirely-new-from-a-provider-2027',
+      'a'.repeat(40),
+    ]) {
+      const v = checkKeyShape(unknownShape, svc('google'), catalogue);
+      expect(v.ok, `${unknownShape.slice(0, 12)}… was rejected on its shape`).toBe(true);
+    }
+  });
+
+  it('still names the other service when the key is unmistakably theirs', () => {
+    // The one prefix check worth keeping: it is high-confidence and useful.
+    const v = checkKeyShape(ANTHROPIC, svc('google'), catalogue);
+    expect(v.ok).toBe(false);
+    if (!v.ok) {
+      expect(v.kind).toBe('wrong-service');
+      expect(v.ownerId).toBe('anthropic');
+    }
   });
 
   it('names the owning service on a wrong-service paste, so the offer to switch is real', () => {
@@ -165,7 +198,7 @@ describe('the offline shape check', () => {
     // Mistral issues keys with no fixed prefix, so a prefix rule would reject
     // every valid key it hands out. The length floor still applies.
     const mistral = svc('mistral');
-    expect(mistral.keyPrefix).toBeUndefined();
+    expect(mistral.keyPrefixes).toEqual([]);
     expect(checkKeyShape('a'.repeat(32), mistral, catalogue).ok).toBe(true);
     expect(checkKeyShape('short', mistral, catalogue).ok).toBe(false);
   });

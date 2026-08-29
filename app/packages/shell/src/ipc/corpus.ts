@@ -181,7 +181,7 @@ export function registerCorpusIpc(): void {
     return (await loadServices(today)).map((s) => ({
       id: s.id, label: s.label, vendor: s.vendor,
       requiresCard: s.requiresCard, freeTier: s.freeTier, vision: s.vision,
-      keyUrl: s.keyUrl, keyPrefix: s.keyPrefix,
+      keyUrl: s.keyUrl, keyPrefixes: s.keyPrefixes,
       costCents: s.costCents, costMeasured: s.costMeasured,
       processedIn: s.processedIn, jurisdiction: s.jurisdiction,
       trainsOnInput: s.trainsOnInput,

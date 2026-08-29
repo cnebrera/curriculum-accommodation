@@ -61,13 +61,13 @@ export function providerFor(
     model: entry.model,
     keyUrl: entry.keyUrl,
     requiresPaymentCard: entry.requiresCard,
-    keyPrefix: entry.keyPrefix,
+    keyPrefixes: entry.keyPrefixes,
     vision: entry.vision,
     quirks: entry.quirks,
     // So a wrong-service paste can name the service it belongs to (FR-722).
     otherServices: catalogue
-      .filter((s) => s.id !== entry.id && s.keyPrefix)
-      .map((s) => ({ prefix: s.keyPrefix!, label: s.label })),
+      .filter((s) => s.id !== entry.id)
+      .flatMap((s) => s.keyPrefixes.map((prefix) => ({ prefix, label: s.label }))),
   });
 }
 

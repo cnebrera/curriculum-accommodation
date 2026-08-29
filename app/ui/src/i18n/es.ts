@@ -110,8 +110,6 @@ export const es = {
     errWrongService: (owner: string, current: string) =>
       `Esa clave es de ${owner}, no de ${current}. Puedo cambiar a ${owner}, o pega la clave de ${current}.`,
     errSwitchTo: (owner: string) => `Cambiar a ${owner}`,
-    errBadPrefix: (prefix: string) =>
-      `Las claves de este servicio empiezan por «${prefix}». Comprueba que la has copiado entera, desde el principio.`,
     errTooShort: 'Parece que se ha copiado a medias. Vuelve a copiarla entera.',
     errExpired: 'La clave no es válida o ha caducado. Crea otra en la página del servicio y pégala aquí.',
     errNoCredit: 'La clave es correcta, pero la cuenta no tiene saldo. Añade saldo en la página del servicio y vuelve a probar.',

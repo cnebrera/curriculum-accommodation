@@ -19,10 +19,11 @@ export const anthropic: Provider = {
       return { ok: false, reason: 'wrong-provider',
         message: 'Esa clave es de Google, no de Anthropic. Elige Google arriba o pega la clave de Anthropic.' };
     }
-    if (!trimmed.startsWith('sk-ant-')) {
-      return { ok: false, reason: 'malformed',
-        message: 'Las claves de Anthropic empiezan por "sk-ant-". Comprueba que la has copiado entera.' };
-    }
+    /*
+     * No shape check here either, for the reason in `google.ts`: Anthropic's
+     * format happens to be stable today, and a format being stable today is not
+     * a reason to build a gate on it. The 401 below is the authoritative answer.
+     */
     try {
       const res = await fetch(API, {
         method: 'POST',
