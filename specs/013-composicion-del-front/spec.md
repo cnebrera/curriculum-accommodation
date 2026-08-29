@@ -147,6 +147,27 @@ rather than to defend the choice harder — and today the boundary holds by habi
   fails on every intentional change, gets updated without being read, and then
   asserts whatever the last commit produced.
 
+### The window is a size nobody chose
+
+The application is a window on someone else's machine. She drags its edge, she
+docks it beside her register, she is on a 1280-wide trolley laptop with the text
+scale turned up. None of those are her doing something unusual, and all of them
+are widths this feature never looked at.
+
+- **FR-1115**: Every screen MUST remain usable at any window width the shell
+  permits, down to the minimum the window itself can be dragged to. "Usable"
+  means: the page body never scrolls sideways, the primary action is reachable,
+  and no region grows to swallow another.
+- **FR-1116**: A layout rule that depends on how much room a component has MUST
+  ask its container, not the window. The window is the wrong question wherever a
+  rail, a panel or the text scale sits between the window and the component —
+  which is everywhere in this application.
+- **FR-1117**: The text scale MUST participate in that question. At `xlarge` a
+  two-column comparison has fewer characters per line than at `base` in the same
+  window, and a rule that only knows pixels cannot see it.
+- **FR-1118**: The narrow layout MUST be looked at, not merely written. FR-1113
+  applies per width, and the record MUST include more than one.
+
 ## Success Criteria *(mandatory)*
 
 - **SC-1101**: `010` SC-805 becomes true: a teacher's first ten seconds do not
@@ -157,6 +178,11 @@ rather than to defend the choice harder — and today the boundary holds by habi
 - **SC-1104**: Zero files outside `packages/shell` import `electron`.
 - **SC-1105**: The screenshots taken before and after this feature are both in the
   record, so the change is visible rather than asserted.
+- **SC-1106**: At every width from the window's minimum to 1920, on every screen,
+  in every text scale, the page body does not scroll sideways and no region
+  exceeds the height of the window's content area. Asserted by test, because the
+  regression is silent: the rule that broke this was written, passed review, and
+  was never rendered at the width it was written for.
 
 ## Assumptions
 
