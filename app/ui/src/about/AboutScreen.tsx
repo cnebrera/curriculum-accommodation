@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Page } from '../shell/Page.js';
 import { Wordmark } from '../components/Logo.js';
 import { Callout } from '../components/Callout.js';
 
@@ -22,7 +23,7 @@ export function AboutScreen() {
   }, []);
 
   return (
-    <div className="stack gap6" style={{ maxWidth: 'var(--measure)' }}>
+    <Page title="Acerca de Rampa">
       <div className="stack gap4">
         {/*
           The wordmark is this screen's heading, so it is marked up as one. It
@@ -148,6 +149,6 @@ export function AboutScreen() {
           </details>
         )}
       </section>
-    </div>
+    </Page>
   );
 }

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Page } from '../shell/Page.js';
 import { useStrings } from '../i18n/context.js';
 import { fromWire } from '../../../packages/core/src/errors.js';
 import { Callout } from '../components/Callout.js';
@@ -90,9 +91,8 @@ export function ReviewScreen({ jobId, learner, recipes }: { jobId: string; learn
   };
 
   return (
-    <div className="stack">
-      <DraftMark signedOff={signedOff} />
-      <h1>{es.review.title}{revision > 1 ? ` · versión ${revision}` : ''}</h1>
+    <Page title={`${es.review.title}${revision > 1 ? ` · versión ${revision}` : ''}`}
+          banner={<DraftMark signedOff={signedOff} />}>
 
       {reportData
         ? <ReportView {...reportData} />
@@ -157,6 +157,6 @@ export function ReviewScreen({ jobId, learner, recipes }: { jobId: string; learn
       </div>
 
       {pdfPath ? <p className="small muted">Guardado en <code>{pdfPath}</code></p> : null}
-    </div>
+    </Page>
   );
 }

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Page } from '../shell/Page.js';
 import { Callout } from '../components/Callout.js';
 import { Badge } from '../components/Badge.js';
 
@@ -62,14 +63,9 @@ export function VerifyScreen({ jobId, onVerified }: { jobId: string; onVerified:
   const failed = extraction.pages.filter((p) => p.problems.length > 0);
 
   return (
-    <div className="stack gap6">
-      <div className="stack gap2">
-        <h1>Comprueba que lo he leído bien</h1>
-        <p className="lede">
-          Mira la foto al lado de lo que he leído. Si aquí hay un error, se cuela en
-          todo lo demás y luego no se nota, porque la ficha se lee perfectamente.
-        </p>
-      </div>
+    <Page variant="wide"
+          title="Comprueba que lo he leído bien"
+          lede="Mira la foto al lado de lo que he leído. Si aquí hay un error, se cuela en todo lo demás y luego no se nota, porque la ficha se lee perfectamente.">
 
       {/*
         FR-612 · the page bound, said out loud. A teacher who dropped a 60-page
@@ -204,6 +200,6 @@ export function VerifyScreen({ jobId, onVerified }: { jobId: string; onVerified:
           </p>
         )}
       </div>
-    </div>
+    </Page>
   );
 }

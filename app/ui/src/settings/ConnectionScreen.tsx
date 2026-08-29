@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Page } from '../shell/Page.js';
 import { useStrings } from '../i18n/context.js';
 import { Callout } from '../components/Callout.js';
 import { Badge } from '../components/Badge.js';
@@ -67,14 +68,8 @@ export function ConnectionScreen({ onReconnect }: { onReconnect: (serviceId: str
   };
 
   return (
-    <div className="stack gap6">
-      <div className="stack gap2">
-        <h1>Tu servicio de IA</h1>
-        <p className="lede">
-          Puedes cambiarlo cuando quieras. Lo que ya tenías conectado sigue
-          conectado: no hay que volver a pedir ninguna clave.
-        </p>
-      </div>
+    <Page title="Tu servicio de IA"
+          lede="Puedes cambiarlo cuando quieras. Lo que ya tenías conectado sigue conectado: no hay que volver a pedir ninguna clave.">
 
       {jurisdictionNote ? (
         <Callout intent="decide" title="Ha cambiado dónde se procesan los datos">
@@ -154,6 +149,6 @@ export function ConnectionScreen({ onReconnect }: { onReconnect: (serviceId: str
         </div>
         <p className="small">{c.residual}</p>
       </div>
-    </div>
+    </Page>
   );
 }

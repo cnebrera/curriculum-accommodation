@@ -14,8 +14,21 @@ import type { ReactNode } from 'react';
  * If a screen cannot be built with this, **fix the shell**. Working around it
  * once is how a shell stops being worth having by the fourth screen.
  */
-export function Page({ title, lede, variant, actions, children }: {
+export function Page({ title, banner, lede, variant, actions, children }: {
   title: string;
+  /**
+   * Above the title, because some things outrank it.
+   *
+   * There is one today and it is the reason this prop exists: the **draft mark**
+   * on the review screen (Principle VII). Recomposing that screen would otherwise
+   * have pushed it below the heading, and a calmer page quietly demoting the one
+   * element whose entire job is to be unmissable until she signs is exactly the
+   * drift `contracts/page-shell.md` warns about.
+   *
+   * The contract says a screen that cannot be built with the shell is a fact
+   * about the shell. This is that, honoured rather than worked around.
+   */
+  banner?: ReactNode;
   /** One line, in her words, under the title. Optional and usually worth it. */
   lede?: ReactNode;
   /**
@@ -29,6 +42,7 @@ export function Page({ title, lede, variant, actions, children }: {
 }) {
   return (
     <div className={variant === 'wide' ? 'page page-wide' : 'page'}>
+      {banner}
       <header className="page-head">
         <h1>{title}</h1>
         {lede ? <p className="page-lede">{lede}</p> : null}

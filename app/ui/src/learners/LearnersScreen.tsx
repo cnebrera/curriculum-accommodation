@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Page } from '../shell/Page.js';
 import { ProfileEditor } from './ProfileEditor.js';
 import { ForgetLearner } from './ForgetLearner.js';
 import { HandoverReview } from './HandoverReview.js';
@@ -67,26 +68,25 @@ export function LearnersScreen() {
   if (forgetting) {
     const who = learners.find((l) => l.code === forgetting);
     return (
-      <div className="stack gap5">
+      <Page title={`Borrar todo lo de ${who?.name ?? forgetting}`}>
         <button className="btn btn-ghost btn-sm" style={{ alignSelf: 'flex-start' }}
                 onClick={() => { setForgetting(null); void refresh(); }}>
           ← Volver a mis alumnos
         </button>
         <ForgetLearner code={forgetting} name={who?.name}
                        onDone={() => { setForgetting(null); void refresh(); }} />
-      </div>
+      </Page>
     );
   }
 
   if (editing !== undefined) {
     const who = learners.find((l) => l.code === editing);
     return (
-      <div className="stack gap5">
+      <Page title={who?.name ?? 'Alumno nuevo'}>
         <button className="btn btn-ghost btn-sm" style={{ alignSelf: 'flex-start' }}
                 onClick={() => { setEditing(undefined); void refresh(); }}>
           ← Volver a mis alumnos
         </button>
-        <h1>{who?.name ?? 'Alumno nuevo'}</h1>
         <ProfileEditor code={editing} onSaved={() => void refresh()} />
 
         {/*
@@ -124,23 +124,17 @@ export function LearnersScreen() {
             </div>
           </div>
         ) : null}
-      </div>
+      </Page>
     );
   }
 
   return (
-    <div className="stack gap5">
-      <div className="stack gap2">
-        <h1>{es.nav.learners}</h1>
-        {learners.length > 0 && (
-          <p className="small">
-            {learners.length} {learners.length === 1 ? 'alumno' : 'alumnos'}. Los nombres
-            solo los ves tú: en los ficheros va un código.
-          </p>
-        )}
-      </div>
-
-      {loading ? (
+    <Page title={es.nav.learners}
+          lede={learners.length > 0
+            ? `${learners.length} ${learners.length === 1 ? 'alumno' : 'alumnos'}. Los nombres solo los ves tú: en los ficheros va un código.`
+            : 'Los nombres solo los ves tú: en los ficheros va un código.'}>
+      <>
+        {loading ? (
         <div className="stack gap3" aria-busy="true" aria-label="Cargando">
           {[0, 1].map((i) => <div className="card" key={i} style={{ height: 96, opacity: .5 }} />)}
         </div>
@@ -175,6 +169,7 @@ export function LearnersScreen() {
           </div>
         </>
       )}
-    </div>
+      </>
+    </Page>
   );
 }

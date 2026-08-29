@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Page } from '../shell/Page.js';
 import { Callout } from '../components/Callout.js';
 import { ConsolidateSection } from './ConsolidateSection.js';
 
@@ -19,8 +20,8 @@ export function NotesScreen() {
   const save = async () => { await window.rampa.vault.write('memory/house.md', house); };
 
   return (
-    <div className="stack">
-      <h1>Mis notas</h1>
+    <Page title="Mis notas"
+          lede="Lo que has ido corrigiendo y lo que le has enseñado a Rampa. Está en texto plano, en tu carpeta.">
       <Callout intent="info" title="Esto es tuyo">
         Están en tu carpeta, en texto plano. Puedes abrirlas con cualquier editor, o con Obsidian,
         y la copia de seguridad es copiar la carpeta. Si desinstalas Rampa, siguen ahí.
@@ -73,6 +74,6 @@ export function NotesScreen() {
       <ConsolidateSection names={names} />
 
       {vaultHint ? <p className="small muted">Tus ficheros: <code>{vaultHint}</code></p> : null}
-    </div>
+    </Page>
   );
 }

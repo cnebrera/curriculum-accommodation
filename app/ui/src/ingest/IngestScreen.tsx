@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Page } from '../shell/Page.js';
 import { fromWire } from '../../../packages/core/src/errors.js';
 import { useStrings } from '../i18n/context.js';
 import { Callout } from '../components/Callout.js';
@@ -95,14 +96,8 @@ export function IngestScreen({ onIngested, onResume }: {
   const needsWarning = warned === false && paths.some((p) => /\.(jpe?g|png|heic|heif|pdf)$/i.test(p));
 
   return (
-    <div className="stack gap5">
-      <div className="stack gap2">
-        <h1>Adaptar una ficha</h1>
-        <p className="lede">
-          Trae la ficha como la tengas. Si está en la plataforma de la editorial y no
-          se puede descargar, hazle una foto: es lo normal, no el plan B.
-        </p>
-      </div>
+    <Page title="Adaptar una ficha"
+          lede="Trae la ficha como la tengas. Si está en la plataforma de la editorial y no se puede descargar, hazle una foto: es lo normal, no el plan B.">
 
       {/*
         She will be interrupted — that is the premise of the whole application —
@@ -217,6 +212,6 @@ export function IngestScreen({ onIngested, onResume }: {
       ) : null}
 
       {error ? <Callout intent="danger" title="No he podido leerla">{error}</Callout> : null}
-    </div>
+    </Page>
   );
 }

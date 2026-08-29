@@ -373,14 +373,26 @@ button, [role="button"], input[type="checkbox"], input[type="radio"] {
    Restored after the v2 rewrite dropped them: `.app` and `.main` were used by
    App.tsx and defined nowhere, so the whole application had no layout at all.
    `ui/test/styles.test.tsx` is now what stops that happening again. */
-.app { display: grid; grid-template-columns: minmax(180px, 232px) 1fr;
-  min-height: 100vh; align-items: stretch; }
+.app { display: grid; grid-template-columns: minmax(200px, 248px) 1fr;
+  min-height: 100vh; align-items: stretch;
+  /* The ground. Everything else sits on it. */
+  background: var(--ground); }
 
+/* Chrome, not content. Tinted, with a real edge and its own depth so the eye
+   reads two regions rather than one flat sheet of white. */
 .rail { display: flex; flex-direction: column; gap: 2px;
-  padding: var(--s5) var(--s3); background: var(--surface);
-  border-right: 1px solid var(--line); }
+  padding: var(--s5) var(--s3);
+  background: var(--rail-ground);
+  border-right: 1px solid var(--line);
+  /* The column is the window's height and its content can exceed it at the
+     larger text scales — the foot was being clipped. */
+  height: 100vh; position: sticky; top: 0; overflow-y: auto; }
 
-.main { padding: var(--s6) var(--s7); max-width: 1100px;
+/* `.main` is the ground the content sits on, not the content. The first attempt
+   made it white and capped it at 1100px, which left the ground showing as a thin
+   strip on the right and read as an accident rather than a decision. */
+.main { padding: var(--s6);
+  height: 100vh; overflow-y: auto;
   /* min-width: 0 is what stops a long unbroken string in the material from
      widening the grid column and pushing the page sideways. */
   min-width: 0; overflow-x: hidden; }
@@ -402,15 +414,18 @@ button, [role="button"], input[type="checkbox"], input[type="radio"] {
   min-height: 44px; padding: 0 var(--s2); border-radius: var(--radius-control);
   width: 100%; cursor: pointer; display: flex; align-items: center; }
 .rail button:hover { background: var(--surface-2); color: var(--ink); }
-.rail button[aria-current] { background: var(--accent-soft); color: var(--accent-ink);
-  font-weight: 700; box-shadow: inset 3px 0 0 var(--accent-bright); }
+.rail button[aria-current] {
+  background: var(--accent); color: var(--on-accent); font-weight: 700;
+  box-shadow: var(--shadow-sm);
+}
+.rail button[aria-current]:hover { background: var(--accent); color: var(--on-accent); }
 
 .rail a { display: flex; align-items: center; min-height: 44px; padding: 0 var(--s2);
   border-radius: var(--radius-control); color: var(--ink-soft);
   text-decoration: none; font-size: var(--text-sm); }
 .rail a:hover { background: var(--surface-2); color: var(--ink); }
-.rail a[aria-current] { background: var(--accent-soft); color: var(--accent-ink);
-  font-weight: 700; box-shadow: inset 3px 0 0 var(--accent-bright); }
+.rail a[aria-current] { background: var(--accent); color: var(--on-accent);
+  font-weight: 700; box-shadow: var(--shadow-sm); }
 
 /* ═══ VERIFYING AN EXTRACTION · spec 008 ═════════════════════════════════
    The hardest layout in the application: a page image beside a column of

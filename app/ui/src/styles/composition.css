@@ -31,6 +31,12 @@
 
 /* ── The page ─────────────────────────────────────────────────────────────── */
 
+/* The content, as a raised surface on the window's ground.
+   
+   This is the pattern every desktop settings application uses, and it is what
+   was missing: before it, the page, the rail and every card were the same near
+   white, so there was no structure for the eye to find and the whole thing read
+   as a web page rendered in a frame. */
 .page {
   display: flex;
   flex-direction: column;
@@ -38,12 +44,22 @@
   /* Wide enough for a table, narrow enough that nothing strands at the left of
      a 1366px window. */
   max-width: 60rem;
+
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-panel);
+  box-shadow: var(--shadow-md);
+  padding: var(--s6) var(--s7) var(--s7);
 }
 
 /* Two columns where the comparison IS the feature (008's verification screen).
    A variant, not an exception: a screen escaping the shell is a fact about the
    shell. */
 .page-wide { max-width: none; }
+
+/* At the largest text scale the panel's own padding is space the content needs
+   more than the frame does. */
+:root[data-text="xlarge"] .page { padding: var(--s5); }
 
 .page-head {
   display: flex;
@@ -54,7 +70,12 @@
   margin-bottom: calc(var(--rhythm-section) - var(--rhythm-section));
 }
 
-.page-head h1 { margin: 0; }
+.page-head h1 {
+  margin: 0;
+  font-family: var(--font-display);
+  /* The platform face carries tighter tracking than a legibility face wants. */
+  letter-spacing: -0.022em;
+}
 
 /* The lede uses the middle of the type scale, which existed and no screen used:
    every page went from a very large h1 straight to 15px body. */
@@ -79,8 +100,9 @@
    as two titles. */
 .section > h2 {
   margin: 0;
+  font-family: var(--font-display);
   font-size: var(--text-lg);
-  letter-spacing: -0.01em;
+  letter-spacing: -0.014em;
 }
 
 .section-lede {

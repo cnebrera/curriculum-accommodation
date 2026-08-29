@@ -102,7 +102,19 @@
   --n-900: #101a19;   /* 17.0:1 */
 
   /* ── Roles. Components use THESE ──────────────────────────────────────── */
-  --paper:       var(--n-25);
+  /* The window's ground. Content sits ON this rather than being it — which is
+     what every desktop application does and what this one was not doing: paper
+     and surface were #fbfcfb and #f2f6f5, near-identical whites, so a card, the
+     rail and the page were the same colour and there was no depth to see.
+
+     Tinted with the brand hue rather than neutral grey. A cold grey chrome under
+     a warm content area reads as unfinished; the tint is what makes it read as
+     chosen. */
+  --ground:      #e4ebe9;
+  /* The rail is chrome and reads a step further from the content than the ground
+     does — two regions, not a gradient nobody can see. */
+  --rail-ground: #dde6e3;
+  --paper:       var(--n-0);
   --surface:     var(--n-50);
   --surface-2:   var(--n-100);
   --ink:         var(--n-900);
@@ -141,6 +153,21 @@
 
   /* ── Type ─────────────────────────────────────────────────────────────── */
   --font-sans: "Atkinson Hyperlegible", Verdana, Tahoma, ui-sans-serif, sans-serif;
+
+  /* Headings in the platform's own interface face — SF Pro on macOS, Segoe UI on
+     Windows, the system stack on Linux.
+     
+     Atkinson Hyperlegible is a superb *reading* face and a plain *display* one,
+     and using it for everything is a large part of why this looked like a
+     utility rather than an application. A Mac user reading SF Pro headings sees
+     something native; the same text in Verdana-adjacent reads as a web page in a
+     wrapper.
+     
+     Costs nothing: no font to bundle, no request, no CSP problem. And it reverts
+     to Atkinson in accessibility mode, which is the mode mechanism finally being
+     used for what it is for — see below. */
+  --font-display: ui-sans-serif, -apple-system, "SF Pro Display", "Segoe UI Variable Display",
+                  "Segoe UI", system-ui, var(--font-sans);
   --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
 
   --text-xs:   0.8125rem;
@@ -160,6 +187,7 @@
   --s5: 24px; --s6: 32px; --s7: 48px; --s8: 64px;
 
   --radius-control: 7px;
+  --radius-panel: 14px;
   --radius-box: 12px;
   --radius-pill: 999px;
 
@@ -167,9 +195,13 @@
      TINTED with the brand hue rather than black — a black shadow on a warm
      ground reads as dirt, a hue-matched one reads as light. This is most of
      what separates expensive-looking UI from flat UI. ───────────────────── */
-  --shadow-sm: 0 1px 2px rgba(6, 66, 63, 0.07), 0 1px 1px rgba(6, 66, 63, 0.04);
-  --shadow-md: 0 2px 4px rgba(6, 66, 63, 0.06), 0 4px 12px rgba(6, 66, 63, 0.08);
-  --shadow-lg: 0 4px 8px rgba(6, 66, 63, 0.07), 0 12px 32px rgba(6, 66, 63, 0.12);
+  /* Doubled after looking at a screenshot: at 0.06–0.07 alpha these were
+     invisible, so "elevation" was a value in a file rather than something on the
+     screen. Still tinted with the brand hue — a black shadow on a warm ground
+     reads as dirt. */
+  --shadow-sm: 0 1px 2px rgba(6, 66, 63, 0.10), 0 1px 3px rgba(6, 66, 63, 0.07);
+  --shadow-md: 0 2px 6px rgba(6, 66, 63, 0.11), 0 8px 20px rgba(6, 66, 63, 0.10);
+  --shadow-lg: 0 6px 14px rgba(6, 66, 63, 0.13), 0 20px 48px rgba(6, 66, 63, 0.16);
   --shadow-accent: 0 2px 6px rgba(0, 115, 109, 0.28), 0 8px 20px rgba(0, 115, 109, 0.16);
   --inset-hi: inset 0 1px 0 rgba(255, 255, 255, 0.22);
   /* Lifted out of components.css, where they were literals. Not tidying: high
@@ -287,7 +319,16 @@
 
 /* High contrast pushes toward AAA and drops the decoration — the one place
    where the palette does get quieter, and only because she asked. */
+/* High contrast is where the plain version lives — and it always was. The
+   mistake was designing the DEFAULT at this austerity, so the mode was never
+   worth having: flat white, no depth, one system face for everything, and
+   nothing to distinguish "she asked for maximum legibility" from "we did not
+   try". */
 :root[data-contrast="high"] {
+  --ground: #fff;
+  --rail-ground: #f2f4f3;
+  /* Headings revert to the legibility face. This is the whole point of the mode. */
+  --font-display: var(--font-sans);
   --paper: #fff; --surface: #f6f8f7; --surface-2: #e9edec;
   --ink: #000; --ink-soft: #1d2926; --ink-faint: #35443f;
   --line: #93a29e; --line-strong: #64756f;
