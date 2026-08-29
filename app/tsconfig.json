@@ -9,5 +9,5 @@
       "@rampa/providers": ["./packages/providers/src/index.ts"]
     }
   },
-  "include": ["types/**/*.d.ts", "packages/*/src/**/*.ts", "packages/*/test/**/*.ts", "ui/src/**/*.ts", "ui/src/**/*.tsx", "*.ts"]
+  "include": ["types/**/*.d.ts", "packages/*/src/**/*.ts", "packages/*/test/**/*.ts", "ui/src/**/*.ts", "ui/src/**/*.tsx", "ui/test/**/*.tsx", "*.ts"]
 }

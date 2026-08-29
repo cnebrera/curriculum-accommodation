@@ -40,3 +40,26 @@ export function Stream({ label, chars }: { label: string; chars: number }) {
     </div>
   );
 }
+
+/**
+ * A bar for work whose size is genuinely known (008 T018).
+ *
+ * `Stream` deliberately shows characters rather than a percentage, because during
+ * an adaptation nothing knows how long the answer will be and a fake percentage
+ * that sticks at 90% is worse than an honest count. Ingest is different: the
+ * page count is known before the first call, so a real fraction is available and
+ * showing it is not a guess.
+ */
+export function Pages({ done, total }: { done: number; total: number }) {
+  const pct = total > 0 ? Math.min(100, Math.round((done / total) * 100)) : 0;
+  return (
+    <div className="stack gap1">
+      <div className="progress" role="progressbar" aria-valuemin={0} aria-valuemax={total}
+           aria-valuenow={done} aria-label={`Página ${done} de ${total}`}>
+        <i style={{ width: `${pct}%` }} />
+      </div>
+      <span className="meta">Página {done} de {total}</span>
+    </div>
+  );
+}
+

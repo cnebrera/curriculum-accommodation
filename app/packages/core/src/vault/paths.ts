@@ -22,6 +22,13 @@ export const VAULT = {
   house: 'memory/house.md',
   journal: 'memory/journal',
   journalArchive: 'memory/archive',
+  /**
+   * Handover packets she has reviewed and is ready to send (004 FR-305).
+   *
+   * Inside the vault and under `output/`'s sibling rather than in it: `output/` is
+   * material for a learner, and a packet is a document for a colleague.
+   */
+  handover: 'handover',
   recipesLocal: 'recipes-local',
   machine: '.rampa',
   names: '.rampa/names.enc',

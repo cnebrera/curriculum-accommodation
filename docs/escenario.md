@@ -43,13 +43,50 @@ Cada momento nombra la especificación que lo cubre y el criterio que lo mide.
 
 Una compañera se lo ha enseñado. Descarga, instala, y en tres pasos que puede
 interrumpir y retomar: dónde guardar sus cosas (acepta la carpeta propuesta),
-conectar su servicio de IA (un enlace directo, una caja donde pegar, y «✓
-Conectado. Unos 3 céntimos por ficha» — eligió el que no pide tarjeta), y su
-primer alumno, descrito con lo que ve en clase, sin diagnóstico y sin códigos.
+conectar su servicio de IA, y su primer alumno, descrito con lo que ve en clase,
+sin diagnóstico y sin códigos.
 
-*Cubierto por:* 006 US1, FR-401…406 · *medido por:* SC-401, SC-407.
+El paso de conectar *(actualizado 2026-08-28 con la spec 009)* le hace **una sola
+pregunta**: «¿puedes usar una tarjeta para esto?». Contesta que no —en su centro
+no dejan— y le sale **un servicio recomendado con el porqué**: «No pide tarjeta y
+es gratis, y lee fotos, que es como te llega casi todo». Es una frase que puede
+repetirle a la directora, que es la prueba de verdad.
+
+Debajo, plegado, hay «¿te ha dicho tu centro dónde pueden procesarse los datos?».
+No lo sabe, y no pasa nada: no cambia la recomendación. Y una línea que no le
+promete de más — Rampa cambia los nombres por códigos, pero si en la ficha que
+fotografía hay un nombre escrito a mano, ese nombre va dentro de la imagen.
+
+Si quiere, «ver todos y comparar» le da los seis con lo que de verdad decide:
+tarjeta, qué hay gratis y con qué límite, coste por ficha, dónde se procesa, qué
+dicen sus condiciones sobre entrenar, si lee fotos, y para quién es cada uno.
+Cada dato con la fecha en que se comprobó. Ninguno aparece como aprobado ni
+certificado por nadie.
+
+Elige, y el paso a paso le dice lo que va a **ver**: «busca el botón azul que dice
+*Create API key*». Antes del paso uno, lo que la va a frenar: qué cuenta necesita,
+si le pedirán el móvil. Pega la clave. Si se equivoca —pega la página entera, o la
+clave de otro servicio— cada error le dice algo distinto y qué hacer, no «clave no
+válida». Y «✓ Conectado. Este servicio es gratis dentro de su límite», que sale
+del fichero del servicio y no de un tres escrito a mano.
+
+Meses después el plan gratuito se le queda corto. En «Mi servicio de IA» conecta
+otro sin perder el que tenía, y cuando cambia a uno que se procesa en otro sitio,
+se lo dice una vez —porque ese es el dato por el que preguntó su centro.
+
+Lo que **no** le pregunta en ningún momento: si quiere «modo accesibilidad».
+La aplicación ya lee del sistema si tiene el tema oscuro, si ha pedido más
+contraste o menos movimiento, y arranca así. Preguntarlo significaría que lo de
+por defecto es lo inaccesible, en una herramienta que adapta material para
+alumnos con discapacidad.
+
+*Cubierto por:* 006 US1, FR-401…406 · **009 US1…US5** · 010 FR-809/FR-817 ·
+*medido por:* SC-401, SC-407, SC-701…SC-706, SC-808.
 *Deuda dicha:* el instalador sin firmar avisa en Windows/macOS (R14) — la
-validación llevará ese asterisco hasta que haya certificados.
+validación llevará ese asterisco hasta que haya certificados. Y de los seis
+servicios, **ninguno se ha conectado de verdad todavía**: los adaptadores están
+probados contra respuestas simuladas, no contra una cuenta real. Está dicho en
+`specs/006-desktop-app/validation.md`, no olvidado.
 
 ### 1 · Martes, hueco de 45 minutos: la ficha de Hugo
 
@@ -62,22 +99,45 @@ imprescindibles, y cualquier texto raro que venga en la hoja. Corrige un número
 que salió mal y confirma. Sin su confirmación no hay adaptación — un error de
 lectura aquí contamina todo lo demás y luego no se nota.
 
+*(Implementado 2026-08-28 con la spec 008.)* Y confirma **página a página**: una
+sola confirmación para dos páginas no abre la puerta. Antes de mandar la primera
+foto le dice una vez que un nombre escrito a mano en la hoja va dentro de la
+imagen y llega al proveedor — Rampa cambia los nombres en todo lo que ella
+escribe, pero no puede borrar lo que hay en una foto. Si el móvil le da la foto en
+HEIC, no ve ningún error de formato: es lo que su teléfono hace por defecto y ella
+no lo eligió.
+
+Si la interrumpen a mitad —y la van a interrumpir— la extracción sigue ahí:
+«tenías esto a medias, 1 de 2 páginas confirmadas». Antes de eso, cerrar la
+ventana perdía el trabajo y lo que había costado.
+
 Adapta para Hugo (carga cognitiva alta, no arranca sin el primer paso hecho). En
 un minuto tiene: las hojas adaptadas —un ejercicio por página, numeración
 original intacta— y un informe de ~10 decisiones con su porqué. Lee el informe,
 no relee la ficha. Lo que la aplicación no hizo — un bloque que quitó, algo que
 necesita decisión suya — va primero.
 
-Firma. La marca de BORRADOR desaparece — solo desaparece así. Imprime. El PDF
-sobrevive a la fotocopiadora en blanco y negro.
+El informe no es un volcado de texto: cada decisión con su porqué, agrupada, y
+lo que necesita criterio suyo arriba. Mientras trabaja, arriba de la hoja hay una
+barra que dice **«Borrador · sin revisar — no la entregues todavía»**, con la
+trama diagonal a 1:12, la misma pendiente accesible del logotipo. Lo dice con
+palabras, no solo con color: la misma hoja fotocopiada en blanco y negro sigue
+avisando.
+
+Firma. La marca de BORRADOR desaparece — solo desaparece así, y cambia en
+pantalla en el momento. Imprime. El PDF sobrevive a la fotocopiadora en blanco y
+negro.
 
 El tutor de Hugo le pide la ficha para tenerla en clase: le reenvía el PDF ya
 firmado, que por estar firmado no lleva marca de borrador. *(Un camino mejor que
 el correo está registrado como pendiente — adoption-risks §4.10 — no olvidado.)*
 
-*Cubierto por:* 008 (entrada y verificación real) · 001/006 (adaptar, informe,
-firma) · 007 (avisos, procedencia, completitud — FR-512/516/517) · recetas +
-`instructions/` · *medido por:* SC-001, SC-002, SC-005, SC-601…603.
+*Cubierto por:* **008 (entrada y verificación real, implementada)** · 001/006
+(adaptar, informe, firma) · 007 (avisos, procedencia, completitud — FR-512/516/517)
+· recetas + `instructions/` · *medido por:* SC-001, SC-002, SC-005, SC-601…606.
+*Deuda dicha:* SC-601 y SC-602 necesitan las fotos de los fixtures —impresora y
+móvil— y SC-603 necesita cronometrar el recorrido con una clave real. Ninguna
+está medida.
 
 ### 2 · La misma ficha para Vega
 
@@ -167,10 +227,29 @@ Nunca un código de estado, nunca la culpa para ella.
 
 ---
 
+### 10 · La pantalla, para ella
+
+*(Añadido 2026-08-28 con la spec 010.)*
+
+Marta tiene 52 años y lleva el portátil del carro del aula: 1366×768, y a
+última hora de la tarde le cuesta la letra pequeña. En el carril de la izquierda,
+debajo del coste, hay un botón que dice **«Aa  Cómo se ve»**. No dice
+«preferencias de accesibilidad» ni «escala tipográfica»: dice tamaño de la letra,
+colores, más contraste, menos movimiento, y debajo de cada uno para qué sirve.
+
+Pone la letra en «muy grande» y marca «más contraste». No se pierde nada ni se
+solapa nada, ni sumándole el zoom del sistema al 200%. Y se queda así la próxima
+vez, en este ordenador y solo aquí: sus preferencias no viajan con los alumnos ni
+con lo que comparte.
+
+*Cubierto por:* 010 US2/US3, FR-809…FR-821 · *medido por:* SC-801…SC-804,
+SC-806. *Sin cerrar:* SC-805 y SC-806 no se pueden medir con un test — hacen
+falta los primeros diez segundos de una PT que no sepa dónde mirar.
+
 ## Lo que Marta no ve nunca
 
 El IR, los códigos de eje, las recetas seleccionadas, el prompt, los tokens, los
-reintentos, la redacción de nombres. Ve: sus alumnos por su nombre, sus fichas,
+reintentos, la redacción de nombres, WCAG, ni la palabra «contraste 4.5:1». Ve: sus alumnos por su nombre, sus fichas,
 sus informes, céntimos, y una carpeta de ficheros legibles que es suya aunque
 Rampa desaparezca mañana.
 

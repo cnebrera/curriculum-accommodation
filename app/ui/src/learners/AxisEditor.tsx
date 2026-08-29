@@ -46,7 +46,7 @@ export function AxisEditor({ axes, onChange }: {
       <p className="muted small">{es.learner.axesHelp}</p>
       <div className="axis-grid">
         {AXES.map((a) => (
-          <div className="axis" key={a.key}>
+          <div className="axis-cell" key={a.key}>
             <strong>{a.name}</strong>
             <div className="small muted" style={{ minHeight: '2.6em' }}>
               {axes[a.key] === undefined ? es.learner.unobserved : a.levels[axes[a.key]!]}

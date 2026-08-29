@@ -32,10 +32,10 @@ export function VaultStep({ onDone }: { onDone: (root: string) => void }) {
         <Notice kind="warn" title="Aviso sobre los nombres">{encryption.message}</Notice>
       ) : null}
       <div className="row">
-        <button className="primary" disabled={busy || !suggested} onClick={() => void accept(suggested)}>
+        <button className="btn btn-primary" disabled={busy || !suggested} onClick={() => void accept(suggested)}>
           {es.onboarding.vaultAccept}
         </button>
-        <button disabled={busy} onClick={() => void accept()}>{es.onboarding.vaultChoose}</button>
+        <button className="btn" disabled={busy} onClick={() => void accept()}>{es.onboarding.vaultChoose}</button>
       </div>
     </div>
   );

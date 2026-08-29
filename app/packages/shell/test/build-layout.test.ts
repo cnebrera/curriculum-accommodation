@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { readFile, stat } from 'node:fs/promises';
+import { readFile, readdir, stat } from 'node:fs/promises';
 import { join, dirname } from 'node:path';
 
 const appRoot = join(dirname(new URL(import.meta.url).pathname), '..', '..', '..');
@@ -103,5 +103,56 @@ describe('the packaged app can find its own renderer', () => {
       `main.ts resolves its preload to app/${resolved}, and the build did not write it there. ` +
       'A missing preload means window.rampa is undefined and every IPC call is dead.',
     ).toBe(true);
+  });
+
+  /**
+   * SC-606 · nothing in the dependency tree needs compiling (008 T001, FR-614).
+   *
+   * The failure mode a native module produces in Electron is an application that
+   * does not launch, on one platform, after a version bump — and the person
+   * holding it is a special-education teacher who cannot read the stack trace.
+   * This project already ships unsigned installers (`006` R14); it cannot also
+   * carry a per-platform compilation step.
+   *
+   * `binding.gyp` is the marker: node-gyp builds from it, and any package that
+   * ships one is a package that compiles on install.
+   */
+  it('has no dependency that requires a native build', async () => {
+    const modules = join(appRoot, 'node_modules');
+    const offenders: string[] = [];
+
+    // One level of scoped and unscoped packages, plus their own dependencies.
+    // A deeper walk would read the whole tree for no extra signal: a transitive
+    // native module surfaces at this depth in npm's flattened layout.
+    for (const name of await readdir(modules)) {
+      if (name.startsWith('.')) continue;
+      const inner = name.startsWith('@')
+        ? (await readdir(join(modules, name))).map((n) => join(name, n))
+        : [name];
+      for (const pkg of inner) {
+        for (const marker of ['binding.gyp']) {
+          try {
+            await stat(join(modules, pkg, marker));
+            offenders.push(`${pkg} ships ${marker}`);
+          } catch { /* the normal case */ }
+        }
+      }
+    }
+
+    expect(offenders, `native build required by:\n  ${offenders.join('\n  ')}`).toEqual([]);
+  });
+
+  it('reads PDF, DOCX and HEIC with pure-JS or WASM packages', async () => {
+    const pkg = JSON.parse(await readFile(join(appRoot, 'package.json'), 'utf8')) as
+      { dependencies?: Record<string, string> };
+    const deps = pkg.dependencies ?? {};
+    for (const name of ['pdfjs-dist', 'mammoth', 'libheif-js']) {
+      expect(deps[name], `${name} is not a declared dependency`).toBeTruthy();
+    }
+    // And the ones deliberately rejected in research R1 stay rejected: each is
+    // native, and each would reintroduce exactly the failure above.
+    for (const rejected of ['canvas', 'sharp', 'heic-convert', 'pdf-poppler', 'node-canvas']) {
+      expect(deps[rejected], `${rejected} is native — see 008 research R1`).toBeUndefined();
+    }
   });
 });

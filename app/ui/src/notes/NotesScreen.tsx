@@ -26,10 +26,24 @@ export function NotesScreen() {
         y la copia de seguridad es copiar la carpeta. Si desinstalas Rampa, siguen ahí.
       </Callout>
 
-      <h2>Cómo trabajo yo</h2>
-      <textarea value={house} onChange={(e) => setHouse(e.target.value)} style={{ minHeight: 240 }} />
+      <div className="stack gap2">
+        <h2 id="house-h">Cómo trabajo yo</h2>
+        <p className="small" id="house-help">
+          Lo que quieras que Rampa tenga en cuenta siempre: cómo pones los enunciados,
+          qué formato usas en clase, lo que ya sabes que no funciona. Se escribe en
+          <code> memory/house.md</code>, en tu carpeta.
+        </p>
+        {/*
+          The heading is the field's name, so it is the field's label. Without
+          this the textarea had no accessible name at all — a critical axe
+          violation, and for a screen-reader user simply an unnamed box.
+        */}
+        <textarea className="textarea" value={house} aria-labelledby="house-h"
+                  aria-describedby="house-help"
+                  onChange={(e) => setHouse(e.target.value)} style={{ minHeight: 240 }} />
+      </div>
       <div className="row">
-        <button className="primary" onClick={() => void save()}>Guardar</button>
+        <button className="btn btn-primary" onClick={() => void save()}>Guardar</button>
         {house.length > 6000
           ? <span className="badge">Esto ya parece un diario más que una guía. ¿Lo resumimos?</span>
           : null}

@@ -51,3 +51,6 @@ export function registerCostIpc(): void {
     };
   });
 }
+
+/** The ledger, for another job's estimate. Read-only. */
+export async function currentLedger(): Promise<CostLedger> { return ledger(); }

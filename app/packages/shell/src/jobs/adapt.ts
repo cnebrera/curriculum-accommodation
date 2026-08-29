@@ -7,10 +7,10 @@ import {
   checkStructurallyComplete, checkCompleteness, completenessNotice,
   assertProvenance, findUnaccountedBlocks, type Notice, type CompletenessIssue,
 } from '@rampa/core';
-import { sendRedacted, providerById } from '@rampa/providers';
+import { sendRedacted } from '@rampa/providers';
 import { currentVault } from '../ipc/vault.js';
 import { knownNames, unknownNamesIn } from '../ipc/names.js';
-import { currentKey } from '../ipc/keys.js';
+import { activeProvider } from '../ipc/keys.js';
 import { allRecipes, assertCorpus, loadInstruction } from '../ipc/corpus.js';
 import { recordCost } from '../ipc/cost.js';
 import { handle } from '../ipc/wrap.js';
@@ -60,7 +60,7 @@ export interface AdaptResult {
   reportData: {
     decisions: Array<{ title: string; recipe: string; axis: string; blocks: string[] }>;
     notDone: string[];
-    memoryApplied: Array<{ source: string; effect: string }>;
+    memoryApplied: Array<{ recipe: string; source: string; effect: string }>;
   };
   /** Everything the teacher must be shown, quoted and located (007 FR-503). */
   notices: Array<{ block: string | null; notice: Notice }>;
@@ -121,9 +121,19 @@ export async function runAdaptation(
   // Memory is never loaded wholesale: only entries for the recipes selected.
   const memory = await loadForRun(vault, selection.selected.map((r) => r.id));
 
-  const { providerId, key } = await currentKey();
-  const provider = providerId ? providerById(providerId) : undefined;
-  if (!provider || !key) throw new RampaError('key-missing', 'Todavía no has conectado Rampa con tu servicio de IA.');
+  /**
+   * The active service, resolved through the catalogue (009 T027).
+   *
+   * This used to be `providerById(providerId)`, which knows only the two
+   * hand-written adapters. The moment `009` let her connect Groq, Mistral,
+   * DeepSeek or OpenAI, adapting would have thrown "todavía no has conectado
+   * Rampa con tu servicio de IA" — with the key sitting right there, connected,
+   * a green tick on the connection screen. She would have had no way to tell
+   * that the failure was ours.
+   */
+  const active = await activeProvider();
+  if (!active) throw new RampaError('key-missing', 'Todavía no has conectado Rampa con tu servicio de IA.');
+  const { provider, key } = active;
 
   onProgress({ stage: 'Adaptando', detail: `${selection.selected.length} reglas` });
 
@@ -236,7 +246,21 @@ export async function runAdaptation(
 
   const report = buildReport({
     adapted, selection,
-    memoryApplied: memory.journal.map((j) => ({ source: j.path, effect: 'Apliqué lo aprendido antes' })),
+    /*
+     * What was **loaded**, not what to report (003 FR-210).
+     *
+     * This used to pass `effect: 'Apliqué lo aprendido antes'` for every entry
+     * that intersected the run — so an entry that matched a recipe id and changed
+     * nothing read exactly like a correction that did. `buildReport` now takes
+     * what was available and keeps only what the model declared using, so a line
+     * in that section means her correction had an effect.
+     *
+     * One entry per recipe it is tagged with: the recipe is what she recognises,
+     * where a path like `memory/journal/2026-03-01-casillas.md` would make her
+     * open a file to find out what the report meant.
+     */
+    memoryAvailable: memory.journal.flatMap((j) =>
+      j.recipes.map((recipe) => ({ recipe, source: j.path }))),
   });
   await vault.writeRaw(jobReport(jobId, learnerCode), report.markdown);
   await recordCost(jobId, totalCents);
@@ -266,7 +290,9 @@ export async function runAdaptation(
     reportData: {
       decisions: report.decisions,
       notDone: report.notDone,
-      memoryApplied: memory.journal.map((j) => ({ source: j.path, effect: 'Apliqué lo aprendido antes' })),
+      // What the model declared using AND the run actually loaded — verified in
+      // `buildReport`, not trusted here.
+      memoryApplied: report.memoryApplied,
     },
     notices,
     costCents: totalCents,
@@ -314,10 +340,29 @@ export function registerAdaptIpc(getWindow: () => BrowserWindow | null): void {
     return jobId;
   });
 
+  /**
+   * The verification gate, for a **pasted** document only.
+   *
+   * This used to flip `verified: false` to `true` with a regular expression over
+   * the whole document, whatever the document was — so the gate the project
+   * calls "its defence against contaminating every output with one reading
+   * error" could be passed with one click, having read nothing.
+   *
+   * For ingested material the gate is per page and derived, in
+   * `jobs/ingest.ts` (008 T021, FR-608). For pasted text there is nothing to
+   * compare against — she wrote it — so one confirmation is the honest gate, and
+   * this handler refuses anything that came from a file.
+   */
   handle('job:verify', async (jobId: string) => {
     const vault = currentVault();
     const path = jobIR(jobId);
     const raw = (await vault.readRaw(path)) ?? '';
+    const doc = parseIR(raw);
+    const source = String(doc.frontMatter['source'] ?? '');
+    if (source && source !== 'pegado' && source !== 'pasted') {
+      throw new RampaError('ir-unverified',
+        'Este material viene de un fichero, así que hay que confirmarlo página a página.');
+    }
     await vault.writeRaw(path, raw.replace(/verified:\s*false/, 'verified: true'));
     return true;
   });

@@ -66,7 +66,9 @@ export function registerMemoryIpc(): void {
     const slug = payload.heading.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40);
     const path = `${VAULT.journal}/${stamp}-${slug || 'nota'}.md`;
     await vault.writeRaw(path, [
-      '---', `date: ${stamp}`, `recipes: [${(payload.recipes ?? []).join(', ')}]`,
+      // Quoted. Unquoted, YAML parses it into a `Date` — which is what broke
+      // every journal entry this application has ever written (003 audit).
+      '---', `date: "${stamp}"`, `recipes: [${(payload.recipes ?? []).map((r) => `"${r}"`).join(', ')}]`,
       'scope: corpus', 'status: open', '---', '',
       `## Qué pasó`, '', payload.text.trim(), '',
     ].join('\n'));
@@ -118,10 +120,48 @@ export function registerMemoryIpc(): void {
 
   handle('memory:house', async () => (await currentVault().readRaw(VAULT.house)) ?? '');
 
-  handle('memory:handover', async (code: string, year: string, summary: string, shareable: boolean) => {
+  /**
+   * The packet, for review (004 T006, FR-304/305).
+   *
+   * Returns the **claims** as well as the prose, because FR-305 says nothing
+   * leaves without her review and FR-304 says what she removes in review is gone
+   * from the packet — not hidden in it. Review needs the claims individually, so
+   * a handler that only returned rendered markdown made the requirement
+   * unimplementable.
+   *
+   * `shareable` is gone. `toShareable` can only ever return an empty packet,
+   * because a handover packet is entirely about one learner — the concept belongs
+   * to `003`'s corpus export, where there is genuinely non-learner material.
+   * Leaving the flag would have offered her a button whose only output is nothing.
+   */
+  handle('memory:handoverDraft', async (code: string, year: string, summary: string) => {
     const learner = await loadLearner(currentVault(), code);
     const packet = buildPacket(learner, year, summary);
-    return packetToMarkdown(shareable ? toShareable(packet) : packet);
+    return { packet, markdown: packetToMarkdown(packet) };
+  });
+
+  /**
+   * The reviewed packet, written where she can send it from.
+   *
+   * `keep` is the list of claim texts she left in. Anything absent is **dropped
+   * from the packet** rather than marked: a claim carried along with a "removed"
+   * flag is a claim in a document she is about to email.
+   */
+  handle('memory:handoverWrite', async (
+    code: string, year: string, summary: string, keep: string[],
+  ) => {
+    const vault = currentVault();
+    const learner = await loadLearner(vault, code);
+    const full = buildPacket(learner, year, summary);
+    const kept = new Set(keep);
+    const reviewed = { ...full, claims: full.claims.filter((c) => kept.has(c.text)) };
+    const markdown = packetToMarkdown(reviewed);
+
+    // Into the vault, as a file she can attach — the packet has to survive
+    // without this application, which is FR-306's whole point.
+    const path = `${VAULT.handover}/${code}-${year}.md`;
+    await vault.writeRaw(path, markdown);
+    return { path, markdown, dropped: full.claims.length - reviewed.claims.length };
   });
 
   /** Lists everything before removing anything (003 FR-215). */

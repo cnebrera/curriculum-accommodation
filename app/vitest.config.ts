@@ -6,7 +6,10 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
   test: {
     environment: 'node',
-    include: ['packages/**/test/**/*.test.ts'],
+    // `ui/test` renders components to a string with react-dom/server. No
+    // browser, no DOM: enough to assert what the markup says, which is where
+    // the draft mark's guarantee lives.
+    include: ['packages/**/test/**/*.test.ts', 'ui/test/**/*.test.tsx'],
     env: { ANTHROPIC_API_KEY: '', GOOGLE_API_KEY: '', NO_NETWORK: '1' },
   },
 });

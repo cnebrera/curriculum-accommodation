@@ -15,7 +15,7 @@ export function ReviewScreen({ jobId, learner, recipes }: { jobId: string; learn
   const { t: es } = useStrings();
   const [reportData, setReportData] = useState<{
     decisions: Decision[]; notDone: string[];
-    memoryApplied: Array<{ source: string; effect: string }>;
+    memoryApplied: Array<{ recipe: string; source: string; effect: string }>;
   } | null>(null);
   const [checklist, setChecklist] = useState('');
   const [signedOff, setSignedOff] = useState(false);
@@ -43,12 +43,21 @@ export function ReviewScreen({ jobId, learner, recipes }: { jobId: string; learn
     });
   }, [jobId, learner]);
 
-  const render = async (signed: boolean) => {
+  /**
+   * Print. Whether the draft mark is on it is **not** this screen's decision
+   * (007 FR-509) — the main process reads it from the document.
+   *
+   * It used to take a `signed` boolean and pass it through, which meant the
+   * renderer could ask for an unmarked worksheet with no sign-off having
+   * happened. Removed rather than left ignored, so nobody reads this call and
+   * believes it still decides anything.
+   */
+  const render = async () => {
     setError(null);
     try {
-      const r = await window.rampa.job.render(jobId, learner, signed);
+      const r = await window.rampa.job.render(jobId, learner);
       setPhotocopy(r.photocopy ?? []);
-      setPdfPath(await window.rampa.job.pdf(jobId, learner, signed));
+      setPdfPath(await window.rampa.job.pdf(jobId, learner));
     } catch (e: unknown) {
       const { kind, message } = fromWire(e);
       setError(es.errors[kind] ?? message ?? es.errors['unknown']!);
@@ -77,7 +86,7 @@ export function ReviewScreen({ jobId, learner, recipes }: { jobId: string; learn
   const sign = async () => {
     await window.rampa.job.signOff(jobId, learner, 'PT');
     setSignedOff(true);
-    await render(true);
+    await render();
   };
 
   return (
@@ -124,7 +133,7 @@ export function ReviewScreen({ jobId, learner, recipes }: { jobId: string; learn
             Si quieres, rehago <em>esta</em> ahora mismo.
           </p>
           <div>
-            <button className="primary" disabled={revising} onClick={() => void revise()}>
+            <button className="btn btn-primary" disabled={revising} onClick={() => void revise()}>
               {revising ? 'Rehaciendo…' : 'Rehacer esta ficha con mis correcciones'}
             </button>
           </div>
@@ -138,13 +147,13 @@ export function ReviewScreen({ jobId, learner, recipes }: { jobId: string; learn
       ) : null}
 
       <div className="row">
-        <button onClick={() => void window.rampa.job.openForEditing(jobId, learner)}>
+        <button className="btn" onClick={() => void window.rampa.job.openForEditing(jobId, learner)}>
           Corregir a mano
         </button>
-        <button onClick={() => void render(signedOff)}>{es.adapt.print}</button>
+        <button className="btn" onClick={() => void render()}>{es.adapt.print}</button>
         {!signedOff
-          ? <button className="primary" onClick={() => void sign()}>{es.review.signOff}</button>
-          : <span className="badge accent">{es.review.signedOff}</span>}
+          ? <button className="btn btn-primary" onClick={() => void sign()}>{es.review.signOff}</button>
+          : <span className="badge badge-accent">{es.review.signedOff}</span>}
       </div>
 
       {pdfPath ? <p className="small muted">Guardado en <code>{pdfPath}</code></p> : null}

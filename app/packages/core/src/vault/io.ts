@@ -33,6 +33,23 @@ export class Vault {
     await writeFile(abs, content, 'utf8');
   }
 
+  /**
+   * Bytes rather than text (008 T013). Her photographs live in the vault with
+   * the material they became, so this goes through the same path resolution as
+   * everything else — a binary write is not an excuse to bypass
+   * `resolveInVault`, which is the only thing keeping a path from content out.
+   */
+  async writeBinary(relPath: string, bytes: Uint8Array): Promise<void> {
+    const abs = resolveInVault(this.root, relPath);
+    await mkdir(dirname(abs), { recursive: true });
+    await writeFile(abs, bytes);
+  }
+
+  async readBinary(relPath: string): Promise<Uint8Array | null> {
+    try { return new Uint8Array(await readFile(resolveInVault(this.root, relPath))); }
+    catch { return null; }
+  }
+
   async writeDoc(relPath: string, data: Record<string, unknown>, body: string): Promise<void> {
     await this.writeRaw(relPath, stringifyFrontMatter(data, body));
   }

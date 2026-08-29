@@ -172,6 +172,16 @@
   --shadow-lg: 0 4px 8px rgba(6, 66, 63, 0.07), 0 12px 32px rgba(6, 66, 63, 0.12);
   --shadow-accent: 0 2px 6px rgba(0, 115, 109, 0.28), 0 8px 20px rgba(0, 115, 109, 0.16);
   --inset-hi: inset 0 1px 0 rgba(255, 255, 255, 0.22);
+  /* Lifted out of components.css, where they were literals. Not tidying: high
+     contrast sets every --shadow-* to none, and a literal in a component rule
+     ignores that — so those four shadows survived a mode whose entire purpose
+     is to remove them, and on dark they were dark teal on a dark ground. */
+  --shadow-accent-hi: var(--inset-hi), 0 4px 12px rgba(0, 115, 109, 0.34),
+                      0 12px 28px rgba(0, 115, 109, 0.2);
+  --inset-press: inset 0 2px 4px rgba(3, 43, 41, 0.35);
+  --inset-well: inset 0 1px 2px rgba(6, 66, 63, 0.06);
+  --inset-well-deep: inset 0 1px 2px rgba(6, 66, 63, 0.09);
+  --sheen: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.45), transparent);
 
   /* Focus: a ring AND a soft glow. The ring is the accessibility requirement;
      the glow is what makes it feel like software from this decade. */
@@ -224,6 +234,12 @@
     --shadow-lg: 0 6px 14px rgba(0, 0, 0, 0.6), 0 18px 48px rgba(0, 0, 0, 0.45);
     --shadow-accent: 0 2px 10px rgba(18, 201, 188, 0.32), 0 8px 28px rgba(18, 201, 188, 0.18);
     --inset-hi: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    --shadow-accent-hi: var(--inset-hi), 0 4px 14px rgba(18, 201, 188, 0.34),
+                        0 12px 32px rgba(18, 201, 188, 0.18);
+    --inset-press: inset 0 2px 5px rgba(0, 0, 0, 0.6);
+    --inset-well: inset 0 1px 2px rgba(0, 0, 0, 0.45);
+    --inset-well-deep: inset 0 1px 3px rgba(0, 0, 0, 0.55);
+    --sheen: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.16), transparent);
     --focus-glow: 0 0 0 6px rgba(75, 217, 206, 0.26);
   }
 }
@@ -244,6 +260,12 @@
   --shadow-lg: 0 6px 14px rgba(0,0,0,.6), 0 18px 48px rgba(0,0,0,.45);
   --shadow-accent: 0 2px 10px rgba(18,201,188,.32), 0 8px 28px rgba(18,201,188,.18);
   --inset-hi: inset 0 1px 0 rgba(255,255,255,.12);
+  --shadow-accent-hi: var(--inset-hi), 0 4px 14px rgba(18, 201, 188, 0.34),
+                      0 12px 32px rgba(18, 201, 188, 0.18);
+  --inset-press: inset 0 2px 5px rgba(0, 0, 0, 0.6);
+  --inset-well: inset 0 1px 2px rgba(0, 0, 0, 0.45);
+  --inset-well-deep: inset 0 1px 3px rgba(0, 0, 0, 0.55);
+  --sheen: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.16), transparent);
   --focus-glow: 0 0 0 6px rgba(75,217,206,.26);
 }
 :root[data-theme="light"] {
@@ -271,6 +293,11 @@
   --line: #93a29e; --line-strong: #64756f;
   --accent: var(--teal-800); --accent-ink: var(--teal-900);
   --shadow-sm: none; --shadow-md: none; --shadow-lg: none; --shadow-accent: none;
+  --shadow-accent-hi: none; --inset-press: none;
+  --inset-well: none; --inset-well-deep: none;
+  /* A moving highlight over a progress bar is decoration. In high contrast the
+     bar's own fill is the whole signal. */
+  --sheen: none;
 }
 :root[data-contrast="high"][data-theme="dark"] {
   --paper: #000; --surface: #0b1211; --surface-2: #141d1b;

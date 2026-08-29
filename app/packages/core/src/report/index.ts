@@ -23,13 +23,26 @@ export interface ReportInput {
   dropped?: Array<{ id: string; why: string }>;
   undescribedFigures?: string[];
   flaggedSignificant?: string[];
-  memoryApplied?: Array<{ source: string; effect: string }>;
+  /**
+   * The journal entries **loaded** for this run, by recipe id (003 FR-210).
+   *
+   * Not what to report — what the model was *allowed* to have used. Every
+   * `[memory:...]` declaration is checked against this list, so a claim about
+   * learning the model was never given is dropped rather than shown.
+   *
+   * That check is the whole value of this section. A line saying "your correction
+   * changed this" is worth reading only if it cannot be produced by a model that
+   * never saw the correction.
+   */
+  memoryAvailable?: Array<{ recipe: string; source: string }>;
 }
 
 export interface Report {
   decisions: Decision[];
   notDone: string[];
   notices: Array<{ block: string | null; notice: Notice }>;
+  /** Prior learning that verifiably changed something (003 FR-210). */
+  memoryApplied: Array<{ recipe: string; source: string; effect: string }>;
   markdown: string;
 }
 
@@ -73,6 +86,25 @@ export function buildReport(input: ReportInput): Report {
     notDone.push(`Conflicto entre "${c.kept}" y "${c.dropped}": me quedé con "${c.kept}" porque ${c.because}.`);
   }
 
+  /**
+   * FR-210 · which memory item altered a decision.
+   *
+   * Memory is meant to be as traceable as a recipe, and it was not. The previous
+   * implementation reported **every entry loaded** with the fixed string
+   * "Apliqué lo aprendido antes" — so an entry that happened to match a recipe id
+   * and changed nothing looked exactly like a correction that did. A list where
+   * everything is claimed is a list she stops reading, and then the one line that
+   * mattered goes with it.
+   *
+   * Now: the model declares what it used, and this checks the declaration against
+   * what was actually loaded. Two failure modes closed at once — the noise, and
+   * the fabrication.
+   */
+  const available = new Map((input.memoryAvailable ?? []).map((m) => [m.recipe, m.source]));
+  const memoryApplied = declared.memory
+    .filter((m) => available.has(m.recipe))
+    .map((m) => ({ recipe: m.recipe, source: available.get(m.recipe)!, effect: m.effect }));
+
   const notices: Report['notices'] = [
     ...adapted.notices.map((n) => ({ block: null, notice: n })),
     ...adapted.blocks.flatMap((b: Block) => b.notices.map((n) => ({ block: b.id, notice: n }))),
@@ -111,9 +143,12 @@ export function buildReport(input: ReportInput): Report {
     md.push('');
   }
 
-  for (const m of input.memoryApplied ?? []) {
-    md.push(`## ${m.effect}`);
-    md.push(`Memoria: \`${m.source}\``);
+  if (memoryApplied.length) {
+    md.push('## Lo que cambió porque tú lo corregiste antes', '');
+    for (const m of memoryApplied) {
+      md.push(`- ${m.effect}`);
+      md.push(`  > De lo que me dijiste sobre \`${m.recipe}\`.`);
+    }
     md.push('');
   }
 
@@ -121,5 +156,5 @@ export function buildReport(input: ReportInput): Report {
     md.push('_No he cambiado nada. Revisa si el perfil tiene ejes sin observar._', '');
   }
 
-  return { decisions, notDone, notices, markdown: md.join('\n') };
+  return { decisions, notDone, notices, memoryApplied, markdown: md.join('\n') };
 }

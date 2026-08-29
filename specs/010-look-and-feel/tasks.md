@@ -52,9 +52,9 @@ project that can block a change for a visual reason.
 - [x] T012 [US1] Replace the `<pre>` dumps in `ReviewScreen.tsx` with `ReportView`, and the checklist dump with a designed disclosure
 - [x] T013 [US1] Rebuild `app/ui/src/learners/AxisStrip.tsx` — ten barriers at a glance, bars **and** number **and** word, with unobserved as dashed and empty because it is not zero
 - [x] T014 [US1] Move the axis level descriptors out of `AxisEditor.tsx` into the corpus and read them from there, closing `006` T096. They are calibration guidance from `docs/axis-calibration.md` living in TypeScript, and this feature touches the component — restyling around a Principle I violation would make it harder to see, not easier
-- [ ] T015 [US1] *(partly done: `AdaptScreen` and `NotesScreen` no longer have placeholder dumps and use the system's callouts and progress. `LearnersScreen` and `AboutScreen` still need their pass, and the `<pre>` left in `AboutScreen` is a licence text, which is legitimately preformatted.)* Restyle `AdaptScreen`, `LearnersScreen`, `NotesScreen` and `AboutScreen` against the system, with every empty state designed and each saying what to do next (FR-828)
-- [ ] T016 [US1] Restyle the onboarding steps, and add the wordmark and mark as `app/ui/src/components/Logo.tsx` — inline SVG, one colour, with the 16px variant drawn separately rather than scaled
-- [ ] T017 [US1] Add the layout assertions to `app/e2e/layout.spec.ts`: 1366×768, every screen, no horizontal scroll, no clipped control (SC-802)
+- [x] T015 [US1] Restyle `AdaptScreen`, `LearnersScreen`, `NotesScreen` and `AboutScreen` against the system, with every empty state designed and each saying what to do next (FR-828) *(done: `LearnersScreen` rebuilt with the axis strip, skeleton loading and a designed empty state; `AboutScreen` rebuilt with the wordmark as its `h1` — it had none — and the licences, including the SIL OFL. The remaining `<pre>` is `.licence`, a legal notice whose line breaks are part of the document.)*
+- [x] T016 [US1] Restyle the onboarding steps, and add the wordmark and mark as `app/ui/src/components/Logo.tsx` — inline SVG, one colour, with the 16px variant drawn separately rather than scaled *(done. Also found: the onboarding buttons were still on the v1 `.primary` class the v2 system dropped, so they rendered at 22px of browser default. See T031.)*
+- [x] T017 [US1] Add the layout assertions to `app/e2e/layout.spec.ts`: 1366×768, every screen, no horizontal scroll, no clipped control (SC-802) *(done: `e2e/layout.spec.ts`, 3 tests. Caught a `<code>` element pushing the page sideways at 200% zoom — invisible at 100%, which is why only this suite could find it.)*
 
 **Checkpoint**: every screen designed; the layout suite passes.
 
@@ -64,38 +64,38 @@ project that can block a change for a visual reason.
 
 **Goal**: AA on every screen with no setting required, enforced by CI.
 
-- [ ] T018 [US2] Write `app/e2e/a11y.spec.ts`: axe over every screen × both themes × default and largest text. Zero violations (SC-801)
-- [ ] T019 [US2] Add the a11y and layout suites to `.github/workflows/app.yml`, failing the build. This closes `006` T075 and backlog G7, open since the WCAG target was first written down
-- [ ] T020 [US2] Audit and fix heading order, landmark roles and `aria-live` on the streaming and validation regions (FR-814)
-- [ ] T021 [US2] Verify the keyboard path end to end and fix what it finds: every action reachable, the ring visible at every stop, focus never lost after a state change (SC-803, quickstart §4)
-- [ ] T022 [US2] Confirm no accessibility question appears at first run (FR-809) — an assertion in the onboarding e2e, so a well-meaning future addition trips it
+- [x] T018 [US2] Write `app/e2e/a11y.spec.ts`: axe over every screen × both themes × default and largest text. Zero violations (SC-801) *(done: `e2e/a11y.spec.ts`, 6 tests, 4 modes × every screen. `@axe-core/playwright` cannot run against Electron — `Target.createTarget: Not supported` — so `axe-core` is injected into the window instead. First run found a critical unlabelled `<textarea>`.)*
+- [x] T019 [US2] Add the a11y and layout suites to `.github/workflows/app.yml`, failing the build. This closes `006` T075 and backlog G7, open since the WCAG target was first written down *(done. `xvfb-run npm run test:e2e` on Linux, failing the build. **G7 and `006` T075 are closed.**)*
+- [x] T020 [US2] Audit and fix heading order, landmark roles and `aria-live` on the streaming and validation regions (FR-814) *(done. axe tags `heading-order` and `region` as best practice rather than WCAG, so the tag filter excludes them and they are asserted explicitly. Found: the About screen had no `h1`.)*
+- [x] T021 [US2] Verify the keyboard path end to end and fix what it finds: every action reachable, the ring visible at every stop, focus never lost after a state change (SC-803, quickstart §4) *(done: tabs the whole screen, asserts a visible ring at every stop, no landing on `<body>`, and that focus survives the re-render when the preferences panel opens.)*
+- [x] T022 [US2] Confirm no accessibility question appears at first run (FR-809) — an assertion in the onboarding e2e, so a well-meaning future addition trips it *(done, in `e2e/a11y.spec.ts`.)*
 
 ---
 
 ## Phase 5 · User Story 4 — the draft mark (P1)
 
 - [x] T023 [US4] Implement `app/ui/src/components/DraftMark.tsx` for both states, stating the state in words, with the hatch at `--ramp-angle` so the mark and the product's most important signal share a geometry
-- [ ] T024 [US4] Use it wherever adapted material appears, and make sign-off change it immediately on screen (FR-823)
-- [ ] T025 [US4] Assert in e2e that unsigned material shows the mark and signed material does not. The per-page print watermark is already asserted by `core.test.ts` from Phase 11
+- [x] T024 [US4] Use it wherever adapted material appears, and make sign-off change it immediately on screen (FR-823) *(done. Sign-off flips one boolean and the mark is a pure function of it, so there is no path that can show the wrong one.)*
+- [x] T025 [US4] Assert in e2e that unsigned material shows the mark and signed material does not. The per-page print watermark is already asserted by `core.test.ts` from Phase 11 *(done in `ui/test/draftmark.test.tsx`, 6 tests, rendered with `react-dom/server` — what matters is what the markup *says*, and a screenshot could not check that.)*
 
 ---
 
 ## Phase 6 · User Story 3 — her preferences (P2)
 
-- [ ] T026 [US3] Extend the settings file with the `display` block per data-model.md, in `app/packages/shell/src/ipc/vault-settings.ts`, outside the vault
-- [ ] T027 [US3] Apply preferences as `data-*` attributes on the root element, reading the OS as initial values for theme, contrast and motion with no question asked (FR-817, research R3)
-- [ ] T028 [US3] Build `app/ui/src/settings/DisplayPreferences.tsx` — size, contrast, motion, theme, described in her words and not as standards ("Letra más grande", never "escala tipográfica")
-- [ ] T029 [US3] Make it findable without being told, and verify by asking a teacher rather than by asserting it (SC-806)
-- [ ] T030 [US3] Add the compounding case to the test matrix: `xlarge` + `high` + `dark` at 200% zoom, nothing lost or overlapped (FR-819, SC-804)
+- [x] T026 [US3] Extend the settings file with the `display` block per data-model.md, in `app/packages/shell/src/ipc/vault-settings.ts`, outside the vault *(done, with 4 tests in `vault-settings.test.ts` — including that the vault directory stays empty, and that saving one key does not drop the other.)*
+- [x] T027 [US3] Apply preferences as `data-*` attributes on the root element, reading the OS as initial values for theme, contrast and motion with no question asked (FR-817, research R3) *(done: `ui/src/settings/preferences.ts`, applied before the first frame.)*
+- [x] T028 [US3] Build `app/ui/src/settings/DisplayPreferences.tsx` — size, contrast, motion, theme, described in her words and not as standards ("Letra más grande", never "escala tipográfica") *(done.)*
+- [ ] T029 [US3] Make it findable without being told, and verify by asking a teacher rather than by asserting it (SC-806) **(NOT done — needs a teacher. Recorded in `specs/006-desktop-app/validation.md` rather than ticked: the panel is in the rail under "Aa · Cómo se ve", and whether she finds it is an observation, not an assertion.)**
+- [x] T030 [US3] Add the compounding case to the test matrix: `xlarge` + `high` + `dark` at 200% zoom, nothing lost or overlapped (FR-819, SC-804) *(done, and it is one test with all four preferences at once plus 200% zoom, not four separate passes.)*
 
 ---
 
 ## Phase 7 · Polish
 
-- [ ] T031 [P] Add the token contract to the CI reviewer checklist: no literal colour, no off-scale space or type, no hand-rolled shadow, no `outline: none`
-- [ ] T032 [P] Add a one-command diff between the design project's stylesheets and `app/ui/src/styles/`, so drift is a check rather than a judgement (research R5)
-- [ ] T033 Record in `specs/006-desktop-app/validation.md` what was verified and what was not — in particular that SC-805 and SC-807 need a teacher and are not machine-checkable
-- [ ] T034 [P] Update `docs/escenario.md` where it describes screens that this feature changed
+- [x] T031 [P] Add the token contract to the CI reviewer checklist: no literal colour, no off-scale space or type, no hand-rolled shadow, no `outline: none` *(done, and stronger than planned: three of the four rules are now machine-checked in `ui/test/styles.test.tsx`, which also asserts that every class in a `className` is defined in a stylesheet. That check found fifteen buttons unstyled since the v2 rewrite, `.app`/`.main` used and defined nowhere, and `.axis` meaning two different things.)*
+- [x] T032 [P] Add a one-command diff between the design project's stylesheets and `app/ui/src/styles/`, so drift is a check rather than a judgement (research R5) *(done: `scripts/design-diff.sh`. Not in CI — the design project is not in this repository, so a CI job could only skip or lie.)*
+- [x] T033 Record in `specs/006-desktop-app/validation.md` what was verified and what was not — in particular that SC-805 and SC-807 need a teacher and are not machine-checkable *(done.)*
+- [x] T034 [P] Update `docs/escenario.md` where it describes screens that this feature changed *(done: scenario 0 gains what she is never asked, scenario 1 the restyled report and the draft bar, and a new scenario 10 for her own display preferences.)*
 
 ---
 

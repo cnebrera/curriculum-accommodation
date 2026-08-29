@@ -76,13 +76,13 @@ export function ProfileEditor({ code, onSaved }: { code: string | null; onSaved:
       <div className="card stack">
         <Notice kind="info">{es.learner.codeExplain}</Notice>
         <div className="row">
-          <span className="badge accent">{current || '…'}</span>
-          {!code ? <button onClick={() => void window.rampa.learners.newCode().then(setCurrent)}>
+          <span className="badge badge-accent">{current || '…'}</span>
+          {!code ? <button className="btn" onClick={() => void window.rampa.learners.newCode().then(setCurrent)}>
             {es.learner.newCode}</button> : null}
         </div>
         <div>
           <label htmlFor="name">{es.learner.nameLabel}</label>
-          <input id="name" type="text" value={name} onChange={(e) => setName(e.target.value)} />
+          <input className="input" id="name" type="text" value={name} onChange={(e) => setName(e.target.value)} />
         </div>
       </div>
 
@@ -91,30 +91,30 @@ export function ProfileEditor({ code, onSaved }: { code: string | null; onSaved:
 
       <div>
         <label htmlFor="works">{es.learner.works}</label>
-        <textarea id="works" value={works} onChange={(e) => setWorks(e.target.value)}
+        <textarea className="textarea" id="works" value={works} onChange={(e) => setWorks(e.target.value)}
                   placeholder={'Una cosa por línea\nPor ejemplo: con el primer ejercicio hecho arranca sola'} />
       </div>
       <div>
         <label htmlFor="avoid">{es.learner.avoid}</label>
-        <textarea id="avoid" value={avoid} onChange={(e) => setAvoid(e.target.value)}
+        <textarea className="textarea" id="avoid" value={avoid} onChange={(e) => setAvoid(e.target.value)}
                   placeholder={'Una cosa por línea\nPor ejemplo: nada con reloj'} />
       </div>
 
       <div>
         <label htmlFor="interests">Le interesa</label>
-        <input id="interests" type="text" value={interests}
+        <input className="input" id="interests" type="text" value={interests}
                onChange={(e) => setInterests(e.target.value)}
                placeholder="Separado por comas. Por ejemplo: dinosaurios, fútbol" />
       </div>
       <div>
         <label htmlFor="response">Cómo puede responder</label>
-        <textarea id="response" value={response} onChange={(e) => setResponse(e.target.value)}
+        <textarea className="textarea" id="response" value={response} onChange={(e) => setResponse(e.target.value)}
                   placeholder={'Una por línea, con dos puntos\nPor ejemplo: escritura: dicta y un adulto transcribe'} />
       </div>
 
       <div className="row">
-        <button className="primary" disabled={!current} onClick={() => void save()}>{es.learner.save}</button>
-        {saved ? <span className="badge accent">Guardado</span> : null}
+        <button className="btn btn-primary" disabled={!current} onClick={() => void save()}>{es.learner.save}</button>
+        {saved ? <span className="badge badge-accent">Guardado</span> : null}
       </div>
     </div>
   );

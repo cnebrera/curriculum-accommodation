@@ -58,7 +58,7 @@ export function ScopeQuestion({ learner, recipes, onCaptured }: {
     <div className="card stack">
       <div>
         <label htmlFor="correction">¿Hay algo que haya hecho mal?</label>
-        <textarea id="correction" value={text} onChange={(e) => setText(e.target.value)}
+        <textarea className="textarea" id="correction" value={text} onChange={(e) => setText(e.target.value)}
                   placeholder="Escríbelo con tus palabras. Por ejemplo: las casillas se las cuenta como tareas." />
       </div>
       {text.trim() ? (
@@ -100,7 +100,7 @@ export function ScopeQuestion({ learner, recipes, onCaptured }: {
           ) : null}
 
           <div>
-            <button className="primary"
+            <button className="btn btn-primary"
                     disabled={!scope || (scope === 'learner' && !destination)}
                     onClick={() => void capture()}>Apuntar</button>
           </div>

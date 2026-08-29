@@ -37,7 +37,24 @@ export function buildPacket(learner: LoadedLearner, academicYear: string, summar
     claims.push({
       text: `${axis} = ${level}`,
       evidence: 'observed',
-      date: learner.profile.axes_confirmed?.[axis] ?? today(),
+      /*
+       * Empty rather than today (004 FR-303).
+       *
+       * This was `?? today()`. An axis nobody had ever confirmed came out stamped
+       * with **today's date**, so the receiving teacher read "confirmed today" for
+       * a claim that had never been confirmed at all — on the one field whose
+       * entire job is to say how old the claim is.
+       *
+       * It is the same mistake the credential store deliberately avoided, in a
+       * comment written a few files away: *"Empty rather than today's date:
+       * claiming we checked it this morning would be a fabrication on the one
+       * screen whose job is to report that fact."* Written there, missed here.
+       *
+       * A missing date is a fact she needs. An invented one is a lie that reads
+       * like reassurance, which is worse than a gap in a document whose whole
+       * purpose is to be believed less than it could be.
+       */
+      date: learner.profile.axes_confirmed?.[axis] ?? '',
       confirmation: 'unconfirmed',
     });
   }
@@ -59,7 +76,11 @@ export function packetToMarkdown(p: Packet): string {
     '| Qué | Cómo lo sé | Desde | Estado |', '|---|---|---|---|',
   ];
   const label: Record<Evidence, string> = { observed: 'observado', inferred: 'deducido', reported: 'me lo contaron' };
-  for (const c of p.claims) l.push(`| ${c.text} | ${label[c.evidence]} | ${c.date} | sin confirmar |`);
+  for (const c of p.claims) {
+    // "sin fecha" rather than an empty cell: a blank in a table reads as a
+    // rendering fault, and this is a fact — nobody has confirmed this.
+    l.push(`| ${c.text} | ${label[c.evidence]} | ${c.date || 'sin fecha'} | sin confirmar |`);
+  }
   l.push('', '---', '', 'Este documento **acompaña** al expediente oficial, no lo sustituye.');
   return l.join('\n');
 }

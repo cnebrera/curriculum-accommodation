@@ -21,9 +21,9 @@ export function NameWarning({ flagged, onAddName, onSendAnyway }: {
       </p>
       <div className="row">
         {flagged.map((f) => (
-          <button key={f} onClick={() => onAddName(f)}>Es un alumno: {f}</button>
+          <button className="btn" key={f} onClick={() => onAddName(f)}>Es un alumno: {f}</button>
         ))}
-        <button onClick={() => {
+        <button className="btn" onClick={() => {
           // Remembered, so the same word is not queried on every job (T090).
           for (const f of flagged) void window.rampa.names.ignore(f);
           onSendAnyway();

@@ -35,8 +35,14 @@ const api = {
   providers: {
     list: () => invoke('providers:list'),
     validate: (id: string, key: string) => invoke('providers:validate', id, key),
+    /** The offline shape check, so five failures read as five sentences (009). */
+    shapeCheck: (id: string, raw: string) => invoke('providers:shapeCheck', id, raw),
     save: (id: string, key: string) => invoke('providers:save', id, key),
     current: () => invoke('providers:current'),
+    /** The connection screen (009 T036). Carries verification dates, never keys. */
+    connections: () => invoke('providers:connections'),
+    activate: (id: string) => invoke('providers:activate', id),
+    forget: (id: string) => invoke('providers:forget', id),
   },
   corpus: {
     version: () => invoke('corpus:version'),
@@ -47,6 +53,24 @@ const api = {
     checklist: (name: string) => invoke('corpus:checklist', name),
     /** Axis descriptors, so the interface never shows an axis code (T014). */
     axes: () => invoke('corpus:axes'),
+    /**
+     * The services she can choose from, and the one recommendation (009).
+     * Neither carries a model name or an endpoint across this boundary — a
+     * field that cannot reach the renderer cannot be rendered by mistake.
+     */
+    services: () => invoke('corpus:services'),
+    recommend: (answers: unknown) => invoke('corpus:recommend', answers),
+    /**
+     * Opens the key page in her browser. Takes a **service id**, not a URL: the
+     * main process resolves it from the catalogue, so the renderer cannot ask
+     * for an arbitrary destination.
+     */
+    openKeyPage: (serviceId: string) => invoke('corpus:openKeyPage', serviceId),
+    /**
+     * Is there a newer Rampa? Only ever called from a button she presses — the
+     * corpus ships in the release, so this is how FR-414's "one action" works.
+     */
+    checkForUpdate: () => invoke('corpus:checkForUpdate'),
   },
   learners: {
     list: () => invoke('learners:list'),
@@ -66,8 +90,15 @@ const api = {
     revise: (id: string, learner: string, corrections: Array<{ text: string; scope: string }>) =>
       invoke('job:revise', id, learner, corrections),
     revisions: (id: string, learner: string) => invoke('job:revisions', id, learner),
-    render: (id: string, learner: string, signedOff?: boolean) => invoke('job:render', id, learner, signedOff),
-    pdf: (id: string, learner: string, signedOff?: boolean) => invoke('job:pdf', id, learner, signedOff),
+    /**
+     * No `signedOff` parameter, deliberately (007 FR-509).
+     *
+     * It used to take one, so the renderer could ask for an unmarked worksheet
+     * with no sign-off having happened. The main process reads it from the
+     * document instead — a signature is not something a caller gets to assert.
+     */
+    render: (id: string, learner: string) => invoke('job:render', id, learner),
+    pdf: (id: string, learner: string) => invoke('job:pdf', id, learner),
     /** Opens the adapted file in her own editor (T094). */
     openForEditing: (id: string, learner: string) => invoke('job:openForEditing', id, learner),
     /** The only way the draft mark comes off. */
@@ -88,11 +119,54 @@ const api = {
     consolidate: () => invoke('memory:consolidate'),
     archive: (path: string) => invoke('memory:archive', path),
     house: () => invoke('memory:house'),
-    handover: (code: string, year: string, summary: string, shareable: boolean) =>
-      invoke('memory:handover', code, year, summary, shareable),
+    /**
+     * The draft, for review. Returns the claims as well as the prose, because
+     * FR-305 says nothing leaves without her review and reviewing needs the
+     * claims individually (004).
+     */
+    handoverDraft: (code: string, year: string, summary: string) =>
+      invoke('memory:handoverDraft', code, year, summary),
+    /** The reviewed packet. `keep` is what she left in; the rest is dropped. */
+    handoverWrite: (code: string, year: string, summary: string, keep: string[]) =>
+      invoke('memory:handoverWrite', code, year, summary, keep),
     forgetPlan: (code: string) => invoke('memory:forgetPlan', code),
     forget: (code: string) => invoke('memory:forget', code),
   },
+  settings: {
+    display: () => invoke('settings:display'),
+    setDisplay: (p: unknown) => invoke('settings:setDisplay', p),
+  },
+  /**
+   * Reading the material she actually has (008). `run` takes file **paths** the
+   * main process opened through a dialog — never file contents from the
+   * renderer, and never a path the renderer composed.
+   */
+  ingest: {
+    accepted: () => invoke('ingest:accepted'),
+    /** Opens the OS dialog and returns what she picked. The renderer never composes a path. */
+    choose: () => invoke('ingest:choose'),
+    run: (jobId: string, paths: string[]) => invoke('ingest:run', jobId, paths),
+    extraction: (jobId: string) => invoke('ingest:extraction', jobId),
+    /** Extractions she started and has not finished confirming. */
+    pending: () => invoke('ingest:pending'),
+    confirmPage: (jobId: string, page: number) => invoke('ingest:confirmPage', jobId, page),
+    unconfirmPage: (jobId: string, page: number) => invoke('ingest:unconfirmPage', jobId, page),
+    budget: () => invoke('ingest:budget'),
+    estimate: (pageCount: number) => invoke('ingest:estimate', pageCount),
+    pageImage: (jobId: string, page: number) => invoke('ingest:pageImage', jobId, page),
+    blocks: (jobId: string) => invoke('ingest:blocks', jobId),
+    correctAndConfirm: (jobId: string, page: number,
+                        corrections: Array<{ id: string; content: string }>) =>
+      invoke('ingest:correctAndConfirm', jobId, page, corrections),
+    photoWarningSeen: () => invoke('ingest:photoWarningSeen'),
+    acknowledgePhotoWarning: () => invoke('ingest:acknowledgePhotoWarning'),
+    onProgress: (cb: (p: { stage: string; detail?: string; page?: number; of?: number }) => void) => {
+      const h = (_e: unknown, p: Parameters<typeof cb>[0]) => cb(p);
+      ipcRenderer.on('ingest:progress', h);
+      return () => { ipcRenderer.off('ingest:progress', h); };
+    },
+  },
+
   diagnostics: {
     path: () => invoke('diagnostics:path'),
     reveal: () => invoke('diagnostics:reveal'),

@@ -89,14 +89,35 @@ anything worth explaining, end the document with **one** block of class
 ::: {#notes .report-notes}
 - [dropped:e5] por qué se quitó
 - [flag] lo que necesita decisión de la maestra
+- [memory:checkbox-to-numbered] qué hiciste distinto por lo aprendido antes
 - cualquier otra nota para el informe
 :::
 ```
 
-Two forms are machine-parsed, so keep them exact: `[dropped:` followed by the
-block id declares a dropped block, and `[flag]` marks something for the teacher's
-decision. The application verifies that every source block is present, derived
-from, or declared here — a block that simply vanishes fails the job.
+Three forms are machine-parsed, so keep them exact:
+
+- `[dropped:` followed by the block id declares a dropped block. The application
+  verifies that every source block is present, derived from, or declared here — a
+  block that simply vanishes fails the job.
+- `[flag]` marks something for the teacher's decision.
+- `[memory:` followed by **the recipe id the prior learning was about**, then what
+  you did differently because of it.
+
+### About `[memory:...]`
+
+Only when something the teacher taught you earlier actually **changed what you
+did**. Not for every note you were given — you are shown the prior learning that
+touches the recipes selected for this run, and most of it will confirm what you
+would have done anyway. Say nothing about those.
+
+The application checks the recipe id against what it actually loaded, so a note
+about learning you were not given is dropped rather than shown. That is not a
+trap: it is what lets the teacher trust that a line in this section means her
+correction had an effect.
+
+Write the effect in her words and in the past tense: «numeré los pasos en vez de
+usar casillas», not «apliqué la memoria». She wrote the correction; she should
+recognise its consequence.
 
 If you dropped nothing and have nothing to flag, omit the block entirely.
 

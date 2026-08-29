@@ -41,3 +41,21 @@ export const isVerified = (d: IRDocument): boolean =>
 
 export const isGenerated = (d: IRDocument): boolean =>
   d.frontMatter['kind'] === 'generated';
+
+/**
+ * Whether a teacher has signed this document off (007 FR-509).
+ *
+ * In the core, and read from the document, so the print path and the sign-off
+ * handler cannot disagree. Before this existed, `job:render` took `signedOff` as
+ * a **parameter from the renderer** — so an unmarked worksheet could be produced
+ * without sign-off having happened at all, while `signoff.ts` carried a comment
+ * asserting the opposite.
+ */
+export const isSignedOff = (d: IRDocument): boolean => {
+  const review = d.frontMatter['review'];
+  if (review && typeof review === 'object') {
+    return (review as Record<string, unknown>)['signed_off'] === true;
+  }
+  return false;
+};
+

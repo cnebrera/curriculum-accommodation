@@ -7,6 +7,7 @@ import { registerCorpusIpc } from './ipc/corpus.js';
 import { registerCostIpc } from './ipc/cost.js';
 import { registerMemoryIpc } from './ipc/memory.js';
 import { registerAdaptIpc } from './jobs/adapt.js';
+import { registerIngestIpc } from './jobs/ingest.js';
 import { registerPrintIpc } from './jobs/print.js';
 import { registerSignoffIpc } from './jobs/signoff.js';
 import { startLogging, registerDiagnosticsIpc } from './ipc/diagnostics.js';
@@ -75,6 +76,7 @@ else {
     registerCostIpc();
     registerMemoryIpc();
     registerAdaptIpc(getWindow);
+  registerIngestIpc(getWindow);
     registerPrintIpc();
     registerSignoffIpc();
     buildMenu();

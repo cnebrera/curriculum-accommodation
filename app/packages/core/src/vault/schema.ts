@@ -50,8 +50,31 @@ export const rosterSchema = z.object({
 });
 export type Roster = z.infer<typeof rosterSchema>;
 
+/**
+ * A date as it arrives from YAML front matter.
+ *
+ * **This was `z.string()`, and it silently broke the whole of spec 003.**
+ *
+ * `js-yaml` parses an unquoted `2026-08-28` into a `Date` object. `ipc/memory.ts`
+ * writes `date: ${stamp}` unquoted, so every corpus-scope journal entry the
+ * application has ever written failed this schema, was dropped by `loadJournal`'s
+ * `if (!value.date) continue`, and **was never loaded again**.
+ *
+ * The consequence is the exact failure spec 003 exists to prevent: a teacher
+ * records that a rule did not work, the entry is written to disk where she can
+ * see it, and the next adaptation has never heard of it. She would conclude the
+ * correction was ignored, which it was — and there was nothing on screen to tell
+ * her why.
+ *
+ * Found by `003`'s audit, on the first test that loaded a journal end to end.
+ * The same defect was found and fixed in `008`'s catalogue parser a few hours
+ * earlier, in a different module, by a test written for a different reason.
+ */
+const yamlDate = z.union([z.string(), z.date()])
+  .transform((v) => (v instanceof Date ? v.toISOString().slice(0, 10) : v));
+
 export const journalEntrySchema = z.object({
-  date: z.string(),
+  date: yamlDate,
   recipes: z.array(z.string()).default([]),
   scope: z.enum(['learner', 'practice', 'corpus']),
   learner: z.string().optional(),

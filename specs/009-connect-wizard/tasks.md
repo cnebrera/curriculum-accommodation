@@ -21,8 +21,8 @@ increment.
 
 ## Phase 1 · Setup
 
-- [ ] T001 Create the catalogue directory `instructions/providers/` with `README.md` pointing at `specs/009-connect-wizard/contracts/provider-catalogue.md` as the authority, so whoever adds the seventh service finds the contract rather than guessing from the six
-- [ ] T002 Confirm `app/scripts/bundle-corpus.mjs` already ships `instructions/**` recursively, and add an assertion to `app/packages/shell/test/corpus-guarantees.test.ts` that `corpus/instructions/providers/` contains at least one entry — a catalogue that silently fails to bundle produces an application with no services and no error
+- [x] T001 Create the catalogue directory `instructions/providers/` with `README.md` pointing at `specs/009-connect-wizard/contracts/provider-catalogue.md` as the authority, so whoever adds the seventh service finds the contract rather than guessing from the six *(done.)*
+- [x] T002 Confirm `app/scripts/bundle-corpus.mjs` already ships `instructions/**` recursively, and add an assertion to `app/packages/shell/test/corpus-guarantees.test.ts` that `corpus/instructions/providers/` contains at least one entry — a catalogue that silently fails to bundle produces an application with no services and no error *(done. It worked by inheritance — `cp` is recursive — which is exactly why the assertion is worth having: narrowing that copy later would produce an app with no services and no error.)*
 
 **Checkpoint**: `npm run bundle:corpus` puts the catalogue in the bundle, and a test says so.
 
@@ -30,15 +30,15 @@ increment.
 
 ## Phase 2 · Foundational — blocks every user story
 
-- [ ] T003 Define the catalogue types and parser in `app/packages/core/src/providers/catalogue.ts` per data-model.md: front matter to a typed `ServiceEntry`, plus the body split into `intro`, `steps[]` and `troubleshooting[]` from the three parsed headings
-- [ ] T004 Implement repair-not-reject in the same parser: a missing `id`, `key_url` or `last_checked` skips the entry and logs it; unknown fields are preserved; an `endpoint` on a non-`compatible` adapter is ignored and logged. A malformed file must degrade to "this service is not offered", never crash the screen she is standing on
-- [ ] T005 [P] Implement the staleness rules in `catalogue.ts` per research R3: ≤180 days normal, 181–365 offered with a marker, >365 not offered. Take "today" as a parameter — a test that changes behaviour in January is not a test
-- [ ] T006 [P] Implement key normalisation and prefix identification in `app/packages/core/src/providers/key.ts`: strip whitespace, smart quotes and a `KEY=` prefix; identify the owning service by longest matching prefix so `sk-ant-` is never read as `sk-`; detect a pasted page by shape and length
-- [ ] T007 Implement the recommendation rule in `app/packages/core/src/providers/recommend.ts` exactly as the seven steps in data-model.md, returning `{ service, reason }` or a stated conflict. The reason is assembled from *why the winner survived* so it cannot drift from the decision (FR-707a, FR-707b, FR-713)
-- [ ] T008 Write the catalogue tests in `app/packages/core/test/catalogue.test.ts` covering quickstart §1: the six entries parse, each malformed case degrades as specified, unknown fields round-trip, and both staleness thresholds fire
-- [ ] T009 Write the recommendation tests in `app/packages/core/test/recommend.test.ts` covering quickstart §2 — including the two that matter most: **a `jurisdiction: other` service is never recommended even when it is cheapest and ranks best**, and a no-card recommendation always reads photographs
-- [ ] T010 [P] Write the key-handling tests in `app/packages/core/test/provider-key.test.ts` covering quickstart §3
-- [ ] T011 Export the new modules from `app/packages/core/src/index.ts`
+- [x] T003 Define the catalogue types and parser in `app/packages/core/src/providers/catalogue.ts` per data-model.md: front matter to a typed `ServiceEntry`, plus the body split into `intro`, `steps[]` and `troubleshooting[]` from the three parsed headings *(done: `app/packages/core/src/providers/catalogue.ts`.)*
+- [x] T004 Implement repair-not-reject in the same parser: a missing `id`, `key_url` or `last_checked` skips the entry and logs it; unknown fields are preserved; an `endpoint` on a non-`compatible` adapter is ignored and logged. A malformed file must degrade to "this service is not offered", never crash the screen she is standing on *(done, 11 repair cases tested. Also handles what the contract did not mention: YAML hands back a `Date` for an unquoted date and a `string` for a quoted one, so a parser taking only one form would silently drop half a catalogue.)*
+- [x] T005 [P] Implement the staleness rules in `catalogue.ts` per research R3: ≤180 days normal, 181–365 offered with a marker, >365 not offered. Take "today" as a parameter — a test that changes behaviour in January is not a test *(done. An unparseable date reads as stale, never as fresh — failing open would offer a service whose facts have no date at all.)*
+- [x] T006 [P] Implement key normalisation and prefix identification in `app/packages/core/src/providers/key.ts`: strip whitespace, smart quotes and a `KEY=` prefix; identify the owning service by longest matching prefix so `sk-ant-` is never read as `sk-`; detect a pasted page by shape and length *(done. Strips smart quotes, `KEY=` prefixes, zero-width characters and terminal line-wrapping, and leaves an unmatched quote alone rather than turning a wrong key into a differently wrong one.)*
+- [x] T007 Implement the recommendation rule in `app/packages/core/src/providers/recommend.ts` exactly as the seven steps in data-model.md, returning `{ service, reason }` or a stated conflict. The reason is assembled from *why the winner survived* so it cannot drift from the decision (FR-707a, FR-707b, FR-713) *(done, and the reason string caught a real drift on first run — see T009.)*
+- [x] T008 Write the catalogue tests in `app/packages/core/test/catalogue.test.ts` covering quickstart §1: the six entries parse, each malformed case degrades as specified, unknown fields round-trip, and both staleness thresholds fire *(done: 28 tests, reading the **shipped** entries rather than fixtures, so a fact edited into a real entry is re-checked.)*
+- [x] T009 Write the recommendation tests in `app/packages/core/test/recommend.test.ts` covering quickstart §2 — including the two that matter most: **a `jurisdiction: other` service is never recommended even when it is cheapest and ranks best**, and a no-card recommendation always reads photographs *(done: 21 tests. Found the exact drift FR-707a exists to prevent: the reason claimed «hay más baratos, pero salieron peor en las pruebas» while every entry is `unmeasured`, so it asserted a comparison that has never been run. Nineteen passing tests sat over it.)*
+- [x] T010 [P] Write the key-handling tests in `app/packages/core/test/provider-key.test.ts` covering quickstart §3 *(done: 23 tests.)*
+- [x] T011 Export the new modules from `app/packages/core/src/index.ts` *(done.)*
 
 **Checkpoint**: `npm run test:all` passes offline with no key; `npm run test:isolation` still passes, proving the new logic reaches no network.
 
@@ -50,14 +50,14 @@ increment.
 
 **Independent test**: Launch with the catalogue bundled and no key. One question appears; a recommendation with a reason appears; the reason names why that service and not another.
 
-- [ ] T012 [US1] Author the six catalogue entries in `instructions/providers/`: `google.md`, `groq.md`, `mistral.md`, `anthropic.md`, `openai.md`, `deepseek.md`. Every fact checked against the provider's own pages on the date in `last_checked` — not copied between entries, not inferred (contract §"What the author of an entry promises")
-- [ ] T013 [US1] Write each entry's walkthrough: at most six steps, one action each, saying what she will **see** on the provider's page. `openai.md` leads with the ChatGPT-Plus-does-not-work warning; `google.md` and `groq.md` state their free-tier limits plainly
-- [ ] T014 [US1] Expose the catalogue over IPC in `app/packages/shell/src/ipc/corpus.ts` as `corpus:services`, filtering to entries whose `adapter` has a registered implementation and whose facts are not older than a year, and add it to `app/packages/shell/src/preload.ts`
-- [ ] T015 [US1] Rebuild `app/ui/src/onboarding/ConnectStep.tsx` as question → recommendation → walkthrough, reading strings through the i18n context (never importing `es` directly — that was T095's whole lesson)
-- [ ] T016 [US1] Build the walkthrough in `app/ui/src/onboarding/Walkthrough.tsx`: numbered steps, the deep link opening **outside** the application, `signup_first` shown before step one, and "no encuentro eso" as a details block
-- [ ] T017 [US1] Persist walkthrough position so reopening returns her to the service she was working on (FR-719), reusing `app/ui/src/onboarding/state.ts`
-- [ ] T018 [US1] Add the optional data-location line beside the recommendation per FR-708: one quiet line, "no lo sé" is first-class and leaves the recommendation unchanged, and it offers `docs/proteccion-de-datos.md`
-- [ ] T019 [US1] Add the honest-residual sentence wherever data location is discussed (FR-708a): barriers and notes travel pseudonymised, and a name handwritten on a photographed worksheet reaches the provider inside the image. It MUST NOT claim nothing personal leaves
+- [x] T012 [US1] Author the six catalogue entries in `instructions/providers/`: `google.md`, `groq.md`, `mistral.md`, `anthropic.md`, `openai.md`, `deepseek.md`. Every fact checked against the provider's own pages on the date in `last_checked` — not copied between entries, not inferred (contract §"What the author of an entry promises") *(done: `google`, `anthropic`, `openai`, `groq`, `mistral`, `deepseek`. Facts read from the providers' own pages on 2026-08-28.)*
+- [x] T013 [US1] Write each entry's walkthrough: at most six steps, one action each, saying what she will **see** on the provider's page. `openai.md` leads with the ChatGPT-Plus-does-not-work warning; `google.md` and `groq.md` state their free-tier limits plainly *(done. `openai.md` opens with the ChatGPT-Plus warning — a test asserts it is in the first 200 characters, because it is the single most common way a teacher loses money here.)*
+- [x] T014 [US1] Expose the catalogue over IPC in `app/packages/shell/src/ipc/corpus.ts` as `corpus:services`, filtering to entries whose `adapter` has a registered implementation and whose facts are not older than a year, and add it to `app/packages/shell/src/preload.ts` *(done. `model`, `endpoint`, `adapter` and `quirks` deliberately do not cross the IPC boundary: a field the renderer cannot receive cannot be rendered into a screen by mistake.)*
+- [x] T015 [US1] Rebuild `app/ui/src/onboarding/ConnectStep.tsx` as question → recommendation → walkthrough, reading strings through the i18n context (never importing `es` directly — that was T095's whole lesson) *(done. The recommendation is computed in the main process over IPC rather than in the renderer, so the rule stays in the one place 21 tests can see it.)*
+- [x] T016 [US1] Build the walkthrough in `app/ui/src/onboarding/Walkthrough.tsx`: numbered steps, the deep link opening **outside** the application, `signup_first` shown before step one, and "no encuentro eso" as a details block *(done. `openKeyPage` takes a service **id**, not a URL — the main process resolves the destination from the catalogue, so the renderer cannot ask for an arbitrary one. `window.open` in a hardened renderer either does nothing or opens a second Electron window that looks like a crash.)*
+- [x] T017 [US1] Persist walkthrough position so reopening returns her to the service she was working on (FR-719), reusing `app/ui/src/onboarding/state.ts` *(done.)*
+- [x] T018 [US1] Add the optional data-location line beside the recommendation per FR-708: one quiet line, "no lo sé" is first-class and leaves the recommendation unchanged, and it offers `docs/proteccion-de-datos.md` *(done, folded and quiet. "No lo sé" is asserted to leave the recommendation byte-identical.)*
+- [x] T019 [US1] Add the honest-residual sentence wherever data location is discussed (FR-708a): barriers and notes travel pseudonymised, and a name handwritten on a photographed worksheet reaches the provider inside the image. It MUST NOT claim nothing personal leaves *(done, and asserted from both sides: the sentence must contain «dentro de una foto» and must **not** contain any claim that nothing personal leaves.)*
 
 **Checkpoint**: the MVP journey runs to the paste box with the catalogue driving every word on screen.
 
@@ -69,11 +69,11 @@ increment.
 
 **Independent test**: Open the comparison; every column in FR-710 is present; every fact shows its check date; no model name, token count or context size appears anywhere.
 
-- [ ] T020 [US2] Build `app/ui/src/onboarding/ServiceComparison.tsx`: card, free tier and its limit, cost per worksheet, where it is processed, what the terms say about training, photographs, and one sentence on who it suits
-- [ ] T021 [US2] Show `last_checked` per row, and the staleness marker for anything past 180 days (FR-706)
-- [ ] T022 [US2] Mark unmeasured costs as estimates and unmeasured quality as provisional, in her words — *"de momento por lo que sabemos, no por lo que hemos medido"* (research R6)
-- [ ] T023 [US2] Flag aggregators explicitly: a `jurisdiction: varies` row says the request may be forwarded again, so "where is it processed" answers *depende*, and a school cannot act on *depende*
-- [ ] T024 [P] [US2] Add the jargon assertion to `app/e2e/connect.spec.ts`: the rendered text of both screens contains no model name and none of "IR", "corpus", "token", "prompt", "endpoint" (FR-702)
+- [x] T020 [US2] Build `app/ui/src/onboarding/ServiceComparison.tsx`: card, free tier and its limit, cost per worksheet, where it is processed, what the terms say about training, photographs, and one sentence on who it suits *(done, in its own horizontal scroll container — eight columns of real sentences do not fit 1366px, and the page body must never scroll sideways.)*
+- [x] T021 [US2] Show `last_checked` per row, and the staleness marker for anything past 180 days (FR-706) *(done, per row rather than per page: entries are checked one at a time.)*
+- [x] T022 [US2] Mark unmeasured costs as estimates and unmeasured quality as provisional, in her words — *"de momento por lo que sabemos, no por lo que hemos medido"* (research R6) *(done. All six read «(estimado)», because `cost_measured` is false on all six and a test asserts it stays that way until `cases/002-model-floor` runs.)*
+- [x] T023 [US2] Flag aggregators explicitly: a `jurisdiction: varies` row says the request may be forwarded again, so "where is it processed" answers *depende*, and a school cannot act on *depende* *(done.)*
+- [x] T024 [P] [US2] Add the jargon assertion to `app/e2e/connect.spec.ts`: the rendered text of both screens contains no model name and none of "IR", "corpus", "token", "prompt", "endpoint" (FR-702) *(done — and the assertion had to be sharpened rather than passed: «API key» is banned in *our* words but required inside a step, because the step quotes the English label printed on the provider's button and a teacher who reads no English needs it verbatim. Now checked outside steps only.)*
 
 **Checkpoint**: `npm run test:e2e -- connect` passes the comparison assertions.
 
@@ -85,11 +85,11 @@ increment.
 
 **Independent test**: Each of the six validates a correctly-shaped key against a stubbed endpoint, and each rejects another service's key by naming that service.
 
-- [ ] T025 [US3] Implement the OpenAI-compatible adapter in `app/packages/providers/src/compatible.ts` per research R1: endpoint and model from the catalogue entry, streaming and usage parsing as in `openai.ts`, and **no branching on service id** — differences that are not the endpoint are declared quirks
-- [ ] T026 [US3] Implement quirk handling for `no-usage` and `no-stream-options` in the same adapter, driven by the entry's `quirks` list
-- [ ] T027 [US3] Register the compatible adapter in `app/packages/providers/src/index.ts` and resolve an entry's adapter by its `adapter` field rather than by `id`
-- [ ] T028 [US3] Write the compatible-adapter contract tests in `app/packages/providers/test/compatible.test.ts` against a stub: streaming assembles, usage is read, a missing-usage quirk does not throw, and the egress chokepoint still runs first
-- [ ] T029 [US3] Extend `app/packages/providers/test/chokepoint.test.ts` to cover the compatible adapter — the redaction invariant must hold for a service added by a Markdown file, or the guarantee is only true for the three that were hand-written
+- [x] T025 [US3] Implement the OpenAI-compatible adapter in `app/packages/providers/src/compatible.ts` per research R1: endpoint and model from the catalogue entry, streaming and usage parsing as in `openai.ts`, and **no branching on service id** — differences that are not the endpoint are declared quirks *(done. A test asserts over the source that the file contains no branch on service id and does not mention any service by name.)*
+- [x] T026 [US3] Implement quirk handling for `no-usage` and `no-stream-options` in the same adapter, driven by the entry's `quirks` list *(done. A `no-usage` service yields no usage frame at all rather than a zeroed one — «gratis» for a paid call is the one wrong number a teacher would never think to question.)*
+- [x] T027 [US3] Register the compatible adapter in `app/packages/providers/src/index.ts` and resolve an entry's adapter by its `adapter` field rather than by `id` *(done, resolved by `adapter` and never by `id`. **This exposed a real defect**: adapting resolved its provider with `providerById`, which knows two adapters, so connecting Groq would have failed with «todavía no has conectado» while the connection screen showed a green tick.)*
+- [x] T028 [US3] Write the compatible-adapter contract tests in `app/packages/providers/test/compatible.test.ts` against a stub: streaming assembles, usage is read, a missing-usage quirk does not throw, and the egress chokepoint still runs first *(done: 33 tests. Found a dead condition — `req.images?.length === 0` is `undefined === 0` when there are no images, so every text-only request went out as a one-element content array, which several services in this catalogue reject.)*
+- [x] T029 [US3] Extend `app/packages/providers/test/chokepoint.test.ts` to cover the compatible adapter — the redaction invariant must hold for a service added by a Markdown file, or the guarantee is only true for the three that were hand-written *(done, over all six built from the catalogue. This is the seam the feature opened: the redaction promise and the extension mechanism were designed at different times and nothing structural connected them.)*
 
 ---
 
@@ -99,30 +99,30 @@ increment.
 
 **Independent test**: Trigger all five and read them. None says only "no válida".
 
-- [ ] T030 [US4] Wire normalisation and prefix identification into the paste box, so a key from another service names that service and offers the switch (FR-722)
-- [ ] T031 [US4] Map the five validation outcomes to their Spanish sentences in `app/ui/src/i18n/es.ts`, each with its next step; the wrong-service case names the service it belongs to
-- [ ] T032 [US4] Report success in cost terms from the entry's `cost_cents` — **"✓ Conectado. Unos N céntimos por ficha."** — rather than from a hardcoded three (FR-724). Today's screen says "3 céntimos" regardless of provider
-- [ ] T033 [US4] Add the failure-path cases to `app/e2e/connect.spec.ts` covering quickstart §4: malformed, wrong service, and offline. Expired and no-credit are asserted at the adapter level in T028, since triggering them needs a real account
+- [x] T030 [US4] Wire normalisation and prefix identification into the paste box, so a key from another service names that service and offers the switch (FR-722) *(done, in the main process — the renderer would otherwise need every service's key prefix, which is a second copy of the catalogue somewhere no test reads it.)*
+- [x] T031 [US4] Map the five validation outcomes to their Spanish sentences in `app/ui/src/i18n/es.ts`, each with its next step; the wrong-service case names the service it belongs to *(done. Five shape failures plus four provider verdicts, each with its own next step.)*
+- [x] T032 [US4] Report success in cost terms from the entry's `cost_cents` — **"✓ Conectado. Unos N céntimos por ficha."** — rather than from a hardcoded three (FR-724). Today's screen says "3 céntimos" regardless of provider *(done, from `cost_cents`. The screen used to say «3 céntimos» whichever service was connected.)*
+- [x] T033 [US4] Add the failure-path cases to `app/e2e/connect.spec.ts` covering quickstart §4: malformed, wrong service, and offline. Expired and no-credit are asserted at the adapter level in T028, since triggering them needs a real account *(done: 12 tests. The first version pasted a well-shaped Google key expecting the offline sentence and instead made a **real outbound request to Google with a fabricated key** — a suite reaching the network, in a project whose offline suite exists to prove it need not. Network verdicts moved to the stubbed adapter tests.)*
 
 ---
 
 ## Phase 7 · User Story 5 — she can change it later (P2)
 
-- [ ] T034 [US5] Migrate the credential store to one key per service in `app/packages/shell/src/ipc/keys.ts` per data-model.md, reading the old single-key shape once and rewriting it. Nobody has a real installation yet, so this is the cheapest it will ever be (research R5)
-- [ ] T035 [US5] Make validation precede storage, so a failed replacement cannot be destructive and FR-730 holds by construction rather than by an undo path
-- [ ] T036 [US5] Build `app/ui/src/settings/ConnectionScreen.tsx`: the active service, its `verified_at`, a switch, and a replace — never the stored key (FR-729)
-- [ ] T037 [US5] Remind her once when a switch changes jurisdiction (FR-731), because that is the fact her school cared about
-- [ ] T038 [P] [US5] Write the credential-store tests in `app/packages/shell/test/keys.test.ts`: migration from the old shape, per-service isolation, and a failed replacement leaving the previous key working
+- [x] T034 [US5] Migrate the credential store to one key per service in `app/packages/shell/src/ipc/keys.ts` per data-model.md, reading the old single-key shape once and rewriting it. Nobody has a real installation yet, so this is the cheapest it will ever be (research R5) *(done: `app/packages/shell/src/credentials.ts`, Electron-free with `safeStorage` injected, so the migration and the non-destructive replacement are testable offline.)*
+- [x] T035 [US5] Make validation precede storage, so a failed replacement cannot be destructive and FR-730 holds by construction rather than by an undo path *(done, by construction: `put` does not validate and is only reached after validation succeeds, so a failed replacement never touches the store. No undo path to remember to write.)*
+- [x] T036 [US5] Build `app/ui/src/settings/ConnectionScreen.tsx`: the active service, its `verified_at`, a switch, and a replace — never the stored key (FR-729) *(done. The stored key never crosses the IPC boundary, not even masked.)*
+- [x] T037 [US5] Remind her once when a switch changes jurisdiction (FR-731), because that is the fact her school cared about *(done, once and only on a switch that actually changes jurisdiction. A permanent banner stops being read within a fortnight.)*
+- [x] T038 [P] [US5] Write the credential-store tests in `app/packages/shell/test/keys.test.ts`: migration from the old shape, per-service isolation, and a failed replacement leaving the previous key working *(done: 16 tests in `credentials.test.ts`, including that a migrated key gets no invented verification date — stamping today on it would put a fabrication on the one screen whose job is to report that fact.)*
 
 ---
 
 ## Phase 8 · Polish and cross-cutting
 
-- [ ] T039 [P] Add a CI check in `.github/workflows/app.yml` that fails when any catalogue entry's `last_checked` is older than 300 days — earlier than the run-time threshold, so a contributor fixes it before a teacher sees a marker (research R3)
-- [ ] T040 [P] Add the catalogue to the Principle I reviewer checklist in `.github/workflows/app.yml`: a cost figure, a step or a jurisdiction claim added to `app/` instead of to a catalogue entry is the leak this feature exists to prevent
-- [ ] T041 Run quickstart §5 — connect all six for real, once — and record in `specs/006-desktop-app/validation.md` which services were actually reached. An adapter implemented against documentation and never called is not verified, and that document exists to say so
-- [ ] T042 Update `docs/escenario.md` moment 0 to describe the real connection step, since it currently describes 006's minimal version
-- [ ] T043 [P] Add `009` to the spec table in `docs/decisions/README.md`
+- [x] T039 [P] Add a CI check in `.github/workflows/app.yml` that fails when any catalogue entry's `last_checked` is older than 300 days — earlier than the run-time threshold, so a contributor fixes it before a teacher sees a marker (research R3) *(done: `scripts/check-catalogue-freshness.sh`, failing at 300 days. Both negative cases verified: an over-age date and a missing one.)*
+- [x] T040 [P] Add the catalogue to the Principle I reviewer checklist in `.github/workflows/app.yml`: a cost figure, a step or a jurisdiction claim added to `app/` instead of to a catalogue entry is the leak this feature exists to prevent *(done.)*
+- [ ] T041 Run quickstart §5 — connect all six for real, once — and record in `specs/006-desktop-app/validation.md` which services were actually reached. An adapter implemented against documentation and never called is not verified, and that document exists to say so **(NOT done — needs six real accounts, two with money in them. Recorded in `specs/006-desktop-app/validation.md`: every adapter here was written against documentation and a stub, and an adapter never called is not verified.)**
+- [x] T042 Update `docs/escenario.md` moment 0 to describe the real connection step, since it currently describes 006's minimal version *(done.)*
+- [x] T043 [P] Add `009` to the spec table in `docs/decisions/README.md` *(done — already present.)*
 
 ---
 

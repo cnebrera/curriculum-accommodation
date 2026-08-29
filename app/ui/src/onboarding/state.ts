@@ -7,7 +7,21 @@ export type Step = 'vault' | 'connect' | 'learner' | 'done';
 
 const KEY = 'rampa.onboarding';
 
-export interface OnboardingState { step: Step; vaultRoot?: string; providerId?: string; learnerCode?: string; }
+export interface OnboardingState {
+  step: Step;
+  vaultRoot?: string;
+  providerId?: string;
+  learnerCode?: string;
+  /**
+   * Which service she was in the middle of setting up (009 FR-719).
+   *
+   * She will be interrupted — that is the premise of a resumable onboarding —
+   * and coming back to "¿puedes usar una tarjeta?" after she had already
+   * answered it and opened Groq's console is how a setup gets abandoned.
+   * Cleared on success.
+   */
+  connectServiceId?: string;
+}
 
 export function loadState(): OnboardingState {
   try { return JSON.parse(localStorage.getItem(KEY) ?? '{}') as OnboardingState; }

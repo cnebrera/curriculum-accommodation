@@ -25,8 +25,16 @@ const stageIndex = (s?: string): number => {
 
 interface JobNotice { block: string | null; notice: { kind: string; quote: string; message: string } }
 
-export function AdaptScreen({ onReview }: {
+export function AdaptScreen({ onReview, onChooseFile, presetJobId }: {
   onReview: (jobId: string, learner: string, recipes: string[]) => void;
+  /**
+   * The other door (008). Pasting text is now the minority case: the worksheet
+   * usually lives on a publisher's platform with no export, so what she has is a
+   * photograph — and a gate over text she typed herself checks nothing.
+   */
+  onChooseFile?: () => void;
+  /** A job whose extraction she has already verified. Skips the paste and the gate. */
+  presetJobId?: string;
 }) {
   const { t: es } = useStrings();
   const [learners, setLearners] = useState<string[]>([]);
@@ -40,7 +48,7 @@ export function AdaptScreen({ onReview }: {
   const [error, setError] = useState<string | null>(null);
   const [reportData, setReportData] = useState<{
     decisions: Decision[]; notDone: string[];
-    memoryApplied: Array<{ source: string; effect: string }>;
+    memoryApplied: Array<{ recipe: string; source: string; effect: string }>;
   } | null>(null);
   // Computed and discarded was the defect (T089, 007 SC-502): the notices were
   // returned as a bare count and InjectionNotice was never mounted anywhere.
@@ -101,13 +109,28 @@ export function AdaptScreen({ onReview }: {
         <div className="stack">
           <div>
             <label htmlFor="who">{es.adapt.forWhom}</label>
-            <select id="who" value={learner} onChange={(e) => setLearner(e.target.value)}>
+            <select className="select" id="who" value={learner} onChange={(e) => setLearner(e.target.value)}>
               {learners.map((c) => <option key={c} value={c}>{names[c] ?? c}</option>)}
             </select>
           </div>
+          {onChooseFile ? (
+            <div className="card card-action stack gap2" role="group">
+              <span className="small"><strong>¿La ficha está en un fichero o en una foto?</strong></span>
+              <p className="small" style={{ margin: 0 }}>
+                Si la tienes en la plataforma de la editorial y no se puede descargar,
+                hazle una foto. Es lo normal.
+              </p>
+              <div className="row">
+                <button className="btn btn-primary" onClick={onChooseFile}>
+                  Traer una foto, un PDF o un Word
+                </button>
+              </div>
+            </div>
+          ) : null}
+
           <div>
             <label htmlFor="text">{es.adapt.paste}</label>
-            <textarea id="text" value={text} onChange={(e) => { setText(e.target.value); setFlagged([]); }} />
+            <textarea className="textarea" id="text" value={text} onChange={(e) => { setText(e.target.value); setFlagged([]); }} />
           </div>
           <NameWarning
             flagged={flagged}
@@ -120,7 +143,7 @@ export function AdaptScreen({ onReview }: {
             onSendAnyway={() => setFlagged([])}
           />
           <div>
-            <button className="primary" disabled={!text.trim() || !learner || !online} onClick={() => void startJob()}>
+            <button className="btn btn-primary" disabled={!text.trim() || !learner || !online} onClick={() => void startJob()}>
               Continuar
             </button>
           </div>
@@ -137,15 +160,15 @@ export function AdaptScreen({ onReview }: {
             <Callout intent="decide" title="Esta ficha va a costar más de lo normal">
               <p>Serían unos {costGate.formatted}, más que tus fichas habituales. Tú decides.</p>
               <div className="row">
-                <button className="primary" onClick={() => void runAdapt(true)}>Adelante</button>
-                <button onClick={() => setCostGate(null)}>Mejor no</button>
+                <button className="btn btn-primary" onClick={() => void runAdapt(true)}>Adelante</button>
+                <button className="btn" onClick={() => setCostGate(null)}>Mejor no</button>
               </div>
             </Callout>
           ) : null}
 
           <div className="row">
-            <button className="primary" onClick={() => void runAdapt()}>{es.adapt.verifyOk}</button>
-            <button onClick={() => setStage('compose')}>Corregir el texto</button>
+            <button className="btn btn-primary" onClick={() => void runAdapt()}>{es.adapt.verifyOk}</button>
+            <button className="btn" onClick={() => setStage('compose')}>Corregir el texto</button>
           </div>
         </div>
       ) : null}
@@ -186,8 +209,8 @@ export function AdaptScreen({ onReview }: {
             ? <ReportView {...reportData} />
             : <Callout intent="info">Preparando el informe…</Callout>}
           <div className="row">
-            <button className="primary" onClick={() => onReview(jobId, learner, recipes)}>Revisar y firmar</button>
-            <button onClick={() => {
+            <button className="btn btn-primary" onClick={() => onReview(jobId, learner, recipes)}>Revisar y firmar</button>
+            <button className="btn" onClick={() => {
               setStage('compose'); setText(''); setReportData(null);
               setNotices([]); setRecipes([]); setRetried(false); setCost(null);
             }}>Otra ficha</button>

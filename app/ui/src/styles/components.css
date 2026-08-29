@@ -31,6 +31,17 @@
 }
 .lede { font-size: 1.2rem; color: var(--ink-soft); }
 .small { font-size: var(--text-sm); color: var(--ink-soft); }
+/* Colour only, so it composes with .small rather than fighting it — the
+   components use both together ("small muted") and either alone. */
+.muted { color: var(--ink-soft); }
+/* A learner code, a file path, a model name: one unbroken token, and at 200%
+   zoom the widest of them pushed the whole page sideways. Found by the layout
+   suite, which is the only place it could have been found — every one of these
+   fits comfortably at 100%. */
+code, kbd, samp, .meta, .tag {
+  overflow-wrap: anywhere;
+}
+
 .meta { font-family: var(--font-mono); font-size: var(--text-xs); color: var(--ink-faint); }
 
 /* ═══ BUTTONS ══════════════════════════════════════════════════════════════
@@ -77,12 +88,12 @@
   background: linear-gradient(180deg, var(--teal-400) 0%, var(--teal-500) 62%);
   border-color: var(--accent);
   transform: translateY(-1px);
-  box-shadow: var(--inset-hi), 0 4px 12px rgba(0,115,109,.34), 0 12px 28px rgba(0,115,109,.2);
+  box-shadow: var(--shadow-accent-hi);
 }
 .btn-primary:active:not(:disabled) {
   transform: translateY(0);
   background: var(--accent-hover);
-  box-shadow: inset 0 2px 4px rgba(3,43,41,.35);
+  box-shadow: var(--inset-press);
 }
 /* A filled button needs the ring to clear its own fill, not just the page. */
 .btn-primary:focus-visible { outline-color: var(--ink); }
@@ -125,14 +136,14 @@
   font-size: var(--text-base);
   width: 100%;
   min-height: 44px;
-  padding: 10px var(--s3);
+  padding: var(--s2) var(--s3);
   border: 1px solid var(--line-strong);
   border-radius: var(--radius-control);
   background: var(--paper);
   color: var(--ink);
   transition: border-color var(--dur) var(--ease), background var(--dur) var(--ease),
               box-shadow var(--dur) var(--ease);
-  box-shadow: inset 0 1px 2px rgba(6,66,63,.06);
+  box-shadow: var(--inset-well);
 }
 .input::placeholder, .textarea::placeholder { color: var(--ink-faint); }
 .input:hover, .textarea:hover, .select:hover { border-color: var(--n-400); }
@@ -263,13 +274,13 @@
 
 /* ── Progress · a real bar, because "adapting" has a shape she can read ─── */
 .progress { height: 6px; background: var(--surface-2); border-radius: var(--radius-pill); overflow: hidden; }
-.progress { box-shadow: inset 0 1px 2px rgba(6,66,63,.09); }
+.progress { box-shadow: var(--inset-well-deep); }
 .progress > i { display: block; height: 100%; border-radius: inherit;
   background: linear-gradient(90deg, var(--work) 0%, var(--work-bright) 100%);
   transition: width var(--dur-slow) var(--ease); position: relative; overflow: hidden; }
 .progress > i::after {
   content: ""; position: absolute; inset: 0;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,.45), transparent);
+  background: var(--sheen);
   animation: sheen 1.6s var(--ease) infinite;
 }
 @keyframes sheen { from { transform: translateX(-100%) } to { transform: translateX(100%) } }
@@ -301,6 +312,38 @@
    is dashed — it is not zero, and confusing the two silently disables the
    adaptations a learner needs.
    ══════════════════════════════════════════════════════════════════════════ */
+/* ── Scoring the axes. A separate class from `.axis` on purpose: the strip is
+      a read-only column and this is a control, and while they shared a name
+      they shared a cascade. ─────────────────────────────────────────────── */
+.axis-grid { display: grid; gap: var(--s4);
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); }
+
+.axis-cell { display: flex; flex-direction: column; gap: var(--s2);
+  padding: var(--s4); background: var(--surface);
+  border: 1px solid var(--line); border-radius: var(--radius-box); }
+
+.levels { display: flex; gap: var(--s2); }
+.levels button {
+  font: inherit; font-variant-numeric: tabular-nums; cursor: pointer;
+  /* 44px, not the 24px minimum: this is the control she uses most, often on a
+     trackpad, and it carries no label but a digit. */
+  min-width: 44px; min-height: 44px; border-radius: var(--radius-control);
+  border: 1px solid var(--line-strong); background: var(--paper);
+  color: var(--ink); box-shadow: var(--shadow-sm);
+}
+.levels button:hover { border-color: var(--accent-line); background: var(--surface-2); }
+.levels button[aria-pressed="true"] {
+  background: var(--accent); border-color: var(--accent-ink);
+  color: var(--on-accent); font-weight: 700; box-shadow: var(--shadow-md);
+}
+/* The chosen level is not only darker: it is also the only one wearing a ring.
+   FR-812 — colour is never the only carrier, including inside a control. */
+.levels button[aria-pressed="true"]::after {
+  content: ''; position: absolute; inset: 3px;
+  border: 1px solid var(--on-accent); border-radius: 3px; opacity: .5;
+}
+.levels button { position: relative; }
+
 .axes { display: flex; gap: var(--s2); flex-wrap: wrap; }
 .axis { min-width: 62px; text-align: center; border: 0; background: none;
   padding: var(--s1); border-radius: var(--radius-control); cursor: pointer; font: inherit; }
@@ -320,12 +363,151 @@
 /* ═══ NAV RAIL ═════════════════════════════════════════════════════════════ */
 .rail { background: var(--surface); border-right: 1px solid var(--line);
   padding: var(--s4) var(--s3); display: flex; flex-direction: column; gap: 2px; }
+/* Every interactive target clears WCAG 2.2 SC 2.5.8 even with no class on it.
+   The 22px browser default is what the layout suite caught. */
+button, [role="button"], input[type="checkbox"], input[type="radio"] {
+  min-height: 24px;
+}
+
+/* ═══ THE SHELL · rail and page ═══════════════════════════════════════════
+   Restored after the v2 rewrite dropped them: `.app` and `.main` were used by
+   App.tsx and defined nowhere, so the whole application had no layout at all.
+   `ui/test/styles.test.tsx` is now what stops that happening again. */
+.app { display: grid; grid-template-columns: minmax(180px, 232px) 1fr;
+  min-height: 100vh; align-items: stretch; }
+
+.rail { display: flex; flex-direction: column; gap: 2px;
+  padding: var(--s5) var(--s3); background: var(--surface);
+  border-right: 1px solid var(--line); }
+
+.main { padding: var(--s6) var(--s7); max-width: 1100px;
+  /* min-width: 0 is what stops a long unbroken string in the material from
+     widening the grid column and pushing the page sideways. */
+  min-width: 0; overflow-x: hidden; }
+
+@media (max-width: 900px) {
+  /* The rail becomes a strip along the top. Below this width she is on a
+     tablet, and a 232px column is a third of her screen. */
+  .app { grid-template-columns: 1fr; }
+  .rail { flex-direction: row; flex-wrap: wrap; border-right: 0;
+    border-bottom: 1px solid var(--line); padding: var(--s3) var(--s4); }
+  .rail button, .rail a { width: auto; }
+  .rail-brand { padding: 0 var(--s3) 0 0; }
+  .main { padding: var(--s5) var(--s4); }
+}
+
+.rail-brand { padding: 0 var(--s2) var(--s4); }
+.rail button { font: inherit; text-align: left; border: 0; background: transparent;
+  box-shadow: none; color: var(--ink-soft); font-size: var(--text-sm);
+  min-height: 44px; padding: 0 var(--s2); border-radius: var(--radius-control);
+  width: 100%; cursor: pointer; display: flex; align-items: center; }
+.rail button:hover { background: var(--surface-2); color: var(--ink); }
+.rail button[aria-current] { background: var(--accent-soft); color: var(--accent-ink);
+  font-weight: 700; box-shadow: inset 3px 0 0 var(--accent-bright); }
+
 .rail a { display: flex; align-items: center; min-height: 44px; padding: 0 var(--s2);
   border-radius: var(--radius-control); color: var(--ink-soft);
   text-decoration: none; font-size: var(--text-sm); }
 .rail a:hover { background: var(--surface-2); color: var(--ink); }
 .rail a[aria-current] { background: var(--accent-soft); color: var(--accent-ink);
   font-weight: 700; box-shadow: inset 3px 0 0 var(--accent-bright); }
+
+/* ═══ VERIFYING AN EXTRACTION · spec 008 ═════════════════════════════════
+   The hardest layout in the application: a page image beside a column of
+   editable blocks, at 1366×768, with the text scale turned up. Side by side
+   until it genuinely cannot be, then stacked — because the comparison IS the
+   feature, and a stacked comparison she has to scroll between is a comparison
+   she stops making. */
+.verify-pair { display: grid; gap: var(--s5); grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: start; }
+
+@media (max-width: 1100px) {
+  .verify-pair { grid-template-columns: 1fr; }
+}
+/* And at the largest text scale, side by side leaves ~28 characters a line,
+   which is unreadable however wide the window is. */
+:root[data-text="xlarge"] .verify-pair { grid-template-columns: 1fr; }
+
+.page-image {
+  width: 100%; height: auto; display: block;
+  border: 1px solid var(--line-strong); border-radius: var(--radius-box);
+  background: var(--paper); box-shadow: var(--shadow-md);
+  /* Sticky, so the photograph stays beside whichever block she has scrolled to.
+     Only where there is room: stacked, sticking it would cover the text. */
+  position: sticky; top: var(--s4);
+}
+@media (max-width: 1100px) { .page-image { position: static; } }
+
+.verify-block { min-height: 5.5em; font-size: var(--text-sm);
+  line-height: var(--leading-body); }
+
+/* ═══ CONNECTING · spec 009 ═══════════════════════════════════════════════ */
+
+/* A real fieldset, so the question and its two answers are one group to a
+   screen reader rather than three unrelated things. */
+.fieldset { border: 1px solid var(--line); border-radius: var(--radius-box);
+  background: var(--surface); padding: var(--s5); margin: 0;
+  display: flex; flex-direction: column; gap: var(--s3); }
+.fieldset > legend { padding: 0 var(--s2); }
+.fieldset > legend h3 { margin: 0; font-size: var(--text-lg); }
+
+.svc-name { font-size: 1.35rem; font-weight: 700; letter-spacing: -0.02em; }
+.svc { display: block; font-weight: 700; }
+
+/* The facts beside the recommendation. A definition list because that is what
+   it is: each label names the value under it. */
+.facts { display: grid; grid-template-columns: auto 1fr; gap: var(--s2) var(--s4);
+  margin: 0; font-size: var(--text-sm); align-items: baseline; }
+.facts dt { color: var(--ink-soft); }
+.facts dd { margin: 0; color: var(--ink); }
+
+/* Eight columns of real sentences do not fit 1366px however carefully they are
+   set, so the table scrolls inside its own box and the page never scrolls
+   sideways (spec 010 SC-802). */
+.table-scroll { overflow-x: auto; border: 1px solid var(--line);
+  border-radius: var(--radius-box); background: var(--paper); }
+
+.compare { border-collapse: collapse; width: 100%; min-width: 900px;
+  font-size: var(--text-sm); }
+.compare th, .compare td { text-align: left; vertical-align: top;
+  padding: var(--s3) var(--s4); border-bottom: 1px solid var(--line); }
+.compare thead th { position: sticky; top: 0; background: var(--surface);
+  font-size: var(--text-xs); text-transform: uppercase;
+  letter-spacing: 0.06em; color: var(--ink-soft); font-weight: 700;
+  border-bottom: 2px solid var(--line-strong); z-index: 1; }
+.compare tbody th { background: var(--surface); min-width: 168px; }
+.compare tbody th .meta { display: block; font-weight: 400; margin-top: 2px; }
+.compare tbody tr:last-child th, .compare tbody tr:last-child td { border-bottom: 0; }
+.compare tbody tr:hover td, .compare tbody tr:hover th { background: var(--surface-2); }
+.compare td { max-width: 230px; }
+.suits { color: var(--ink-soft); }
+
+.steps { display: flex; flex-direction: column; gap: var(--s4);
+  margin: 0; padding: 0; list-style: none; counter-reset: step; }
+.steps > li { counter-increment: step; position: relative;
+  padding-left: calc(var(--s7) + var(--s2)); min-height: 34px;
+  display: flex; align-items: center; font-size: var(--text-base);
+  line-height: var(--leading-body); }
+/* Numbered because the order is real: step four does not work before step three.
+   The numbers are content, not decoration, hence a counter rather than a glyph. */
+.steps > li::before {
+  content: counter(step); position: absolute; left: 0; top: 0;
+  width: 34px; height: 34px; border-radius: 50%;
+  display: grid; place-items: center;
+  font-family: var(--font-mono); font-size: var(--text-sm); font-weight: 700;
+  background: var(--accent-soft); color: var(--accent-ink);
+  border: 1px solid var(--accent-line);
+}
+
+.details { border: 1px solid var(--line); border-radius: var(--radius-box);
+  background: var(--surface); padding: 0 var(--s4); }
+.details > summary { cursor: pointer; padding: var(--s3) 0; min-height: 44px;
+  display: flex; align-items: center; font-weight: 600; font-size: var(--text-sm);
+  color: var(--accent-ink); }
+.details > summary:focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
+.details[open] > summary { border-bottom: 1px solid var(--line); }
+.details > ul, .details > .stack { margin: 0 0 var(--s4); padding-left: var(--s5);
+  font-size: var(--text-sm); color: var(--ink-soft); }
 
 /* ═══ THE REPORT · where her judgement is the product ══════════════════════ */
 .decision { border-top: 1px solid var(--line); padding: var(--s4) 0;
@@ -340,6 +522,15 @@
   border: 1px solid var(--line); border-left: 4px solid var(--accent-line);
   border-radius: var(--radius-box); padding: var(--s4) var(--s5);
   max-width: var(--measure); box-shadow: var(--shadow-sm);
+}
+
+/* The one permitted <pre>: a licence, whose line breaks are part of the
+   document. Reflowing a legal notice would change it. */
+.licence {
+  white-space: pre-wrap; font-family: var(--font-mono); font-size: var(--text-xs);
+  color: var(--ink-soft); margin: var(--s3) 0 0; max-height: 320px; overflow: auto;
+  background: var(--surface); border: 1px solid var(--line);
+  border-radius: var(--radius-control); padding: var(--s3);
 }
 
 .quote { margin: 0; padding: var(--s2) var(--s3); border-left: 3px solid var(--draft-line);

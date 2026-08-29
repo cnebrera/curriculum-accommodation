@@ -88,10 +88,10 @@ export function ConsolidateSection({ names }: { names: Record<string, string> })
                 </ul>
               </details>
               <div className="row">
-                <button onClick={() => void promote(code, t.text, 'avoid')}>
+                <button className="btn" onClick={() => void promote(code, t.text, 'avoid')}>
                   Fijarlo en «evitar»
                 </button>
-                <button onClick={() => void promote(code, t.text, 'works')}>
+                <button className="btn" onClick={() => void promote(code, t.text, 'works')}>
                   Fijarlo en «lo que funciona»
                 </button>
               </div>
@@ -115,7 +115,7 @@ export function ConsolidateSection({ names }: { names: Record<string, string> })
                   {a.because === 'promoted' ? 'ya promovida' : 'hay una más nueva'}
                 </span>
               </span>
-              <button onClick={() => void archive(a.path)}>Guardar aparte</button>
+              <button className="btn" onClick={() => void archive(a.path)}>Guardar aparte</button>
             </div>
           ))}
         </div>

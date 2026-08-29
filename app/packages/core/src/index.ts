@@ -29,6 +29,15 @@ export * from './ir/bounds.js';
 export * from './ir/completeness.js';
 
 export * from './recipes/index.js';
+export * from './ingest/schema.js';
+export * from './ingest/validate.js';
+export * from './ingest/to-ir.js';
+export * from './ingest/budget.js';
+export * from './ingest/downscale.js';
+
+export * from './providers/catalogue.js';
+export * from './providers/recommend.js';
+export * from './providers/key.js';
 export * from './axes/parse.js';
 export * from './redact/names.js';
 

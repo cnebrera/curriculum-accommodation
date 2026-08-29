@@ -4,7 +4,7 @@ import { Vault, resolveInVault, RampaError, VAULT, logger } from '@rampa/core';
 import { join } from 'node:path';
 import { homedir } from 'node:os';
 import { handle } from './wrap.js';
-import { rememberedVaultRoot, rememberVaultRoot } from './vault-settings.js';
+import { rememberedVaultRoot, rememberVaultRoot, loadDisplay, saveDisplay } from './vault-settings.js';
 
 /**
  * Every privileged filesystem operation crosses this boundary, which is what
@@ -70,6 +70,13 @@ export function registerVaultIpc(getWindow: () => BrowserWindow | null): void {
   handle('vault:current', () => vault?.root ?? null);
 
   handle('vault:default', () => defaultVaultPath());
+
+  /** Her display preferences. Never in the vault (spec 010 FR-820). */
+  handle('settings:display', async () => loadDisplay(app.getPath('userData')));
+  handle('settings:setDisplay', async (display: unknown) => {
+    await saveDisplay(app.getPath('userData'), display as never);
+    return true;
+  });
 
   handle('vault:read', async (relPath: string) => {
     const doc = await currentVault().readDoc(relPath);

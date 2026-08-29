@@ -102,4 +102,24 @@ describe('provenance survives a corpus update (T081, 006 FR-416)', () => {
     // Anything added here must have a reader, or it is decoration in an installer.
     expect(dirs.sort()).toEqual(['checklists', 'instructions', 'recipes']);
   });
+
+  /**
+   * T002 · the catalogue reaches the bundle.
+   *
+   * `bundle-corpus.mjs` copies `instructions/` recursively, so this works today
+   * by inheritance rather than by intent — and a future change narrowing that
+   * copy to named files would produce an application with **no services and no
+   * error**, which is a broken installation that looks like a design decision.
+   */
+  it('ships the service catalogue', async () => {
+    const dir = join(corpus, 'instructions', 'providers');
+    const entries = (await readdir(dir)).filter((f) => f.endsWith('.md') && f !== 'README.md');
+    expect(entries.length, 'the bundled catalogue is empty').toBeGreaterThanOrEqual(6);
+  });
+
+  it('ships the contract that tells the next contributor how to add one', async () => {
+    const readme = await readFile(join(corpus, 'instructions', 'providers', 'README.md'), 'utf8');
+    expect(readme).toContain('provider-catalogue.md');
+    expect(readme).toContain('last_checked');
+  });
 });

@@ -41,6 +41,13 @@ jobs:
         run: bash ../scripts/check-spec-kit.sh origin/main
         if: runner.os != 'Windows'
 
+      # T039 · research R3. Fails at 300 days, earlier than the 181-day marker
+      # and the 365-day cutoff, so a contributor re-reads the provider's pages
+      # before a teacher sees a stale fact or a service quietly disappears.
+      - name: Catalogue facts are current
+        run: bash ../scripts/check-catalogue-freshness.sh
+        if: runner.os != 'Windows'
+
       - name: The vault survives a teacher
         run: npm run test:vault
 
@@ -49,9 +56,47 @@ jobs:
       - name: Content is never instruction
         run: npm run test:injection
 
+      # 007 T016. Its own step on purpose: a failure here means a security
+      # guarantee broke, and that must not read as one line in a 550-test run.
+      # This suite found the draft mark being removable without signing off.
+      - name: Principle IX — the audit of every structural defence
+        run: npx vitest run packages/core/test/untrusted.test.ts
+
+      # 003 T017. Its own step: this suite found that every corpus-scope
+      # correction a teacher ever made was silently discarded, and that erasure
+      # had no way in from the interface.
+      - name: Principle VIII — memory is human-routed, and actually loads
+        run: npx vitest run packages/core/test/memory-audit.test.ts
+
+      # 004 T012. Found a packet stamping today's date on an axis nobody had
+      # confirmed, and a handover with no review step at all.
+      - name: Handover — observations, not a label
+        run: npx vitest run packages/core/test/handover.test.ts
+
       - run: npm run typecheck
       - run: npm run test:all
       - run: npm run build
+
+      # T019 · closes backlog G7 and 006 T075, open since the WCAG 2.2 AA
+      # target was first written down. Until this step existed the target was
+      # a sentence in a specification and nothing else: the first run of the
+      # suite found a critical unlabelled field and a screen with no h1.
+      #
+      # Linux only. These drive a real Electron window, which needs a display,
+      # and one platform's DOM is every platform's DOM — the renderer is the
+      # same Chromium everywhere. The build above already runs on all three.
+      # 008 T039. The digital-PDF fixture carries hidden text, so this is also
+      # where SC-605 is measured — and where SC-606 is measured by the absence of
+      # any compilation step above.
+      - name: Reading the material — PDF, DOCX, HEIC, no native build
+        run: npx vitest run packages/shell/test/documents.test.ts packages/shell/test/build-layout.test.ts
+
+      - name: The ingest fixture harness is well-formed
+        run: npx vitest run packages/core/test/fixtures.test.ts
+
+      - name: Accessibility and layout — WCAG 2.2 AA, 1366x768
+        if: runner.os == 'Linux'
+        run: xvfb-run --auto-servernum npm run test:e2e
 
   # Principle I is the weakest gate in the plan: nothing structural stops
   # adaptation policy leaking out of the corpus and into interface copy. This
@@ -72,3 +117,55 @@ jobs:
           echo "It leaks through wizard copy, validation messages and prompts."
           echo "The whole adaptation prompt was once a string in jobs/adapt.ts:"
           echo "see docs/decisions/0006-one-vehicle.md."
+          echo
+          echo "── The service catalogue (009) ────────────────────────────────"
+          echo
+          echo "Same principle, second corpus. A cost figure, a free-tier limit,"
+          echo "a walkthrough step, or a claim about where a service processes"
+          echo "data belongs in instructions/providers/<id>.md — NOT in app/."
+          echo
+          echo "Reject a diff that puts any of these under app/:"
+          echo "  · a number of cents, or the word 'gratis' about a service"
+          echo "  · a provider's page layout, button label or sign-up step"
+          echo "  · a country, a jurisdiction, or a claim about training"
+          echo "  · a branch on a service id inside an adapter"
+          echo
+          echo "Adding the seventh service must be one Markdown file and no code."
+          echo "The contract:"
+          echo "  specs/009-connect-wizard/contracts/provider-catalogue.md"
+          echo
+          echo "── Reading the material (008) ─────────────────────────────────"
+          echo
+          echo "Third corpus, same principle. instructions/ingest.md carries the"
+          echo "extraction rules AND the loop's budgets in its front matter."
+          echo
+          echo "Reject a diff that puts any of these under app/:"
+          echo "  · a rule about what to flag, ignore or describe on a page"
+          echo "  · a retry bound, a page bound or an image size"
+          echo "  · advice to a teacher about how to photograph a worksheet"
+          echo
+          echo "The clamps in budget.ts are the exception, and they are there to"
+          echo "protect her FROM the file, not to implement it."
+
+  # T031. Three of the four token rules are now machine-checked by
+  # `ui/test/styles.test.tsx`, which runs in `test:all` above. What remains here
+  # is the part a test cannot judge: whether a new component belongs to the
+  # system at all.
+  design-system:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Reviewer checklist — the token contract
+        run: |
+          echo "Checked automatically by ui/test/styles.test.tsx:"
+          echo "  · no literal colour outside tokens.css"
+          echo "  · no off-scale padding, margin or gap"
+          echo "  · no 'outline: none' anywhere"
+          echo "  · every class in a className is defined in a stylesheet"
+          echo
+          echo "Still yours to judge:"
+          echo "  · Does this reuse a component, or add a fifth kind of card?"
+          echo "  · Is any state carried by colour alone? (FR-812)"
+          echo "  · Does it hold at data-text=xlarge and data-contrast=high?"
+          echo "  · Would it survive the design project's preview pages"
+          echo "    unchanged? If not, run scripts/design-diff.sh (R5, T032)."

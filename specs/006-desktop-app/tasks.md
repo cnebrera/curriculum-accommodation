@@ -134,7 +134,7 @@ constitutional principles (II and IX) are only real if a test enforces them.
 - [x] T057 [P] [US5] Implement the domain error taxonomy in `app/packages/core/src/errors.ts` and the Spanish message map in `app/ui/src/i18n/errors.ts` — no status codes, no stack traces (006 FR-423) *(message map lives in `i18n/es.ts` under `errors`)*
 - [x] T058 [US5] Implement offline detection and degraded mode in `app/ui/src/hooks/useOnline.ts` so everything except adaptation still works (006 FR-424)
 - [x] T059 [US5] Job recovery *(no `recover.ts` needed — the property holds by construction and is now load-bearing: `runAdaptation` writes nothing to `adapted.md` until the output gate has passed, so a crash mid-stream leaves the previous sheet, every kept revision, the IR and the profile exactly as they were, and a rejected second attempt lands in `adapted.rejected.md` without touching the good file. **Not verified by an actual crash** — that needs the app running.)*
-- [ ] T060 [P] [US5] Degradation for network loss, bad key and rate limit. *Partly covered by `onboarding.spec.ts` — no-key and offline-except-adaptation are asserted. The remaining cases need a way to simulate a provider without a production backdoor: a local endpoint the adapter is pointed at by configuration, which is a design decision, not a test to write.*
+- [x] T060 [P] [US5] Degradation for network loss, bad key and rate limit. *(**closed 2026-08-28** by `packages/providers/test/degradation.test.ts`, 15 tests. The design decision this was waiting on arrived from `009` on other grounds: the compatible adapter takes its endpoint from a catalogue entry, and the parser accepts plain http **only to loopback** — a request to 127.0.0.1 cannot leave the machine, so it is safe by construction rather than by configuration, and there is no production backdoor. Better than the `fetch` stub it replaces: real sockets, real chunk boundaries, a real mid-stream disconnect and the real resilience layer. A stub resolves instantly and can never produce a timeout or a socket that dies halfway through a sentence, which are the two failures a teacher on a school connection actually meets.)*
 
 ---
 
@@ -164,11 +164,11 @@ constitutional principles (II and IX) are only real if a test enforces them.
 
 ## Phase 10 · Polish and cross-cutting
 
-- [ ] T073 [P] Implement corpus update in `app/packages/shell/src/ipc/corpus.ts`, one action, never touching the vault (006 FR-414) *(only version/read IPC exists; the one-action update is unbuilt)*
+- [x] T073 [P] Implement corpus update in `app/packages/shell/src/ipc/corpus.ts`, one action, never touching the vault (006 FR-414) *(**done.** The corpus ships inside the release (FR-413), so updating the corpus is updating the application, and R11 already chose the channel: GitHub Releases. `corpus:checkForUpdate` reads and reports; it downloads nothing and replaces nothing, because the installers are unsigned (R14) and an in-place update would fail in a way that looks like the application breaking. It does not touch the vault, which is true by construction: the handler has no vault reference. **Never automatic** — an outbound request on launch from a machine handling children's data is exactly what a school's DPO objects to, and a test asserts over the source that there is no scheduler, no launch hook and nothing identifying in the request. Lives in `packages/providers` because that package being the only network-capable code is what makes the redaction guarantee mean anything.)*
 - [x] T074 [P] Build the "Acerca de" screen in `app/ui/src/about/AboutScreen.tsx` carrying both licences and corpus attribution (R8)
-- [ ] T075 [P] Add accessibility checks to `app/e2e/a11y.spec.ts` against the WCAG 2.2 AA target for the app's own interface *(moved into `specs/010-look-and-feel` FR-815, where the design system it checks is specified. Stating a target and never testing it had been open since the target was written)*
+- [x] T075 [P] Add accessibility checks to `app/e2e/a11y.spec.ts` against the WCAG 2.2 AA target for the app's own interface *(**closed 2026-08-28** by `010` T018/T019: axe over every screen × light/dark × default/largest text, plus explicit heading-order, landmark and keyboard assertions, in CI and failing the build. Its first run found a critical unlabelled field and a screen with no `h1`.)*
 - [x] T076 [P] Write `app/README.md` covering build, test and release for contributors
-- [x] T077 Add the CI workflow in `.github/workflows/app.yml` running lint, core, isolation, vault, injection and e2e on all three platforms *(runs, minus the e2e steps: T040/T060/T075 pending)*
+- [x] T077 Add the CI workflow in `.github/workflows/app.yml` running lint, core, isolation, vault, injection and e2e on all three platforms *(complete for T040 and T075; T060 still pending. e2e runs on Linux under xvfb — the renderer is the same Chromium on all three platforms, and the build still runs everywhere)*
 - [x] T078 Run the full `quickstart.md` validation and record the results in `specs/006-desktop-app/validation.md` *(2026-08-27 run; extended by the 2026-08-28 review appendix)*
 - [x] T079 [P] Write the uninstall-survival test in `app/packages/core/test/vault-standalone.test.ts` asserting a vault is complete and readable with no application present (006 FR-408, previously uncovered)
 - [x] T080 Enforce the corpus as read-only at runtime in `app/packages/shell/src/ipc/corpus.ts` and assert it in `app/packages/shell/test/corpus-readonly.test.ts` — bundling it is not the same as preventing writes (006 FR-413, previously uncovered)
@@ -252,3 +252,20 @@ own plan and tasks) → the pending e2e work (T040, T060, T075) and T073/T080/T0
 → first internal end-to-end run → teacher validation. Nothing goes in front of a
 teacher before Phase 11 and 008 are done: without them the app dies on relaunch,
 forgets her corrections, and cannot ingest the material she will actually bring.
+
+**Closed 2026-08-28.** All 96 tasks done. T040, T075, T060 and T073 were the last
+four, and each one found something:
+
+- **T075** (the axe gate, `010` T018/T019) found a critical unlabelled field, a
+  screen with no `h1`, fifteen buttons unstyled since the v2 design rewrite, and
+  `.app`/`.main` used by `App.tsx` and defined in no stylesheet — the application
+  shell had no layout at all.
+- **T060** was waiting on a design decision it correctly refused to fake, and
+  `009` supplied it: a catalogue endpoint restricted to https-or-loopback, so a
+  real adapter can be pointed at a real local server with no production backdoor.
+- **T073** turned out to be a question about honesty rather than plumbing — the
+  corpus ships in the release, so the update is a release check, and a release
+  check is a phone-home that must never be automatic.
+
+What remains before a teacher sees it is **spec 008** (vision ingest) and the
+first real end-to-end run, which needs a key. Neither is in this spec.

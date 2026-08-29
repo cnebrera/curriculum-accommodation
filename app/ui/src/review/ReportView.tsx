@@ -26,7 +26,7 @@ export function ReportView({ decisions, notDone, notices, memoryApplied }: {
   decisions: Decision[];
   notDone: string[];
   notices?: ReportNotice[];
-  memoryApplied?: Array<{ source: string; effect: string }>;
+  memoryApplied?: Array<{ recipe: string; source: string; effect: string }>;
 }) {
   const flagged = notDone.filter((n) => n.startsWith('Necesita que lo decidas tú'));
   const rest = notDone.filter((n) => !n.startsWith('Necesita que lo decidas tú'));
@@ -91,12 +91,23 @@ export function ReportView({ decisions, notDone, notices, memoryApplied }: {
 
       {memoryApplied && memoryApplied.length > 0 && (
         <section className="stack gap2">
-          <h3>Lo que he aplicado de lo que me enseñaste</h3>
+          <h3>Lo que cambió porque tú lo corregiste antes</h3>
+          <p className="small">
+            Sólo lo que de verdad cambió algo. Lo que ya coincidía con lo que iba a
+            hacer no sale aquí.
+          </p>
           <div>
             {memoryApplied.map((m, i) => (
               <div className="decision" key={i}>
+                {/*
+                  003 FR-210 · memory as traceable as a recipe.
+                  The effect first and the recipe under it, matching how a
+                  decision reads — and the recipe rather than the file path,
+                  because a path would make her open a file to find out what
+                  the line meant.
+                */}
                 <h4>{m.effect}</h4>
-                <span className="meta">{m.source}</span>
+                <span className="why">De lo que me dijiste sobre <code>{m.recipe}</code>.</span>
               </div>
             ))}
           </div>

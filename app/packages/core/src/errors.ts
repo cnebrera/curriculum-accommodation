@@ -13,6 +13,12 @@ export type ErrorKind =
   | 'render-learner-data'    // learner data reached learner-facing output
   | 'render-undescribed'     // an essential figure with no description
   | 'input-too-large'
+  | 'ingest-empty'           // nothing dropped
+  | 'ingest-format'          // a file type we cannot read, or a mixed drop
+  | 'ingest-unusable'        // a photo too dark or too small to be worth a call
+  | 'ingest-many-sheets'     // two worksheets in one image; she splits, we never do
+  | 'ingest-no-vision'       // her service cannot read photographs
+  | 'ingest-failed'          // the bound was exhausted on a page
   | 'key-missing' | 'key-invalid' | 'key-wrong-provider' | 'key-no-credit'
   | 'offline' | 'rate-limited' | 'provider-failed';
 
