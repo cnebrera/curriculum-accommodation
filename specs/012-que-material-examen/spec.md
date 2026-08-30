@@ -35,6 +35,42 @@ of work in a sentence about a child's grades.
 And the naming compounds it: a teacher who reads «Adaptar una ficha» on every
 screen concludes it does not do exams and never tries.
 
+## Clarifications
+
+### Session 2026-08-30
+
+Answered from the constitution and from specifications already written, each
+recording where the answer came from.
+
+- **Q: Where is the kind asked?** → **A: In the door (`016`), after the learner
+  and before the material arrives.** `016` was clarified to learner → work →
+  material, so US1's «before anything else» is preserved in substance rather than
+  in sequence: the kind is still explicit, still never defaulted (FR-1003), and
+  still chosen before the model sees anything. What moved is when she is asked
+  relative to naming a child, not relative to the adaptation.
+
+- **Q: What is the kind of material composed from objectives (`002`)?** → **A:
+  She says, same as any other material.** `002` FR-126 already requires generated
+  material to carry a kind. Composing does not exempt it: a generated exam is
+  still an exam, and the assessment rule applies to it for the same reason.
+
+- **Q: Does a kind survive a re-adaptation or a revision?** → **A: Yes — it is a
+  property of the material, not of a run.** It lives in the IR's front matter,
+  which `job:revise` re-reads. A revision that quietly became a worksheet would
+  be `001`'s revision mechanism undoing `012`'s rule.
+
+- **Q: Where does `kind` live for a multi-part unit (FR-1009)?** → **A: On the
+  part, not on the job.** A unit of three documents can be a study text, a
+  worksheet and an exam, and putting one kind on the job would force the
+  strictest rule onto all three or the loosest onto the exam. Both are wrong and
+  the second is dangerous.
+
+- **Q: What happens to material already in a vault, which carries
+  `kind: 'worksheet'` written unconditionally by `job:create`?** → **A: It stays
+  a worksheet and is not re-asked.** It was adapted as one, the report says so,
+  and retroactively relabelling finished work would make the record disagree with
+  the document. New material is asked; old material keeps what it was treated as.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - She says what it is, once, before anything else (Priority: P1)
