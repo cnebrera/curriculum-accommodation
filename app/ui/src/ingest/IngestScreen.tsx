@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Page } from '../shell/Page.js';
-import { fromWire } from '../../../packages/core/src/errors.js';
+import { useAcceptedFormats, usePhotoWarningSeen, usePendingIngest, useIngestProgress,
+         useChooseFiles, useIngestEstimate, useRunIngest, useAcknowledgePhotoWarning } from '../data/ingest.js';
 import { useStrings } from '../i18n/context.js';
 import { Callout } from '../components/Callout.js';
 import { Pages } from '../components/Progress.js';
@@ -34,63 +35,58 @@ export function IngestScreen({ onIngested, onResume }: {
   onResume?: (jobId: string) => void;
 }) {
   const { t: es } = useStrings();
-  const [accepted, setAccepted] = useState<{ description: string } | null>(null);
   const [paths, setPaths] = useState<string[]>([]);
-  const [running, setRunning] = useState(false);
   const [progress, setProgress] = useState<IngestProgress | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [warned, setWarned] = useState<boolean | null>(null);
+  const [acknowledged, setAcknowledged] = useState(false);
   /** T016 · 006 US4. Asked before running, never after charging. */
   const [estimate, setEstimate] = useState<
     { pages: number; formatted: string; unusual: boolean } | null>(null);
   const [costAccepted, setCostAccepted] = useState(false);
-  const [pending, setPending] = useState<Pending[]>([]);
 
-  useEffect(() => {
-    void window.rampa.ingest.accepted().then((a) => setAccepted(a as { description: string }));
-    // FR-609: whether she has already been told about names in photos.
-    void window.rampa.ingest.photoWarningSeen().then((seen) => setWarned(Boolean(seen)));
-    void window.rampa.ingest.pending().then((p) => setPending(p as Pending[]));
-    return window.rampa.ingest.onProgress(setProgress);
-  }, []);
+  useIngestProgress(setProgress);
+
+  const acceptedLoaded = useAcceptedFormats();
+  // FR-609: whether she has already been told about names in photos.
+  const warnedLoaded = usePhotoWarningSeen();
+  const pendingLoaded = usePendingIngest();
+  const accepted = acceptedLoaded.state === 'ready'
+    ? acceptedLoaded.value as { description: string } : null;
+  const pending = pendingLoaded.state === 'ready' ? pendingLoaded.value as Pending[] : [];
+
+  const chooseFiles = useChooseFiles();
+  const ingestEstimate = useIngestEstimate();
+  const runIngest = useRunIngest();
+  const acknowledge = useAcknowledgePhotoWarning();
+  const running = runIngest.busy;
+  /*
+   * Decoded once, in the data layer (FR-1109). This screen carried the longest
+   * comment in the codebase about why it had to call `fromWire` itself — and
+   * that comment was correct, which is exactly why every screen that did NOT
+   * carry it went unnoticed. It is now true of all of them, stated in one file.
+   */
+  const error = runIngest.error?.message ?? chooseFiles.error?.message ?? null;
+
+  // Local, because acknowledging the warning must take effect immediately rather
+  // than after a re-read of a value she just changed.
+  const warned = acknowledged || (warnedLoaded.state === 'ready' ? Boolean(warnedLoaded.value) : null);
 
   const choose = async () => {
-    setError(null);
-    const picked = await window.rampa.ingest.choose() as string[];
-    if (!picked.length) return;
+    const picked = await chooseFiles.run();
+    if (!picked?.length) return;
     setPaths(picked);
     setCostAccepted(false);
     // A PDF's page count is not known until it is opened, so this estimates
     // from the file count — right for photographs, a floor for a PDF. The bound
     // and the real total are both reported after the run.
-    setEstimate(await window.rampa.ingest.estimate(picked.length) as typeof estimate);
+    const est = await ingestEstimate.run(picked.length);
+    if (est !== undefined) setEstimate(est as typeof estimate);
   };
 
   const run = async () => {
-    setRunning(true);
-    setError(null);
-    try {
-      const jobId = `job-${new Date().toISOString().slice(0, 19).replace(/[:T]/g, '')}`;
-      const r = await window.rampa.ingest.run(jobId, paths) as StartedIngest;
-      onIngested({ ...r, jobId });
-    } catch (e: unknown) {
-      /*
-       * The kind survives the IPC round trip encoded in the message, and
-       * decoding it is what makes the Spanish error map apply. Showing
-       * `e.message` raw put **"Error invoking remote method 'ingest:run': Error:
-       * [rampa:ingest-empty] …"** in front of a teacher — Electron's wrapper, the
-       * project's wire prefix, and then the sentence written for her, in that
-       * order. The e2e suite caught it on its first run.
-       *
-       * The provider's own message is preferred where there is one, because
-       * "Groq no lee fotos" names her service and a generic sentence cannot.
-       */
-      const { kind, message } = fromWire(e);
-      setError(es.errors[kind] ?? message ?? es.errors['unknown']!);
-    } finally {
-      setRunning(false);
-      setProgress(null);
-    }
+    const jobId = `job-${new Date().toISOString().slice(0, 19).replace(/[:T]/g, '')}`;
+    const r = await runIngest.run(jobId, paths) as StartedIngest | undefined;
+    setProgress(null);
+    if (r) onIngested({ ...r, jobId });
   };
 
   const needsWarning = warned === false && paths.some((p) => /\.(jpe?g|png|heic|heif|pdf)$/i.test(p));
@@ -161,7 +157,7 @@ export function IngestScreen({ onIngested, onResume }: {
           </p>
           <div className="row gap2">
             <button className="btn btn-sm" onClick={() => {
-              void window.rampa.ingest.acknowledgePhotoWarning().then(() => setWarned(true));
+              void acknowledge.run().then(() => setAcknowledged(true));
             }}>
               Entendido, seguir
             </button>

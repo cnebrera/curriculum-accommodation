@@ -1,4 +1,4 @@
-import { useAxisDefs, type AxisDef } from './axisDefs.js';
+import { useAxisDefs, type AxisDef } from '../data/axes-defs.js';
 
 /**
  * Ten barriers, at a glance (spec 010 FR, T013).

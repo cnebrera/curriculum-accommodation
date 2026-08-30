@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
+import { useRecommendService } from '../data/corpus.js';
+import { useKeyShapeCheck, useValidateKey, useSaveKey } from '../data/providers.js';
 import { useStrings } from '../i18n/context.js';
 import { Callout } from '../components/Callout.js';
 import { Walkthrough } from './Walkthrough.js';
 import { ServiceComparison } from './ServiceComparison.js';
-import { loadServices, formatDate, type Service } from './services.js';
-import { loadState, saveState } from './state.js';
+import { loadServices, formatDate, type Service } from '../data/services.js';
+import { loadState, saveState } from '../data/onboarding.js';
 
 /**
  * The step most likely to lose her (009 US1–US4, replacing 006 FR-403).
@@ -53,6 +55,10 @@ export function ConnectStep({ onDone }: { onDone: (providerId: string) => void }
   const [key, setKey] = useState('');
   const [checking, setChecking] = useState(false);
   const [verdict, setVerdict] = useState<Verdict | null>(null);
+  const recommend = useRecommendService();
+  const shapeCheck = useKeyShapeCheck();
+  const validateKey = useValidateKey();
+  const saveKey = useSaveKey();
 
   useEffect(() => {
     void loadServices().then((list) => {
@@ -74,7 +80,8 @@ export function ConnectStep({ onDone }: { onDone: (providerId: string) => void }
   const answer = async (card: boolean, loc?: 'eu') => {
     setCanUseCard(card);
     setLocation(loc);
-    const r = await window.rampa.corpus.recommend({ canUseCard: card, locationConstraint: loc }) as Reco;
+    const r = await recommend.run({ canUseCard: card, locationConstraint: loc }) as Reco | undefined;
+    if (!r) return;  // the failure is on screen; she stays on the question
     setReco(r);
     setStage('recommendation');
   };
@@ -101,8 +108,9 @@ export function ConnectStep({ onDone }: { onDone: (providerId: string) => void }
     setChecking(true);
     setVerdict(null);
     try {
-      const shape = await window.rampa.providers.shapeCheck(service.id, key) as
-        { ok: boolean; kind?: string; ownerId?: string; key?: string };
+      const shape = await shapeCheck.run(service.id, key) as
+        { ok: boolean; kind?: string; ownerId?: string; key?: string } | undefined;
+      if (!shape) return;
 
       if (!shape.ok) {
         const owner = services.find((s) => s.id === shape.ownerId);
@@ -119,11 +127,13 @@ export function ConnectStep({ onDone }: { onDone: (providerId: string) => void }
         return;
       }
 
-      const r = await window.rampa.providers.validate(service.id, shape.key ?? key);
+      const r = await validateKey.run(service.id, shape.key ?? key) as
+        { ok: boolean; reason?: string; message?: string } | undefined;
+      if (!r) return;
       if (r.ok) {
         // FR-730/T035: validation precedes storage, so a failed replacement can
         // never be destructive. The save happens only on this branch.
-        await window.rampa.providers.save(service.id, shape.key ?? key);
+        if (await saveKey.run(service.id, shape.key ?? key) === undefined) return;
         setVerdict({ ok: true, costCents: service.costCents });
         saveState({ ...loadState(), connectServiceId: undefined });
         setTimeout(() => onDone(service.id), 1200);

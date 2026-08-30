@@ -1,4 +1,7 @@
 import { useEffect, useState } from 'react';
+import { useHouseStyle, useNotesIndex } from '../data/notes.js';
+import { useVault, useWriteToVault } from '../data/vault.js';
+import { useNames } from '../data/names.js';
 import { Page } from '../shell/Page.js';
 import { Callout } from '../components/Callout.js';
 import { ConsolidateSection } from './ConsolidateSection.js';
@@ -6,18 +9,27 @@ import { ConsolidateSection } from './ConsolidateSection.js';
 /** Her notes, over memory/house.md and memory/journal/. */
 export function NotesScreen() {
   const [house, setHouse] = useState('');
-  const [index, setIndex] = useState('');
-  const [vaultHint, setVaultHint] = useState('');
-  const [names, setNames] = useState<Record<string, string>>({});
 
-  useEffect(() => {
-    void window.rampa.memory.house().then(setHouse);
-    void window.rampa.memory.index().then(setIndex);
-    void window.rampa.vault.current().then((r: string | null) => setVaultHint(r ?? ''));
-    void window.rampa.names.all().then(setNames);
-  }, []);
+  /*
+   * Four independent loads that used to be four bare `.then(setState)` calls in
+   * one effect — so any one of them rejecting killed the other three silently
+   * and the screen rendered with empty boxes she would read as "I have written
+   * nothing". Four hooks, four independent outcomes.
+   */
+  const houseStyle = useHouseStyle();
+  const notesIndex = useNotesIndex();
+  const vault = useVault();
+  const namesLoaded = useNames();
+  const writeToVault = useWriteToVault();
 
-  const save = async () => { await window.rampa.vault.write('memory/house.md', house); };
+  useEffect(() => { if (houseStyle.state === 'ready') setHouse(String(houseStyle.value ?? '')); },
+    [houseStyle.state, houseStyle]);
+
+  const index = notesIndex.state === 'ready' ? String(notesIndex.value ?? '') : '';
+  const vaultHint = vault.state === 'ready' ? (vault.value ?? '') : '';
+  const names = namesLoaded.state === 'ready' ? namesLoaded.value : {};
+
+  const save = async () => { await writeToVault.run('memory/house.md', house); };
 
   return (
     <Page title="Mis notas"

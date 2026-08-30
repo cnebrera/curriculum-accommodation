@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useStrings } from '../i18n/context.js';
 import { Notice } from '../components/Notice.js';
+import { useNameCheck } from '../data/names.js';
+import { useCaptureNote } from '../data/notes.js';
 
 /**
  * One question, and NO DEFAULT (003 FR-201).
@@ -30,6 +32,8 @@ export function ScopeQuestion({ learner, recipes, onCaptured }: {
   const [destination, setDestination] = useState<Destination | null>(null);
   const [done, setDone] = useState(false);
   const [nameWarning, setNameWarning] = useState<string[]>([]);
+  const nameCheck = useNameCheck();
+  const captureNote = useCaptureNote();
 
   const capture = async () => {
     if (!scope || !text.trim()) return;
@@ -37,10 +41,11 @@ export function ScopeQuestion({ learner, recipes, onCaptured }: {
 
     // Memory stays name-free at the source (T090): what she writes here is
     // stored and later sent, so it is checked before it is written, not after.
-    const check = await window.rampa.names.check(text);
+    const check = await nameCheck.run(text);
+    if (!check) return;  // the failure is already on screen, in her language
     if (check.flagged.length && !nameWarning.length) { setNameWarning(check.flagged); return; }
 
-    await window.rampa.memory.capture({
+    await captureNote.run({
       scope,
       learner: scope === 'learner' ? learner : undefined,
       destination: scope === 'learner' ? destination! : undefined,
@@ -91,6 +96,16 @@ export function ScopeQuestion({ learner, recipes, onCaptured }: {
             </div>
           ) : null}
 
+          {/*
+            The failure, in her language, where she is looking. `useCommand`
+            decoded it; showing it is still the component's job, and before the
+            data layer existed this branch did not exist either — a note that
+            failed to save simply did not save, silently, and she found out the
+            next time she adapted a worksheet and the correction was not there.
+          */}
+          {captureNote.error ? <Notice kind="warn" title="No he podido apuntarlo">{captureNote.error.message}</Notice> : null}
+          {nameCheck.error ? <Notice kind="warn" title="No he podido comprobarlo">{nameCheck.error.message}</Notice> : null}
+
           {nameWarning.length ? (
             <Notice kind="warn" title="Creo que ahí hay un nombre">
               He visto <strong>{nameWarning.join(', ')}</strong>. Esto se guarda y luego se
@@ -101,7 +116,8 @@ export function ScopeQuestion({ learner, recipes, onCaptured }: {
 
           <div>
             <button className="btn btn-primary"
-                    disabled={!scope || (scope === 'learner' && !destination)}
+                    disabled={!scope || (scope === 'learner' && !destination) || captureNote.busy}
+                    aria-busy={captureNote.busy}
                     onClick={() => void capture()}>Apuntar</button>
           </div>
         </div>

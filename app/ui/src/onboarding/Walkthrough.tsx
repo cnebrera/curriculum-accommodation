@@ -1,6 +1,7 @@
 import { useStrings } from '../i18n/context.js';
+import { useOpenKeyPage } from '../data/corpus.js';
 import { Callout } from '../components/Callout.js';
-import type { Service } from './services.js';
+import type { Service } from '../data/services.js';
 
 /**
  * Walking her to the key (009 T016, FR-716/FR-719).
@@ -21,6 +22,7 @@ export function Walkthrough({
   /** The paste box. Passed in so this component owns no credential state. */
   children: React.ReactNode;
 }) {
+  const openKeyPage = useOpenKeyPage();
   const { t: es } = useStrings();
   const c = es.connect;
 
@@ -37,7 +39,7 @@ export function Walkthrough({
 
       <div className="stack gap3">
         <button className="btn btn-primary btn-lg"
-                onClick={() => void window.rampa.corpus.openKeyPage(service.id)}>
+                onClick={() => void openKeyPage.run(service.id)}>
           {c.openPage}
         </button>
         {/*

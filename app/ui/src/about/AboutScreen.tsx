@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useCorpusVersion, useLicences, useUpdateCheck } from '../data/corpus.js';
 import { Page } from '../shell/Page.js';
 import { Wordmark } from '../components/Logo.js';
 import { Callout } from '../components/Callout.js';
@@ -10,17 +11,15 @@ import { Callout } from '../components/Callout.js';
  * for a project whose argument is that the commons should stay common.
  */
 export function AboutScreen() {
-  const [version, setVersion] = useState<Record<string, unknown> | null>(null);
-  const [lic, setLic] = useState<{ code: string; content: string; notice: string } | null>(null);
+  const versionLoaded = useCorpusVersion();
+  const licLoaded = useLicences();
+  const version = versionLoaded.state === 'ready' ? versionLoaded.value : null;
+  const lic = licLoaded.state === 'ready' ? licLoaded.value : null;
   /** The update check (006 T073). Null until she asks; never on mount. */
   const [update, setUpdate] = useState<
     { current: string; latest?: string; newer: boolean; page: string; problem?: string } | null>(null);
-  const [checking, setChecking] = useState(false);
-
-  useEffect(() => {
-    void window.rampa.corpus.version().then(setVersion);
-    void window.rampa.corpus.licences().then(setLic);
-  }, []);
+  const updateCheck = useUpdateCheck();
+  const checking = updateCheck.busy;
 
   /*
    The wordmark used to be marked up as this screen's `<h1>`, because at the
@@ -95,10 +94,7 @@ export function AboutScreen() {
               <div className="row gap2">
                 <button className="btn btn-sm" disabled={checking} aria-busy={checking}
                         onClick={() => {
-                          setChecking(true);
-                          void window.rampa.corpus.checkForUpdate()
-                            .then((u) => setUpdate(u as typeof update))
-                            .finally(() => setChecking(false));
+                          void updateCheck.run().then((u) => { if (u) setUpdate(u); });
                         }}>
                   {checking ? 'Comprobando…' : '¿Hay una versión más nueva?'}
                 </button>
@@ -111,7 +107,17 @@ export function AboutScreen() {
               </p>
 
               <div role="status" aria-label="Resultado de la comprobación">
-                {update ? (
+                {/*
+                  The main process answers a *failed* check with a `problem`
+                  field, which is why the branches below read like a full set.
+                  They are not: a check that throws never reaches them, and
+                  before the data layer that case rendered nothing at all — she
+                  pressed the button, the spinner stopped, and no sentence
+                  appeared either way.
+                */}
+                {updateCheck.error ? (
+                  <p className="small" style={{ margin: 0 }}>{updateCheck.error.message}</p>
+                ) : update ? (
                   <p className="small" style={{ margin: 0 }}>
                     {update.problem === 'not-published'
                       ? `Todavía no hay ninguna versión publicada. La tuya es la ${update.current}.`

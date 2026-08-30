@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEducationSystems } from '../data/corpus.js';
 
 /**
  * One choice, filling three fields (011 T012, US1).
@@ -28,14 +28,18 @@ export function YearPicker({ value, onChange }: {
   value: Who;
   onChange: (who: Who) => void;
 }) {
-  const [systems, setSystems] = useState<EducationSystem[] | null>(null);
+  const loaded = useEducationSystems();
 
-  useEffect(() => {
-    void window.rampa.corpus.educationSystems()
-      .then((s) => setSystems(s as EducationSystem[]));
-  }, []);
-
-  if (!systems) return null;
+  /*
+   * No `Loaded` wrapper here, and that is the deliberate exception. This is one
+   * field inside a form: a loading sentence or an error callout appearing in the
+   * middle of the profile editor would push everything below it up and down
+   * while she is typing. The corpus ships inside the application, so the only
+   * way this fails is a broken install — which every other screen will also be
+   * reporting.
+   */
+  if (loaded.state !== 'ready') return null;
+  const systems = loaded.value as EducationSystem[];
   // One system per vault, chosen at first run. Until there is a second, this is
   // simply the one that shipped.
   const system = systems[0];

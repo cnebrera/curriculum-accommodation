@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react';
+import { useExtractionCommand, usePageImageCommand, useBlocksCommand,
+         useCorrectAndConfirm, useUnconfirmPage } from '../data/ingest.js';
 import { Page } from '../shell/Page.js';
 import { Callout } from '../components/Callout.js';
 import { Badge } from '../components/Badge.js';
@@ -42,21 +44,33 @@ export function VerifyScreen({ jobId, onVerified }: { jobId: string; onVerified:
   const [images, setImages] = useState<Record<number, string>>({});
   const [blocks, setBlocks] = useState<Array<{ id: string; page: number; content: string; number?: string }>>([]);
   const [edited, setEdited] = useState<Record<string, string>>({});
+  const extractionFor = useExtractionCommand();
+  const pageImage = usePageImageCommand();
+  const blocksFor = useBlocksCommand();
+  const confirmPage = useCorrectAndConfirm();
+  const unconfirm = useUnconfirmPage();
+  const failure = extractionFor.error ?? blocksFor.error ?? confirmPage.error ?? unconfirm.error ?? null;
 
   const refresh = async () => {
-    const e = await window.rampa.ingest.extraction(jobId) as Extraction | null;
+    const e = await extractionFor.run(jobId) as Extraction | null | undefined;
+    if (e === undefined) return;   // failed; the message is on screen
     setExtraction(e);
     if (!e) return;
     for (const p of e.pages) {
       if (!p.image || images[p.page]) continue;
-      const dataUri = await window.rampa.ingest.pageImage(jobId, p.page) as string | null;
+      const dataUri = await pageImage.run(jobId, p.page);
       if (dataUri) setImages((prev) => ({ ...prev, [p.page]: dataUri }));
     }
-    setBlocks(await window.rampa.ingest.blocks(jobId) as typeof blocks);
+    const b = await blocksFor.run(jobId);
+    if (b) setBlocks(b as typeof blocks);
   };
 
   useEffect(() => { void refresh(); }, [jobId]);
 
+  /* Failure first: an extraction that could not be read and one that does not
+     exist rendered the same «Un momento…» for ever, which is the loading state
+     lying about a dead screen. */
+  if (failure) return <Callout intent="danger">{failure.message}</Callout>;
   if (!extraction) return <p className="small" aria-live="polite">Un momento…</p>;
 
   const readable = extraction.pages.filter((p) => p.problems.length === 0);
@@ -157,7 +171,7 @@ export function VerifyScreen({ jobId, onVerified }: { jobId: string; onVerified:
             <div className="row gap2">
               {p.verified ? (
                 <button className="btn btn-sm" onClick={() => {
-                  void window.rampa.ingest.unconfirmPage(jobId, p.page).then(refresh);
+                  void unconfirm.run(jobId, p.page).then(refresh);
                 }}>
                   Quitar la confirmación
                 </button>
@@ -166,7 +180,7 @@ export function VerifyScreen({ jobId, onVerified }: { jobId: string; onVerified:
                   const mine = pageBlocks
                     .filter((b) => edited[b.id] !== undefined && edited[b.id] !== b.content)
                     .map((b) => ({ id: b.id, content: edited[b.id]! }));
-                  void window.rampa.ingest.correctAndConfirm(jobId, p.page, mine).then(refresh);
+                  void confirmPage.run(jobId, p.page, mine).then(refresh);
                 }}>
                   Está bien leída
                 </button>

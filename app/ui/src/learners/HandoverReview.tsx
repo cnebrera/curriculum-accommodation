@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useHandoverDraft, useHandoverWrite } from '../data/notes.js';
 import { Callout } from '../components/Callout.js';
 
 /**
@@ -33,12 +34,14 @@ export function HandoverReview({ code, name, onDone }: {
   const [draft, setDraft] = useState<Draft | null>(null);
   const [dropped, setDropped] = useState<Set<string>>(new Set());
   const [written, setWritten] = useState<{ path: string; dropped: number } | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const handoverDraft = useHandoverDraft();
+  const handoverWrite = useHandoverWrite();
+  const error = handoverDraft.error?.message ?? handoverWrite.error?.message ?? null;
 
   useEffect(() => {
-    void window.rampa.memory.handoverDraft(code, year, summary)
-      .then((d) => setDraft(d as Draft))
-      .catch((e: unknown) => setError(e instanceof Error ? e.message : 'No he podido prepararlo.'));
+    void handoverDraft.run(code, year, summary).then((d) => { if (d) setDraft(d as Draft); });
+    // `handoverDraft` is stable per render of this component and including it
+    // would re-run the draft on every keystroke of the summary it depends on.
   }, [code, year, summary]);
 
   if (written) {
@@ -141,10 +144,8 @@ export function HandoverReview({ code, name, onDone }: {
       <div className="row gap2">
         <button className="btn btn-primary btn-lg" disabled={!summary.trim() || !draft}
                 onClick={() => {
-                  void window.rampa.memory
-                    .handoverWrite(code, year, summary, keep.map((c) => c.text))
-                    .then((r) => setWritten(r as typeof written))
-                    .catch((e: unknown) => setError(e instanceof Error ? e.message : 'No he podido guardarlo.'));
+                  void handoverWrite.run(code, year, summary, keep.map((c) => c.text))
+                    .then((r) => { if (r) setWritten(r as typeof written); });
                 }}>
           Preparar el documento
         </button>

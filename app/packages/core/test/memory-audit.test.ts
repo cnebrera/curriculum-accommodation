@@ -111,8 +111,18 @@ describe('FR-205 · the journal records the pattern, never the passage', () => {
   it('checks what she typed for names before it is stored', () => {
     // 006 FR-419 applied here: her own note is a channel a learner's name reaches
     // the vault through, and a shareable one at that.
+    /*
+     * Asserted through the data layer since 013 T016. This used to grep for
+     * `names.check(text)` — the literal IPC call — and broke the day the screen
+     * started going through a hook, which is a change in *where* the check
+     * happens and not in *whether* it happens. The two questions worth pinning
+     * are that the screen still asks, and that it asks before it stores.
+     */
     const scope = read(join(uiSrc, 'review', 'ScopeQuestion.tsx'));
-    expect(scope).toMatch(/names\.check\(text\)/);
+    expect(scope).toMatch(/useNameCheck/);
+    expect(scope).toMatch(/nameCheck\.run\(text\)/);
+    expect(scope.indexOf('nameCheck.run(text)'))
+      .toBeLessThan(scope.indexOf('captureNote.run('));
   });
 });
 
@@ -221,7 +231,10 @@ describe('FR-215/216 · erasure lists everything, then removes it', () => {
     const screen = join(uiSrc, 'learners', 'ForgetLearner.tsx');
     expect(existsSync(screen), 'there is no erasure screen').toBe(true);
     const src = readFileSync(screen, 'utf8');
-    expect(src).toMatch(/memory\.forgetPlan/);
+    // Through the data layer since 013 T016 — the plan is still fetched, and
+    // still by this screen; only the door changed.
+    expect(src).toMatch(/useForgetPlan/);
+    expect(src).toMatch(/forgetPlan\.run\(code\)/);
     expect(src).toMatch(/plan\.paths/);
     expect(src).toMatch(/plan\.survives/);
     expect(src).toMatch(/plan\.outOfReach/);

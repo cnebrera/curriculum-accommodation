@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { load, save, type DisplayPrefs } from './preferences.js';
+import { load, save, type DisplayPrefs } from '../data/preferences.js';
 
 /**
  * Her display preferences (spec 010 US3, T028).

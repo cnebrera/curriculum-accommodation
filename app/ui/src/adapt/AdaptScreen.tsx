@@ -1,6 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useStrings } from '../i18n/context.js';
-import { fromWire } from '../../../packages/core/src/errors.js';
+import { useLearnerChoices } from '../data/learners.js';
+import { useNameCheck, useSetName } from '../data/names.js';
+import { useNewLearnerCode } from '../data/learners.js';
+import { useCostEstimate } from '../data/cost.js';
+import { useCreateJob, useVerifyJob, useAdapt, useJobProgress } from '../data/jobs.js';
 import { Callout } from '../components/Callout.js';
 import { Page, Section, Field, Actions } from '../shell/Page.js';
 import { ReportView, type Decision } from '../review/ReportView.js';
@@ -38,15 +42,31 @@ export function AdaptScreen({ onReview, onChooseFile, presetJobId }: {
   presetJobId?: string;
 }) {
   const { t: es } = useStrings();
-  const [learners, setLearners] = useState<string[]>([]);
-  const [names, setNames] = useState<Record<string, string>>({});
+  /*
+   * One hook where there were two `useState`s kept in step by hand (013
+   * FR-1107). `learners` and `names` were fetched by separate calls in the same
+   * effect and could disagree about which learners exist — and if
+   * `names.all()` rejected, the select rendered every child as a bare code with
+   * no indication that anything had failed.
+   */
+  const choices = useLearnerChoices();
   const [learner, setLearner] = useState('');
   const [text, setText] = useState('');
   const [stage, setStage] = useState<Stage>('compose');
   const [jobId, setJobId] = useState('');
   const [progress, setProgress] = useState<{ stage: string; detail?: string } | null>(null);
   const [flagged, setFlagged] = useState<string[]>([]);
-  const [error, setError] = useState<string | null>(null);
+  const nameCheck = useNameCheck();
+  const setName = useSetName();
+  const newCode = useNewLearnerCode();
+  const estimate = useCostEstimate();
+  const createJob = useCreateJob();
+  const verifyJob = useVerifyJob();
+  const adapt = useAdapt();
+  /* Decoded in the data layer (FR-1109). This screen used to call `fromWire`
+     itself and look the kind up in `es.errors` — correctly, which is why the
+     screens that did not do it went unnoticed for so long. */
+  const error = adapt.error?.message ?? verifyJob.error?.message ?? createJob.error?.message ?? null;
   const [reportData, setReportData] = useState<{
     decisions: Decision[]; notDone: string[];
     memoryApplied: Array<{ recipe: string; source: string; effect: string }>;
@@ -61,44 +81,42 @@ export function AdaptScreen({ onReview, onChooseFile, presetJobId }: {
   const [costGate, setCostGate] = useState<{ formatted: string } | null>(null);
   const online = useOnline();
 
+  useJobProgress(setProgress);
+
+  // The first learner is selected once the roster arrives, and only if she has
+  // not already picked someone.
   useEffect(() => {
-    void window.rampa.learners.list().then((l: string[]) => { setLearners(l); setLearner(l[0] ?? ''); });
-    void window.rampa.names.all().then(setNames);
-    return window.rampa.job.onProgress(setProgress);
-  }, []);
+    if (choices.state === 'ready' && !learner) setLearner(choices.value[0]?.code ?? '');
+  }, [choices, learner]);
 
   const startJob = async () => {
-    const check = await window.rampa.names.check(text);
+    const check = await nameCheck.run(text);
+    if (!check) return;  // the failure is on screen already
     if (check.flagged.length) { setFlagged(check.flagged); return; }
     const id = `${new Date().toISOString().slice(0, 10)}-${Math.random().toString(36).slice(2, 6)}`;
-    await window.rampa.job.create(id, text, 'es');
+    if (await createJob.run(id, text, 'es') === undefined) return;
     setJobId(id);
     setStage('verify');
   };
 
   const runAdapt = async (confirmedCost = false) => {
     if (!confirmedCost) {
-      const est = await window.rampa.cost.estimate(text.length + 20_000);
-      if (est.unusual) { setCostGate({ formatted: est.formatted }); return; }
+      const est = await estimate.run(text.length + 20_000);
+      if (est?.unusual) { setCostGate({ formatted: est.formatted }); return; }
     }
     setCostGate(null);
-    setStage('working'); setError(null);
-    try {
-      await window.rampa.job.verify(jobId);
-      const r = await window.rampa.job.adapt(jobId, learner);
-      setReportData(r.reportData ?? null);
-      setNotices(r.notices ?? []);
-      setRecipes(r.recipes ?? []);
-      setRetried(Boolean(r.retried));
-      setCost(typeof r.costCents === 'number' ? r.costCents : null);
-      setStage('done');
-    } catch (e: unknown) {
-      // The kind survives the IPC round trip encoded in the message; decoding it
-      // here is what makes the Spanish error map actually apply.
-      const { kind, message } = fromWire(e);
-      setError(es.errors[kind] ?? message ?? es.errors['unknown']!);
-      setStage('verify');
-    }
+    setStage('working');
+
+    if (await verifyJob.run(jobId) === undefined) { setStage('verify'); return; }
+    const r = await adapt.run(jobId, learner);
+    if (!r) { setStage('verify'); return; }
+
+    setReportData((r.reportData ?? null) as typeof reportData);
+    setNotices((r.notices ?? []) as JobNotice[]);
+    setRecipes(r.recipes ?? []);
+    setRetried(Boolean(r.retried));
+    setCost(typeof r.costCents === 'number' ? r.costCents : null);
+    setStage('done');
   };
 
   return (
@@ -111,7 +129,9 @@ export function AdaptScreen({ onReview, onChooseFile, presetJobId }: {
           <Section>
             <Field label={es.adapt.forWhom} htmlFor="who">
               <select className="select" id="who" value={learner} onChange={(e) => setLearner(e.target.value)}>
-                {learners.map((c) => <option key={c} value={c}>{names[c] ?? c}</option>)}
+                {choices.state === 'ready'
+                  ? choices.value.map((c) => <option key={c.code} value={c.code}>{c.name}</option>)
+                  : null}
               </select>
             </Field>
           </Section>
@@ -141,9 +161,10 @@ export function AdaptScreen({ onReview, onChooseFile, presetJobId }: {
           <NameWarning
             flagged={flagged}
             onAddName={async (n) => {
-              const code = await window.rampa.learners.newCode();
-              await window.rampa.names.set(code, n);
-              setNames(await window.rampa.names.all());
+              const code = await newCode.run();
+              if (!code) return;
+              await setName.run(code, n);
+              choices.reload();
               setFlagged(flagged.filter((f) => f !== n));
             }}
             onSendAnyway={() => setFlagged([])}

@@ -1,4 +1,5 @@
 import { Notice } from './Notice.js';
+import { useIgnoreWord } from '../data/names.js';
 
 /**
  * Asks before sending, never rewrites silently (006 FR-419).
@@ -12,6 +13,7 @@ export function NameWarning({ flagged, onAddName, onSendAnyway }: {
   onAddName: (name: string) => void;
   onSendAnyway: () => void;
 }) {
+  const ignore = useIgnoreWord();
   if (flagged.length === 0) return null;
   return (
     <Notice kind="warn" title="Creo que ahí hay un nombre">
@@ -25,7 +27,7 @@ export function NameWarning({ flagged, onAddName, onSendAnyway }: {
         ))}
         <button className="btn" onClick={() => {
           // Remembered, so the same word is not queried on every job (T090).
-          for (const f of flagged) void window.rampa.names.ignore(f);
+          for (const f of flagged) void ignore.run(f);
           onSendAnyway();
         }}>No es un nombre, sigue</button>
       </div>

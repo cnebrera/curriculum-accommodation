@@ -14,8 +14,8 @@ import { ProfileEditor } from './learners/ProfileEditor.js';
 import { CostBadge } from './components/CostBadge.js';
 import { Logo, Wordmark } from './components/Logo.js';
 import { DisplayPreferences } from './settings/DisplayPreferences.js';
-import { applyStoredPreferences } from './settings/preferences.js';
-import { detectStep, loadState, saveState, type Step } from './onboarding/state.js';
+import { applyStoredPreferences } from './data/preferences.js';
+import { detectStep, loadState, saveState, type Step } from './data/onboarding.js';
 
 type View = 'learners' | 'adapt' | 'ingest' | 'verify' | 'review' | 'notes' | 'connection' | 'about';
 

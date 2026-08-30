@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useConsolidateNotes, useCaptureNote, useArchiveNote } from '../data/notes.js';
 import { Notice } from '../components/Notice.js';
 
 interface Theme {
@@ -24,18 +25,20 @@ interface Proposals {
  */
 export function ConsolidateSection({ names }: { names: Record<string, string> }) {
   const [p, setP] = useState<Proposals | null>(null);
-  const [busy, setBusy] = useState(false);
+  const consolidate = useConsolidateNotes();
+  const capture = useCaptureNote();
+  const archiveNote = useArchiveNote();
+  const busy = consolidate.busy;
   const [applied, setApplied] = useState<string[]>([]);
 
   const refresh = async () => {
-    setBusy(true);
-    try { setP(await window.rampa.memory.consolidate()); }
-    finally { setBusy(false); }
+    const proposals = await consolidate.run();
+    if (proposals) setP(proposals as Proposals);
   };
   useEffect(() => { void refresh(); }, []);
 
   const promote = async (code: string, text: string, destination: 'avoid' | 'works') => {
-    await window.rampa.memory.capture({
+    await capture.run({
       scope: 'learner', learner: code, destination,
       heading: text.slice(0, 40), text,
     });
@@ -44,7 +47,7 @@ export function ConsolidateSection({ names }: { names: Record<string, string> })
   };
 
   const archive = async (path: string) => {
-    await window.rampa.memory.archive(path);
+    await archiveNote.run(path);
     setApplied((a) => [...a, path]);
     await refresh();
   };

@@ -1,6 +1,6 @@
 import { useStrings } from '../i18n/context.js';
 import { Callout } from '../components/Callout.js';
-import { formatDate, type Service } from './services.js';
+import { formatDate, type Service } from '../data/services.js';
 
 /**
  * The full list, comparing what actually decides it (009 T020–T023, FR-710).

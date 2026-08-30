@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react';
+import { useLoadLearner, useSaveLearner, useNewLearnerCode } from '../data/learners.js';
+import { useResolveName, useSetName } from '../data/names.js';
 import { useStrings } from '../i18n/context.js';
 import { AxisEditor } from './AxisEditor.js';
 import { YearPicker, type Who } from './YearPicker.js';
@@ -28,10 +30,18 @@ export function ProfileEditor({ code, onSaved }: { code: string | null; onSaved:
   const [carried, setCarried] = useState<Record<string, unknown>>({});
   const [repairs, setRepairs] = useState<Array<{ message: string }>>([]);
   const [saved, setSaved] = useState(false);
+  const loadLearner = useLoadLearner();
+  const saveLearner = useSaveLearner();
+  const newCode = useNewLearnerCode();
+  const resolveName = useResolveName();
+  const setNameFor = useSetName();
+  const failure = saveLearner.error ?? setNameFor.error ?? loadLearner.error ?? null;
 
   useEffect(() => {
     if (code) {
-      void window.rampa.learners.load(code).then((l: any) => {
+      void loadLearner.run(code).then((raw) => {
+        if (!raw) return;
+        const l = raw as any;
         const { code: _c, axes, works, avoid, interests, response,
                 age, year, stage, age_recorded: _ar, ...rest } = l.profile ?? {};
         setCurrent(l.profile.code);
@@ -44,9 +54,9 @@ export function ProfileEditor({ code, onSaved }: { code: string | null; onSaved:
         setCarried(rest);
         setRepairs(l.repairs ?? []);
       });
-      void window.rampa.names.resolve(code).then((n: string | null) => setName(n ?? ''));
+      void resolveName.run(code).then((n) => setName(n ?? ''));
     } else {
-      void window.rampa.learners.newCode().then(setCurrent);
+      void newCode.run().then((c) => { if (c) setCurrent(c); });
     }
   }, [code]);
 
@@ -58,7 +68,7 @@ export function ProfileEditor({ code, onSaved }: { code: string | null; onSaved:
       if (at > 0) responseMap[line.slice(0, at).trim()] = line.slice(at + 1).trim();
       else responseMap['default'] = line;
     }
-    await window.rampa.learners.save({
+    const stored = await saveLearner.run({
       // Carried fields first so the form's own values win, and nothing the
       // teacher wrote by hand is dropped just because this form has no input.
       ...carried,
@@ -75,7 +85,11 @@ export function ProfileEditor({ code, onSaved }: { code: string | null; onSaved:
        */
       ...(who.age !== undefined ? { age_recorded: new Date().toISOString().slice(0, 10) } : {}),
     });
-    if (name.trim()) await window.rampa.names.set(current, name.trim());
+    // Nothing follows a failed save. The screen used to set `saved` and call
+    // `onSaved` unconditionally, so a profile that never reached disk still said
+    // «Guardado» and sent her back to a list that had not changed.
+    if (stored === undefined) return;
+    if (name.trim() && await setNameFor.run(current, name.trim()) === undefined) return;
     setSaved(true);
     onSaved(current);
   };
@@ -88,7 +102,7 @@ export function ProfileEditor({ code, onSaved }: { code: string | null; onSaved:
         <Notice kind="info">{es.learner.codeExplain}</Notice>
         <div className="row">
           <span className="badge badge-accent">{current || '…'}</span>
-          {!code ? <button className="btn" onClick={() => void window.rampa.learners.newCode().then(setCurrent)}>
+          {!code ? <button className="btn" onClick={() => void newCode.run().then((c) => { if (c) setCurrent(c); })}>
             {es.learner.newCode}</button> : null}
         </div>
         <div>
@@ -131,8 +145,12 @@ export function ProfileEditor({ code, onSaved }: { code: string | null; onSaved:
       </div>
 
       <div className="row">
-        <button className="btn btn-primary" disabled={!current} onClick={() => void save()}>{es.learner.save}</button>
-        {saved ? <span className="badge badge-accent">Guardado</span> : null}
+        <button className="btn btn-primary" disabled={!current || saveLearner.busy}
+                aria-busy={saveLearner.busy} onClick={() => void save()}>{es.learner.save}</button>
+        {saved && !failure ? <span className="badge badge-accent">Guardado</span> : null}
+        {/* And when it did not save, she is told so instead of being told the
+            opposite. */}
+        {failure ? <span className="small" role="alert">{failure.message}</span> : null}
       </div>
     </div>
   );

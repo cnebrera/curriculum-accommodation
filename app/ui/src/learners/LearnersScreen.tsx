@@ -1,14 +1,13 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Page } from '../shell/Page.js';
 import { ProfileEditor } from './ProfileEditor.js';
 import { ForgetLearner } from './ForgetLearner.js';
 import { HandoverReview } from './HandoverReview.js';
 import { AxisStrip } from './AxisStrip.js';
-import { EmptyState } from '../components/EmptyState.js';
 import { Badge } from '../components/Badge.js';
 import { useStrings } from '../i18n/context.js';
-
-interface Loaded { code: string; name: string; axes: Record<string, number>; works: number; avoid: number }
+import { useLearners, type LearnerRow } from '../data/learners.js';
+import { Loaded } from '../data/Loaded.js';
 
 /**
  * Her caseload (spec 010 T015).
@@ -19,7 +18,15 @@ interface Loaded { code: string; name: string; axes: Record<string, number>; wor
  */
 export function LearnersScreen() {
   const { t: es } = useStrings();
-  const [learners, setLearners] = useState<Loaded[]>([]);
+  /*
+   * One hook, and the join lives in it (013 FR-1107). This screen used to list
+   * the codes, fetch the name map, load every profile and zip the three by hand
+   * — with a `loading` flag it set and cleared itself, a bespoke skeleton, and
+   * no error branch at all. `learners:list` rejecting left it loading for ever.
+   */
+  const roster = useLearners();
+  const learners: LearnerRow[] = roster.state === 'ready' ? roster.value : [];
+  const refresh = roster.reload;
   /**
    * A learner she is removing (003 US4).
    *
@@ -31,26 +38,6 @@ export function LearnersScreen() {
   /** A learner she is preparing a handover packet for (004 US1). */
   const [handing, setHanding] = useState<string | null>(null);
   const [editing, setEditing] = useState<string | null | undefined>(undefined);
-  const [loading, setLoading] = useState(true);
-
-  const refresh = async () => {
-    setLoading(true);
-    try {
-      const codes: string[] = await window.rampa.learners.list();
-      const names: Record<string, string> = await window.rampa.names.all();
-      const rows = await Promise.all(codes.map(async (code) => {
-        const l = await window.rampa.learners.load(code);
-        return {
-          code, name: names[code] ?? code,
-          axes: l.profile.axes ?? {},
-          works: (l.profile.works ?? []).length,
-          avoid: (l.profile.avoid ?? []).length,
-        };
-      }));
-      setLearners(rows);
-    } finally { setLoading(false); }
-  };
-  useEffect(() => { void refresh(); }, []);
 
   if (handing) {
     const who = learners.find((l) => l.code === handing);
@@ -70,11 +57,11 @@ export function LearnersScreen() {
     return (
       <Page title={`Borrar todo lo de ${who?.name ?? forgetting}`}>
         <button className="btn btn-ghost btn-sm" style={{ alignSelf: 'flex-start' }}
-                onClick={() => { setForgetting(null); void refresh(); }}>
+                onClick={() => { setForgetting(null); refresh(); }}>
           ← Volver a mis alumnos
         </button>
         <ForgetLearner code={forgetting} name={who?.name}
-                       onDone={() => { setForgetting(null); void refresh(); }} />
+                       onDone={() => { setForgetting(null); refresh(); }} />
       </Page>
     );
   }
@@ -84,10 +71,10 @@ export function LearnersScreen() {
     return (
       <Page title={who?.name ?? 'Alumno nuevo'}>
         <button className="btn btn-ghost btn-sm" style={{ alignSelf: 'flex-start' }}
-                onClick={() => { setEditing(undefined); void refresh(); }}>
+                onClick={() => { setEditing(undefined); refresh(); }}>
           ← Volver a mis alumnos
         </button>
-        <ProfileEditor code={editing} onSaved={() => void refresh()} />
+        <ProfileEditor code={editing} onSaved={() => refresh()} />
 
         {/*
           Below the editor and set apart, because it is not part of editing a
@@ -133,43 +120,39 @@ export function LearnersScreen() {
           lede={learners.length > 0
             ? `${learners.length} ${learners.length === 1 ? 'alumno' : 'alumnos'}. Los nombres solo los ves tú: en los ficheros va un código.`
             : 'Los nombres solo los ves tú: en los ficheros va un código.'}>
-      <>
-        {loading ? (
-        <div className="stack gap3" aria-busy="true" aria-label="Cargando">
-          {[0, 1].map((i) => <div className="card" key={i} style={{ height: 96, opacity: .5 }} />)}
-        </div>
-      ) : learners.length === 0 ? (
-        <EmptyState
-          title="Todavía no hay ningún alumno"
-          action={<button className="btn btn-primary" onClick={() => setEditing(null)}>Añadir un alumno</button>}
-        >
-          Empieza por el que más trabajo te dé. No hace falta ningún diagnóstico:
-          con lo que ves en clase es suficiente.
-        </EmptyState>
-      ) : (
-        <>
-          <div className="stack gap3">
-            {learners.map((l) => (
-              <button className="card card-action stack gap3" key={l.code} onClick={() => setEditing(l.code)}>
-                <div className="row" style={{ justifyContent: 'space-between' }}>
-                  <span className="row gap2">
-                    <strong>{l.name}</strong>
-                    <Badge>{l.code}</Badge>
-                  </span>
-                  <span className="small">
-                    {l.works} {l.works === 1 ? 'apoyo' : 'apoyos'} · {l.avoid} a evitar
-                  </span>
-                </div>
-                <AxisStrip axes={l.axes} />
-              </button>
-            ))}
-          </div>
-          <div>
-            <button className="btn btn-primary" onClick={() => setEditing(null)}>Añadir un alumno</button>
-          </div>
-        </>
-      )}
-      </>
+      <Loaded
+        from={roster}
+        busyLabel="Un momento, que busco tus alumnos…"
+        empty={{
+          title: 'Todavía no hay ningún alumno',
+          body: 'Empieza por el que más trabajo te dé. No hace falta ningún diagnóstico: con lo que ves en clase es suficiente.',
+          action: <button className="btn btn-primary" onClick={() => setEditing(null)}>Añadir un alumno</button>,
+        }}
+      >
+        {(rows) => (
+          <>
+            <div className="stack gap3">
+              {rows.map((l) => (
+                <button className="card card-action stack gap3" key={l.code} onClick={() => setEditing(l.code)}>
+                  <div className="row" style={{ justifyContent: 'space-between' }}>
+                    <span className="row gap2">
+                      <strong>{l.name}</strong>
+                      <Badge>{l.code}</Badge>
+                    </span>
+                    <span className="small">
+                      {l.works} {l.works === 1 ? 'apoyo' : 'apoyos'} · {l.avoid} a evitar
+                    </span>
+                  </div>
+                  <AxisStrip axes={l.axes} />
+                </button>
+              ))}
+            </div>
+            <div>
+              <button className="btn btn-primary" onClick={() => setEditing(null)}>Añadir un alumno</button>
+            </div>
+          </>
+        )}
+      </Loaded>
     </Page>
   );
 }

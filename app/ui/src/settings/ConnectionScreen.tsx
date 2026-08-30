@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
+import { useConnectionsCommand, useActivateProvider, useForgetProvider } from '../data/providers.js';
 import { Page } from '../shell/Page.js';
 import { useStrings } from '../i18n/context.js';
 import { Callout } from '../components/Callout.js';
 import { Badge } from '../components/Badge.js';
-import { loadServices, formatDate, type Service } from '../onboarding/services.js';
+import { loadServices, formatDate, type Service } from '../data/services.js';
 
 /**
  * Changing her mind later (009 US5, T036/T037).
@@ -27,10 +28,13 @@ export function ConnectionScreen({ onReconnect }: { onReconnect: (serviceId: str
   const [connections, setConnections] = useState<Connection[]>([]);
   const [active, setActive] = useState<string | null>(null);
   const [jurisdictionNote, setJurisdictionNote] = useState<string | null>(null);
+  const connections_ = useConnectionsCommand();
+  const activate = useActivateProvider();
+  const forget = useForgetProvider();
 
   const refresh = async () => {
-    const s = await window.rampa.providers.connections() as
-      { active: string | null; connected: Connection[] };
+    const s = await connections_.run() as { active: string | null; connected: Connection[] } | undefined;
+    if (!s) return;  // already on screen, in her language
     setActive(s.active);
     setConnections(s.connected);
   };
@@ -46,7 +50,7 @@ export function ConnectionScreen({ onReconnect }: { onReconnect: (serviceId: str
   const switchTo = async (id: string) => {
     const from = activeService;
     const to = byId(id);
-    if (!await window.rampa.providers.activate(id)) return;
+    if (!await activate.run(id)) return;
     await refresh();
 
     /**
@@ -126,7 +130,7 @@ export function ConnectionScreen({ onReconnect }: { onReconnect: (serviceId: str
                     Cambiar la clave
                   </button>
                   <button className="btn btn-danger btn-sm"
-                          onClick={() => void window.rampa.providers.forget(conn.serviceId).then(refresh)}>
+                          onClick={() => void forget.run(conn.serviceId).then(refresh)}>
                     Quitar
                   </button>
                 </div>

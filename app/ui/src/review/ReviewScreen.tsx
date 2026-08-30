@@ -1,7 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Page } from '../shell/Page.js';
+import { useReportDataCommand, useSignedOffCommand, useRender, usePdf, useRevise, useSignOff, useOpenForEditing } from '../data/jobs.js';
+import { useChecklistCommand } from '../data/corpus.js';
+import { useVaultChanged } from '../data/vault.js';
 import { useStrings } from '../i18n/context.js';
-import { fromWire } from '../../../packages/core/src/errors.js';
 import { Callout } from '../components/Callout.js';
 import { ReportView, type Decision } from './ReportView.js';
 import { DraftMark } from '../components/DraftMark.js';
@@ -21,28 +23,35 @@ export function ReviewScreen({ jobId, learner, recipes }: { jobId: string; learn
   const [checklist, setChecklist] = useState('');
   const [signedOff, setSignedOff] = useState(false);
   const [pdfPath, setPdfPath] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
   const [photocopy, setPhotocopy] = useState<Array<{ message: string }>>([]);
   const [corrections, setCorrections] = useState<Array<{ text: string; scope: 'learner' | 'practice' | 'corpus' }>>([]);
-  const [revising, setRevising] = useState(false);
   const [revision, setRevision] = useState(1);
   const [editedOutside, setEditedOutside] = useState(false);
+  const reportDataFor = useReportDataCommand();
+  const signedOffFor = useSignedOffCommand();
+  const checklist_ = useChecklistCommand();
+  const renderJob = useRender();
+  const pdf = usePdf();
+  const reviseJob = useRevise();
+  const signOff = useSignOff();
+  const openForEditing = useOpenForEditing();
+  const revising = reviseJob.busy;
+  const error = renderJob.error?.message ?? pdf.error?.message
+    ?? reviseJob.error?.message ?? signOff.error?.message ?? null;
 
   useEffect(() => {
-    void window.rampa.job.reportData(jobId, learner)
-      .then(setReportData)
-      .catch(() => setReportData(null));
-    void window.rampa.job.isSignedOff(jobId, learner).then(setSignedOff);
+    void reportDataFor.run(jobId, learner).then((d) => setReportData((d ?? null) as typeof reportData));
+    void signedOffFor.run(jobId, learner).then((v) => setSignedOff(Boolean(v)));
     // The checklist is corpus, not code: a teacher can correct what she is asked
     // to check without anyone touching the application.
-    void window.rampa.corpus.checklist('review').then(setChecklist).catch(() => setChecklist(''));
-
-    // She may fix two words in her own editor (T094). The vault watcher tells us,
-    // and the report is rebuilt from the file rather than from what we remember.
-    return window.rampa.vault.onChanged((path: string) => {
-      if (path.includes(jobId) && path.endsWith('adapted.md')) setEditedOutside(true);
-    });
+    void checklist_.run('review').then((c) => setChecklist(String(c ?? '')));
   }, [jobId, learner]);
+
+  // She may fix two words in her own editor (T094). The vault watcher tells us,
+  // and the report is rebuilt from the file rather than from what we remember.
+  useVaultChanged(useCallback((path: string) => {
+    if (path.includes(jobId) && path.endsWith('adapted.md')) setEditedOutside(true);
+  }, [jobId]));
 
   /**
    * Print. Whether the draft mark is on it is **not** this screen's decision
@@ -54,15 +63,11 @@ export function ReviewScreen({ jobId, learner, recipes }: { jobId: string; learn
    * believes it still decides anything.
    */
   const render = async () => {
-    setError(null);
-    try {
-      const r = await window.rampa.job.render(jobId, learner);
-      setPhotocopy(r.photocopy ?? []);
-      setPdfPath(await window.rampa.job.pdf(jobId, learner));
-    } catch (e: unknown) {
-      const { kind, message } = fromWire(e);
-      setError(es.errors[kind] ?? message ?? es.errors['unknown']!);
-    }
+    const r = await renderJob.run(jobId, learner);
+    if (!r) return;
+    setPhotocopy(r.photocopy ?? []);
+    const path = await pdf.run(jobId, learner);
+    if (path !== undefined) setPdfPath(path);
   };
 
   /**
@@ -71,21 +76,22 @@ export function ReviewScreen({ jobId, learner, recipes }: { jobId: string; learn
    * whether it landed. Every previous attempt is kept so she can compare.
    */
   const revise = async () => {
-    setRevising(true); setError(null);
-    try {
-      const r = await window.rampa.job.revise(jobId, learner, corrections);
-      setReportData(r.reportData ?? null);
-      setRevision(r.revision);
-      setCorrections([]);
-      setSignedOff(false);          // a new version is a new draft
-    } catch (e: unknown) {
-      const { kind, message } = fromWire(e);
-      setError(es.errors[kind] ?? message ?? es.errors['unknown']!);
-    } finally { setRevising(false); }
+    const r = await reviseJob.run(jobId, learner, corrections);
+    if (!r) return;
+    setReportData((r.reportData ?? null) as typeof reportData);
+    setRevision(r.revision);
+    setCorrections([]);
+    setSignedOff(false);          // a new version is a new draft
   };
 
+  /*
+   * Principle VII. A signature that failed and a screen that says it succeeded
+   * is the worst failure this application can have: the draft mark comes off in
+   * the interface and stays on the document, or the reverse. So nothing after
+   * the sign-off runs unless the sign-off returned.
+   */
   const sign = async () => {
-    await window.rampa.job.signOff(jobId, learner, 'PT');
+    if (await signOff.run(jobId, learner, 'PT') === undefined) return;
     setSignedOff(true);
     await render();
   };
@@ -147,7 +153,7 @@ export function ReviewScreen({ jobId, learner, recipes }: { jobId: string; learn
       ) : null}
 
       <div className="row">
-        <button className="btn" onClick={() => void window.rampa.job.openForEditing(jobId, learner)}>
+        <button className="btn" onClick={() => void openForEditing.run(jobId, learner)}>
           Corregir a mano
         </button>
         <button className="btn" onClick={() => void render()}>{es.adapt.print}</button>

@@ -52,10 +52,10 @@ scale nobody had rendered.
 
 ## Phase 4 · The data layer
 
-- [ ] T014 Build `ui/src/data/`: one hook per domain over the IPC surface, with loading, error and empty resolved once (FR-1107/1108)
-- [ ] T015 Decode errors in the hook, not in the component (FR-1109) — a component must not be the thing that remembers to call `fromWire`, which is exactly how the raw IPC wrapper reached a teacher's screen in `008`
-- [ ] T016 Move all 19 components off direct `window.rampa` calls
-- [ ] T017 Assert it: zero components call `window.rampa` directly (SC-1103)
+- [x] T014 Build `ui/src/data/`: one hook per domain over the IPC surface, with loading, error and empty resolved once (FR-1107/1108) *(done: `ui/src/data/`, one module per domain over `useAsync`/`useCommand`, plus `Loaded` for the three states. Ten domains, 24 files off direct IPC.)*
+- [x] T015 Decode errors in the hook, not in the component (FR-1109) — a component must not be the thing that remembers to call `fromWire`, which is exactly how the raw IPC wrapper reached a teacher's screen in `008` *(done. Three screens called `fromWire` and looked the kind up in `es.errors` — correctly, which is exactly why the sixteen that did not go unnoticed. Now nothing outside the layer may import it, and a test says so.)*
+- [x] T016 Move all 19 components off direct `window.rampa` calls *(done, all 19. Four modules that were already data access but lived in feature folders moved too — `services.ts`, `preferences.ts`, `axisDefs.ts`, `state.ts` — and `useLearnerName.ts` was deleted: a hook with a branded type and no callers anywhere.)*
+- [x] T017 Assert it: zero components call `window.rampa` directly (SC-1103) *(done: `ui/test/data-layer.test.ts`. Four assertions, and writing it surfaced that `vitest.config.ts` collected only `ui/test/**/*.test.tsx`, so a `.test.ts` under `ui/test/` ran nowhere and passed by being absent.)*
 
 ---
 

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Callout } from '../components/Callout.js';
+import { useForgetPlan, useForgetLearner } from '../data/notes.js';
 
 /**
  * Removing a learner (003 US4, FR-215/216/217/218/220).
@@ -38,9 +39,14 @@ export function ForgetLearner({ code, name, onDone }: {
 }) {
   const [plan, setPlan] = useState<Plan | null>(null);
   const [typed, setTyped] = useState('');
-  const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<{ removed: string[]; remaining: string[] } | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const forgetPlan = useForgetPlan();
+  const forget = useForgetLearner();
+  /* Either step can fail, and they fail for different reasons — a plan that
+     cannot be read, a deletion that cannot complete — so the message is
+     whichever one actually happened rather than a shared `error` string that
+     each branch had to remember to clear. */
+  const error = forgetPlan.error?.message ?? forget.error?.message ?? null;
 
   const label = name ?? code;
 
@@ -86,10 +92,7 @@ export function ForgetLearner({ code, name, onDone }: {
         {error ? <Callout intent="danger" title="No he podido mirarlo">{error}</Callout> : null}
         <div className="row gap2">
           <button className="btn btn-primary" onClick={() => {
-            setError(null);
-            void window.rampa.memory.forgetPlan(code)
-              .then((p) => setPlan(p as Plan))
-              .catch((e: unknown) => setError(e instanceof Error ? e.message : 'Algo ha ido mal.'));
+            void forgetPlan.run(code).then((p) => { if (p) setPlan(p as Plan); });
           }}>
             Ver qué se borraría
           </button>
@@ -142,16 +145,12 @@ export function ForgetLearner({ code, name, onDone }: {
         <input className="input" id="confirm" value={typed} autoComplete="off"
                onChange={(e) => setTyped(e.target.value)} />
         <div className="row gap2">
-          <button className="btn btn-danger" disabled={typed.trim() !== code || busy}
-                  aria-busy={busy}
+          <button className="btn btn-danger" disabled={typed.trim() !== code || forget.busy}
+                  aria-busy={forget.busy}
                   onClick={() => {
-                    setBusy(true);
-                    void window.rampa.memory.forget(code)
-                      .then((r) => setResult(r as typeof result))
-                      .catch((e: unknown) => setError(e instanceof Error ? e.message : 'Algo ha ido mal.'))
-                      .finally(() => setBusy(false));
+                    void forget.run(code).then((r) => { if (r) setResult(r as typeof result); });
                   }}>
-            {busy ? 'Borrando…' : 'Borrar todo lo suyo'}
+            {forget.busy ? 'Borrando…' : 'Borrar todo lo suyo'}
           </button>
           <button className="btn btn-ghost" onClick={onDone}>Cancelar</button>
         </div>

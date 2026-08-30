@@ -9,7 +9,14 @@ export default defineConfig({
     // `ui/test` renders components to a string with react-dom/server. No
     // browser, no DOM: enough to assert what the markup says, which is where
     // the draft mark's guarantee lives.
-    include: ['packages/**/test/**/*.test.ts', 'ui/test/**/*.test.tsx'],
+    /*
+     * `ui/test/**\/*.test.tsx` only. Both existing UI tests render, so `.tsx`
+     * looked like the whole story — and a `.test.ts` added under `ui/test/`
+     * was collected by nothing, reported by nothing, and passed by being
+     * absent. Found by writing one. Not every UI test renders: a test about
+     * the shape of the source tree is plain TypeScript.
+     */
+    include: ['packages/**/test/**/*.test.ts', 'ui/test/**/*.test.{ts,tsx}'],
     env: { ANTHROPIC_API_KEY: '', GOOGLE_API_KEY: '', NO_NETWORK: '1' },
   },
 });
