@@ -27,6 +27,11 @@ export function useVaultChanged(onChanged: (path: string) => void): void {
   useEffect(() => window.rampa.vault.onChanged(onChanged), [onChanged]);
 }
 
+/** Open a document from the vault in whatever she uses to read Markdown. */
+export function useOpenInVault() {
+  return useCommand((path: string) => window.rampa.vault.open(path) as Promise<string>);
+}
+
 export function useWriteToVault() {
   return useCommand((path: string, content: string) => window.rampa.vault.write(path, content));
 }

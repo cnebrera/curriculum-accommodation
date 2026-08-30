@@ -1,6 +1,7 @@
 import { jobAdapted } from '@rampa/core';
 import { currentVault } from './vault.js';
 import { handle } from './wrap.js';
+import { refreshRecord } from './record.js';
 
 /*
  * Moved from `jobs/` on 2026-08-30 (013 T019, FR-1111) — and it turned out there
@@ -39,6 +40,9 @@ export function registerSignoffIpc(): void {
       ? raw.replace(/^---\r?\n/, `---\n${block}`)
       : `---\n${block}---\n\n${raw}`;
     await vault.writeRaw(path, updated);
+    // A sign-off is one of FR-1215's three events: the record says «sin firmar»
+    // beside this sheet and must stop.
+    await refreshRecord(learnerCode);
     return { signedOff: true, date: stamp };
   });
 

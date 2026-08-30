@@ -1,4 +1,4 @@
-import { app, dialog, BrowserWindow } from 'electron';
+import { app, dialog, shell, BrowserWindow } from 'electron';
 import { watch as chokidarWatch, type FSWatcher } from 'chokidar';
 import { Vault, resolveInVault, RampaError, VAULT, logger } from '@rampa/core';
 import { join } from 'node:path';
@@ -50,6 +50,25 @@ async function useVault(root: string): Promise<string> {
 export const defaultVaultPath = () => join(homedir(), 'Documentos', 'Rampa');
 
 export function registerVaultIpc(getWindow: () => BrowserWindow | null): void {
+  /**
+   * Open a document from the vault in her own editor (014 T014).
+   *
+   * The path comes from the renderer, so it goes through `resolveInVault`, which
+   * **refuses** rather than sanitises (007 FR-508) — a path trying to leave the
+   * vault is a signal, not a typo, and quietly rewriting it into something
+   * plausible would hide exactly the event worth seeing.
+   *
+   * This is the generalisation of `job:openForEditing`, which could only open an
+   * adapted document. A record row offers the source and the read text as well,
+   * and those are equally hers.
+   */
+  handle('vault:open', async (relPath: string) => {
+    const vault = currentVault();
+    const abs = resolveInVault(vault.root, relPath);
+    const problem = await shell.openPath(abs);
+    if (problem) throw new RampaError('vault-unreadable', problem);
+    return abs;
+  });
   handle('vault:choose', async () => {
     const win = getWindow();
     const res = win

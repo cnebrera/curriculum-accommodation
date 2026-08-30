@@ -5,6 +5,7 @@ import { currentVault } from './vault.js';
 import { handle } from './wrap.js';
 import { runAdaptation, type Correction } from '../jobs/adapt.js';
 import { runBatch } from '../jobs/batch.js';
+import { refreshRecord } from './record.js';
 
 /**
  * Wiring, and only wiring (013 T019, FR-1111).
@@ -30,9 +31,14 @@ export function registerAdaptIpc(getWindow: () => BrowserWindow | null): void {
    * the e2e suite keeps driving the application unchanged *through* this change
    * and can therefore catch a regression in it.
    */
-  handle('job:adapt', async (jobId: string, learners: string | string[]) =>
-    runBatch(jobId, learners, runAdaptation,
-      (p) => getWindow()?.webContents.send('job:progress', p)));
+  handle('job:adapt', async (jobId: string, learners: string | string[]) => {
+    const outcome = await runBatch(jobId, learners, runAdaptation,
+      (p) => getWindow()?.webContents.send('job:progress', p));
+    // A job completing is one of FR-1215's three events. Only the learners who
+    // actually got a sheet: a failure changed nothing to record.
+    for (const r of outcome.results) if (r.ok) await refreshRecord(r.learner);
+    return outcome;
+  });
 
   /**
    * Re-run this worksheet with what she just corrected. The correction is also

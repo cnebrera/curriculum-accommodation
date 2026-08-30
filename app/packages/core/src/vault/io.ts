@@ -85,6 +85,21 @@ export class Vault {
     try { return (await readdir(abs)).sort(); } catch { return []; }
   }
 
+  /**
+   * When a file was last written, as an ISO date (014 T003).
+   *
+   * The fallback for a document written before Rampa stamped `adapted_on` into
+   * its front matter — which is every document in every vault that predates
+   * `014`. FR-1204 says the record must show that history, and without this it
+   * would show it undated, which sorts wrong and reads as broken.
+   */
+  async modifiedAt(relPath: string): Promise<string | null> {
+    try {
+      const s = await stat(resolveInVault(this.root, relPath));
+      return s.mtime.toISOString().slice(0, 10);
+    } catch { return null; }
+  }
+
   async exists(relPath: string): Promise<boolean> {
     try { await stat(resolveInVault(this.root, relPath)); return true; } catch { return false; }
   }

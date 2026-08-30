@@ -24,6 +24,7 @@ export function App() {
   const [step, setStep] = useState<Step | null>(null);
   const [view, setView] = useState<View>('adapt');
   const [review, setReview] = useState<{ jobId: string; learner: string; recipes: string[] } | null>(null);
+  const [learnersNonce, setLearnersNonce] = useState(0);
   /** A service she is reconnecting from the connection screen (009 US5). */
   const [reconnect, setReconnect] = useState<string | null>(null);
   /** An ingested job waiting to be verified (008). */
@@ -86,7 +87,16 @@ export function App() {
         <div className="rail-brand"><Wordmark size={19} /></div>
         <button aria-current={view === 'adapt' ? 'page' : undefined} onClick={() => { setView('adapt'); setReview(null); }}>
           {es.nav.adapt}</button>
-        <button aria-current={view === 'learners' ? 'page' : undefined} onClick={() => setView('learners')}>
+        {/*
+          Bumping the nonce remounts `LearnersScreen`, which is what makes
+          pressing «Mis alumnos» while already inside a learner's profile take
+          her back to the list. Before this it did nothing visible: the rail
+          changed `view` to a value it already had, and the screen's own
+          `editing` state survived — so the one control that should always mean
+          "start again here" was the one that appeared broken.
+        */}
+        <button aria-current={view === 'learners' ? 'page' : undefined}
+                onClick={() => { setView('learners'); setLearnersNonce((n) => n + 1); }}>
           {es.nav.learners}</button>
         <button aria-current={view === 'notes' ? 'page' : undefined} onClick={() => setView('notes')}>
           {es.nav.notes}</button>
@@ -136,7 +146,7 @@ export function App() {
         {view === 'review' && review
           ? <ReviewScreen jobId={review.jobId} learner={review.learner} recipes={review.recipes} />
           : null}
-        {view === 'learners' ? <LearnersScreen /> : null}
+        {view === 'learners' ? <LearnersScreen key={learnersNonce} /> : null}
         {view === 'notes' ? <NotesScreen /> : null}
         {view === 'connection' ? (
           /*

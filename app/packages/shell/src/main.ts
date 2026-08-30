@@ -6,6 +6,7 @@ import { registerKeysIpc } from './ipc/keys.js';
 import { registerCorpusIpc } from './corpus/index.js';
 import { registerCostIpc } from './ipc/cost.js';
 import { registerMemoryIpc } from './ipc/memory.js';
+import { registerRecordIpc } from './ipc/record.js';
 import { registerAdaptIpc } from './ipc/adapt.js';
 import { registerIngestIpc } from './ipc/ingest.js';
 import { registerPrintIpc } from './ipc/print.js';
@@ -98,6 +99,7 @@ else {
     registerCorpusIpc();
     registerCostIpc();
     registerMemoryIpc();
+    registerRecordIpc();
     registerAdaptIpc(getWindow);
   registerIngestIpc(getWindow);
     registerPrintIpc();

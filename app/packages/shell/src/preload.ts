@@ -15,6 +15,8 @@ const api = {
     current: () => invoke('vault:current'),
     read: (p: string) => invoke('vault:read', p),
     write: (p: string, c: string) => invoke('vault:write', p, c),
+    /** Open a document from the vault in her own editor (014). */
+    open: (p: string) => invoke('vault:open', p),
     list: (d: string) => invoke('vault:list', d),
     onChanged: (cb: (p: string) => void) => {
       const h = (_e: unknown, p: string) => cb(p);
@@ -115,6 +117,12 @@ const api = {
       ipcRenderer.on('job:progress', h);
       return () => { ipcRenderer.off('job:progress', h); };
     },
+  },
+  /** Everything ever made for one learner (014). */
+  record: {
+    forLearner: (code: string) => invoke('record:forLearner', code),
+    rebuild: (code: string) => invoke('record:rebuild', code),
+    search: (q: unknown) => invoke('record:search', q),
   },
   memory: {
     capture: (payload: unknown) => invoke('memory:capture', payload),

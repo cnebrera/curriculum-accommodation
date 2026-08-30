@@ -1,5 +1,6 @@
 import type { Vault } from '../vault/io.js';
 import { VAULT, learnerDir, jobDir, jobLearnerDir, outputDir } from '../vault/paths.js';
+import { learnersOf } from '../record/scan.js';
 import { rm } from 'node:fs/promises';
 import { resolveInVault } from '../vault/paths.js';
 
@@ -16,11 +17,22 @@ export interface ForgetPlan {
   /** Said plainly rather than left for her to wonder about. */
   survives: string[];
   outOfReach: string[];
+  /**
+   * Shared material kept because somebody else still uses it (014 FR-1211).
+   *
+   * `survives` says the general rule; this says which jobs, and how many other
+   * learners are the reason. **Counts, not codes**: naming another child inside
+   * a dialogue about erasing this one is exposure that buys nothing, and she can
+   * see who from their own records.
+   */
+  sharedKept: Array<{ job: string; alsoUsedBy: number }>;
 }
 
 export async function planForget(vault: Vault, code: string): Promise<ForgetPlan> {
   const paths: string[] = [];
   if (await vault.exists(learnerDir(code))) paths.push(learnerDir(code));
+
+  const sharedKept: ForgetPlan['sharedKept'] = [];
 
   for (const job of await vault.list(VAULT.material)) {
     // Adaptations live under the learner's code (T092b), so removing a learner
@@ -30,12 +42,21 @@ export async function planForget(vault: Vault, code: string): Promise<ForgetPlan
       paths.push(jobLearnerDir(job, code));
       paths.push(outputDir(job, code));
 
-      // If nobody else was adapted from this job, the shared material left
-      // behind is an orphan: the teacher's own source file and its extraction,
-      // kept for a learner who is gone. Remove the job too, and say so.
-      const siblings = (await vault.list(jobDir(job)))
-        .filter((e) => !e.includes('.') && e !== 'source' && e !== code);
-      if (siblings.length === 0) paths.push(jobDir(job));
+      /*
+       * Does anybody else still read this source?
+       *
+       * `learnersOf` asks whether an `adapted.md` is actually there, rather than
+       * whether a directory with the right name is. A directory left behind by a
+       * crash is not a reader, and treating it as one would keep a photograph of
+       * a worksheet in her folder for ever with nobody able to say why.
+       *
+       * The other direction is worse and is what makes this the subtle part of
+       * `014`: removing a source another learner still uses destroys that
+       * child's material, and she would find out the next time she opened it.
+       */
+      const others = (await learnersOf(vault, job)).filter((l) => l !== code);
+      if (others.length === 0) paths.push(jobDir(job));
+      else sharedKept.push({ job, alsoUsedBy: others.length });
     }
   }
 
@@ -48,9 +69,14 @@ export async function planForget(vault: Vault, code: string): Promise<ForgetPlan
   return {
     code,
     paths: [...new Set(paths)],
+    sharedKept,
     survives: [
       'Las mejoras a las recetas que ya enviaste a la comunidad no se retiran: no contienen nada de este alumno, por construcción.',
       'Las fichas adaptadas para otros alumnos a partir del mismo material se quedan como están.',
+      ...(sharedKept.length ? [
+        `${sharedKept.length} ${sharedKept.length === 1 ? 'material se queda' : 'materiales se quedan'} `
+        + 'en tu carpeta porque otros alumnos tuyos también lo usan. Lo suyo de este alumno sí se borra.',
+      ] : []),
     ],
     outOfReach: [
       'Las copias de seguridad que hayas hecho tú están fuera de mi alcance. Ésas tienes que borrarlas tú.',

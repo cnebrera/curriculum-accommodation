@@ -3,6 +3,7 @@ import { Page } from '../shell/Page.js';
 import { ProfileEditor } from './ProfileEditor.js';
 import { ForgetLearner } from './ForgetLearner.js';
 import { HandoverReview } from './HandoverReview.js';
+import { RecordScreen } from './RecordScreen.js';
 import { AxisStrip } from './AxisStrip.js';
 import { Badge } from '../components/Badge.js';
 import { useStrings } from '../i18n/context.js';
@@ -37,7 +38,14 @@ export function LearnersScreen() {
   const [forgetting, setForgetting] = useState<string | null>(null);
   /** A learner she is preparing a handover packet for (004 US1). */
   const [handing, setHanding] = useState<string | null>(null);
+  /** A learner whose record she is reading (014). */
+  const [viewing, setViewing] = useState<string | null>(null);
   const [editing, setEditing] = useState<string | null | undefined>(undefined);
+
+  if (viewing) {
+    const who = learners.find((l) => l.code === viewing);
+    return <RecordScreen code={viewing} name={who?.name} onBack={() => setViewing(null)} />;
+  }
 
   if (handing) {
     const who = learners.find((l) => l.code === handing);
@@ -82,6 +90,21 @@ export function LearnersScreen() {
           burying it means she asks somebody to do it in the filesystem instead —
           which reaches neither the journal entries nor the adapted sheets.
         */}
+        {editing ? (
+          <div className="card stack gap3">
+            <span className="small"><strong>Lo que le has preparado</strong></span>
+            <p className="small" style={{ margin: 0 }}>
+              Todo lo que ha salido de aquí para este alumno, con lo que trajiste y lo
+              que salió. También está en su carpeta, en texto plano.
+            </p>
+            <div className="row">
+              <button className="btn btn-sm" onClick={() => setViewing(editing)}>
+                Ver lo que le he preparado
+              </button>
+            </div>
+          </div>
+        ) : null}
+
         {editing ? (
           <div className="card stack gap3">
             <span className="small"><strong>Si cambia de tutor el año que viene</strong></span>

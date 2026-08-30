@@ -3,7 +3,7 @@ import {
   Vault, VAULT, jobDir, jobIR, jobLearnerDir, jobAdapted, jobAdaptedRevision,
   jobRejected, jobReport, parseIR, annotateInjection, checkBounds, isVerified,
   selectRecipes, loadLearner, buildReport, loadForRun, RampaError,
-  stringifyFrontMatter, injectionNotices, logger, buildAdaptPrompt,
+  stringifyFrontMatter, injectionNotices, logger, buildAdaptPrompt, schoolYearOf,
   checkStructurallyComplete, checkCompleteness, completenessNotice,
   assertProvenance, findUnaccountedBlocks, divergence, studiesFor,
   type Notice, type CompletenessIssue,
@@ -274,7 +274,19 @@ export async function runAdaptation(
   }
 
   onProgress({ stage: 'Guardando' });
-  await vault.writeRaw(jobAdapted(jobId, learnerCode), result.out);
+  /*
+   * Stamp when this was made, and which school year it belonged to (014 FR-1203).
+   *
+   * From the process, never from the model. When something happened is a fact,
+   * and a model asked for today's date will confidently produce one — Principle
+   * II. Stored rather than computed at read time so a record opened next August
+   * still says a sheet made in May belonged to 2025-2026.
+   */
+  const madeOn = new Date().toISOString().slice(0, 10);
+  const stamped = result.out.replace(/^---\r?\n/,
+    `---\nadapted_on: "${madeOn}"\nschool_year: "${schoolYearOf(madeOn)}"\n`);
+  await vault.writeRaw(jobAdapted(jobId, learnerCode),
+    /^---\r?\n/.test(result.out) ? stamped : result.out);
 
   const report = buildReport({
     adapted, selection,
