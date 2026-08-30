@@ -735,6 +735,33 @@ it, which is intentional: a half-present generation path would be worse than non
   
   Diagnosis and decision in [ADR 0009](../../docs/decisions/0009-composition-not-tokens.md);
   the work is `013`. The tokens are fine and were never composed into a page.
+
+  **Updated 2026-08-30, after `013`.** Still not *met*, because only a teacher can
+  meet it — but no longer met-by-assumption either, and the honest statement is
+  now longer than "not met":
+
+  - Every screen goes through a page shell; the rhythms are named in one place;
+    the tokens were composed into a page.
+  - The diagnosis underneath it was that the accessible mode had been built first
+    and the normal mode designed with the same austerity — `--paper` and
+    `--surface` were effectively the same white, and a legibility face was
+    carrying the headings. Fixed, with `[data-contrast="high"]` reverting all of
+    it, which is the mode mechanism finally earning its keep.
+  - It holds at every width the window can be, from 560 to 1920, in every text
+    scale (`e2e/layout.spec.ts`). Before `013` it did not: at 640px the
+    navigation filled the viewport.
+  - Dark mode was **broken** and nobody had looked: `--ground` was added to
+    `:root` and to no other theme, so the rail kept a pale green under pale text.
+    A serious axe contrast failure on every screen, found the day a build step
+    was added that made a stale `out/` impossible.
+  - The application has an icon.
+  - Both screenshot sets are in `docs/screenshots/`, plus seven widths and both
+    modes, so the change is visible rather than asserted (SC-1105 met).
+
+  What is **still** unmet is the sentence itself: whether a teacher's first ten
+  seconds produce "this looks unfinished". Carlos, who is not a teacher, went from
+  «se ve como el puto ano» to «mucho mejor, no es la hostia pero no es horrenda»,
+  which is evidence and is not the criterion.
 - **SC-806 — the display preferences are findable without being told** (T029).
   The panel is in the rail under "Cómo se ve", next to the cost badge. Whether
   she finds it is an observation, not an assertion, and writing a test that

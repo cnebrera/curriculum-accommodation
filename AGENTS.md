@@ -224,6 +224,43 @@ recipes, or it is unreviewable.
 
 ---
 
+
+## Writing a screen
+
+Everything here is a rule `013` had to introduce because its absence had already
+cost something. Three of the four are tests, and the fourth is here because it
+cannot be one.
+
+**A screen declares what it is, not how it is laid out.** It uses `Page`,
+`Section`, `Field` and `Actions` from `ui/src/shell/`. It does not choose a max
+width, a gap or a spinner. If it needs one the shell is missing something, and
+that is a change to the shell — a screen that escapes the shell is a fact about
+the shell.
+
+**A component never calls `window.rampa`.** Access goes through a hook in
+`ui/src/data/`, which resolves loading, error and empty once, and decodes the
+error into her language so a component cannot forget to. Asserted by
+`ui/test/data-layer.test.ts`.
+
+**A layout rule asks its container, not the window.** `@container page` for
+anything inside a screen, `@container window` for the shell itself, and in `em`
+so the text scale is part of the question. A media query in pixels cannot see
+that the same window holds a third less text at `xlarge`.
+
+**A job does not register its own IPC**, and nothing outside `packages/shell`
+imports `electron`. Asserted by `packages/shell/test/boundary.test.ts`, which
+also holds the list of the twelve files that legitimately do and what each needs
+it for.
+
+**And the one that is not a test: look at it.** Run `npm run shots` and open the
+screenshots. Every test `010` produced checks a *property* — a contrast ratio, an
+absence of overflow, a present label — so the suite passed on screens that were
+correctly coloured, correctly labelled and ugly, for a whole feature, because
+nobody rendered them. There is deliberately no pixel-diff suite
+([ADR 0009](docs/decisions/0009-composition-not-tokens.md)): it would fail on
+every intentional change, get updated without being read, and end up asserting
+whatever the last commit produced.
+
 ## Before you claim something works
 
 This project has a specific failure mode: **plausible output that is wrong in a
