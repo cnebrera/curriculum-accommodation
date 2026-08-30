@@ -4,6 +4,7 @@ import { jobIR, jobAdapted, jobDir, jobLearnerDir } from '@rampa/core';
 import { currentVault } from './vault.js';
 import { handle } from './wrap.js';
 import { runAdaptation, type Correction } from '../jobs/adapt.js';
+import { runBatch } from '../jobs/batch.js';
 
 /**
  * Wiring, and only wiring (013 T019, FR-1111).
@@ -21,8 +22,17 @@ import { runAdaptation, type Correction } from '../jobs/adapt.js';
  * this application knows it is running inside Electron.
  */
 export function registerAdaptIpc(getWindow: () => BrowserWindow | null): void {
-  handle('job:adapt', async (jobId: string, learnerCode: string) =>
-    runAdaptation(jobId, learnerCode, (p) => getWindow()?.webContents.send('job:progress', p)));
+  /**
+   * One worksheet, one or several learners (005 FR-501).
+   *
+   * A bare string is still accepted and returns a `BatchOutcome` of one. Not
+   * politeness to old callers — there are none outside this repository — but so
+   * the e2e suite keeps driving the application unchanged *through* this change
+   * and can therefore catch a regression in it.
+   */
+  handle('job:adapt', async (jobId: string, learners: string | string[]) =>
+    runBatch(jobId, learners, runAdaptation,
+      (p) => getWindow()?.webContents.send('job:progress', p)));
 
   /**
    * Re-run this worksheet with what she just corrected. The correction is also

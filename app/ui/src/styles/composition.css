@@ -156,6 +156,38 @@
 
 .actions-note { font-size: var(--text-sm); color: var(--ink-soft); }
 
+/* ── A group of answers that is still a section ────────────────────────────
+   `<fieldset>` is the right element for "one question, several checkboxes" — a
+   screen reader announces the legend with each control, which is the whole point
+   — but `009`'s framed `.fieldset` is wrong here: the legend sits on the border
+   and reads as broken, and the frame makes one section of a form look unlike
+   every other section for no reason a teacher could name.
+
+   So: the semantics of a fieldset, the appearance of a `Section`. Same heading
+   level, same rhythm, no box. */
+.fieldset-bare {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-inline-size: 0;   /* fieldset defaults to min-content, which breaks flex children */
+  display: flex;
+  flex-direction: column;
+  /* Answers to one question sit closer together than fields do — they are one
+     thing, not a list of things. */
+  gap: var(--rhythm-inline);
+}
+
+.fieldset-bare > .field-help { margin-top: var(--s2); }
+
+.fieldset-bare > legend { padding: 0; }
+
+.fieldset-bare > legend h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  letter-spacing: -0.014em;
+}
+
 /* ── The rail's foot ──────────────────────────────────────────────────────
    Was two controls pinned to the floor with a `grow` above them. Now a block
    that reads as one thing, separated by a rule rather than by a void. */

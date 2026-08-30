@@ -11,10 +11,10 @@ version passes a happy-path test.
 
 ## Phase 1 · Setup
 
-- [ ] T001 Write `packages/shell/test/batch.test.ts` **first**, red, from
+- [x] T001 Write `packages/shell/test/batch.test.ts` **first**, red, from
       [quickstart.md](quickstart.md)'s offline list. Every later task in Phase 2
       turns one of its cases green. The one that matters is not "three sheets
-      appear" — it is the forced failure on the second learner
+      appear" — it is the forced failure on the second learner *(done, red first. `packages/shell/test/batch.test.ts`, 24 cases.)*
 
 ---
 
@@ -24,92 +24,92 @@ version passes a happy-path test.
 The hard part of this feature is what happens when part of it fails, and that is
 cheapest to get right where there is no window in the way.
 
-- [ ] T002 Add `runBatch(jobId, learners, onProgress, corrections?)` to
+- [x] T002 Add `runBatch(jobId, learners, onProgress, corrections?)` to
       `packages/shell/src/jobs/adapt.ts`, beside `runAdaptation` and calling it
       once per learner. Sequential (FR-518). It is a separate function rather
       than a loop in the handler because "what happens when the second of three
-      fails" is orchestration, not wiring (FR-1111)
-- [ ] T003 Deduplicate the learner list before running. A repeated code adapts
-      once — she picked the same child twice, she did not ask to pay twice
-- [ ] T004 Isolate failures (FR-506/507): catch per learner, record
+      fails" is orchestration, not wiring (FR-1111) *(done: `packages/shell/src/jobs/batch.ts`. It takes the per-learner adaptation as an **argument** — `runAdaptation` reaches `currentVault()` and `activeProvider()`, both of which transitively import Electron, so importing it would have made the loop untestable without mocking three modules. A testing convenience that turned out to be the right separation.)*
+- [x] T003 Deduplicate the learner list before running. A repeated code adapts
+      once — she picked the same child twice, she did not ask to pay twice *(done, via `Set`, which also preserves insertion order — the order-independence test needs stable, not sorted.)*
+- [x] T004 Isolate failures (FR-506/507): catch per learner, record
       `{ learner, ok: false, kind, message }`, continue the loop. **The catch is
       inside the loop body**, which is the whole task — a `try` around the loop
-      is the naive version and it stops at the first failure
-- [ ] T005 Assert order-independence (Principle II): the same learners in reverse
+      is the naive version and it stops at the first failure *(done, and the catch is **inside** the loop, which is the whole function.)*
+- [x] T005 Assert order-independence (Principle II): the same learners in reverse
       order produce the same documents. Guards against a shared accumulator
       leaking one learner's state into the next, which is the way this goes wrong
-      that no happy-path test can see
-- [ ] T006 [P] Atomicity per sheet (FR-509): write to a temporary path and move
+      that no happy-path test can see *(done, forwards and backwards, plus «one learner failing does not change what another produced».)*
+- [x] T006 [P] Atomicity per sheet (FR-509): write to a temporary path and move
       into place, so a failure or a cancellation leaves a sheet whole or absent
-      and never half-written
-- [ ] T007 [P] Per-learner verdicts (FR-510) — completeness, provenance and
+      and never half-written *(done, and it moved into `Vault.writeRaw` so every writer benefits: temp file plus rename, with a fallback to the direct write for the realistic case of a vault on OneDrive with the destination held open. The observable half — no leftover temp — is asserted.)*
+- [x] T007 [P] Per-learner verdicts (FR-510) — completeness, provenance and
       unaccounted-blocks checks each produce a verdict about one learner and
-      never about the run
-- [ ] T008 Assert the extraction is read once and never written, for a batch of
+      never about the run *(done; the checks already ran inside `runAdaptation`, so this was verifying rather than building.)*
+- [x] T008 Assert the extraction is read once and never written, for a batch of
       three (FR-502). This is Principle IV, and it has been a directory layout
-      and a comment since August with nothing exercising it
-- [ ] T009 `BatchProgress` with `learner`, `index` and `of` (FR-519). A
+      and a comment since August with nothing exercising it *(done, asserted as an **absence**: `batch.ts` imports no vault, no provider and no ingest, so it could not re-read the source if a future edit wanted to. Also clarified what FR-502 is about — the provider ingest, which is a separate step; reading `ir.md` from disk N times is free.)*
+- [x] T009 `BatchProgress` with `learner`, `index` and `of` (FR-519). A
       single-learner run sends `of: 1`, so the renderer needs no branch for the
-      old shape
+      old shape *(done. A single-learner run sends `of: 1`, so no caller needs a branch.)*
 
 ---
 
 ## Phase 3 · The wire
 
-- [ ] T010 `job:adapt` accepts `string | string[]` and returns `BatchOutcome`
+- [x] T010 `job:adapt` accepts `string | string[]` and returns `BatchOutcome`
       per [contracts/job-batch.md](contracts/job-batch.md). Accepting a bare
       string keeps the e2e suite driving the application unchanged **through**
-      the change, which is what lets it catch a regression in it
-- [ ] T011 [P] `ui/src/data/jobs.ts`: `useAdapt` takes a list and returns the
+      the change, which is what lets it catch a regression in it *(done, and a bare string is still accepted.)*
+- [x] T011 [P] `ui/src/data/jobs.ts`: `useAdapt` takes a list and returns the
       outcome. Errors still decode in the layer (`013` FR-1109) — and now there
-      can be three of them, each belonging to a named learner
-- [ ] T012 [P] Assert that `job:signOff`, `job:render`, `job:pdf`,
+      can be three of them, each belonging to a named learner *(done. `BatchOutcome` has no «did it succeed?» field — a screen holding it cannot say «it failed» without saying whose, which is FR-507 enforced by the type.)*
+- [x] T012 [P] Assert that `job:signOff`, `job:render`, `job:pdf`,
       `job:isSignedOff` and `job:reportData` still take exactly one learner. The
       contract's most important line: a `signOff` that took a list would be the
       «firmar todo» button FR-512 forbids, arriving through the API instead of
-      through the interface
+      through the interface *(done, over the **preload**, because that is the surface a renderer can reach.)*
 
 ---
 
 ## Phase 4 · Choosing
 
-- [ ] T013 `AdaptScreen`: the learner control becomes multi-select, after the
+- [x] T013 `AdaptScreen`: the learner control becomes multi-select, after the
       extraction is verified. Per `016`'s clarification the flow is
       learner-first, so **this control is where the first learner becomes
       several** — `016` FR-1412 says a second learner must not feel like a
-      correction, and this is the screen where that is either true or not
-- [ ] T014 The cost estimate covers the batch, stated as one figure with the
+      correction, and this is the screen where that is either true or not *(done: a checkbox list, not a select plus «añadir otro». Two controls over one list is two copies of one truth, and it would have read as «this child, and then corrections» — which is what `016` FR-1412 forbids.)*
+- [x] T014 The cost estimate covers the batch, stated as one figure with the
       number of sheets (FR-514), and the unusual-cost gate considers the batch
-      (FR-515). Three ordinary sheets can be an unusual bill
-- [ ] T015 Batch progress: «2 de 3 · Mateo», with the stages as today
+      (FR-515). Three ordinary sheets can be an unusual bill *(done: the estimate multiplies by the number of sheets, and the gate carries the learner list so «Adelante» runs the same set it priced.)*
+- [x] T015 Batch progress: «2 de 3 · Mateo», with the stages as today *(done, shown only when there is more than one — «1 de 1» is noise on the common case.)*
 
 ---
 
 ## Phase 5 · Reviewing and signing · where the constitution is at risk
 
-- [ ] T016 `ReviewScreen` handles N sheets: a list she picks from, **not** a
-      forced sequence. A sequence is how the third gets signed without being read
-- [ ] T017 Each sheet keeps its own draft mark and its own sign-off (FR-511), and
+- [x] T016 `ReviewScreen` handles N sheets: a list she picks from, **not** a
+      forced sequence. A sequence is how the third gets signed without being read *(done, and it needed no batch review screen: the outcome list on the adapt screen **is** the list, one row per learner, each entering the existing per-learner review. A forced sequence is how the third gets signed without being read.)*
+- [x] T017 Each sheet keeps its own draft mark and its own sign-off (FR-511), and
       the learner is unambiguous on every screen a sheet appears on (FR-513) —
       the same worksheet three times over is exactly where a teacher signs the
-      wrong one
-- [ ] T018 **Assert there is no way to sign two documents with one action**
+      wrong one *(done. The review title said «Revisa y firma» and nothing else — fine while one worksheet meant one sheet, and exactly how a teacher signs the wrong one when three differ only in their content. It now names the learner.)*
+- [x] T018 **Assert there is no way to sign two documents with one action**
       (FR-512, SC-504) — over the rendered interface, not over the handler, since
       T012 already covers the handler. Principle VII, and the affordance is the
-      risk rather than the API
-- [ ] T019 Assert the review of three learners never presents their axes as
+      risk rather than the API *(done in `e2e/group.spec.ts`, over the rendered interface on every screen a batch reaches. The handler assertion is T012; this is the affordance, which could be built entirely in the renderer without a handler changing.)*
+- [x] T019 Assert the review of three learners never presents their axes as
       aligned columns (`015` FR-1310, Principle V). This is the first screen in
       the application where children appear side by side, and a comparison view
-      is one layout decision away
+      is one layout decision away *(done, structurally: no table containing axis values, and no row-direction container holding two learners' strips.)*
 
 ---
 
 ## Phase 6 · Close it honestly
 
-- [ ] T020 `e2e/group.spec.ts`, then **measure**: adapt one worksheet for one
+- [x] T020 `e2e/group.spec.ts`, then **measure**: adapt one worksheet for one
       learner and the same worksheet for three, and record both costs
       (SC-502). If the second is three times the first, the extraction is being
-      re-read and FR-502 is unmet however green the suite is
+      re-read and FR-502 is unmet however green the suite is *(e2e done — four tests. **The cost measurement is not done and needs a real key**, and until it is, SC-502 is unverified: if the second run costs three times the first, the extraction is being re-read and FR-502 is unmet however green the suite is.)*
 
 ---
 

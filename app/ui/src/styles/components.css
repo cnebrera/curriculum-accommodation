@@ -169,12 +169,27 @@ code, kbd, samp, .meta, .tag {
 .input-key { font-family: var(--font-mono); font-size: var(--text-sm); letter-spacing: 0.02em; }
 
 /* Checkbox and radio: drawn, so they look the same on every OS and can meet
-   the 44px target without a 44px box. */
+   the 44px target without a 44px box.
+
+   The box was 22×22 from the day it was written — below WCAG 2.2 SC 2.5.8's
+   24×24 minimum, which `e2e/layout.spec.ts` has checked since `010` T017 and
+   never once evaluated here, because the only two checkboxes in the application
+   live inside a popover and inside a checklist the layout sweep does not open.
+   Found on 2026-08-30 by `005` putting a checkbox on the adapt screen, which the
+   sweep does open. Two pixels, and eight weeks. */
 .check { display: flex; gap: var(--s3); align-items: flex-start; cursor: pointer;
   min-height: 44px; align-content: center; padding: 6px 0; }
-.check input { appearance: none; flex: none; width: 22px; height: 22px; margin: 0;
+.check input { appearance: none; flex: none; width: 24px; height: 24px; margin: 0;
   border: 2px solid var(--line-strong); background: var(--paper); cursor: pointer;
-  border-radius: var(--radius-control); transition: all var(--dur) var(--ease); }
+  border-radius: var(--radius-control);
+  /* NOT `transition: all`. It animated `outline-width` from 0 to 3px, so the
+     focus ring **faded in** — and a focus indicator that is briefly absent is a
+     focus indicator that is absent for anyone reading the frame it is absent in.
+     `prefers-reduced-motion` zeroes `--dur` and hid it from exactly the users
+     who would have reported it. Found by the keyboard sweep in `e2e/a11y.spec.ts`
+     reading the computed outline the instant after Tab, which is also when a
+     person looks. Name the properties. */
+  transition: background-color var(--dur) var(--ease), border-color var(--dur) var(--ease); }
 .check input[type="radio"] { border-radius: var(--radius-pill); }
 .check input:hover { border-color: var(--accent); }
 .check input:checked { background: var(--accent); border-color: var(--accent); }

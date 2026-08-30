@@ -3,6 +3,7 @@ import { Page } from '../shell/Page.js';
 import { useReportDataCommand, useSignedOffCommand, useRender, usePdf, useRevise, useSignOff, useOpenForEditing } from '../data/jobs.js';
 import { useChecklistCommand } from '../data/corpus.js';
 import { useVaultChanged } from '../data/vault.js';
+import { useNames } from '../data/names.js';
 import { useStrings } from '../i18n/context.js';
 import { Callout } from '../components/Callout.js';
 import { ReportView, type Decision } from './ReportView.js';
@@ -35,6 +36,17 @@ export function ReviewScreen({ jobId, learner, recipes }: { jobId: string; learn
   const reviseJob = useRevise();
   const signOff = useSignOff();
   const openForEditing = useOpenForEditing();
+  /*
+   * Whose sheet this is (005 FR-513).
+   *
+   * The title said «Revisa y firma» and nothing else, which was fine while one
+   * worksheet meant one sheet. With three learners adapted from one worksheet,
+   * three review screens differ only in their content — and the same worksheet
+   * three times over is exactly the situation where a teacher signs the wrong
+   * one. The name is display only, resolved locally, never written.
+   */
+  const names = useNames();
+  const who = (names.state === 'ready' ? names.value[learner] : undefined) ?? learner;
   const revising = reviseJob.busy;
   const error = renderJob.error?.message ?? pdf.error?.message
     ?? reviseJob.error?.message ?? signOff.error?.message ?? null;
@@ -97,7 +109,7 @@ export function ReviewScreen({ jobId, learner, recipes }: { jobId: string; learn
   };
 
   return (
-    <Page title={`${es.review.title}${revision > 1 ? ` · versión ${revision}` : ''}`}
+    <Page title={`${es.review.title} · ${who}${revision > 1 ? ` · versión ${revision}` : ''}`}
           banner={<DraftMark signedOff={signedOff} />}>
 
       {reportData

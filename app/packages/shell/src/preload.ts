@@ -87,7 +87,8 @@ const api = {
   job: {
     create: (id: string, text: string, lang?: string) => invoke('job:create', id, text, lang),
     verify: (id: string) => invoke('job:verify', id),
-    adapt: (id: string, learner: string) => invoke('job:adapt', id, learner),
+    /** One learner or several — 005 FR-501. */
+    adapt: (id: string, learners: string | string[]) => invoke('job:adapt', id, learners),
     /** Re-run with what she just corrected, on this worksheet, now. */
     revise: (id: string, learner: string, corrections: Array<{ text: string; scope: string }>) =>
       invoke('job:revise', id, learner, corrections),

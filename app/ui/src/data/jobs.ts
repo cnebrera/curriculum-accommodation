@@ -54,14 +54,36 @@ export function useVerifyJob() {
   return useCommand((id: string) => window.rampa.job.verify(id));
 }
 
+/** What one learner's adaptation produced. */
+export interface AdaptResult {
+  reportData?: unknown;
+  notices?: Array<{ block: string | null; notice: { kind: string; quote: string; message: string } }>;
+  recipes?: string[];
+  retried?: boolean;
+  costCents?: number;
+}
+
+export type LearnerOutcome =
+  | { learner: string; ok: true; result: AdaptResult }
+  | { learner: string; ok: false; kind: string; message: string };
+
+export interface BatchOutcome { jobId: string; results: LearnerOutcome[] }
+
+/**
+ * Adapt one job for one or more learners (005 FR-501).
+ *
+ * The outcome is per learner and there is deliberately no "did the batch
+ * succeed?" on it. A screen holding this cannot say "it failed" without saying
+ * whose — which is FR-507 enforced by the type rather than by a reviewer
+ * noticing.
+ *
+ * Note what does **not** happen here: `useCommand`'s `error` stays for the case
+ * where the whole call could not be made at all. A learner failing is a value,
+ * not an error, because the other two sheets are real and hers.
+ */
 export function useAdapt() {
-  return useCommand((id: string, learner: string) => window.rampa.job.adapt(id, learner) as Promise<{
-    reportData?: unknown;
-    notices?: Array<{ block: string | null; notice: { kind: string; quote: string; message: string } }>;
-    recipes?: string[];
-    retried?: boolean;
-    costCents?: number;
-  }>);
+  return useCommand((id: string, learners: string | string[]) =>
+    window.rampa.job.adapt(id, learners) as Promise<BatchOutcome>);
 }
 
 export function useRevise() {

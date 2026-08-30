@@ -1,4 +1,4 @@
-import { readFile, writeFile, mkdir, readdir, stat } from 'node:fs/promises';
+import { readFile, writeFile, mkdir, readdir, stat, rename, unlink } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { resolveInVault } from './paths.js';
 import { parseFrontMatter, stringifyFrontMatter, type Parsed, type Repair } from './parse.js';
@@ -26,11 +26,37 @@ export class Vault {
     return { ...parseFrontMatter(raw, relPath), exists: true };
   }
 
-  /** Writes only on an explicit action. Never called from a read path. */
+  /**
+   * Writes only on an explicit action. Never called from a read path.
+   *
+   * **Whole file or no file** (005 FR-509). Written to a sibling temporary and
+   * renamed into place, because a plain `writeFile` interrupted halfway leaves a
+   * truncated document — and the document this most matters for is an adapted
+   * worksheet, where "truncated" means content silently missing, which is this
+   * project's stated number-one failure mode.
+   *
+   * It became urgent with `005`: a batch of three adaptations is three times the
+   * window in which a crash or a cancellation can land mid-write.
+   *
+   * The rename is atomic on POSIX and replaces on Windows. Where it cannot be —
+   * a vault on OneDrive or Drive with the destination held open by the sync
+   * client is the realistic case, and this project assumes exactly that — the
+   * fallback is the direct write we did before. Worse, and no worse than
+   * yesterday, rather than a failure she cannot act on.
+   */
   async writeRaw(relPath: string, content: string): Promise<void> {
     const abs = resolveInVault(this.root, relPath);
     await mkdir(dirname(abs), { recursive: true });
-    await writeFile(abs, content, 'utf8');
+    // A sibling, so the rename never crosses a filesystem boundary — which is
+    // the one thing that would silently turn it into a non-atomic copy.
+    const tmp = `${abs}.rampa-tmp`;
+    try {
+      await writeFile(tmp, content, 'utf8');
+      await rename(tmp, abs);
+    } catch {
+      await unlink(tmp).catch(() => {});
+      await writeFile(abs, content, 'utf8');
+    }
   }
 
   /**

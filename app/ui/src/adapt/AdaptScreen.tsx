@@ -4,12 +4,13 @@ import { useLearnerChoices } from '../data/learners.js';
 import { useNameCheck, useSetName } from '../data/names.js';
 import { useNewLearnerCode } from '../data/learners.js';
 import { useCostEstimate } from '../data/cost.js';
-import { useCreateJob, useVerifyJob, useAdapt, useJobProgress } from '../data/jobs.js';
+import { useCreateJob, useVerifyJob, useAdapt, useJobProgress, type BatchOutcome } from '../data/jobs.js';
 import { Callout } from '../components/Callout.js';
 import { Page, Section, Field, Actions } from '../shell/Page.js';
 import { ReportView, type Decision } from '../review/ReportView.js';
 import { Stages, Stream } from '../components/Progress.js';
 import { NameWarning } from '../components/NameWarning.js';
+import { Badge } from '../components/Badge.js';
 import { InjectionNotice } from '../components/InjectionNotice.js';
 import { useOnline } from '../hooks/useOnline.js';
 
@@ -50,11 +51,20 @@ export function AdaptScreen({ onReview, onChooseFile, presetJobId }: {
    * no indication that anything had failed.
    */
   const choices = useLearnerChoices();
-  const [learner, setLearner] = useState('');
+  /*
+   * Several learners, and `016`'s clarification is why this reads the way it
+   * does. She chooses a learner first — that is the order she thinks in — and
+   * this control is where the first learner becomes several. FR-1412 says a
+   * second learner must not feel like a correction to a flow that started with
+   * one, which is a statement about this select and nothing else.
+   */
+  const [learners, setLearners] = useState<string[]>([]);
+  const learner = learners[0] ?? '';
   const [text, setText] = useState('');
   const [stage, setStage] = useState<Stage>('compose');
   const [jobId, setJobId] = useState('');
-  const [progress, setProgress] = useState<{ stage: string; detail?: string } | null>(null);
+  const [progress, setProgress] = useState<
+    { stage: string; detail?: string; learner?: string; index?: number; of?: number } | null>(null);
   const [flagged, setFlagged] = useState<string[]>([]);
   const nameCheck = useNameCheck();
   const setName = useSetName();
@@ -77,17 +87,25 @@ export function AdaptScreen({ onReview, onChooseFile, presetJobId }: {
   const [recipes, setRecipes] = useState<string[]>([]);
   const [retried, setRetried] = useState(false);
   const [cost, setCost] = useState<number | null>(null);
+  /** Per learner, because a failure belongs to a learner (005 FR-507). */
+  const [outcome, setOutcome] = useState<BatchOutcome | null>(null);
   // 006 US4-3: told first, not billed first (T091).
-  const [costGate, setCostGate] = useState<{ formatted: string } | null>(null);
+  const [costGate, setCostGate] = useState<{ formatted: string; who: string[] } | null>(null);
   const online = useOnline();
+  /** Her name for the child; the code is what is on the sheet, not on this screen. */
+  const nameOf = (code: string): string =>
+    (choices.state === 'ready' ? choices.value.find((c) => c.code === code)?.name : undefined) ?? code;
 
   useJobProgress(setProgress);
 
   // The first learner is selected once the roster arrives, and only if she has
   // not already picked someone.
   useEffect(() => {
-    if (choices.state === 'ready' && !learner) setLearner(choices.value[0]?.code ?? '');
-  }, [choices, learner]);
+    if (choices.state === 'ready' && learners.length === 0) {
+      const first = choices.value[0]?.code;
+      if (first) setLearners([first]);
+    }
+  }, [choices, learners.length]);
 
   const startJob = async () => {
     const check = await nameCheck.run(text);
@@ -99,23 +117,42 @@ export function AdaptScreen({ onReview, onChooseFile, presetJobId }: {
     setStage('verify');
   };
 
-  const runAdapt = async (confirmedCost = false) => {
+  const startOver = (): void => {
+    setStage('compose'); setText(''); setReportData(null); setOutcome(null);
+    setNotices([]); setRecipes([]); setRetried(false); setCost(null);
+  };
+
+  const runAdapt = async (confirmedCost = false, only?: string[]) => {
+    const who = only ?? learners;
+    if (who.length === 0) return;
+
     if (!confirmedCost) {
-      const est = await estimate.run(text.length + 20_000);
-      if (est?.unusual) { setCostGate({ formatted: est.formatted }); return; }
+      /*
+       * The estimate is for the batch (005 FR-514/515): three ordinary sheets
+       * can be an unusual bill, and pricing one of them would let exactly that
+       * through the gate that exists to stop it.
+       */
+      const est = await estimate.run((text.length + 20_000) * who.length);
+      if (est?.unusual) { setCostGate({ formatted: est.formatted, who }); return; }
     }
     setCostGate(null);
     setStage('working');
 
     if (await verifyJob.run(jobId) === undefined) { setStage('verify'); return; }
-    const r = await adapt.run(jobId, learner);
+    const r = await adapt.run(jobId, who);
     if (!r) { setStage('verify'); return; }
 
-    setReportData((r.reportData ?? null) as typeof reportData);
-    setNotices((r.notices ?? []) as JobNotice[]);
-    setRecipes(r.recipes ?? []);
-    setRetried(Boolean(r.retried));
-    setCost(typeof r.costCents === 'number' ? r.costCents : null);
+    setOutcome(r);
+    // The single-learner case keeps today's screen: the report, then one button.
+    const first = r.results.find((x) => x.ok);
+    if (first?.ok) {
+      setReportData((first.result.reportData ?? null) as typeof reportData);
+      setNotices((first.result.notices ?? []) as JobNotice[]);
+      setRecipes(first.result.recipes ?? []);
+      setRetried(Boolean(first.result.retried));
+    }
+    setCost(r.results.reduce((sum, x) =>
+      sum + (x.ok && typeof x.result.costCents === 'number' ? x.result.costCents : 0), 0) || null);
     setStage('done');
   };
 
@@ -127,13 +164,38 @@ export function AdaptScreen({ onReview, onChooseFile, presetJobId }: {
       {stage === 'compose' ? (
         <>
           <Section>
-            <Field label={es.adapt.forWhom} htmlFor="who">
-              <select className="select" id="who" value={learner} onChange={(e) => setLearner(e.target.value)}>
-                {choices.state === 'ready'
-                  ? choices.value.map((c) => <option key={c.code} value={c.code}>{c.name}</option>)
-                  : null}
-              </select>
-            </Field>
+            {/*
+              A checkbox list rather than a select plus an "add another" control.
+              Two controls over one list is two copies of one truth, which is the
+              defect this project keeps finding — and it would read as «this
+              child, and then corrections», which is exactly what `016` FR-1412
+              says a second learner must not feel like.
+
+              A real fieldset so the question and its answers are one group to a
+              screen reader rather than N unrelated checkboxes.
+            */}
+            <fieldset className="fieldset-bare">
+              {/* h2, not h3: this fieldset is the section's own heading and the
+                  page title above it is the h1. `ConnectionScreen`'s fieldsets
+                  use h3 because a Section h2 precedes them — copying the markup
+                  without the context skipped a level, which the a11y suite
+                  caught immediately. */}
+              <legend><h2>{es.adapt.forWhom}</h2></legend>
+              {choices.state === 'ready' ? choices.value.map((c) => (
+                <label key={c.code} className="check" htmlFor={`who-${c.code}`}>
+                  <input type="checkbox" id={`who-${c.code}`}
+                         checked={learners.includes(c.code)}
+                         onChange={(e) => setLearners((prev) => e.target.checked
+                           ? [...prev, c.code]
+                           : prev.filter((x) => x !== c.code))} />
+                  <span>{c.name}</span>
+                </label>
+              )) : null}
+              <p className="field-help">
+                Puedes marcar varios. La ficha se lee una sola vez y sale una
+                versión para cada uno — no se paga la lectura tres veces.
+              </p>
+            </fieldset>
           </Section>
 
           <Section title="¿De dónde sacamos la ficha?">
@@ -178,12 +240,16 @@ export function AdaptScreen({ onReview, onChooseFile, presetJobId }: {
           <Actions
             primary={
               <button className="btn btn-primary btn-lg"
-                      disabled={!text.trim() || !learner || !online}
+                      disabled={!text.trim() || learners.length === 0 || !online}
                       onClick={() => void startJob()}>
                 Continuar
               </button>
             }
-            note={!text.trim() && learner ? 'Trae la ficha o pega el texto para seguir.' : undefined}
+            note={
+              !text.trim() && learners.length > 0 ? 'Trae la ficha o pega el texto para seguir.'
+              : learners.length === 0 ? 'Marca al menos un alumno.'
+              : undefined
+            }
           />
         </>
       ) : null}
@@ -198,7 +264,7 @@ export function AdaptScreen({ onReview, onChooseFile, presetJobId }: {
             <Callout intent="decide" title="Esta ficha va a costar más de lo normal">
               <p>Serían unos {costGate.formatted}, más que tus fichas habituales. Tú decides.</p>
               <div className="row">
-                <button className="btn btn-primary" onClick={() => void runAdapt(true)}>Adelante</button>
+                <button className="btn btn-primary" onClick={() => void runAdapt(true, costGate.who)}>Adelante</button>
                 <button className="btn" onClick={() => setCostGate(null)}>Mejor no</button>
               </div>
             </Callout>
@@ -213,6 +279,14 @@ export function AdaptScreen({ onReview, onChooseFile, presetJobId }: {
 
       {stage === 'working' ? (
         <div className="card stack gap4">
+          {/* Whose adaptation this is (005 FR-519). Shown only when there is more
+              than one, because «1 de 1» is noise on the common case. */}
+          {progress?.of && progress.of > 1 ? (
+            <p className="meta" role="status">
+              {progress.index} de {progress.of}
+              {progress.learner ? ` · ${nameOf(progress.learner)}` : ''}
+            </p>
+          ) : null}
           <Stages stages={STAGES} current={stageIndex(progress?.stage)} />
           {/* Once the model is streaming there is no total to divide by, so the
               bar approaches without ever claiming completion. */}
@@ -222,42 +296,106 @@ export function AdaptScreen({ onReview, onChooseFile, presetJobId }: {
         </div>
       ) : null}
 
-      {stage === 'done' ? (
-        <div className="stack">
-          <Callout intent="ok" title="Listo">
-            Está adaptado y sin firmar. Ahora tienes que mirarlo tú.
-            {cost !== null ? ` Esta ficha ha costado unos ${cost} céntimo${cost === 1 ? '' : 's'}.` : ''}
-          </Callout>
-
-          {/* Anything the material tried to do, or that could not be read. */}
-          <InjectionNotice
-            notices={notices.map((n) => ({
-              block: n.block, quote: n.notice.quote, message: n.notice.message,
-            }))}
-          />
-
-          {retried ? (
-            <Callout intent="decide">
-              El primer intento volvió incompleto y lo he vuelto a pedir. Esta es la
-              segunda versión: míratela con calma.
+      {stage === 'done' && outcome ? (
+        outcome.results.length === 1 && outcome.results[0]?.ok ? (
+          /*
+             One learner: today's screen, unchanged. The common case must not get
+             worse to make room for the uncommon one.
+          */
+          <div className="stack">
+            <Callout intent="ok" title="Listo">
+              Está adaptado y sin firmar. Ahora tienes que mirarlo tú.
+              {cost !== null ? ` Esta ficha ha costado unos ${cost} céntimo${cost === 1 ? '' : 's'}.` : ''}
             </Callout>
-          ) : null}
 
-          {reportData
-            ? <ReportView {...reportData} />
-            : <Callout intent="info">Preparando el informe…</Callout>}
-          <Actions
-            primary={
-              <button className="btn btn-primary btn-lg" onClick={() => onReview(jobId, learner, recipes)}>
-                Revisar y firmar
-              </button>
-            }>
-            <button className="btn" onClick={() => {
-              setStage('compose'); setText(''); setReportData(null);
-              setNotices([]); setRecipes([]); setRetried(false); setCost(null);
-            }}>Otra ficha</button>
-          </Actions>
-        </div>
+            {/* Anything the material tried to do, or that could not be read. */}
+            <InjectionNotice
+              notices={notices.map((n) => ({
+                block: n.block, quote: n.notice.quote, message: n.notice.message,
+              }))}
+            />
+
+            {retried ? (
+              <Callout intent="decide">
+                El primer intento volvió incompleto y lo he vuelto a pedir. Esta es la
+                segunda versión: míratela con calma.
+              </Callout>
+            ) : null}
+
+            {reportData
+              ? <ReportView {...reportData} />
+              : <Callout intent="info">Preparando el informe…</Callout>}
+            <Actions
+              primary={
+                <button className="btn btn-primary btn-lg" onClick={() => onReview(jobId, learner, recipes)}>
+                  Revisar y firmar
+                </button>
+              }>
+              <button className="btn" onClick={startOver}>Otra ficha</button>
+            </Actions>
+          </div>
+        ) : (
+          /*
+             Several learners (005 US2/US3).
+             
+             One row per learner, each with its own outcome and its own way in.
+             Deliberately **not** a table: this is the first screen in the
+             application where children appear one under another, and a grid with
+             their axes as columns is one layout decision away from being a league
+             table of disability (Principle V, `015` FR-1310). Rows carry a name, a
+             state and an action, and nothing about the child.
+
+             And deliberately no «revisar todo» or «firmar todo». One signature per
+             sheet, because a signature is a claim she read it (Principle VII,
+             FR-512).
+          */
+          <div className="stack">
+            <Callout intent={outcome.results.every((r) => r.ok) ? 'ok' : 'decide'}
+                     title={outcome.results.every((r) => r.ok) ? 'Listas' : 'Casi'}>
+              {outcome.results.filter((r) => r.ok).length} de {outcome.results.length}{' '}
+              {outcome.results.length === 1 ? 'ficha adaptada' : 'fichas adaptadas'}, sin firmar.
+              Hay que mirar cada una por separado.
+              {cost !== null ? ` En total han costado unos ${cost} céntimo${cost === 1 ? '' : 's'}.` : ''}
+            </Callout>
+
+            <div className="stack gap3">
+              {outcome.results.map((r) => (
+                <div className="card stack gap2" key={r.learner}>
+                  <div className="row" style={{ justifyContent: 'space-between' }}>
+                    <strong>{nameOf(r.learner)}</strong>
+                    <Badge>{r.ok ? 'Sin firmar' : 'No ha salido'}</Badge>
+                  </div>
+                  {r.ok ? (
+                    <div className="row">
+                      <button className="btn btn-primary btn-sm"
+                              onClick={() => onReview(jobId, r.learner, r.result.recipes ?? [])}>
+                        Revisar y firmar
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      {/* Named, and hers alone: this is not a verdict on the
+                          others (FR-507). */}
+                      <p className="small" style={{ margin: 0 }}>
+                        {es.errors[r.kind] ?? r.message}
+                      </p>
+                      <div className="row">
+                        <button className="btn btn-sm"
+                                onClick={() => void runAdapt(true, [r.learner])}>
+                          Intentarlo otra vez solo con {nameOf(r.learner)}
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            <Actions>
+              <button className="btn" onClick={startOver}>Otra ficha</button>
+            </Actions>
+          </div>
+        )
       ) : null}
     </Page>
   );

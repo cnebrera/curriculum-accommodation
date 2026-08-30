@@ -50,7 +50,7 @@ disagreed with it. G3 remains open; G6 is moot.
 |---|---|---|---|
 | ~~G1~~ | Retention and erasure of learner data | **Closed** 2026-08-27 | `003-memory` FR-215…220 |
 | ~~G2~~ | Axis calibration guidance | **Drafted** 2026-08-27, awaiting PT review | `docs/axis-calibration.md` |
-| ~~G3~~ | Several learners, one worksheet | **Specified** 2026-08-30 | `005-group` |
+| ~~G3~~ | Several learners, one worksheet | **Implemented** 2026-08-30 | `005-group`, 20/20 — SC-502's cost measurement still needs a real key |
 | ~~G4~~ | Recipe versioning | **Closed** 2026-08-27 | `data-recipe: id@version` |
 | ~~G5~~ | Corpus validation script | **Closed** 2026-08-27 | `scripts/validate-recipes.sh` |
 | ~~G6~~ | Agent compatibility matrix | **Moot** 2026-08-28 — no harness, no agnosticism claim (ADR 0006) |
