@@ -103,6 +103,32 @@ specified here is: read a guide, honour it, help write the one Rampa is already
 qualified to help with, and interrogate any of them. Everything else is a later
 specification and should have to argue for itself.
 
+## Clarifications
+
+### Session 2026-08-30
+
+- **Q: Does helping with the ACS — the significant adaptation — stay in scope, or do
+  we stop at the ACNS?** → **A: Both, as written** (Carlos). US4 stays, with its five
+  locks intact: Rampa never proposes which objectives to modify, refuses to draft
+  where no evaluación psicopedagógica is recorded, names the PT as author and
+  Orientación as adviser, marks the draft, and declines in one sentence naming who
+  decides when asked to make the decision itself.
+
+  Recorded as a decision rather than a default. I offered stopping at the ACNS as the
+  low-risk option and he took the wider scope knowingly; the locks are therefore
+  load-bearing rather than cautious, and weakening any of them is a change to this
+  answer and not a detail of implementation.
+
+- **Q: Does a guide go through the same verification screen as a worksheet?** →
+  **A: Yes.** FR-1505 and FR-1506: one ingest pipeline, and she confirms what was
+  read before anything is written. A separate path for guides would be the
+  modality-specific pipeline Principle IV forbids, and the document where a
+  misreading matters most is the one nobody would have checked.
+
+- **Q: Is the ACS assistance blocked on the same DPO conversation as the rest?** →
+  **A: Yes, and more so.** The blocker is stated for the whole feature; US4 is where
+  a wrong answer has consequences for a child's schooling rather than for a file.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - She brings the guide she was given (Priority: P1)

@@ -75,6 +75,35 @@ pictures to decorate a text, and does not use a model to pick what a word looks
 like. The pictogram set is a controlled vocabulary; matching a word to it is
 deterministic lookup, which is Principle II territory and belongs in code.
 
+## Clarifications
+
+### Session 2026-08-30
+
+Answered from the constitution and from specifications already written rather than
+asked, each recording where the answer came from.
+
+- **Q: Does Rampa fetch the pictogram set for her if she asks?** → **A: No, and not
+  even behind a confirmation.** FR-1601 is absolute: the relationship with the
+  licence is hers, and a download button makes us the distributor of CC BY-NC-SA
+  content inside an Apache-2.0 application. Rampa says what to download and from
+  where; she goes and gets it.
+
+- **Q: What happens to an existing sheet when the pictogram set is upgraded and an
+  id no longer exists?** → **A: The sheet renders with a named gap and the provenance
+  still says which id it wanted.** FR-1616 requires the degrade; FR-1611 makes the
+  gap diagnosable rather than a mystery.
+
+- **Q: May a pictogram appear in an exam?** → **A: Only where it does not change what
+  is being asked, and never on a question whose subject is the word itself.** `012`
+  FR-1006 allows presentation to change in an assessment and nothing else; a
+  pictogram beside «rana» in a vocabulary test supplies the answer.
+
+- **Q: Who writes the word-to-pictogram mappings?** → **A: The set does.** FR-1608
+  makes matching a deterministic lookup against the set's own metadata. A mapping
+  file of ours would be a second vocabulary to maintain and to get wrong, and
+  FR-1612 already gives her the override for the cases the set gets wrong for her
+  school.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - She brings the set, and Rampa uses it (Priority: P1)

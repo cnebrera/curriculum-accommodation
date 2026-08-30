@@ -51,6 +51,43 @@ one reading.
 declaring a group that persists. If groups turn out to be worth having, they are
 `015`'s business and they need their own argument.
 
+## Clarifications
+
+### Session 2026-08-30
+
+Answered from the constitution and from specifications already written, rather than
+asked — each records where the answer came from, so a reviewer can disagree with the
+source rather than with my judgement.
+
+- **Q: Are the learners adapted concurrently or one after another?** → **A: One after
+  another.** It was an assumption in this spec; promoted to FR-518. Concurrency
+  against a rate-limited provider (`009`) turns one failure into three, and the
+  saving this feature exists for is the *ingest*, which happens once either way.
+
+- **Q: What does she see while a batch of three runs?** → **A: Progress names the
+  learner and the position — «2 de 3, Mateo».** Determined by FR-507: a failure must
+  name the learner it belongs to, and a progress stream that cannot say who it is on
+  cannot produce that message. Added as FR-519.
+
+- **Q: She corrects the extraction after one learner has already been adapted. What
+  happens to that sheet?** → **A: The correction is allowed, the affected sheets are
+  marked stale by name, and nothing is re-run without her.** Blocking the correction
+  would make a real misreading permanent; re-adapting automatically spends her money
+  on a decision she did not make. Marking and telling is what this project does
+  everywhere else. Added as FR-520 and an edge case.
+
+- **Q: Is there a maximum number of learners in one batch?** → **A: No cap; the cost
+  gate is the control.** FR-515 already makes the unusual-cost gate consider the
+  batch. A hard cap would be a number nobody can justify, and twelve is already the
+  realistic ceiling of an aula de apoyo (SC-505).
+
+- **Q: Does she choose the learners before or after verifying the extraction?** →
+  **A: One learner first, the rest before the run** — `016` was clarified to
+  **learner → work → material**, so a learner is named at the start and the others
+  are added once the extraction is verified and she can see what she is adapting.
+  This is the spec that has to make that work: `016` FR-1412 says a second learner
+  must not feel like a correction, and FR-503 here is what makes it free.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - She reads the worksheet once (Priority: P1)
@@ -170,6 +207,9 @@ and Lucía's keep it?» is a good question with a recorded answer.
 - **Twelve learners.** A PT's aula de apoyo can hold that many. Cost, time, and
   whether she is told before it runs rather than after.
 - **She cancels halfway.** What is on disk must be complete-or-absent per learner.
+- **She corrects the extraction after two of three are adapted.** Allowed; those two
+  are marked stale by name and she chooses whether to re-run them (FR-520). A stale
+  sheet is not deleted — it is the sheet she has already photocopied.
 
 ## Requirements *(mandatory)*
 
@@ -183,6 +223,18 @@ and Lucía's keep it?» is a good question with a recorded answer.
 - **FR-504**: The verification a teacher performs (`008`) MUST be a property of the
   job, not of a learner. Three verifications of one page are three chances to
   disagree with oneself.
+
+### Running the batch
+
+- **FR-518**: Learners MUST be adapted sequentially. Concurrency against a
+  rate-limited provider turns one failure into several, and the saving this feature
+  exists for is the ingest, which happens once regardless.
+- **FR-519**: Progress MUST name the learner and the position in the batch. A
+  progress stream that cannot say who it is on cannot produce FR-507's message.
+- **FR-520**: Correcting the extraction after adaptations exist MUST be allowed,
+  MUST mark the affected sheets stale **by learner name**, and MUST NOT re-run
+  anything on its own. Blocking the correction makes a real misreading permanent;
+  re-adapting automatically spends her money on a decision she did not make.
 
 ### N adaptations
 

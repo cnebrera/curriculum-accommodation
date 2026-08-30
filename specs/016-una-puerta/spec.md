@@ -55,6 +55,40 @@ gets abandoned.
 **Not a new pipeline.** ADR 0003: two entry points, one pipeline. Both doors end in
 the same IR and the same adaptation.
 
+## Clarifications
+
+### Session 2026-08-30
+
+- **Q: In what order does the door ask — work first, or learner first?** →
+  **A: Learner → work → material** (Carlos, chosen against my recommendation).
+
+  I argued for work-first on `012` US1 («she says what it is, once, before anything
+  else») and on its fit with `005`. He is right that it reads as the application's
+  order rather than hers: she does not arrive holding a category of work, she
+  arrives thinking about a child.
+
+  What that costs, named so it is designed for rather than discovered: **Principle
+  IV pulls the other way.** One worksheet for three learners is the classroom's
+  common case, and a flow that starts with one child makes the other two an
+  afterthought. So the resolution is that the learner chosen first is *the first
+  learner*, not *the only one*, and adding the others happens at the point of
+  running — where `005` FR-503 already reuses the extraction. FR-1411/1412.
+
+  And `012` US1 is preserved in substance rather than in sequence: the material kind
+  is still chosen explicitly and still never defaults (FR-1403). What moves is when
+  she is asked, not whether.
+
+- **Q: Does the interface say «generar adaptación» as one verb covering both doors?**
+  → **A: No — the two doors are named separately, in her words.** «Generar
+  adaptación» is our vocabulary for the pair; hers is «adaptar algo que tengo» and
+  «hacer material para que aprenda algo». `012` FR-1011 is about exactly this: the
+  interface must stop using one word for several things.
+
+- **Q: What happens if she has no learners at all?** → **A: The door routes to
+  creating one and does not offer a disabled control.** Already an edge case; with
+  learner-first it stops being an edge case and becomes the first screen a new
+  teacher meets, which is `006`'s onboarding.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - She says what she is doing (Priority: P1)
@@ -180,6 +214,12 @@ shortcut into the same door, so nothing else depends on it.
   re-read the source through a provider.
 - **FR-1410**: The door MUST NOT introduce an adaptation behaviour of its own. Its
   entire job is to reach `001`, `002` and `012`.
+- **FR-1411**: The learner chosen first MUST be the first learner and not the only
+  one. Adding others MUST be possible before the run without re-entering the work or
+  the material, and MUST reuse the extraction (`005` FR-503).
+- **FR-1412**: Choosing a learner first MUST NOT make a second learner feel like a
+  correction. The control that adds them is part of the flow, not a repair to it —
+  Principle IV is the common case, not the exception.
 
 ## Success Criteria *(mandatory)*
 
@@ -198,10 +238,8 @@ shortcut into the same door, so nothing else depends on it.
 
 ## Assumptions
 
-- The order is **work → material → learners**, following `012` US1 ("she says what
-  it is, once, before anything else"). The alternative — learner first — reads more
-  naturally for a single child and fights Principle IV the moment there are three.
-  **This is the decision most worth challenging in `/speckit-clarify`.**
+- The order is **learner → work → material**, decided in clarification. The learner
+  chosen first is the *first* learner, never the only one — see FR-1411.
 - «Generar adaptación» as a single verb covers both doors. Whether the Spanish
   interface says that or names the two things separately is a wording question for
   clarification, not a structural one.

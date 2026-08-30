@@ -40,6 +40,32 @@ same folder without them.
 **Not a dashboard.** No counts of adaptations per child, no "most active learner",
 no progress bars over a person.
 
+## Clarifications
+
+### Session 2026-08-30
+
+Answered from the constitution and from specifications already written rather than
+asked, each recording where the answer came from.
+
+- **Q: Which view is the default?** → **A: The list.** It is today's behaviour, and
+  a feature that changes what she sees before she has asked for anything is a feature
+  that makes her re-find her own caseload.
+
+- **Q: Do filters survive closing the application?** → **A: No.** FR-1303 keeps them
+  while she works. A filter she set on Friday and forgot is a caseload that looks
+  half-empty on Monday, and the first thing she will conclude is that Rampa lost her
+  learners.
+
+- **Q: Is `school` a property of the learner or of the teacher?** → **A: Of the
+  learner.** Itinerant PTs and orientadores work across centres, so a single value on
+  the teacher would be wrong for most of the people this field exists for.
+
+- **Q: Does this feature introduce a «grupo» or «clase» concept?** → **A: No.**
+  `005` already states that choosing several learners for one worksheet does not
+  declare a persistent group. If groups turn out to be worth having they need their
+  own argument, and building one here would be inventing the school's data model on
+  the way past.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - She finds a learner in a list of thirty (Priority: P1)

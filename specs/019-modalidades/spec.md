@@ -55,6 +55,26 @@ expertise this project does not have and cannot check.
 **Not a general export menu.** Every modality here has a learner it exists for. A
 format nobody named is not in scope.
 
+## Clarifications
+
+### Session 2026-08-30
+
+- **Q: Which modality is built first?** → **A: The editable export (ODT/Word)**
+  (Carlos). Confirms US1's P1: the most users by a wide margin, and the one that
+  makes every other feature safer — a teacher who can fix the last two words herself
+  does not abandon a sheet that is 95% right.
+
+- **Q: Is `MOT` part of this feature or corpus work?** → **A: Both, and the split is
+  the point.** This specification says what the response route must achieve
+  (FR-1716…1719); the recipes that achieve it are corpus under `recipes/core/`
+  (backlog G19), written in Markdown by someone who knows how a child answers —
+  Principle I.
+
+- **Q: Does Rampa speak the audio itself?** → **A: No.** It produces an audio-*ready*
+  document; what speaks it is the operating system, her player, or a service. A
+  bundled speech engine is a large dependency and a per-language quality problem
+  nobody here can judge.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - She edits it (Priority: P1)

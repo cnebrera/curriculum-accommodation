@@ -46,6 +46,40 @@ folder named `E38`.
 This is the same shape as the finding in `003`, where `planForget` was written,
 tested and exposed over IPC and no screen called it. Built, correct, unreachable.
 
+## Clarifications
+
+### Session 2026-08-30
+
+Answered from the constitution and from specifications already written rather than
+asked, each recording where the answer came from.
+
+- **Q: When is `profiles/<code>/record.md` written?** → **A: When the work changes —
+  a job completing, a sign-off, an erasure — and on an explicit rebuild. Never on
+  opening a screen.** FR-1215 already forbids rewriting more often than the work
+  changes; this names the events. Reading a learner must not touch a synced folder.
+
+- **Q: Does the machine index under `.rampa/` exist in the first version?** → **A:
+  No. Scan the vault.** FR-1214 permits a cache; SC-1207 demands 400 jobs without a
+  perceptible wait, and reading front matter from 400 directories is milliseconds.
+  A cache built before it is needed is a second copy of a truth that already has one
+  — the defect this whole specification is written against. It gets added when a
+  measurement asks for it, not before.
+
+- **Q: Does an unsigned draft from three months ago appear in the record?** → **A:
+  Yes, marked unsigned.** Hiding it would mean the one thing she cannot find is the
+  thing she abandoned halfway, which is exactly what she is looking for when she
+  comes back to it. Principle VII already requires it to announce itself; the record
+  is one more place it must.
+
+- **Q: What is «the original» for material composed from objectives (`002`)?** →
+  **A: The objectives she asked for and the anchor that was used.** Already US2-3;
+  recorded here because it is the case where «the original» has no file behind it
+  and an implementation could reasonably conclude there is nothing to show.
+
+- **Q: Where does the school-year boundary rule live?** → **A: In the education
+  corpus (`011`), not in code.** September–June is right in Spain and wrong in the
+  southern hemisphere. Already an assumption; promoted here so it is not rediscovered.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - She opens a learner and sees everything (Priority: P1)
