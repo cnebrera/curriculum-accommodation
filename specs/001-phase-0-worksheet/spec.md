@@ -185,9 +185,37 @@ assessment.
 - **Adaptation report** — changes grouped by decision, derived from provenance
   attributes.
 
-## Success Criteria *(mandatory)*
+### The citation that was already there *(added 2026-08-30, from SDA-IA)*
 
-### Measurable Outcomes
+The Junta de Andalucía's generator anchors every activity to a named DUA pauta,
+with links to the BOE, the BOJA and CAST's guidelines, because a document a
+teacher has to defend to jefatura de estudios needs the vocabulary the
+administration recognises. Our report gives her excellent reasons in plain
+Spanish and not one word of that vocabulary.
+
+**Except it does.** Every recipe carries an `evidence:` field — «UDL 8.3;
+working-memory load», «WCAG 1.1.1; Marrakesh accessible-format copies», «UNE
+153101:2018 EX — Lectura Fácil» — and `packages/core/src/recipes/index.ts`
+parses it into the `Recipe` type. **Nothing reads it after that.** It is written,
+validated, typed and dropped.
+
+That is the fourth time this project has found the same shape: `planForget` in
+`003`, the injection notices in `007` T089, the corpus journal entries whose
+dates never parsed, and now this. Built, correct, unreachable. See
+[docs/sda-ia-junta-andalucia.md](../../docs/sda-ia-junta-andalucia.md).
+
+- **FR-016**: The report MUST show, for every applied recipe, the citation in its
+  `evidence:` field. A field parsed and never rendered is a field that will drift
+  out of date without anyone noticing, because nobody is looking at it.
+- **FR-017**: Where the citation names a DUA/UDL guideline, the report MUST name
+  it in a form a teacher can quote. WCAG, UNE 153101 and plain pedagogical
+  reasoning are equally valid citations and MUST NOT be forced into a DUA shape —
+  five of the nine current recipes cite something else, correctly.
+- **FR-018**: A recipe MUST remain valid with no citation. Requiring one would
+  push a contributor who knows how to adapt material, and not how to cite it,
+  out of the corpus — which is the audience `recipes/README.md` was written for.
+
+## Success Criteria *(mandatory)*
 
 - **SC-001**: A special-education teacher takes a two-page worksheet from source
   file to classroom-ready adapted material in under 20 minutes, including review.

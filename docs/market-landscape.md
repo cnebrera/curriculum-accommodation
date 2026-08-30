@@ -20,6 +20,15 @@ none covers what this project sets out to do end to end.
 **Limitation.** All of it is built on IDEA/FERPA. It knows nothing of ACI/DIAC,
 LOMLOE, or competencias específicas and criterios de evaluación.
 
+> **Corrected 2026-08-30.** That last sentence was true of the *US* tools and was
+> written as though it were true of everything. It is not. **SDA-IA**, the Junta
+> de Andalucía's own generator, knows LOMLOE, the Orden andaluza, DUA 3.0 and the
+> full Andalusian curriculum — competencias, criterios, saberes and descriptores,
+> with their official codes, served from a database rather than invented by the
+> model. It solves a different problem (the teacher's planning document, not the
+> child's material) but it solves the curricular half better than we do today.
+> See [sda-ia-junta-andalucia.md](sda-ia-junta-andalucia.md).
+
 ## 2 · Adapting content
 
 - **Diffit** — paste a text, URL or topic and it rewrites to a reading level

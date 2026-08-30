@@ -201,6 +201,42 @@ costs a rewrite.
 - **FR-910**: These fields MUST NOT appear in learner-facing output, and the
   existing output check MUST cover them.
 
+
+### What the corpus should also carry *(added 2026-08-30, from SDA-IA)*
+
+FR-913's «orientation about what a learner at that point is usually working on» is
+today a paragraph of prose per year. The Junta de Andalucía's own generator shows
+what the same knowledge looks like when it is structured: competencias específicas,
+criterios de evaluación and saberes básicos, per course and per subject, each with
+its official LOMLOE code, served as data and never invented by the model.
+
+That is the same corpus-as-truth decision this project has now made four times,
+and it is the input `002` FR-127 needs. See
+[docs/sda-ia-junta-andalucia.md](../../docs/sda-ia-junta-andalucia.md).
+
+- **FR-918**: An education file MUST be able to carry, per year and per subject,
+  the official curricular elements of that system — for Spain: competencias
+  específicas, criterios de evaluación and saberes básicos — each with its
+  official code.
+- **FR-919**: Those elements MUST remain optional. A system file that carries only
+  years and ages MUST stay valid, and the Spanish file MUST be allowed to gain
+  them one subject at a time. A corpus that is only useful when complete is a
+  corpus that is never useful.
+- **FR-920**: The corpus MUST also be able to carry the **PT and AL objective
+  taxonomy** — the areas, blocks and objectives a specialist names when she writes
+  a programa específico («memoria de trabajo», «fonema /R/», «resolución de
+  conflictos»). These are *objectives*, what she is working on, and they are a
+  different axis from the barriers of `005`, which say what gets in the way. Both
+  describe the same child and neither replaces the other.
+- **FR-921**: That taxonomy MUST NOT be copied from another application's data
+  file. Its structure is a fact about the profession and traceable to the
+  Instrucción de la Consejería; the exact wording of two hundred objectives is
+  somebody else's work. Build it from the source instruction and say where it came
+  from (FR-916 already requires a file to state what it is).
+- **FR-922**: Nothing in this corpus MAY carry a diagnosis, a category of
+  disability or a clinical label. An objective is what a child is working on; a
+  déficit is what somebody decided about them (Principle V, ADR 0002).
+
 ## Success Criteria *(mandatory)*
 
 - **SC-901**: For a learner with an age, the adapted sheet's register matches the

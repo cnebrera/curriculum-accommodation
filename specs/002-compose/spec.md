@@ -229,9 +229,36 @@ wrong answer is refused before she sees it.
 - **FR-126**: Generated material MUST carry a material kind (`012`) and MUST be
   bound by that kind's prohibitions from the moment it is first revised.
 
-## Success Criteria *(mandatory)*
+### Anchoring in the official curriculum *(added 2026-08-30, from SDA-IA)*
 
-### Measurable Outcomes
+The Junta de Andalucía's own generator settles a question this spec left open. Its
+strongest decision is that competencias, criterios and saberes reach the prompt
+from a database with their official codes intact, never from the model — *elimina
+la alucinación curricular*, in their words. FR-102 already requires an anchor and
+FR-122 already says the level comes from the education corpus; this is the shape
+those requirements were reaching for, and it is the difference between "material
+about carrying in multiplication" and material a PT can put in front of a jefatura
+de estudios. See [docs/sda-ia-junta-andalucia.md](../../docs/sda-ia-junta-andalucia.md).
+
+- **FR-127**: An official criterio de evaluación from the education corpus (`011`)
+  MUST be admissible as the anchor required by FR-102, and MUST be recorded with
+  its official code.
+- **FR-128**: Where an objective is anchored to an official criterio, the report
+  MUST cite that code, so the traceability of Principle VI is expressed in the
+  vocabulary the administration uses rather than only in plain Spanish.
+- **FR-129**: The **curricular level the material targets** MUST be an input, and
+  it MUST come from her or from the learner's overlay
+  (`profiles/<code>/adaptations.md`) — never from the application's own judgement
+  about the child. Composing at a stated level is a different act from quietly
+  lowering someone else's worksheet, which Principle III forbids; the difference
+  is who decided, and it must stay visible.
+- **FR-130**: Material MUST be able to record how many **sessions** it is for. A PT
+  works in sessions and the application has no concept of one.
+- **FR-131**: Objectives MAY be chosen from the PT/AL objective corpus (`011`)
+  rather than typed. FR-101's free text stays: a corpus that cannot be escaped is
+  a corpus that decides what a teacher is allowed to want.
+
+## Success Criteria *(mandatory)*
 
 - **SC-101**: Zero unflagged factual errors in generated material across the
   validation set. This is a hard gate: one unflagged error fails the feature.
