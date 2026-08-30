@@ -72,6 +72,7 @@ scale nobody had rendered.
 
 - [ ] T022 Update `specs/006-desktop-app/validation.md`: SC-805 moves from **not met** to whatever is now true, with both screenshot sets referenced
 - [ ] T023 Add the composition rules to the CI reviewer checklist — a screen that declares its own width or gap is the regression this feature exists to prevent
+- [ ] T030 The application has no icon: the dock shows Electron's default, which announces the framework rather than the product on the one surface a teacher sees before she has opened anything. `Logo.tsx` already holds a designed mark with a thesis behind it — ground, ramp, threshold, door — so this is rendering it to `.icns`/`.ico`/`.png`, wiring `BrowserWindow` and `electron-builder`, and checking it at 16px where the arched top stops resolving (the component already draws a separate small variant for exactly this reason)
 - [ ] T024 SC-1101 needs a teacher's first ten seconds. Still unmet, still only collectable once, and still the only verdict that counts
 
 ---
