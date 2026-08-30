@@ -5,6 +5,25 @@ are decisions rather than omissions.
 
 Nothing here blocks Phase 0 validation.
 
+> **Status 2026-08-30.** Worked through end to end. **G3** (several learners, one
+> worksheet) had been open since the first audit, rated High, and its data-model
+> foundation landed on 2026-08-28 — the flow on top of it was never written and
+> `016` FR-1406 had started assuming it existed. Now `005-group`. **G8** and the
+> `MOT` half of **G19** are `019-modalidades`; the pictogram half is
+> `018-pictogramas`, where the ARASAAC licence turned out to decide the whole
+> architecture. **G18** went into `001`, which owns provenance.
+>
+> Two defects in this file itself, found only by working through it: **two
+> different gaps were both filed as G16** (corpus families, and the unreviewed
+> Spanish education file) — the corpus one is now G19. And `015` cited `005` as
+> though it were the axes specification; `005` was reserved for the group flow all
+> along.
+>
+> Still open and deliberately: **G15** (a documentation change, not a feature),
+> **G16** and **G2** (both closed only when a practising teacher disagrees with
+> something specific), **G14** (awaiting a DPO), **G17** (a non-goal on purpose),
+> and the `PER-A`/`REG` corpus families, which are recipes rather than a spec.
+
 **Status 2026-08-28:** the vehicle is decided *and* it is the only one — the
 harness is removed (ADR 0006). The desktop application over an open vault is
 specified in `006-desktop-app`. That closes or specifies G9, G10, G11 and G13, and
@@ -31,12 +50,12 @@ disagreed with it. G3 remains open; G6 is moot.
 |---|---|---|---|
 | ~~G1~~ | Retention and erasure of learner data | **Closed** 2026-08-27 | `003-memory` FR-215…220 |
 | ~~G2~~ | Axis calibration guidance | **Drafted** 2026-08-27, awaiting PT review | `docs/axis-calibration.md` |
-| G3 | Several learners, one worksheet | High | New spec `005-group` |
+| ~~G3~~ | Several learners, one worksheet | **Specified** 2026-08-30 | `005-group` |
 | ~~G4~~ | Recipe versioning | **Closed** 2026-08-27 | `data-recipe: id@version` |
 | ~~G5~~ | Corpus validation script | **Closed** 2026-08-27 | `scripts/validate-recipes.sh` |
 | ~~G6~~ | Agent compatibility matrix | **Moot** 2026-08-28 — no harness, no agnosticism claim (ADR 0006) |
 | ~~G7~~ | Stated accessibility target, never tested | **Enforced** 2026-08-28 — `010` T018/T019 put axe in CI, failing the build | `specs/010-look-and-feel` |
-| G8 | Phase 1 modalities (audio, braille-ready, ODT) unspecified | Low, deliberate | New spec, after Phase 0 |
+| ~~G8~~ | Phase 1 modalities (audio, braille-ready, ODT) unspecified | **Specified** 2026-08-30 | `019-modalidades`, which also picks up the `MOT` half of G19 |
 | ~~G9~~ | Delivery vehicle | **Decided** 2026-08-27 | ADR 0005 accepted → `006-desktop-app` |
 | ~~G10~~ | Learner names reach the model | **Specified** 2026-08-27 | `006` FR-417…421 |
 | ~~G11~~ | Flat `profiles/` caseload layout | **Specified** 2026-08-27 | `006` FR-412 |
@@ -45,6 +64,8 @@ disagreed with it. G3 remains open; G6 is moot.
 | ~~G14~~ | No plain-language document for the school's data protection officer | **Drafted** 2026-08-28, awaiting DPO review | `docs/proteccion-de-datos.md` |
 | G15 | Guardrails are norms, not controls — and we do not say so | Medium | `AGENTS.md`, README |
 | G16 | `instructions/education/es.md` is unreviewed and partly wrong | Medium | `011` T026 — see below |
+| G19 | Corpus families missing for `MOT`, `PER-A`, `REG`, and pictograms | Medium | `recipes/core/` — pictograms **specified** as `018-pictogramas`; `MOT` as `019` US4; `PER-A` and `REG` still open corpus work |
+| ~~G18~~ | Provenance does not record which service produced the material | **Specified** 2026-08-30 | `001` FR-019/020 |
 
 ---
 
@@ -326,7 +347,11 @@ every moment should have a spec. What it added beyond the seams pass:
    journey sentence → T094). Handover *import* (004 US2) recorded as deliberately
    deferred rather than silently missing.
 
-## G16 · Corpus families missing for three axes
+## G19 · Corpus families missing for three axes
+
+*(Renumbered 2026-08-30: this was filed as G16 and so was «the Spanish education
+file is unreviewed», two different gaps under one number in the same document —
+found while working through the backlog, which is the only way anyone would.)*
 
 New gap, found by the problem pass. The corpus has nothing for `MOT`
 (response-route: dictate, type, point — the axis is *how they answer* and no

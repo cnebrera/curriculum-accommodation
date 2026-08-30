@@ -211,6 +211,18 @@ dates never parsed, and now this. Built, correct, unreachable. See
   it in a form a teacher can quote. WCAG, UNE 153101 and plain pedagogical
   reasoning are equally valid citations and MUST NOT be forced into a DUA shape —
   five of the nine current recipes cite something else, correctly.
+- **FR-019**: Provenance MUST record **which AI service produced the material**
+  (backlog G18). Adapted material already records `data-recipe: id@version` and the
+  axis that justified each change. With one provider that was invisible; with six
+  offered and switching expected (`009`), a teacher comparing last month's sheets
+  with this month's cannot tell whether a difference came from a changed recipe, a
+  corrected note, or a different model — and «traceability to a moving target is
+  not traceability» is the argument that closed G4 for recipe versions. The same
+  argument applies here and was not noticed for a year.
+- **FR-020**: The recorded service MUST be the identifier of the service, never a
+  model name. `009` FR-702 says a teacher never sees a model name, and a provenance
+  attribute is somewhere she can see.
+
 - **FR-018**: A recipe MUST remain valid with no citation. Requiring one would
   push a contributor who knows how to adapt material, and not how to cite it,
   out of the corpus — which is the audience `recipes/README.md` was written for.

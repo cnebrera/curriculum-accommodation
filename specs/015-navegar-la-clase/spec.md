@@ -164,7 +164,8 @@ where the design has to say no to the obvious one.
 - **FR-1311**: No view MAY show a total, average, count or score summarising a
   learner's barriers.
 - **FR-1312**: The axis strip MUST keep reading as *what helps this child*, in the
-  words of the corpus, in every view it appears in (`005`/Principle V).
+  words of the corpus (`instructions/axes.md`,
+  `docs/axis-calibration.md`), in every view it appears in (Principle V).
 
 ## Success Criteria *(mandatory)*
 
