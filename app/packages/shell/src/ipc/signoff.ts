@@ -1,6 +1,13 @@
 import { jobAdapted } from '@rampa/core';
-import { currentVault } from '../ipc/vault.js';
-import { handle } from '../ipc/wrap.js';
+import { currentVault } from './vault.js';
+import { handle } from './wrap.js';
+
+/*
+ * Moved from `jobs/` on 2026-08-30 (013 T019, FR-1111) — and it turned out there
+ * was nothing to separate. The whole file was one IPC handler; it had never been
+ * a job, it was wiring filed in the wrong drawer. The rule found that by being
+ * applied rather than by anyone reading the file.
+ */
 
 /**
  * The ONLY way the draft mark comes off (007 FR-509).

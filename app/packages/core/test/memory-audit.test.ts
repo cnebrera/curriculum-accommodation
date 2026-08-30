@@ -381,9 +381,11 @@ describe('a journal entry the application wrote is an entry it can read', () => 
   });
 
   it('writes dates quoted, so no future parser repeats the mistake', () => {
+    // `signoff.ts` moved from `jobs/` to `ipc/` on 2026-08-30 (013 T019): it was
+    // entirely one IPC handler, so it had never been a job.
     const writers = [
       join(shellSrc, 'ipc', 'memory.ts'),
-      join(shellSrc, 'jobs', 'signoff.ts'),
+      join(shellSrc, 'ipc', 'signoff.ts'),
     ];
     for (const f of writers) {
       const code = read(f);

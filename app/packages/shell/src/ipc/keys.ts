@@ -1,7 +1,7 @@
 import { safeStorage, app } from 'electron';
 import { PROVIDERS, providerById, providerFor } from '@rampa/providers';
 import { checkKeyShape } from '@rampa/core';
-import { loadServices } from './corpus.js';
+import { loadServices } from '../corpus/index.js';
 import { CredentialStore, today, type Crypto } from '../credentials.js';
 import { handle } from './wrap.js';
 

@@ -6,14 +6,13 @@ import { knownNames } from '../ipc/names.js';
 import { writeFile, mkdir } from 'node:fs/promises';
 import { dirname } from 'node:path';
 import { resolveInVault } from '@rampa/core';
-import { handle } from '../ipc/wrap.js';
 
 /**
  * HTML and PDF are produced by the application itself (006 FR-425): nothing for
  * the teacher to install, and — because Chromium is bundled — the PDF she prints
  * is made by the same engine we tested against.
  */
-async function renderJob(jobId: string, learnerCode: string) {
+export async function renderJob(jobId: string, learnerCode: string) {
   const vault = currentVault();
   const raw = await vault.readRaw(jobAdapted(jobId, learnerCode));
   if (!raw) throw new RampaError('vault-unreadable', 'Este trabajo todavía no está adaptado.');
@@ -58,48 +57,35 @@ async function renderJob(jobId: string, learnerCode: string) {
   return { html, photocopy: checkPhotocopy(html) };
 }
 
-export function registerPrintIpc(): void {
-  /**
-   * Fix two things by hand (T094).
-   *
-   * 001's own journey says *"they read the report, fix two things, and take it to
-   * class"*. Until this existed her only in-app route for a two-word fix was a
-   * full re-run: cost, wait, and a fresh document to re-check. Opening the file
-   * in her own editor is the vault promise doing its job, not a workaround — and
-   * the watcher already reports the change, so a re-render picks it up.
-   */
-  handle('job:openForEditing', async (jobId: string, learnerCode: string) => {
-    const vault = currentVault();
-    const path = resolveInVault(vault.root, jobAdapted(jobId, learnerCode));
-    const problem = await shell.openPath(path);
-    if (problem) throw new RampaError('vault-unreadable', problem);
-    return path;
-  });
+/**
+ * HTML to PDF, which is the reason this application is Electron.
+ *
+ * ADR 0008 chose Electron over Tauri **against** the numbers on bundle size and
+ * memory, on one argument: Chromium's `printToPDF` produces a print-quality
+ * document from the same HTML the screen shows, and Tauri has no programmatic
+ * equivalent. Two of that ADR's three arguments were later found to be
+ * overstated and were corrected in the file. This is the one that survived.
+ *
+ * So it stays in `jobs/` with its `electron` import, and the boundary test
+ * counts it rather than pretending it is not there. Everything else in this
+ * package that touches Electron is wiring; this is the dependency itself.
+ */
+export async function renderPdf(html: string): Promise<Buffer> {
+  const win = new BrowserWindow({ show: false, webPreferences: { offscreen: true, javascript: false } });
+  try {
+    await win.loadURL('data:text/html;charset=utf-8,' + encodeURIComponent(html));
+    return await win.webContents.printToPDF({
+      printBackground: true, pageSize: 'A4',
+      margins: { top: 0.6, bottom: 0.6, left: 0.6, right: 0.6 },
+    });
+  } finally { win.destroy(); }
+}
 
-  handle('job:render', async (jobId: string, learnerCode: string) => {
-    const vault = currentVault();
-    const { html, photocopy } = await renderJob(jobId, learnerCode);
-    const htmlPath = resolveInVault(vault.root, `${outputDir(jobId, learnerCode)}/sheet.html`);
-    await mkdir(dirname(htmlPath), { recursive: true });
-    await writeFile(htmlPath, html, 'utf8');
-    return { htmlPath, photocopy };
-  });
-
-  handle('job:pdf', async (jobId: string, learnerCode: string) => {
-    const vault = currentVault();
-    const { html } = await renderJob(jobId, learnerCode);
-
-    const win = new BrowserWindow({ show: false, webPreferences: { offscreen: true, javascript: false } });
-    try {
-      await win.loadURL('data:text/html;charset=utf-8,' + encodeURIComponent(html));
-      const pdf = await win.webContents.printToPDF({
-        printBackground: true, pageSize: 'A4',
-        margins: { top: 0.6, bottom: 0.6, left: 0.6, right: 0.6 },
-      });
-      const pdfPath = resolveInVault(vault.root, `${outputDir(jobId, learnerCode)}/sheet.pdf`);
-      await mkdir(dirname(pdfPath), { recursive: true });
-      await writeFile(pdfPath, pdf);
-      return pdfPath;
-    } finally { win.destroy(); }
-  });
+/** Open the adapted document in her own editor (T094). */
+export async function openAdaptedForEditing(jobId: string, learnerCode: string): Promise<string> {
+  const vault = currentVault();
+  const path = resolveInVault(vault.root, jobAdapted(jobId, learnerCode));
+  const problem = await shell.openPath(path);
+  if (problem) throw new RampaError('vault-unreadable', problem);
+  return path;
 }

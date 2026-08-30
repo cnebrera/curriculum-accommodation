@@ -3,13 +3,13 @@ import { join } from 'node:path';
 import { registerVaultIpc, reopenVault, startWatching, stopWatching } from './ipc/vault.js';
 import { registerNamesIpc } from './ipc/names.js';
 import { registerKeysIpc } from './ipc/keys.js';
-import { registerCorpusIpc } from './ipc/corpus.js';
+import { registerCorpusIpc } from './corpus/index.js';
 import { registerCostIpc } from './ipc/cost.js';
 import { registerMemoryIpc } from './ipc/memory.js';
-import { registerAdaptIpc } from './jobs/adapt.js';
-import { registerIngestIpc } from './jobs/ingest.js';
-import { registerPrintIpc } from './jobs/print.js';
-import { registerSignoffIpc } from './jobs/signoff.js';
+import { registerAdaptIpc } from './ipc/adapt.js';
+import { registerIngestIpc } from './ipc/ingest.js';
+import { registerPrintIpc } from './ipc/print.js';
+import { registerSignoffIpc } from './ipc/signoff.js';
 import { startLogging, registerDiagnosticsIpc } from './ipc/diagnostics.js';
 
 let win: BrowserWindow | null = null;
@@ -31,6 +31,17 @@ function createWindow(): void {
      */
     minWidth: 560, minHeight: 480,
     title: 'Rampa',
+    /*
+     * The dock showed Electron's default icon (013 T030) — the framework's mark
+     * on the one surface a teacher sees before she has opened anything.
+     *
+     * `electron-builder` picks `build/icon.png` up on its own for the packaged
+     * app, so this line is for the *unpackaged* case: `npm run dev`, and the
+     * Linux window manager, which reads it from the window rather than from the
+     * bundle. Missing file is not fatal — Electron falls back — so a checkout
+     * that has not run `npm run icon` still launches.
+     */
+    icon: join(import.meta.dirname, '..', '..', 'build', 'icon.png'),
     backgroundColor: '#fcfcfa',
     webPreferences: {
       // electron-vite emits main and preload into SEPARATE directories, so this

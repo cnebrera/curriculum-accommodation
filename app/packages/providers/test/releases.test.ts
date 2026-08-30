@@ -2,8 +2,25 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { createServer, type Server, type ServerResponse } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import { checkForUpdate, isNewer } from '../src/releases.js';
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, dirname } from 'node:path';
+
+/** Every TypeScript source in the shell package, concatenated. */
+function shellSources(): string {
+  const appRoot = join(dirname(new URL(import.meta.url).pathname), '..', '..', '..');
+  const dir = join(appRoot, 'packages', 'shell', 'src');
+  const out: string[] = [];
+  const walk = (d: string): void => {
+    for (const e of readdirSync(d)) {
+      const p = join(d, e);
+      if (statSync(p).isDirectory()) walk(p);
+      else if (/\.tsx?$/.test(p)) out.push(readFileSync(p, 'utf8'));
+    }
+  };
+  walk(dir);
+  if (out.length === 0) throw new Error(`no shell sources under ${dir}`);
+  return out.join('\n');
+}
 
 /**
  * The update check (006 T073).
@@ -146,9 +163,18 @@ describe('it is never automatic', () => {
     expect(code.match(/setTimeout/g) ?? []).toHaveLength(1);
     expect(code).toContain('controller.abort');
 
-    // And the main-process handler must not call it on its own either.
-    const shell = readFileSync(join(root, 'packages/shell/src/ipc/corpus.ts'), 'utf8');
-    const shellCode = shell.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
+    /*
+     * And the main-process handler must not call it on its own either.
+     *
+     * Read across the whole shell package rather than from one filename. This
+     * named `ipc/corpus.ts`, which was split into six files on 2026-08-30 (013
+     * T018) — so the assertion broke, loudly, which is the good outcome. A
+     * question of the form "does anything anywhere call this on its own?" should
+     * never have been pinned to a path in the first place: a seventh file could
+     * have answered it differently by being new.
+     */
+    const shellCode = shellSources()
+      .replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
     const calls = shellCode.match(/checkForUpdate\(/g) ?? [];
     // Exactly one: inside the IPC handler, reached only from her button.
     expect(calls).toHaveLength(1);

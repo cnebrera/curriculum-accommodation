@@ -379,17 +379,22 @@ describe('FR-509 · only sign-off removes the draft mark', () => {
       }
     }
     /*
-     * Four files, and each one legitimately: `signoff.ts` writes the state,
-     * `print.ts` reads it, `main.ts` registers the handler, `preload.ts` exposes
-     * it. A **fifth** appearing here is a second way to unmark a document, and
-     * a teacher's signature would stop meaning anything.
+     * Four files, and each one legitimately: `ipc/signoff.ts` writes the state,
+     * `jobs/print.ts` reads it, `main.ts` registers the handler, `preload.ts`
+     * exposes it. A **fifth** appearing here is a second way to unmark a
+     * document, and a teacher's signature would stop meaning anything.
      *
      * Listed exactly rather than filtered by "mentions vs writes": a filter is
      * something a future edit slips past, and an exact list has to be updated
      * deliberately by whoever adds the file.
+     *
+     * `signoff.ts` moved from `jobs/` to `ipc/` on 2026-08-30 (013 T019). The
+     * count did not change, which is the thing this test is actually about — a
+     * reorganisation that changed *which* files may sign would have failed here,
+     * and did not.
      */
     expect(writers.sort()).toEqual([
-      'jobs/print.ts', 'jobs/signoff.ts', 'main.ts', 'preload.ts',
+      'ipc/signoff.ts', 'jobs/print.ts', 'main.ts', 'preload.ts',
     ]);
   });
 

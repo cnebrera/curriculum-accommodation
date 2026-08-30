@@ -7,6 +7,24 @@ const appRoot = join(dirname(new URL(import.meta.url).pathname), '..', '..', '..
 const corpus = join(appRoot, 'corpus');
 const shellSrc = join(appRoot, 'packages', 'shell', 'src');
 
+/**
+ * Every file of the corpus module, concatenated.
+ *
+ * It used to be `readFile(shellSrc/ipc/corpus.ts)`. That file was split into six
+ * on 2026-08-30 (013 T018) and both assertions below started failing with ENOENT
+ * — which is the good outcome: a test pinned to one filename is a test that
+ * stops asserting the moment somebody reorganises, and an ENOENT is at least
+ * loud. Reading the directory means the next split does not break it either, and
+ * a seventh file cannot quietly escape the guarantee by being new.
+ */
+async function corpusModule(): Promise<string> {
+  const dir = join(shellSrc, 'corpus');
+  const files = await walk(dir);
+  const parts = await Promise.all(files.filter((f) => f.endsWith('.ts')).map((f) => readFile(f, 'utf8')));
+  if (parts.length === 0) throw new Error(`no corpus module found under ${dir}`);
+  return parts.join('\n');
+}
+
 async function walk(dir: string): Promise<string[]> {
   const out: string[] = [];
   let entries: string[];
@@ -47,7 +65,7 @@ describe('the corpus is read-only at runtime (T080, 006 FR-413)', () => {
   });
 
   it('the vault is where writes go, and it is never the corpus', async () => {
-    const corpusIpc = await readFile(join(shellSrc, 'ipc', 'corpus.ts'), 'utf8');
+    const corpusIpc = await corpusModule();
     // Reading is the whole job of that module.
     expect(corpusIpc).toMatch(/readFile/);
     expect(corpusIpc).not.toMatch(/writeFile|appendFile|rm\s*\(/);
@@ -81,7 +99,7 @@ describe('provenance survives a corpus update (T081, 006 FR-416)', () => {
     // material/, so a sheet adapted with one-task-per-page@1 still says @1 after
     // the bundle ships @2. Asserted over the code because the alternative is
     // shipping two corpus versions in a test fixture.
-    const corpusIpc = await readFile(join(shellSrc, 'ipc', 'corpus.ts'), 'utf8');
+    const corpusIpc = await corpusModule();
     expect(corpusIpc).not.toMatch(/material|adapted\.md|jobDir/);
   });
 

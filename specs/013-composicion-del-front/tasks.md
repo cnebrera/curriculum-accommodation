@@ -61,10 +61,10 @@ scale nobody had rendered.
 
 ## Phase 5 · The back end, and the boundary
 
-- [ ] T018 Split `ipc/corpus.ts` by subject: corpus, services, education, links
-- [ ] T019 Separate orchestration from IPC registration in `jobs/` (FR-1111)
-- [ ] T020 [P] Assert the Electron boundary: nothing outside `packages/shell` imports `electron` (FR-1112, SC-1104). ADR 0008 chose Electron against the numbers, so the exit stays affordable by test rather than by habit
-- [ ] T021 [P] Record the size of the Electron-specific surface, so a future migration is a known number
+- [x] T018 Split `ipc/corpus.ts` by subject: corpus, services, education, links *(done: `packages/shell/src/corpus/` — `bundle` (where it is), `recipes`, `services`, `education`, `links` (the two handlers that reach the network, filed together because «what leaves the machine, and when» is the question a DPO asks first). 330 lines → six files, largest 111.)*
+- [x] T019 Separate orchestration from IPC registration in `jobs/` (FR-1111) *(done. `jobs/adapt.ts` and `jobs/ingest.ts` no longer import `electron` at all — the file picker, the progress send and the userData path were the only uses and all three were wiring. `jobs/signoff.ts` turned out to be **entirely** an IPC handler and moved to `ipc/`: it had never been a job. `jobs/print.ts` keeps its import, and that is the honest outcome — the offscreen `printToPDF` is ADR 0008's one surviving argument.)*
+- [x] T020 [P] Assert the Electron boundary: nothing outside `packages/shell` imports `electron` (FR-1112, SC-1104). ADR 0008 chose Electron against the numbers, so the exit stays affordable by test rather than by habit *(done: `packages/shell/test/boundary.test.ts`. It found a real leftover on its first run — `jobs/adapt.ts` still importing `handle` — which is the entire point of writing it.)*
+- [x] T021 [P] Record the size of the Electron-specific surface, so a future migration is a known number *(done, and asserted rather than described: the exact list of twelve files with a comment each saying what it needs Electron **for**, plus a 1,400-line ceiling. Recorded at 1,010 lines of a ~15,000-line application.)*
 
 ---
 
@@ -72,7 +72,7 @@ scale nobody had rendered.
 
 - [ ] T022 Update `specs/006-desktop-app/validation.md`: SC-805 moves from **not met** to whatever is now true, with both screenshot sets referenced
 - [ ] T023 Add the composition rules to the CI reviewer checklist — a screen that declares its own width or gap is the regression this feature exists to prevent
-- [ ] T030 The application has no icon: the dock shows Electron's default, which announces the framework rather than the product on the one surface a teacher sees before she has opened anything. `Logo.tsx` already holds a designed mark with a thesis behind it — ground, ramp, threshold, door — so this is rendering it to `.icns`/`.ico`/`.png`, wiring `BrowserWindow` and `electron-builder`, and checking it at 16px where the arched top stops resolving (the component already draws a separate small variant for exactly this reason)
+- [x] T030 The application has no icon: the dock shows Electron's default, which announces the framework rather than the product on the one surface a teacher sees before she has opened anything. `Logo.tsx` already holds a designed mark with a thesis behind it — ground, ramp, threshold, door — so this is rendering it to `.icns`/`.ico`/`.png`, wiring `BrowserWindow` and `electron-builder`, and checking it at 16px where the arched top stops resolving (the component already draws a separate small variant for exactly this reason) *(done. Rendered from `Logo.tsx` rather than drawn again — two marks drifting apart is this project's most familiar defect — and redrawn for the size rather than scaled: a solid teal plate with the mark in white, because a hairline in the accent colour disappears at 32px. First attempt filled the plate edge to edge with no margin; found by generating it and looking at it, twice. Rendered by Electron's own Chromium, since Playwright's browsers are not installed and one PNG does not justify a dependency.)*
 - [ ] T024 SC-1101 needs a teacher's first ten seconds. Still unmet, still only collectable once, and still the only verdict that counts
 
 ---
