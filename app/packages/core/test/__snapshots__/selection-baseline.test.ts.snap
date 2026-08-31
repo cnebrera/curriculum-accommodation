@@ -1,8 +1,16 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`selection after scope filtering > a study text: explanation only · cognitive load and attention 1`] = `[]`;
+exports[`selection after scope filtering > a study text: explanation only · cognitive load and attention 1`] = `
+[
+  "chunk-the-prose",
+]
+`;
 
-exports[`selection after scope filtering > a study text: explanation only · executive function 1`] = `[]`;
+exports[`selection after scope filtering > a study text: explanation only · executive function 1`] = `
+[
+  "signpost-the-page",
+]
+`;
 
 exports[`selection after scope filtering > a study text: explanation only · reading, in Spanish 1`] = `
 [
@@ -26,6 +34,7 @@ exports[`selection after scope filtering > a worksheet: instructions and exercis
 exports[`selection after scope filtering > a worksheet: instructions and exercises · executive function 1`] = `
 [
   "explicit-steps",
+  "signpost-the-page",
 ]
 `;
 
@@ -53,6 +62,7 @@ exports[`selection after scope filtering > an exam: assessments and a figure · 
 [
   "exam-access-not-difficulty",
   "explicit-steps",
+  "signpost-the-page",
 ]
 `;
 
@@ -73,6 +83,7 @@ exports[`selection after scope filtering > an exam: assessments and a figure · 
 
 exports[`selection today, per profile > cognitive load and attention — before scope filtering 1`] = `
 [
+  "chunk-the-prose",
   "exam-access-not-difficulty",
   "one-task-per-page",
 ]
@@ -82,6 +93,7 @@ exports[`selection today, per profile > executive function — before scope filt
 [
   "exam-access-not-difficulty",
   "explicit-steps",
+  "signpost-the-page",
 ]
 `;
 

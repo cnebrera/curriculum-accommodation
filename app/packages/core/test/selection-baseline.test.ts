@@ -65,6 +65,9 @@ const PROFILES: Array<{ name: string; profile: Profile }> = [
   { name: 'reading, in Spanish', profile: profile('B04', { DEC: 3, LIN: 2 }) },
 ];
 
+const byName = (name: string): Profile =>
+  PROFILES.find((x) => x.name === name)!.profile;
+
 const selected = (p: Profile, lang?: string): string[] =>
   selectRecipes(corpus, p, lang).selected.map((r) => r.id).sort();
 
@@ -133,30 +136,59 @@ describe('MOT finally selects something (019 US4)', () => {
 
 describe('the coverage gap the filter revealed', () => {
   /**
-   * **A finding, not a failure**, and the reason T001 was worth writing.
+   * **G20, opened by this test and closed on 2026-08-31.**
    *
-   * With `scope` honoured, a study text made of `explanation` and `example`
-   * blocks selects **zero** recipes for a learner with high cognitive load or
-   * weak executive function. Every load recipe in the corpus is scoped to
-   * `exercise` or `assessment`.
+   * With `scope` honoured, a study text made of `explanation` and `example` blocks
+   * selected **zero** recipes for a learner with high cognitive load or weak
+   * executive function: every load recipe in the corpus was scoped to `exercise` or
+   * `assessment`.
    *
-   * Before the filter, that learner got `one-task-per-page` (which is about
-   * exercises and was being applied to prose anyway) and
-   * `exam-access-not-difficulty` (which is about exams and was nonsense here).
-   * So the coverage was never real — it was two misapplied recipes.
+   * Before the filter, that learner got `one-task-per-page` (about exercises, and
+   * being applied to prose anyway) and `exam-access-not-difficulty` (about exams,
+   * and nonsense there). The coverage was never real — it was two misapplied
+   * recipes, and this test is what made that visible.
    *
-   * The filter is right and the corpus has a hole: nothing reduces load in
-   * explanatory prose. Recorded as backlog **G20** rather than papered over by
-   * loosening a scope, which would put the misapplication back and hide it again.
+   * Closed the way the backlog entry demanded: **not** by loosening a scope, which
+   * would have put the misapplication back and hidden it again, but by writing the
+   * recipes the corpus was missing — `chunk-the-prose` (`COG`) and
+   * `signpost-the-page` (`EJE`).
+   *
+   * The assertion is inverted rather than deleted. What it now protects is that the
+   * prose recipes stay scoped to prose: if `chunk-the-prose` ever acquires
+   * `exercise` in its scope, or the study text goes empty again, this fails.
    */
-  it('a study text selects nothing for a load profile — see backlog G20', () => {
+  it('a study text now selects the prose recipes — G20 closed', () => {
     const studyText = ['explanation', 'example'];
-    for (const name of ['cognitive load and attention', 'executive function']) {
-      const p = PROFILES.find((x) => x.name === name)!.profile;
-      expect(selectRecipes(corpus, p, 'es', studyText).selected,
-        `${name}: if this is no longer empty, G20 has been closed — update this test`)
-        .toEqual([]);
-    }
+
+    const forLoad = selectRecipes(corpus, byName('cognitive load and attention'), 'es', studyText);
+    expect(forLoad.selected.map((r) => r.id)).toContain('chunk-the-prose');
+
+    const forExecutive = selectRecipes(corpus, byName('executive function'), 'es', studyText);
+    expect(forExecutive.selected.map((r) => r.id)).toContain('signpost-the-page');
+  });
+
+  /**
+   * `axes:` is **AND**, and it caught the author of those two recipes.
+   *
+   * `chunk-the-prose` was written `[COG>=2, EJE>=2, ATE>=2]`, which means «all three
+   * at once» and fired for **neither** baseline profile — a recipe written to close a
+   * coverage gap, covering nothing. The ninth instance in this project of something
+   * written, parsed and read by nobody.
+   *
+   * Asserted rather than remembered: a prose recipe that stops applying to the
+   * profile it was written for fails here.
+   */
+  it('each prose recipe fires for the axis it was written for', () => {
+    const studyText = ['explanation', 'example'];
+    const fires = (name: string, recipe: string): boolean =>
+      selectRecipes(corpus, byName(name), 'es', studyText).selected.some((r) => r.id === recipe);
+
+    expect(fires('cognitive load and attention', 'chunk-the-prose'), 'COG → chunk').toBe(true);
+    expect(fires('executive function', 'signpost-the-page'), 'EJE → signpost').toBe(true);
+    // And neither is a recipe that applies to everybody, which would be the other
+    // way to make this test pass and would mean nothing.
+    expect(fires('visual access', 'chunk-the-prose'), 'PER-V alone → no chunk').toBe(false);
+    expect(fires('visual access', 'signpost-the-page'), 'PER-V alone → no signpost').toBe(false);
   });
 });
 

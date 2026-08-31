@@ -418,30 +418,57 @@ content without carrying the condition that came with it — and we were doing i
 the repository that contains the document explaining how careful we are about
 licences.
 
-## G20 · No recipe reduces load in explanatory prose
+## G20 · No recipe reduces load in explanatory prose — *CLOSED 2026-08-31*
 
-Found 2026-08-31, by `012` T005 turning `recipe.scope` on and the selection
-baseline making the consequence visible.
+Found by `012` T005 turning `recipe.scope` on and the selection baseline making the
+consequence visible.
 
 With scope honoured, a **study text** — `explanation` and `example` blocks, no
-exercises — selects **zero** recipes for a learner with `COG>=2` or `EJE>=2`.
-Every load recipe in the corpus is scoped to `exercise` or `assessment`.
+exercises — selected **zero** recipes for a learner with `COG>=2` or `EJE>=2`. Every
+load recipe in the corpus was scoped to `exercise` or `assessment`.
 
 The coverage was never real. Before the filter that learner received
 `one-task-per-page`, which is about exercises and was being applied to prose, and
 `exam-access-not-difficulty`, which is about exams and was nonsense there. Two
-misapplied recipes are not coverage; they are two wrong answers that happened to
-be present.
+misapplied recipes are not coverage; they are two wrong answers that happened to be
+present.
 
-**Do not close this by loosening a scope.** That puts the misapplication back and
-hides it again. What is missing is a recipe about prose: chunking, headings,
-one idea per paragraph, a summary box — the things a PT actually does to a page of
-apuntes. It is also, like the rest of G19, a natural first community contribution.
+**Closed as the entry demanded: not by loosening a scope.** Two recipes were
+written — `recipes/core/chunk-the-prose.md` (`COG>=2`) and
+`recipes/core/signpost-the-page.md` (`EJE>=2`) — and the baseline test was inverted
+rather than deleted, so it now fails if a prose recipe acquires `exercise` in its
+scope or if the study text goes empty again.
 
-Asserted in `packages/core/test/selection-baseline.test.ts`, which fails if the
-emptiness stops being true — so closing this gap is noticed rather than assumed.
+### Writing them found something about the corpus format
 
-## G19 · Corpus families missing for three axes
+**`axes:` is AND.** `chunk-the-prose` was written `[COG>=2, EJE>=2, ATE>=2]`,
+intending «any of these», which means «all three at once» — and it fired for
+**neither** baseline profile. A recipe written to close a coverage gap, covering
+nothing: the ninth instance in this project of something written, parsed and read by
+nobody, and the first one where I was the author of the file.
+
+Three consequences, all recorded:
+
+1. `recipes/README.md` now says it, with this failure named. There is no OR, and a
+   rule that applies to «`COG` or `EJE`» is **two recipes** — which turned out to be
+   the honest decomposition anyway: what a page needs to be *chunked* and what it
+   needs to be *startable* are different judgements, even for the same learner.
+2. `selection-baseline.test.ts` asserts each prose recipe fires for the axis it was
+   written for **and does not fire for an unrelated one** — because «applies to
+   everybody» is the other way to make that test pass and it would mean nothing.
+3. `signpost-the-page` is scoped to `instruction`, so it now fires on an exam. Half
+   of it must not: «empieza por la 1» changes how a paper is taken, and a progress
+   box beside a question is scaffolding `012`'s checklist forbids. The recipe says
+   so, and `kinds.test.ts` asserts the prose says so.
+
+### Still needs a person
+
+Both recipes are `reviewed_by_teacher: false` in spirit — the corpus's own standard
+is «false until a practising PT **disagrees** with something concrete», and nobody
+has read either. The `chunk-the-prose` example is a circulation text I wrote; a PT
+may well say the summary box is exactly what she has been told not to give.
+
+## G19 · Corpus families missing for three axes## G19 · Corpus families missing for three axes
 
 *(Renumbered 2026-08-30: this was filed as G16 and so was «the Spanish education
 file is unreviewed», two different gaps under one number in the same document —

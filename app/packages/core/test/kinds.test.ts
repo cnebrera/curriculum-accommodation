@@ -194,3 +194,31 @@ describe('when the document disagrees with her, she is told and nothing changes'
     expect(report.kindDisagreement).toBeNull();
   });
 });
+
+describe('signposting an exam is half of signposting a worksheet (018/019 era)', () => {
+  /**
+   * `signpost-the-page` is scoped to `instruction`, so it fires on an exam paper —
+   * the selection baseline shows it, beside `exam-access-not-difficulty`.
+   *
+   * That is correct for the count and the numbering: «son seis preguntas» changes
+   * nothing that is asked. It is **not** correct for «empieza por la 1», which
+   * changes how the paper is taken, or for progress boxes, which are a mark
+   * somebody has to interpret and which `012`'s own checklist calls scaffolding.
+   *
+   * The recipe is prose for a model, so this asserts the prose says so — the same
+   * way `012`'s hard rules are asserted rather than assumed.
+   */
+  it('the recipe tells the model which half does not apply', async () => {
+    const { readFileSync } = await import('node:fs');
+    const { join, dirname } = await import('node:path');
+    const root = join(dirname(new URL(import.meta.url).pathname), '..', '..', '..', '..');
+    const flat = readFileSync(join(root, 'recipes', 'core', 'signpost-the-page.md'), 'utf8')
+      .replace(/\s+/g, ' ');
+
+    expect(flat).toContain('In an exam, only half of this');
+    expect(flat).toContain('No «empieza por la 1»');
+    expect(flat).toContain('No progress boxes');
+    // And it says what is still allowed, so the model does not conclude «skip it».
+    expect(flat).toContain('saying how many questions there are');
+  });
+});

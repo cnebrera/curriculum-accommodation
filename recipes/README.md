@@ -28,6 +28,24 @@ evidence: "UDL 8.3; working-memory load"
 ---
 ```
 
+### `axes:` is AND, and that catches people
+
+`axes: [COG>=2, ATE>=2]` means «cognitive load **and** attention», so a recipe with
+three conditions is **narrower** than one with a single condition, not broader. The
+intuition runs the other way: a list looks like «any of these».
+
+There is no OR. If a rule applies to a learner with high cognitive load *or* weak
+executive function, that is **two recipes**, and writing them separately is usually
+the honest outcome anyway — what a page needs to be *chunked* and what it needs to
+be *startable* are different professional judgements, even when the same learner
+needs both.
+
+Caught the hard way on 2026-08-31: `chunk-the-prose` was written with
+`[COG>=2, EJE>=2, ATE>=2]`, which fired for **nobody** — and it was a recipe
+written to close a gap about coverage. It would have shipped as a file in the
+corpus that never applied to a single learner, which is the same shape as every
+other «written, parsed, read by nothing» defect in this project.
+
 **Bump `version` whenever you change what the recipe does.** Adapted material
 records `data-recipe: one-task-per-page@1`, and that attribute is the audit
 trail: without a version it points at a moving target, and traceability to a
