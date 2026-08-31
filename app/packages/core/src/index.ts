@@ -64,6 +64,8 @@ export * from './redact/names.js';
 export * from './guide/corpus.js';
 export * from './guide/read.js';
 export * from './guide/refuse.js';
+export * from './guide/overlay.js';
+export * from './guide/acns.js';
 export * from './pictograms/set.js';
 export * from './pictograms/match.js';
 export * from './pictograms/apply.js';

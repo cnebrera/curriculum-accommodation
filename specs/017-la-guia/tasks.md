@@ -39,11 +39,11 @@ safeguard built around code that already works without it.
 
 - [x] T008 `Measure` and `GuideReading` per
       [contracts/guide.md](contracts/guide.md), in `core` *(done, in `read.ts`, per the contract.)*
-- [ ] T009 `packages/core/src/guide/overlay.ts`: confirmed measures → the overlay's
+- [x] T009 `packages/core/src/guide/overlay.ts`: confirmed measures → the overlay's
       Markdown, and **the heading is owned here** — no caller passes one, because
-      FR-1512 keys on it
-- [ ] T010 [P] A measure Rampa cannot act on is written and marked as such
-      (FR-1510), never dropped
+      FR-1512 keys on it *(done: `packages/core/src/guide/overlay.ts`. Prose in the file, structure only in the extraction step (research R2) — and the heading is a **constant**, not a parameter, because FR-1512 has no field on disk to key on. Appended and never replacing: a February DIAC does not retract October's, and which measures were in force when a sheet was adapted is a question the file has to answer.)*
+- [x] T010 [P] A measure Rampa cannot act on is written and marked as such
+      (FR-1510), never dropped *(done, with its own section and its own sentence: «están aquí porque el documento las dice, no porque yo haga algo con ellas».)*
 - [ ] T011 [P] The guide goes through `008`'s pipeline unchanged, and through its
       verification gate (FR-1505/1506). Assert there is **no second ingest path**
 
@@ -79,17 +79,17 @@ says so.
 
 ## Phase 4 · US2 — Rampa writes the ACNS it has been doing all along (P1)
 
-- [ ] T019 [US2] `packages/core/src/guide/acns.ts`: assemble the four sourceable
-      sections from `014`'s record and the overlay (research R3)
-- [ ] T020 [US2] Name the unsourceable ones as **missing**, never interpolated
+- [x] T019 [US2] `packages/core/src/guide/acns.ts`: assemble the four sourceable
+      sections from `014`'s record and the overlay (research R3) *(done: `packages/core/src/guide/acns.ts`. A rendering, not a generation — nothing in it asks a model for a sentence.)*
+- [x] T020 [US2] Name the unsourceable ones as **missing**, never interpolated
       (FR-1514) — and the two «partly» ones get what exists plus a marked gap,
       because «del 3 de marzo al 12 de junio» is a fact about work done and not a
-      plan for a term
-- [ ] T021 [US2] Decline for a learner with no recorded work, and say why: a draft
-      from nothing is a form filled in by a language model (FR-1515)
-- [ ] T022 [US2] The draft carries the mark, states **Séneca is the record**, and
+      plan for a term *(done, and the «partly» pair is the interesting one: temporalización gets the real dates plus «falta lo tuyo», because «del 3 de marzo al 12 de junio» is a fact about work done and not a plan for a term. A section the corpus adds and the code cannot build is **named as missing**, never assembled from a plausible guess.)*
+- [x] T021 [US2] Decline for a learner with no recorded work, and say why: a draft
+      from nothing is a form filled in by a language model (FR-1515) *(done, and the sentence carries the argument: «un borrador hecho de nada es un formulario rellenado por un modelo de lenguaje, y lo firmarías tú». Plus what would unblock it.)*
+- [x] T022 [US2] The draft carries the mark, states **Séneca is the record**, and
       names the role that must sign it — the **tutor** coordinates an ACNS, and
-      Rampa must not imply the PT authored it (FR-1502, FR-1504, FR-1516)
+      Rampa must not imply the PT authored it (FR-1502, FR-1504, FR-1516) *(done, and above the content where it cannot be scrolled past. The **tutor** coordinates an ACNS, so the draft says «Rampa no la ha escrito: ha ordenado lo que ya había hecho» — the failure being avoided is a document that looks complete enough to file.)*
 
 ---
 
