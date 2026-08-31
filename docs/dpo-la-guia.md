@@ -12,6 +12,23 @@
 > Escrito 2026-08-31, cuando `002`, `012`, `016`, `018` y `019` cerraron y `017` se
 > quedó como el único bloqueo real.
 
+## Primero: **qué** DPO, porque no es obvio y sólo uno puede responder
+
+Todo el repositorio dice «el DPO» como si hubiera uno. No lo hay, y confundirlos
+cuesta la reunión entera.
+
+| Quién | ¿Puede responder a esto? |
+|---|---|
+| **El delegado de protección de datos del responsable del tratamiento** — el centro si es privado o concertado; **si es un centro público andaluz, normalmente la Consejería y no el centro** *(a confirmar: cambia quién firma y cuánto tarda)* | **Sí. Es el único.** Los datos del alumno los trata el centro/la Administración, y la base jurídica y el registro de actividades son suyos |
+| **El DPO de VASS** | **No.** Rampa no es un producto de VASS y VASS no trata estos datos. Puede darte una lectura interna como favor, y no autoriza nada |
+| **El proveedor de IA** (Anthropic, Google…) | **No.** Lo que importa de ellos no es su DPO: son sus condiciones — retención, entrenamiento, transferencias — y el contrato lo firma quien trata, no nosotros |
+
+Y una cosa que conviene tener clara antes de pedir la reunión: **tú no eres
+encargado del tratamiento.** Rampa es software libre que corre en el ordenador de
+la maestra; no recibe nada, no almacena nada y no hay servicio detrás. No hay
+contrato que firmar contigo, y eso simplifica la conversación — pero también
+significa que quien tiene que decidir no trabaja para ti.
+
 ## El objeto de la conversación, en un párrafo
 
 Una PT recibe del orientador un DIAC o una ACNS: el documento oficial que dice qué
@@ -129,10 +146,31 @@ Cada afirmación de arriba tiene un test público que corre en cada cambio:
 Y [`docs/proteccion-de-datos.md`](proteccion-de-datos.md) es el documento general,
 con la lista de comprobación que ya existía.
 
+## Puede que la reunión no toque todavía
+
+Hay un camino que no la necesita, y merece considerarse antes de pedirla.
+
+La **Fase 0** — la validación con la PT identificada — no necesita `017`. Necesita
+los momentos 0-4 del escenario, que están construidos. Si el piloto corre con la
+**opción D** (ella teclea las medidas del DIAC en `adaptations.md`), **no hay ningún
+tratamiento nuevo que autorizar**: ninguna página del DIAC sale de su ordenador, y
+lo que sí sale — el material de clase, con códigos en lugar de nombres — es lo que ya
+describe `proteccion-de-datos.md`.
+
+Dicho de otro modo: **`017` bloquea `017`, no el proyecto.** Pedir una reunión con un
+DPO de la Consejería para desbloquear una comodidad, antes de que una sola PT haya
+dicho si lo demás le sirve, es gastar el favor en el momento equivocado.
+
+Lo que sí conviene hacer ya, y es barato: preguntarle **a ella** si su centro le
+permite usar una clave de IA propia con material de clase. Si la respuesta es que no
+lo sabe — que es la respuesta más frecuente, y el propio
+`proteccion-de-datos.md` lo dice — eso es un dato sobre la Fase 0, no sobre `017`.
+
 ## Después de la reunión
 
 Lo único que hace falta traer de vuelta para desbloquear `017`:
 
+- [ ] **Con qué DPO se ha hablado** — el del responsable del tratamiento, no otro
 - [ ] Respuesta a la pregunta 1 — sí, no, o «sí con condiciones» y cuáles
 - [ ] Si es sí: qué proveedores, y si hay restricción de ubicación
 - [ ] Si entra en art. 9: la base, y si hace falta EIPD

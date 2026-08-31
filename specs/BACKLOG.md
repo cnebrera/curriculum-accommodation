@@ -403,9 +403,22 @@ sending that page to a third party.
 questions, what depends on each answer, the three options with two of them named as
 wrong, and the tests the DPO can run rather than believe.
 
-**What is needed**: twenty minutes with a named person. Everything else in this
-backlog that «needs a person» needs a teacher; this one needs a lawyer, and it is the
-only item on the list that a single meeting closes.
+**What is needed**: twenty minutes with **the data protection officer of the
+controller** — which is the school for a private or concertado centre and normally
+the Consejería for a public Andalusian one. Not VASS's DPO: Rampa is not a VASS
+product and VASS does not process this data, so it can give an internal read as a
+favour and cannot authorise anything. The whole repository said «the DPO» as if there
+were one, which was itself the defect; `docs/dpo-la-guia.md` now names which.
+
+**And it may not be time to ask.** Phase 0 — the validation with the identified PT —
+does not need `017`. If the pilot runs on option D, there is **no new processing to
+authorise**: no page of the DIAC leaves her machine. `017` blocks `017`, not the
+project, and spending a favour with a Consejería DPO on a convenience before one
+teacher has said the rest works is spending it at the wrong moment.
+
+What *is* worth asking now, and is free: whether her school lets her use her own AI
+key with classroom material. «No lo sé» is the commonest answer and it is a fact
+about Phase 0, not about `017`.
 
 **The floor, worth knowing before the meeting**: if the answer is no, `003` FR-209's
 typed overlay already exists. Rampa loses ten minutes of a PT's time per learner per
