@@ -222,3 +222,64 @@ describe('signposting an exam is half of signposting a worksheet (018/019 era)',
     expect(flat).toContain('saying how many questions there are');
   });
 });
+
+/**
+ * There is nowhere a default kind could come from (012 T004).
+ *
+ * T004 asked for `kind` on «the part/document schema, optional, absent by default».
+ * Two halves, and only one of them exists:
+ *
+ * - **The part schema** belongs to Phase 4, which is deferred with its reason
+ *   written down — it moves the vault layout that `005`, `014` and every path helper
+ *   now read.
+ * - **The document** has no front-matter schema at all. The IR's front matter is
+ *   `Record<string, unknown>` by design, so `006` FR-410 holds: a field a teacher
+ *   wrote by hand survives a round trip because nothing validates it away.
+ *
+ * So there is no field to make optional. What T004 actually protects is that **no
+ * code path invents `worksheet`**, and that is what is asserted here — over the
+ * source, because the defect it replaced was one line of code that has since been
+ * deleted and could be written again in a minute.
+ */
+describe('no code path invents a kind', () => {
+  it('nothing in core or the shell assigns `worksheet` as a value', async () => {
+    const { readdirSync, statSync, readFileSync } = await import('node:fs');
+    const { join, dirname, relative } = await import('node:path');
+
+    const appRoot = join(dirname(new URL(import.meta.url).pathname), '..', '..', '..');
+    const walk = (dir: string): string[] => readdirSync(dir).flatMap((e) => {
+      const p = join(dir, e);
+      return statSync(p).isDirectory() ? walk(p) : (/\.ts$/.test(p) ? [p] : []);
+    });
+
+    const strip = (src: string): string =>
+      src.replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/\/\/[^\n]*/g, ' ');
+
+    const offenders: string[] = [];
+    for (const f of [
+      ...walk(join(appRoot, 'packages', 'core', 'src')),
+      ...walk(join(appRoot, 'packages', 'shell', 'src')),
+    ]) {
+      const src = strip(readFileSync(f, 'utf8'));
+      /*
+       * An assignment or a fallback, not a mention. `KIND_ES.worksheet` is a label
+       * lookup and `kind === 'worksheet'` is a comparison — neither invents one.
+       * What is forbidden is `kind: 'worksheet'`, `?? 'worksheet'` and
+       * `= 'worksheet'`.
+       */
+      if (/kind:\s*'worksheet'|\?\?\s*'worksheet'|=\s*'worksheet'/.test(src)) {
+        offenders.push(relative(appRoot, f));
+      }
+    }
+
+    expect(offenders, 'a defaulted kind is how an exam gets adapted as a worksheet')
+      .toEqual([]);
+  });
+
+  it('and the resolver still refuses to invent one', () => {
+    // The behavioural half, beside the structural one.
+    expect(findKind(KINDS, undefined)).toBeNull();
+    expect(findKind(KINDS, '')).toBeNull();
+    expect(findKind(KINDS, 'ficha')).toBeNull();
+  });
+});

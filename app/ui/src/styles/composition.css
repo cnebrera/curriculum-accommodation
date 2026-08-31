@@ -165,6 +165,17 @@
 
    So: the semantics of a fieldset, the appearance of a `Section`. Same heading
    level, same rhythm, no box. */
+/* ── `hidden` must actually hide ────────────────────────────────────────────
+   The UA stylesheet's `[hidden] { display: none }` is author-overridable, so any
+   class with its own `display` silently wins. `.fieldset-bare { display: flex }`
+   did exactly that: `016` hides the «¿Qué es?» fieldset once the door has already
+   asked, and it stayed on screen — a teacher answering the same question twice,
+   which is the wizard failure the door's contract exists to prevent.
+
+   Found by `e2e/material.spec.ts`. Global rather than per-class, because the next
+   `hidden` somewhere else would have the same bug and nobody would connect them. */
+[hidden] { display: none !important; }
+
 .fieldset-bare {
   border: 0;
   padding: 0;

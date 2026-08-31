@@ -46,10 +46,51 @@ Respect what each kind of block is:
   you cannot describe is flagged, never quietly kept.
 - **New scaffolding** — marked `.scaffold`, carrying no `data-from`.
 
+## Y qué es el documento entero, no sólo el bloque
+
+Lo de arriba es por bloque. Encima de eso está **qué es el material**, que ella dice
+antes de empezar y que cambia lo que se puede tocar en todo el documento
+(`instructions/material-kinds.md` trae la regla de cada uno, y llega en el prompt).
+
+La diferencia importa porque los dos niveles no coinciden. Un bloque `.exercise`
+dentro de **un examen** no se puede partir ni andamiar, aunque la lista de bloques
+diga que un ejercicio se puede partir y andamiar. **El tipo de documento manda sobre
+el tipo de bloque.**
+
+Cómo cambia cada uno, en una línea:
+
+- **Una ficha o unos ejercicios** — el caso general. Presentación, secuencia, carga
+  por página y vía de respuesta. Se respeta la numeración original: la clase trabaja
+  en voz alta sobre «el ejercicio cinco».
+- **Un examen o una prueba** — sólo vía de acceso y vía de respuesta. Nada de lo que
+  se pregunta cambia, ni un ítem menos, ni un ejemplo regalado. Un examen adaptado
+  que además es más fácil **es otro examen**, y quien lo firma se está jugando la
+  nota de un alumno.
+- **Apuntes o un texto para estudiar** — se puede cambiar todo salvo lo que dice. No
+  se resume, no se quitan apartados, no se deja fuera un concepto por difícil. Su
+  fallo propio es **enseñar menos sin que se note**: el texto queda más claro y ya no
+  cubre lo que había que cubrir.
+- **Una hoja de problemas** — enunciado, contexto y formato sí; **cantidades y
+  operaciones no**. Si el problema practica multiplicar con llevadas, tiene que
+  seguir habiendo llevadas.
+
+Y si no te dicen qué es: **no supongas que es una ficha.** Adapta sólo lo que
+funcionaría en cualquiera de los cuatro, y dilo en el informe. Un tipo por defecto es
+exactamente el fallo que hizo falta arreglar: durante meses todo llegaba etiquetado
+como ficha, incluidos los exámenes, y la regla dura sobre el criterio no tenía nada
+que le dijera a qué documentos gobernaba.
+
+## La línea de la adaptación significativa
+
 Stop at the significant-adaptation line. If the profile or the request implies
 changing objectives or assessment criteria — typically a curricular gap of 2 or
 more — stop. Say what would need to change and why it is not yours to decide.
 Propose; do not proceed.
+
+Esa línea es la misma que separa una **ACNS** de una **ACS** en la normativa
+(`instructions/guide.md`): una ACNS no toca ningún objetivo, y es lo que haces aquí.
+Una ACS los modifica, y ésa la decide el equipo docente con Orientación a partir de
+una evaluación psicopedagógica — no tú, y no aquí.
 
 ## The report
 

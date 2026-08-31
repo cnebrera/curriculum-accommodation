@@ -55,7 +55,12 @@ export function AdaptScreen({
    * **No screen re-asks what the intent already holds.** That is the failure every
    * wizard has: she answers «para quién» on the door and is asked again here, and
    * concludes the first answer did not register. So when these arrive, the two
-   * questions are not rendered — she can still change them from the door.
+   * question is not rendered — she can still change it from the door.
+   *
+   * **The learners are a different case.** The door answers «para quién» with one
+   * learner and FR-1411 says the first is the first, not the only one — so that list
+   * stays on screen with the door's choice already ticked, and adding the second is
+   * one click rather than a trip back.
    */
   presetLearners?: readonly string[];
   presetKind?: string;
@@ -243,8 +248,18 @@ export function AdaptScreen({
               A real fieldset so the question and its answers are one group to a
               screen reader rather than N unrelated checkboxes.
             */}
-            <fieldset className="fieldset-bare"
-                      hidden={presetLearners !== undefined && presetLearners.length > 0}>
+            {/*
+              **Never hidden**, even when the door already picked somebody.
+              
+              It was, briefly, and the e2e suite caught what that costs: the door
+              answers «para quién» with **one** learner, and FR-1411 says the first is
+              the first and not the only one. Hiding the control that adds the others
+              is FR-1412 broken in the most literal way — the second learner becomes
+              unreachable rather than merely feeling like a correction.
+              
+              The kind is different and stays hidden: there is nothing to add to it.
+            */}
+            <fieldset className="fieldset-bare">
               {/* h2, not h3: this fieldset is the section's own heading and the
                   page title above it is the h1. `ConnectionScreen`'s fieldsets
                   use h3 because a Section h2 precedes them — copying the markup
@@ -262,8 +277,9 @@ export function AdaptScreen({
                 </label>
               )) : null}
               <p className="field-help">
-                Puedes marcar varios. El material se lee una sola vez y sale una
-                versión para cada uno — no se paga la lectura tres veces.
+                {presetLearners?.length
+                  ? 'Ya está marcado el que elegiste. Puedes añadir más: el material se lee una sola vez y sale una versión para cada uno — no se paga la lectura tres veces.'
+                  : 'Puedes marcar varios. El material se lee una sola vez y sale una versión para cada uno — no se paga la lectura tres veces.'}
               </p>
             </fieldset>
           </Section>
