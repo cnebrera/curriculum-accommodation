@@ -77,6 +77,29 @@ describe('the model proposes, the code decides', () => {
   });
 });
 
+describe('the computed answer never goes back to the model', () => {
+  /**
+   * Structural, not a rule: `Propose` receives `ProposedExercise[]`, which has no
+   * computed answer on it — the loop passes `accepted.map(a => a.exercise)`. So
+   * the answer key cannot travel to a provider because there is no field on the
+   * wire that carries it.
+   *
+   * Asserted rather than described, because the tempting refactor is to pass
+   * `accepted` straight through for convenience.
+   */
+  it('shows it only what it said itself', async () => {
+    const seen: unknown[] = [];
+    const propose: Propose = async (_s, soFar) => {
+      seen.push(...soFar);
+      return [{ expression: soFar.length === 0 ? '47 × 8' : '68 × 7' }];
+    };
+    await composeExercises(carrying, arithmetic, propose, { wanted: 2, maxProposals: 6 });
+
+    expect(seen.length).toBeGreaterThan(0);
+    for (const e of seen) expect(Object.keys(e as object)).not.toContain('answer');
+  });
+});
+
 describe('exhaustion surfaces and never ships', () => {
   /** The case this whole branch exists to prevent. */
   it('returns fewer than she asked for rather than the rejected ones', async () => {

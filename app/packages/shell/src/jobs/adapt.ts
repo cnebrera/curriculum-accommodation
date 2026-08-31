@@ -2,7 +2,7 @@
 import {
   Vault, VAULT, jobDir, jobIR, jobLearnerDir, jobAdapted, jobAdaptedRevision,
   jobRejected, jobReport, parseIR, annotateInjection, checkBounds, isVerified,
-  selectRecipes, loadLearner, buildReport, loadForRun, RampaError,
+  selectRecipes, loadLearner, buildReport, loadForRun, RampaError, isGenerated,
   stringifyFrontMatter, injectionNotices, logger, buildAdaptPrompt, schoolYearOf, blockClassesIn,
   checkStructurallyComplete, checkCompleteness, completenessNotice,
   assertProvenance, findUnaccountedBlocks, divergence, studiesFor,
@@ -132,7 +132,22 @@ export async function runAdaptation(
   // The verification gate: one reading error in step one contaminates every
   // output, and she will not catch it in the finished PDF because it will read
   // perfectly plausibly.
-  if (!isVerified(doc)) {
+  /*
+   * Composed material has no extraction to verify (002 T013).
+   *
+   * The gate exists because a reading error in step one contaminates every output
+   * and she will not catch it in the finished PDF. A composed sheet was not read
+   * from anything: there is no original it could be unfaithful to. Requiring the
+   * flag would mean writing `extraction: { verified: true }` into a document that
+   * never had an extraction — a true-looking field asserting something that did
+   * not happen, which is the shape of defect this project keeps finding.
+   *
+   * What composed material needs instead is a **content** review, and that is not
+   * this gate: it is the louder draft mark (T016) and the checklist that says the
+   * effort is higher (T020). Nothing is waved through — the two checks are
+   * different checks.
+   */
+  if (!isVerified(doc) && !isGenerated(doc)) {
     throw new RampaError('ir-unverified',
       'Todavía no has comprobado que la lectura del material sea fiel al original. Revísala antes de adaptar.');
   }

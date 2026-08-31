@@ -32,7 +32,11 @@ export * from './recipes/index.js';
 export * from './recipes/kinds.js';
 export * from './compose/objectives.js';
 export * from './compose/generated.js';
+export * from './compose/budget.js';
 export * from './compose/loop.js';
+export * from './compose/proposals.js';
+export * from './compose/level.js';
+export * from './compose/sheet.js';
 export * from './compose/verify/types.js';
 export * from './compose/verify/arithmetic.js';
 export * from './render/zip.js';
@@ -55,11 +59,13 @@ export * from './education/parse.js';
 export * from './education/lookup.js';
 export * from './redact/names.js';
 
+export * from './render/draft.js';
 export * from './render/html.js';
 export * from './render/check.js';
 export * from './render/photocopy.js';
 
 export * from './report/index.js';
+export * from './report/compose.js';
 export * from './report/notes.js';
 export * from './prompt/adapt.js';
 export * from './cost/index.js';

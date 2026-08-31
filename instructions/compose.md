@@ -1,3 +1,29 @@
+---
+# The compose loop's budget (spec 002 FR-124, T011).
+#
+# Here rather than in code for the same reason as `ingest.md`: these numbers will
+# move with real material, and moving them must not need a release. Read at run
+# time.
+#
+# The application clamps each one — exercises 1-40, proposals 1-200, objectives
+# 1-20 — so a typo here cannot spend a teacher's money.
+
+# How many exercises per objective, when she does not say.
+exercises_per_objective: 10
+
+# How many proposals may be spent per objective, in total.
+#
+# A shared pool rather than a retry count per exercise, because the failures
+# cluster: a model that has misunderstood «con llevadas» produces twenty bad
+# exercises, not one bad and nineteen good. Roughly three times the exercises
+# asked for, which leaves room for a model that rejects at a normal rate and
+# stops early on one that has not understood.
+proposals_per_objective: 30
+
+# Objectives in one job. More than this is a term's planning, not a worksheet.
+objectives_per_job: 6
+---
+
 # Generating material from learning objectives
 
 Build material from what the learner must learn, when there is no usable source

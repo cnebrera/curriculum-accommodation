@@ -54,6 +54,17 @@ export const jobIR = (job: string) => join(jobDir(job), 'ir.md');
 export const jobSourceDir = (job: string) => join(jobDir(job), 'source');
 
 /** Everything downstream of verification lives under the learner's code. */
+/**
+ * Composed material's own two documents (002 T014/T015).
+ *
+ * At the job level rather than under a learner, because they belong to the
+ * composition: one composition, N presentations (Principle IV). The answer key in
+ * particular is a **separate file** so that no path exists by which an answer can
+ * reach the child's sheet.
+ */
+export const jobAnswers = (job: string) => join(jobDir(job), 'answers.md');
+export const jobComposeReport = (job: string) => join(jobDir(job), 'compose-report.md');
+
 export const jobLearnerDir = (job: string, code: string) => join(jobDir(job), code);
 export const jobAdapted = (job: string, code: string) => join(jobLearnerDir(job, code), 'adapted.md');
 export const jobAdaptedRevision = (job: string, code: string, n: number) =>

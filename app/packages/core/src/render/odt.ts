@@ -1,4 +1,5 @@
 import type { IRDocument, Block } from '../ir/types.js';
+import { draftMark } from './draft.js';
 import { learnerFacing } from '../ir/parse.js';
 import { zip, type ZipEntry } from './zip.js';
 
@@ -191,9 +192,10 @@ export function renderODT(doc: IRDocument, opts: OdtOptions = {}): Uint8Array {
    * depend on the editor. A first paragraph is content: it survives anything
    * short of her deleting it, and if she deletes it she has decided to.
    */
-  const banner = opts.signedOff === true ? '' :
-    '<text:p text:style-name="Borrador">BORRADOR — pendiente de revisión docente'
-    + ' · no entregar al alumnado</text:p>';
+  const mark = draftMark(doc, opts.signedOff);
+  const banner = mark
+    ? `<text:p text:style-name="Borrador">${esc(mark.banner)}</text:p>`
+    : '';
 
   const body = doc.blocks.filter(learnerFacing).map(renderBlock).join('\n');
 

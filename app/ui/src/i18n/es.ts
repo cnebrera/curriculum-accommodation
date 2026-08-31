@@ -178,6 +178,12 @@ export const es = {
     // 012 FR-1003. Deliberately not "algo ha ido mal": the fix is one click and
     // she is the only one who knows the answer.
     'material-kind-missing': 'Dime primero qué es esto: una ficha, un examen, apuntes o una hoja de problemas.',
+    /*
+     * Composing (002). Neither is a fault: the first is an empty form and the
+     * second is a perfectly good objective that needs the other route.
+     */
+    'compose-no-objective': 'Dime primero qué quieres que aprenda.',
+    'compose-needs-anchor': 'Eso es contenido, no una destreza que yo pueda comprobar. Necesito algo en lo que apoyarlo: la página del libro, tus apuntes, o las tres frases que dirías en clase.',
     /* Reading the material (008). Each one says what she does next. */
     'ingest-empty': 'No has añadido ningún fichero.',
     'ingest-format': 'No sé leer ese tipo de fichero. Fotos (JPG, PNG, HEIC), PDF, Word (.docx) o texto.',

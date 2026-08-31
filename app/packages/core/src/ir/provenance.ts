@@ -49,11 +49,31 @@ export function checkProvenance(doc: IRDocument): ProvenanceIssue[] {
 /**
  * A block present in the adapted document that derives from nothing in the
  * original, and is not marked as scaffolding, is unaccounted-for content.
+ *
+ * ## Why `data-objective` is not an exemption here
+ *
+ * It used to be, mirroring `checkProvenance` — and that was a hole with the same
+ * shape as the one `002` T008 closed. This function only ever runs on an
+ * **adaptation**, where there is always an original. Adapting a composed sheet
+ * meant a model could add a whole new exercise carrying
+ * `data-objective="multiplicar con llevadas"` — an objective genuinely on her
+ * list, so the objective check passed too — and it would be exempt from tracing
+ * to anything.
+ *
+ * That exercise has no verified answer: it is not in the key, because the key was
+ * computed from the exercises that passed the verifier. A sheet of checked
+ * arithmetic with one unchecked exercise in it is worse than an unchecked sheet,
+ * because the report says the arithmetic was computed.
+ *
+ * So a generated block in an adapted document traces like any other: same id, or
+ * `data-from`. The exemption stays in `checkProvenance`, where it is right — a
+ * composed document's own blocks key to an objective and there is no source block
+ * for them to come from.
  */
 export function findUnaccountedBlocks(original: IRDocument, adapted: IRDocument): Block[] {
   const known = new Set(original.blocks.map((b) => b.id));
   return adapted.blocks.filter((b) => {
-    if (isScaffold(b) || isGeneratedBlock(b) || isReportNotes(b)) return false;
+    if (isScaffold(b) || isReportNotes(b)) return false;
     const from = b.attrs['data-from'];
     if (!from) return !known.has(b.id);
     return !from.split(/[,\s]+/).filter(Boolean).every((id) => known.has(id));

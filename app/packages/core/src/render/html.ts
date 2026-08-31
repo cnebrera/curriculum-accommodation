@@ -1,3 +1,4 @@
+import { draftMark } from './draft.js';
 import { createRenderer, learnerFacing } from '../ir/parse.js';
 import type { IRDocument, Block } from '../ir/types.js';
 
@@ -53,7 +54,7 @@ const DEFAULTS: Required<Omit<Presentation, 'font' | 'oneTaskPerPage'>> = {
   ink: '#111', paper: '#fff', accent: '#0b5f5b',
 };
 
-function styles(p: Presentation, signedOff: boolean): string {
+function styles(p: Presentation, watermark: string | null): string {
   const v = { ...DEFAULTS, ...p };
   return `
 :root{
@@ -88,7 +89,7 @@ ${p.oneTaskPerPage ? '.exercise,.assessment{break-after:page;page-break-after:al
   /* On paper the banner is one line on page one, and pages two onward would
      carry nothing saying they are unreviewed. The watermark is per-page, so a
      sheet that got separated from the first one still announces itself. */
-  ${signedOff ? '' : `main::before{content:"BORRADOR — PENDIENTE DE REVISIÓN";
+  ${watermark === null ? '' : `main::before{content:"${watermark}";
     position:fixed;top:45%;left:0;right:0;text-align:center;font-size:3rem;
     color:rgba(138,47,44,.13);transform:rotate(-24deg);pointer-events:none;z-index:-1}`}
 }
@@ -110,19 +111,24 @@ export function renderHTML(doc: IRDocument, opts: RenderOptions = {}): string {
   const md = createRenderer();
   const lang = opts.lang ?? (typeof doc.frontMatter['lang'] === 'string' ? doc.frontMatter['lang'] : 'es');
   const presentation = opts.presentation ?? {};
-  const signedOff = opts.signedOff === true;
+  /*
+   * The mark is derived from the document (002 T016). Composed material says
+   * more, because there its content — not merely its adaptation — is unreviewed,
+   * and a teacher who reads the ordinary banner performs the ordinary review.
+   */
+  const mark = draftMark(doc, opts.signedOff);
   // learnerFacing excludes the model's report notes: structural, not a check the
   // model is asked to respect (007 FR-506's shape applied to T087).
   const body = doc.blocks.filter(learnerFacing).map((b) => renderBlock(md, b)).join('\n');
 
-  const banner = signedOff ? '' :
-    `<div class="draft-banner" role="status">BORRADOR — pendiente de revisión docente · no entregar al alumnado</div>`;
+  const banner = mark === null ? '' :
+    `<div class="draft-banner" role="status">${esc(mark.banner)}</div>`;
 
   return `<!DOCTYPE html>
 <html lang="${esc(lang)}">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${esc(opts.title ?? 'Material adaptado')}</title>
-<style>${styles(presentation, signedOff)}</style></head>
+<style>${styles(presentation, mark?.watermark ?? null)}</style></head>
 <body>
 ${banner}
 <main>

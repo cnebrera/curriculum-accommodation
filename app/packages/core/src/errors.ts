@@ -20,6 +20,8 @@ export type ErrorKind =
   | 'ingest-many-sheets'     // two worksheets in one image; she splits, we never do
   | 'ingest-no-vision'       // her service cannot read photographs
   | 'ingest-failed'          // the bound was exhausted on a page
+  | 'compose-no-objective'   // she asked to compose and said nothing to compose
+  | 'compose-needs-anchor'   // content, which needs something true to rest on
   | 'key-missing' | 'key-invalid' | 'key-wrong-provider' | 'key-no-credit'
   | 'offline' | 'rate-limited' | 'provider-failed';
 
