@@ -76,6 +76,50 @@ disagreed with it. G3 remains open; G6 is moot.
 > and receiver. They should be done as part of that feature, not before it in a
 > separate pass.
 
+## Planning order
+
+*Written 2026-08-30, and **it did not land**: the script that added it replaced an
+anchor that did not exist and silently did nothing, and I committed a message
+saying otherwise. Rewritten 2026-08-31 with the anchor asserted. Same defect class
+as everything else this week — a write that quietly wrote nothing.*
+
+**Done, in this order and for these reasons:**
+
+1. **`013` phases 5-6.** T019 separates orchestration from IPC registration in
+   `jobs/`, and `005` is the feature that *rewrites* job orchestration. Doing
+   `005` first meant writing the batch loop into `jobs/adapt.ts` as it stood and
+   then splitting the file underneath it. The icon rode along.
+2. **`005`** — one worksheet, several learners. Open since the first audit.
+3. **`014`** — the learner's record. Needed `005` to be writing the entries it
+   reads; building the reader first is how you get a record designed for one row.
+4. **`012` phases 1-3** — an exam is adapted as an exam. Phase 4 deferred, with
+   the reason in its own tasks file.
+5. **`015`** — finding a learner among thirty.
+
+**Blocked, and not worked around:**
+
+**`002` — compose from objectives.** Its own T000: «Do not start until a teacher
+has answered `001` SC-001. Not a formality: if she does not find an adapted
+worksheet usable, composing new ones is not the next problem.»
+
+Confirmed 2026-08-31 rather than skipped. Every part of `002` — the arithmetic
+verifier, the anchor requirement, the compose loop — is real work that assumes the
+answer to a question nobody has asked a teacher. It is the most expensive wrong
+turn available here.
+
+**`016` — the door.** Blocked in half by the above: its compose branch leads
+nowhere until `002` exists, and its adapt branch is largely delivered by `012`'s
+kind question. Shipping a door with one side that does nothing is what its own
+FR-1410 calls a lie in the interface, so `016` waits with `002`.
+
+**`017` — the guide.** Unplannable until the DPO conversation, which is not
+something engineering sequencing can move.
+
+**Next, therefore:** `019` (ODT first, Carlos's choice), the **G20** prose recipe,
+then `018`. Everything else needs a person, and that is not a queue.
+
+---
+
 ## G1 · Retention and erasure — *CLOSED 2026-08-27*
 
 Specified in `003-memory` as User Story 5 and FR-215…FR-220: `/rampa-memory
