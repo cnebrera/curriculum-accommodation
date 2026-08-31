@@ -170,8 +170,25 @@ export const CONSTRAINT_ES: Record<string, string> = {
 export const describeConstraints = (ids: readonly string[]): string =>
   ids.map((i) => CONSTRAINT_ES[i] ?? i).join(' y ');
 
+/**
+ * The four operations, and only the four (002 T022).
+ *
+ * `handles` used to be `startsWith('arith.')`, which claimed every arithmetic
+ * skill anybody might name — and the claim was false. `arith.percent` reached
+ * `exercises()`, whose operation table has no entry for it, so every proposal came
+ * back `unknown`: the loop would spend the whole proposal budget, charge her for
+ * it, and end with «no he podido comprobar los que proponía».
+ *
+ * The right answer for a skill this file cannot check is **no verifier**, which is
+ * one ask, labelled as a draft, and cheaper. Claiming a skill it cannot decide is
+ * how the unverifiable path gets bypassed by a verifier that means well.
+ */
+const HANDLED: ReadonlySet<string> = new Set([
+  'arith.add', 'arith.subtract', 'arith.multiply', 'arith.divide',
+]);
+
 export const arithmetic: Verifier = {
-  handles: (skillId) => skillId.startsWith('arith.'),
+  handles: (skillId) => HANDLED.has(skillId),
 
   describe: describeConstraints,
 

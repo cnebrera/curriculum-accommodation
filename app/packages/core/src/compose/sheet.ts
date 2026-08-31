@@ -1,6 +1,7 @@
 import type { Block, IRDocument } from '../ir/types.js';
 import { irToMarkdown } from '../ingest/to-ir.js';
 import type { Accepted } from './loop.js';
+import { NO_ANSWERS_ES } from './unverifiable.js';
 
 /**
  * The composed sheet, and the answer key that does not live on it
@@ -37,6 +38,16 @@ export interface SheetGroup {
   /** The instruction line above the exercises, in her language. */
   instruction: string;
   accepted: readonly Accepted[];
+  /**
+   * True for a skill with no verifier (FR-125).
+   *
+   * Nothing checked these. The blocks carry `data-unverified`, **no answer of
+   * theirs reaches the key**, and the report leads with the sentence rather than
+   * mentioning it. The failure mode this guards against is not that the draft
+   * exists — it is a sheet where checked and unchecked exercises look alike to
+   * her.
+   */
+  unverified?: boolean;
 }
 
 export interface SheetInput {
@@ -87,16 +98,35 @@ export interface AnswerLine {
   answer: string;
 }
 
+/** One exercise on the sheet, whether or not anything could check it. */
+export interface ExerciseLine {
+  objective: string;
+  number: number;
+  expression: string;
+  /** False for a skill with no verifier (FR-125). */
+  verified: boolean;
+}
+
 export interface ComposedSheet {
   doc: IRDocument;
   /** The IR as it is written to `ir.md`. */
   markdown: string;
+  /** Only the checked ones. This is what the key is built from. */
   answers: AnswerLine[];
+  /**
+   * **Every** exercise on the sheet, checked or not.
+   *
+   * Separate from `answers` on purpose: the report lists what is on the page, and
+   * building that list from the answers would silently omit the unverified
+   * exercises — the ones she most needs to see listed.
+   */
+  listing: ExerciseLine[];
 }
 
 export function buildSheet(input: SheetInput): ComposedSheet {
   const blocks: Block[] = [];
   const answers: AnswerLine[] = [];
+  const listing: ExerciseLine[] = [];
   let n = 0;
   let line = 1;
 
@@ -141,19 +171,32 @@ export function buildSheet(input: SheetInput): ComposedSheet {
       push({
         id: `g${g + 1}-e${n}`,
         classes: ['exercise'],
-        attrs: { 'data-objective': group.objective },
+        attrs: {
+          'data-objective': group.objective,
+          ...(group.unverified ? { 'data-unverified': '1' } : {}),
+        },
         /*
          * The trailing `=` and nothing after it. The exercise is the question;
          * the answer is in the other document.
          */
         content: `${n}. ${item.exercise.expression} =`,
       });
-      answers.push({
-        objective: group.objective,
-        number: n,
-        expression: item.exercise.expression,
-        answer: item.answer,
+      listing.push({
+        objective: group.objective, number: n,
+        expression: item.exercise.expression, verified: !group.unverified,
       });
+
+      // An unverified group contributes no answer. Not «the model's answer with a
+      // caveat»: a proposed result presented as a solution is worse than none,
+      // because she marks with it in her hand.
+      if (!group.unverified) {
+        answers.push({
+          objective: group.objective,
+          number: n,
+          expression: item.exercise.expression,
+          answer: item.answer,
+        });
+      }
     }
   }
 
@@ -188,6 +231,13 @@ export function buildSheet(input: SheetInput): ComposedSheet {
       ...(input.anchor ? { anchor: input.anchor } : {}),
       ...(input.composedFor ? { composed_for: input.composedFor.code } : {}),
       ...(input.composedFor?.yearId ? { level_from: input.composedFor.yearId } : {}),
+      /*
+       * The objectives nothing could check (FR-125), in the document so the
+       * report, the key and the checklist read one fact rather than three.
+       */
+      ...(input.groups.some((g) => g.unverified)
+        ? { unverified_objectives: input.groups.filter((g) => g.unverified).map((g) => g.objective) }
+        : {}),
       /**
        * Louder than elsewhere (Principle VII, T016).
        *
@@ -204,7 +254,7 @@ export function buildSheet(input: SheetInput): ComposedSheet {
     notices: [],
   };
 
-  return { doc, markdown: irToMarkdown(doc), answers };
+  return { doc, markdown: irToMarkdown(doc), answers, listing };
 }
 
 /**
@@ -221,6 +271,8 @@ export function renderAnswerKey(input: {
   title: string;
   composedOn: string;
   answers: readonly AnswerLine[];
+  /** Objectives nothing could check, named rather than omitted (FR-125). */
+  unverifiedObjectives?: readonly string[];
 }): string {
   const lines: string[] = [
     `# Soluciones — ${input.title}`,
@@ -244,6 +296,16 @@ export function renderAnswerKey(input: {
 
   if (input.answers.length === 0) {
     lines.push('', 'No he podido generar ningún ejercicio comprobable.');
+  }
+
+  /*
+   * Named, not omitted. A key that silently covers three of five objectives is a
+   * key she reads as complete — and the two it skipped are precisely the ones she
+   * needed to look at.
+   */
+  if (input.unverifiedObjectives?.length) {
+    lines.push('', '## Sin soluciones', '', NO_ANSWERS_ES, '');
+    for (const o of input.unverifiedObjectives) lines.push(`- ${o}`);
   }
 
   return lines.join('\n') + '\n';

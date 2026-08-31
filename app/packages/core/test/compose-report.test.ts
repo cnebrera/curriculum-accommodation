@@ -34,13 +34,13 @@ const report = async (yearId: string | undefined, expressions: string[], wanted:
   const objective = 'multiplicar con llevadas';
   const outcome = await run(expressions, wanted);
   const leveled = levelAll([readObjective(objective)], es, yearId);
-  const { answers } = buildSheet({
+  const { listing } = buildSheet({
     title: 'X', lang: 'es', objectives: [objective], composedOn: '2026-08-31',
     groups: [{ objective, instruction: 'Resuelve.', accepted: outcome.accepted }],
   });
   return buildComposeReport({
     title: 'Multiplicar con llevadas', composedOn: '2026-08-31',
-    leveled, outcomes: [{ objective, wanted, outcome }], answers,
+    leveled, outcomes: [{ objective, wanted, outcome }], listing,
   });
 };
 

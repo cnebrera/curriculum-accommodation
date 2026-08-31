@@ -709,17 +709,73 @@ That is the honest architecture, and it belongs in this document rather than
 implied: the project's central promise is kept by a person, supported by machinery
 whose job is to make breaking it visible.
 
-## Spec 002 — deferred, and why
+## Spec 002 — built on 2026-08-31, and what it can actually check (T022)
 
-Composing material from objectives has no plan, deliberately. The reason is
-recorded in the spec's own header: composition has **no anchor**. Adaptation can be
-checked against the original — numbering preserved, nothing dropped undeclared,
-provenance per block — and composition cannot, so every structural defence this
-project relies on is unavailable to it.
+Composing was deferred for the reason recorded in the spec's own header:
+composition has **no anchor**. Adaptation can be checked against the original —
+numbering preserved, nothing dropped undeclared, provenance per block — and
+composition cannot, so every structural defence this project relies on is
+unavailable to it.
 
-Building it before `001`'s SC-001 is answered would put the harder half of the
-product on top of an unanswered question. Nothing in the application gestures at
-it, which is intentional: a half-present generation path would be worse than none.
+**Carlos overrode that gate explicitly on 2026-08-31**, with his reason stated:
+«lo sé, sé que nadie lo ha visto, pero montemos todo y luego ya vamos probando e
+iterando flujo a flujo.» It is his call. What has not changed is that SC-101…104
+still need a teacher, and none of them is satisfied by this being built.
+
+### The verifier list, which is the honest limit of the feature
+
+This is the whole of it. Everything in the second table produces **a draft for a
+professional to verify, not material to hand out**, and says so in those words on
+the sheet, in the key, in the report and in the checklist.
+
+| Skill | Verifier | What code decides |
+|---|---|---|
+| `arith.add` | `arithmetic` | The sum, exactly, on scaled integers. Carrying **column by column**, and borrowing likewise |
+| `arith.subtract` | `arithmetic` | The difference. Borrowing per column; a negative result is not borrowing |
+| `arith.multiply` | `arithmetic` | The product. Carrying per column, so `21 × 3` is rejected for «con llevadas» |
+| `arith.divide` | `arithmetic` | The quotient **only when it is exact**. A non-terminating division is `unknown`, never rounded |
+
+Plus, for all four: the digit bound and whether decimals are in scope, from `011`'s
+corpus and never from a model.
+
+| Not covered, and there is no plan for it | Why not |
+|---|---|
+| `arith.percent`, `arith.fraction`, `arith.power`, `arith.root` | Named because `handles` **used to claim them**. `startsWith('arith.')` meant every proposal came back `unknown`, spending the whole budget and charging her for «no he podido comprobar los que proponía». Found by `verifier-inventory.test.ts` on its first run |
+| Spelling, accents, grammar | Deciding whether an exercise exercises «tildes diacríticas» needs to parse the sentence and know what was intended |
+| Reading comprehension | The answer is a judgement about a text. There is no computation |
+| Writing, summarising, ordering a narrative | Same, and the answer is not a single value |
+| Word problems in general | The arithmetic inside one is checkable; whether the wording asks for that arithmetic is not |
+| Every other subject | Nothing in the corpus claims otherwise |
+
+**The second table is the feature's honest limit**, and it is longer than the
+first. That is not a gap to be closed — a verifier for comprehension would be a
+model, and a model that marks its own work is the thing this whole branch exists
+to avoid.
+
+### What is verified by machine, in `002`
+
+| Check | Where | Result |
+|---|---|---|
+| The answer key is computed, never asked for | `verify-arithmetic.test.ts` | **Pass.** 32 cases, including a seeded wrong answer thrown away rather than corrected |
+| Exhaustion surfaces and never ships | `compose-loop.test.ts` | **Pass.** 15 cases; a budget that runs out returns fewer, never the rejected ones |
+| The computed answer never returns to the model | `compose-loop.test.ts` | **Pass**, structurally: `Propose` receives `ProposedExercise[]`, which has no such field |
+| The level comes from `011`, never from her wording | `compose-level.test.ts` | **Pass.** «para un niño de sexto» inside an objective changes nothing |
+| No answer anywhere in the child's document | `compose-sheet.test.ts` | **Pass.** Asserted over the serialised IR, not over a comment |
+| Every block traces to an objective she wrote | `generated.test.ts` | **Pass**, and it closed a real hole: `data-objective="algo"` used to satisfy every check in the pipeline |
+| A generated block in an adapted document still traces | `compose-proposals.test.ts` | **Pass**, and it closed a second one of the same shape |
+| No content without an anchor | `compose-anchor.test.ts` | **Pass.** Refused before the provider is resolved: nothing sent, nothing charged |
+| The anchor is treated as data | `compose-anchor.test.ts` | **Pass.** Injection and invisible-character detectors, reported and never stripped |
+| The unverifiable path says what it is | `compose-unverifiable.test.ts` | **Pass.** 13 cases; no answer in the key, marked block, sentence leading the report |
+| The checklist leads with content | `checklist-generated.test.ts` | **Pass**, over the shipped `checklists/review.md` |
+
+### NOT verified
+
+- **Nothing in `002` has been run against a real provider.** There is no screen
+  to start it from until `016`. Every deterministic part is tested offline; the
+  prompt, the wire format and the parser have never met a model.
+- **No teacher has seen composed material.** SC-101…104 remain open, and the
+  first composed sheet a teacher sees will be the real test of whether the report
+  and the checklist do what they claim.
 
 ## NOT machine-checkable, and not claimed
 

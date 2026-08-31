@@ -5,6 +5,7 @@ import {
   parseProposals,
   loadLearner, annotateInjection, checkBounds,
   assertAnchor, readAnchor, renderAnchorForPrompt, checkAnchored, checkObjectives,
+  composeUnverified, verifierFor, UNVERIFIABLE_ES,
   type Leveled, type ProposedExercise, type Skill, type ComposeOutcome,
   type AnswerLine, type SheetGroup, type Verifier, type AnchorPassage, type Block,
   type Notice,
@@ -90,6 +91,16 @@ export interface ComposeResult {
   answers: AnswerLine[];
   /** Objectives that are content, and need the anchor path rather than this one. */
   needsAnchor: string[];
+  /**
+   * Objectives no verifier covers (FR-125): produced, and produced as a draft.
+   *
+   * On the result rather than only in the report, because T021 asks for the
+   * sentence **on the screen where she gets it** — and a screen that has to parse
+   * the report's markdown to find out is a screen that will stop doing it.
+   */
+  unverifiedObjectives: string[];
+  /** The sentence itself, so no surface writes its own version of it. */
+  unverifiedNotice: string | null;
   /** Objectives dropped because the job bound was reached. Never silent. */
   cutObjectives: string[];
   /** Everything she must see about her own anchor (Principle IX). */
@@ -192,6 +203,7 @@ export async function runCompose(
   let costCents = 0;
 
   const groups: SheetGroup[] = [];
+  const unverifiedObjectives: string[] = [];
   const outcomes: Array<{ objective: string; wanted: number; outcome: ComposeOutcome }> = [];
 
   for (const [i, l] of skills.entries()) {
@@ -203,16 +215,44 @@ export async function runCompose(
       detail: skills.length > 1 ? `${i + 1} de ${skills.length}: ${text}` : text,
     });
 
-    const verifier = verifierFor(skill);
+    const verifier = verifierFor(skill, VERIFIERS);
     if (!verifier) {
       /*
-       * A skill nobody can check does not quietly become a worksheet. FR-125's
-       * path is Phase 5 and it says so in her words; until it exists, refusing is
-       * the honest behaviour and it is the one that cannot ship unchecked
-       * arithmetic.
+       * Nothing can check this one (FR-125, T021).
+       *
+       * Refusing would be tidier and wrong: a draft she edits in ten minutes is
+       * worth having. What must not happen is her believing it was checked — so
+       * it is a separate group, its blocks carry `data-unverified`, **no answer of
+       * its exercises reaches the key**, and the sentence leads the report and the
+       * screen.
        */
       logger.warn('compose.no-verifier', { skill: skill.id });
-      needsAnchor.push(text);
+      unverifiedObjectives.push(text);
+
+      const drafted = await composeUnverified(async (need) => {
+        const { proposed, cents } = await propose({
+          provider, key, known, system,
+          skill, objective: text, level: l, need, soFar: [],
+          interests: learner.profile.interests ?? [],
+          yearLabel: yearId ? yearLabel(yearId) : undefined,
+          onProgress: (detail) => onProgress({ stage: 'Preparando los ejercicios', detail }),
+        });
+        costCents += cents;
+        return proposed;
+      }, wanted);
+
+      if (drafted.exercises.length > 0) {
+        groups.push({
+          objective: text, instruction: instructionFor(skill), unverified: true,
+          /*
+           * `answer: ''` and not the model's stated one. `Accepted.answer` means
+           * «computed by code», and there was no computation — an empty string is
+           * the only honest value, and the group's `unverified` flag keeps it out
+           * of the key entirely.
+           */
+          accepted: drafted.exercises.map((exercise) => ({ exercise, answer: '' })),
+        });
+      }
       continue;
     }
 
@@ -274,6 +314,9 @@ export async function runCompose(
   const title = (request.title ?? kept[0] ?? 'Material generado').trim();
 
   const notes = [
+    ...(unverifiedObjectives.length
+      ? [`${UNVERIFIABLE_ES} Concretamente: ${unverifiedObjectives.map((o) => `«${o}»`).join(', ')}.`]
+      : []),
     ...leveled.map((l) => explainLevel(l, yearLabel)).filter((s): s is string => s !== null),
     ...outcomes.map(({ objective, wanted: w, outcome }) => {
       const short = explainOutcome(outcome, w);
@@ -300,10 +343,14 @@ export async function runCompose(
 
   await vault.ensureDir(jobDir(jobId));
   await vault.writeRaw(jobIR(jobId), sheet.markdown);
-  await vault.writeRaw(jobAnswers(jobId), renderAnswerKey({ title, composedOn, answers: sheet.answers }));
+  await vault.writeRaw(jobAnswers(jobId), renderAnswerKey({
+    title, composedOn, answers: sheet.answers,
+    ...(unverifiedObjectives.length ? { unverifiedObjectives } : {}),
+  }));
 
   const report = buildComposeReport({
-    title, composedOn, leveled, outcomes, answers: sheet.answers, yearLabel,
+    title, composedOn, leveled, outcomes, listing: sheet.listing, yearLabel,
+    ...(unverifiedObjectives.length ? { unverifiedObjectives } : {}),
   });
   await vault.writeRaw(jobComposeReport(jobId), report.markdown);
   await recordCost(jobId, costCents);
@@ -322,6 +369,8 @@ export async function runCompose(
     reportData: { unchecked: report.unchecked, checked: report.checked, shortfalls: report.shortfalls },
     answers: sheet.answers,
     needsAnchor,
+    unverifiedObjectives,
+    unverifiedNotice: unverifiedObjectives.length > 0 ? UNVERIFIABLE_ES : null,
     cutObjectives,
     anchorNotices: anchor.notices,
     anchorCut: { chars: anchor.charsCut, passages: anchor.passagesCut },
@@ -509,10 +558,14 @@ function stripFence(raw: string): string {
   return /```(?:\w+)?\s*([\s\S]*?)```/.exec(raw)?.[1] ?? raw;
 }
 
-/** Which verifier covers this skill, or none — and none is an answer (FR-125). */
-function verifierFor(skill: Skill): Verifier | null {
-  return arithmetic.handles(skill.id) ? arithmetic : null;
-}
+/**
+ * Which verifiers exist.
+ *
+ * A list rather than a chain of `if`s, so adding the second one is one line here
+ * and a `contracts/verifiable-skills.md` read — and so `verifierFor` returning
+ * `null` stays the single place the unverifiable path begins.
+ */
+const VERIFIERS = [arithmetic];
 
 /**
  * The instruction line above a group.

@@ -214,6 +214,22 @@ describe('what it refuses to decide', () => {
     expect(arithmetic.handles('arith.multiply')).toBe(true);
     expect(arithmetic.handles('lengua.ortografia')).toBe(false);
   });
+
+  /**
+   * Found by `verifier-inventory.test.ts` on its first run, and it was a real
+   * defect. `handles` was `startsWith('arith.')`, so `arith.percent` was claimed —
+   * and `exercises()` has no entry for it, so every proposal came back `unknown`.
+   * The loop would spend the whole budget, charge her, and end with «no he podido
+   * comprobar los que proponía».
+   *
+   * The right answer for a skill this file cannot decide is **no verifier**: one
+   * ask, labelled as a draft, and cheaper.
+   */
+  it('does not claim an arithmetic skill it cannot decide', () => {
+    for (const id of ['arith.percent', 'arith.fraction', 'arith.power', 'arith.root']) {
+      expect(arithmetic.handles(id), id).toBe(false);
+    }
+  });
 });
 
 describe('it is model-free and offline', () => {

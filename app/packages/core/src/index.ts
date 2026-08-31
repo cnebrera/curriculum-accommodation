@@ -38,6 +38,7 @@ export * from './compose/proposals.js';
 export * from './compose/anchor.js';
 export * from './compose/level.js';
 export * from './compose/sheet.js';
+export * from './compose/unverifiable.js';
 export * from './compose/verify/types.js';
 export * from './compose/verify/arithmetic.js';
 export * from './render/zip.js';

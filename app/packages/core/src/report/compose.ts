@@ -1,7 +1,8 @@
 import type { ComposeOutcome } from '../compose/loop.js';
 import { explainOutcome } from '../compose/loop.js';
 import { explainLevel, type Leveled } from '../compose/level.js';
-import type { AnswerLine } from '../compose/sheet.js';
+import type { ExerciseLine } from '../compose/sheet.js';
+import { UNVERIFIABLE_ES } from '../compose/unverifiable.js';
 
 /**
  * The composition report (002 T015, FR-107).
@@ -35,7 +36,20 @@ export interface ComposeReportInput {
   leveled: readonly Leveled[];
   /** Per objective, what the loop actually managed. */
   outcomes: ReadonlyArray<{ objective: string; wanted: number; outcome: ComposeOutcome }>;
-  answers: readonly AnswerLine[];
+  /**
+   * Every exercise on the sheet, checked or not — not the answer key.
+   *
+   * Built from the sheet's `listing` rather than from its `answers`, because the
+   * answers omit the unverified exercises and those are the ones she most needs
+   * to see listed.
+   */
+  listing: readonly ExerciseLine[];
+  /**
+   * Objectives no verifier covers (FR-125). They lead the report, because for
+   * those the honest position is not «revisa esto» but «esto es un borrador para
+   * que lo revises tú, no material para dar».
+   */
+  unverifiedObjectives?: readonly string[];
   /** Her label for a course id, so the report speaks her language. */
   yearLabel?: (id: string) => string;
 }
@@ -51,7 +65,18 @@ export interface ComposeReport {
 }
 
 export function buildComposeReport(input: ComposeReportInput): ComposeReport {
+  const unverified = input.unverifiedObjectives ?? [];
+
   const unchecked: string[] = [
+    /*
+     * FR-125 first, when it applies. Not a paragraph further down: this is the
+     * sentence most likely to be softened, and «revisa el contenido» read after
+     * «las cuentas están comprobadas» is a different sentence from the same words
+     * read first.
+     */
+    ...(unverified.length > 0
+      ? [`${UNVERIFIABLE_ES} Concretamente: ${unverified.map((o) => `«${o}»`).join(', ')}.`]
+      : []),
     'Nadie ha leído estos ejercicios. Los ha propuesto un modelo de IA y yo he '
     + 'comprobado lo que se puede comprobar con una cuenta — no si le sirven a tu '
     + 'alumno, ni si están en el orden que tiene sentido.',
@@ -112,18 +137,18 @@ export function buildComposeReport(input: ComposeReportInput): ComposeReport {
   }
 
   md.push('## Qué practica cada ejercicio', '');
-  if (input.answers.length === 0) {
+  if (input.listing.length === 0) {
     md.push('_No hay ningún ejercicio en la hoja._', '');
   } else {
     let current = '';
-    for (const a of input.answers) {
+    for (const a of input.listing) {
       if (a.objective !== current) {
         current = a.objective;
         md.push(`**${a.objective}**`, '');
       }
       // The expression, not the answer: this report travels with the sheet, and
       // the answers live in their own document (T014).
-      md.push(`- ${a.number}. ${a.expression}`);
+      md.push(`- ${a.number}. ${a.expression}${a.verified ? '' : ' — *sin comprobar*'}`);
     }
     md.push('');
   }
@@ -135,6 +160,10 @@ export function buildComposeReport(input: ComposeReportInput): ComposeReport {
     + 'la hoja del alumno.**',
     '',
   );
+  if (unverified.length > 0) {
+    md.push('No hay soluciones para ' + unverified.map((o) => `«${o}»`).join(', ')
+      + ': no las he podido calcular.', '');
+  }
 
   return { unchecked, checked, shortfalls, markdown: md.join('\n') };
 }
