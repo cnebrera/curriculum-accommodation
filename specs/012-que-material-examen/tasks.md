@@ -44,6 +44,29 @@ the change it protects, which is unusual enough to be its own task.
 
 ## Phase 4 · US3 — several documents, one unit of work (P2)
 
+> **Deferred 2026-08-31, deliberately, after Phases 1-3 shipped.**
+>
+> This phase's own implementation strategy says it: «MVP = Phase 1 + 2 + 3. The
+> exam distinction is a correctness matter; several parts is a convenience one.»
+> The correctness matter is done — an exam is now adapted as an exam.
+>
+> What Phase 4 costs, which is why it is not next: it moves
+> `material/<job>/ir.md` to `material/<job>/p1/ir.md`, and that layout is now
+> read by **three** features rather than one. `005`'s batch resolves
+> `jobLearnerDir`, `014`'s record scan walks every job directory, and every path
+> helper in `packages/core/src/vault/paths.ts` assumes one IR per job. Plus a
+> migration for every vault that exists.
+>
+> A layout migration touching three shipped features, for a convenience, while
+> `002` sits fully specified and unreachable, is the wrong order. It comes back
+> when a teacher asks for it or when `016` needs it — and `016` FR-1009 references
+> it without depending on it.
+>
+> Nothing here is abandoned. `data-model.md` does not yet describe the parts
+> layout — my rewrite of it on 2026-08-31 dropped that section, which T017 refers
+> to — so **T017 needs the data model written before it can be executed.** Noted
+> so the next person does not discover it mid-task.
+
 - [ ] T017 [US3] Introduce `parts.json` and the `material/<job>/p1/` layout per data-model.md
 - [ ] T018 [US3] Migrate a job with `ir.md` at its root to one part with **kind absent** — never `worksheet`, which would bake the original lie into her existing material
 - [ ] T019 [US3] Let her bring several documents, each with its own kind, into one job; keep several images as pages of one part (FR-1010)

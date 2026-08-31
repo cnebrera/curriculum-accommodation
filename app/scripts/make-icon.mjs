@@ -78,6 +78,8 @@ const svg = `
 const app = await electron.launch({
   args: [join(process.cwd(), 'out', 'main', 'main.js'),
          `--user-data-dir=${mkdtempSync(join(tmpdir(), 'rampa-icon-'))}`],
+  // Inactive and out of the dock — see the note in packages/shell/src/main.ts.
+  env: { ...process.env, RAMPA_TEST: '1' },
 });
 const page = await app.firstWindow();
 await page.waitForLoadState('domcontentloaded');

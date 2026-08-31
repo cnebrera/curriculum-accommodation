@@ -20,6 +20,11 @@ const vault = mkdtempSync(join(tmpdir(), 'rampa-shot-v-'));
 const app = await electron.launch({
   args: [join(process.cwd(), 'out', 'main', 'main.js'),
          `--user-data-dir=${mkdtempSync(join(tmpdir(), 'rampa-shot-u-'))}`],
+  /*
+   * Inactive, and out of the dock — see the note in packages/shell/src/main.ts.
+   * Taking the record must not take the keyboard off whoever is working.
+   */
+  env: { ...process.env, RAMPA_TEST: '1' },
 });
 const page = await app.firstWindow();
 // The laptop on the trolley, not the developer's monitor.
