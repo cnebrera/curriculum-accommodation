@@ -66,3 +66,15 @@ much of Phase 2 is worth trusting.
 **Do not let T014 become "no findings".** If the audit finds nothing, that is a
 result worth stating explicitly in coverage.md — and worth being suspicious of,
 because this project's every previous review pass found something.
+
+---
+
+## Coverage · every requirement, and where it is
+
+`check-fr-coverage.sh` fails if a requirement in the spec appears nowhere here.
+The reason is the one `002` learned the hard way: **a requirement nobody can point
+at is a requirement nobody is keeping.**
+
+| | Where it is satisfied |
+|---|---|
+| FR-511 | `isolation.test.ts` walks every file in `packages/core/src` for a network path, and `chokepoint.test.ts` asserts one egress function. `018` added a second check for the pictogram path, which reaches no network by construction |

@@ -101,3 +101,17 @@ larger thing on top of the unfixed smaller one.
 behaviour change to every adaptation this application has ever produced. Landing it
 without the baseline means the first person to notice is a teacher whose worksheets
 got quietly worse, and nobody will connect it to this commit.
+
+---
+
+## Coverage · every requirement, and where it is
+
+`check-fr-coverage.sh` fails if a requirement in the spec appears nowhere here.
+The reason is the one `002` learned the hard way: **a requirement nobody can point
+at is a requirement nobody is keeping.**
+
+| | Where it is satisfied |
+|---|---|
+| FR-1001 | T003/T004 · the four kinds as corpus, asked and never defaulted. `job:create` refuses without one, and `kinds.test.ts` asserts no code path assigns `worksheet` |
+| FR-1007 | `material-kinds.md`'s `forbids: [quantities, operations, …]` for `problems`, sent to the model verbatim and named in the report by `FORBIDS_LABELS`. **And it is what `002` FR-126 needed**: a composed arithmetic sheet is `problems` or `worksheet`, so the prohibition protects its verified answer key from a later revision |
+| FR-1008 | `checkCompleteness` is applied to every kind with no relaxation — there is no per-kind branch in it, which is the structural form of «no relaxation». `study`'s own rule in the corpus says «no resumas, no quites apartados» |

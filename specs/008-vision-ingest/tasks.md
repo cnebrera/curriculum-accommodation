@@ -120,3 +120,24 @@ a hole in the promise the application exists to keep, and it is small.
 converted IR is the one task here that keeps a constitutional principle true
 across a new input path, and it is the one most likely to be dropped as already
 covered — it is not: those detectors have only ever seen pasted text.
+
+---
+
+## Coverage · every requirement, and where it is
+
+`check-fr-coverage.sh` fails if a requirement in the spec appears nowhere here.
+The reason is the one `002` learned the hard way: **a requirement nobody can point
+at is a requirement nobody is keeping.**
+
+| | Where it is satisfied |
+|---|---|
+| FR-601 | `ingest/read.ts` — JPG, PNG, HEIC, PDF (scanned and digital), DOCX, plus pasted text. `documents.test.ts` |
+| FR-602 | `runIngest` calls one page at a time and `validatePage` checks each answer **in code** before accepting it |
+| FR-603 | `attemptsPerPage` from the corpus, and exhausting it surfaces the page's problems — never accepts the last attempt. A dark photograph is a **stop**, not a retry: a second call produces a second dark extraction and a second charge |
+| FR-604 | `instructions/ingest.md` carries the extraction rules, per Principle I, and `[UNREADABLE]` is flagged in place |
+| FR-605 | The IR contract in `docs/ir.md`; `validatePage` requires a figure's role and both descriptions |
+| FR-613 | `017` T011 · a guide is ingested material and takes no shortcut: same pipeline, same verification gate, asserted in `corpus-guarantees.test.ts`. `002`'s anchor is the other case — she pastes it, and it goes through the injection and invisible-character detectors |
+| FR-614 | Pure-JS and WASM only. `documents.test.ts` asserts no compilation step and no native build, which is also how SC-606 is measured |
+| FR-615 | `EXTRACTION_JSON_SCHEMA`, validated by `validatePage`, and `pagesToIR` is deterministic and lives in `core` |
+| FR-616 | `planDownscale` with the bound read from the corpus. A full-resolution phone photograph is several times the cost of a page that reads identically |
+| FR-617 | `parseIngestBudget` reads them at run time from `instructions/ingest.md` front matter — **and clamps them**, because a corpus is editable content and `attempts_per_page: 500` would spend her money five hundred times. The clamp is the one part that belongs in code: it protects her *from* the file |

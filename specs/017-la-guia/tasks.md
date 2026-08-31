@@ -157,3 +157,19 @@ extraction prompt, the candidate format and the conversation have never run agai
 model, and no PT has read a drafted ACNS. SC-1501, SC-1505 and the negative half of
 SC-1502 — «after ingesting a *real* DIAC» — all need a person and a document nobody
 here has.
+
+---
+
+## Coverage · every requirement, and where it is
+
+`check-fr-coverage.sh` fails if a requirement in the spec appears nowhere here.
+The reason is the one `002` learned the hard way: **a requirement nobody can point
+at is a requirement nobody is keeping.**
+
+| | Where it is satisfied |
+|---|---|
+| FR-1501 | **Was unbuilt until 2026-08-31**, found by `check-fr-coverage.sh`. Rampa had been producing adaptaciones no significativas since the first worksheet and never said so. `buildReport` now names the ACNS, states that no objective or criterion changed, and says Séneca is the register — asserted in `guide-acns.test.ts` |
+| FR-1506 | T013 · `readGuideJob` refuses an unverified extraction, and `corpus-guarantees.test.ts` asserts the reading half of the job contains **no write at all** |
+| FR-1507 | T001/T002 · the clinical filter, in code, over a synthetic DIAC. And the sentence naming an omission does not *contain* the omission |
+| FR-1513 | T019 · `draftAcns` assembles from `014`'s record and the overlay. A section it cannot source is **named**, never interpolated — including one the corpus adds that the code does not know |
+| FR-1518 | T023 · the guide goes through `007`'s injection and hidden-text detectors, and the refusals are code over the answer rather than prompt text — because a prompt shares its context window with the document |

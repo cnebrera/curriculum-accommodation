@@ -50,6 +50,15 @@ export interface ComposeReportInput {
    * que lo revises tú, no material para dar».
    */
   unverifiedObjectives?: readonly string[];
+  /**
+   * Official criterio codes the anchor cited (002 FR-128).
+   *
+   * Cited in the administration's own vocabulary rather than only in plain Spanish —
+   * which is what makes Principle VI's traceability usable by somebody who has to
+   * file this. Rampa carries what she pasted and validates nothing: a code it
+   * invented would be worse than none.
+   */
+  criteria?: readonly string[];
   /** Her label for a course id, so the report speaks her language. */
   yearLabel?: (id: string) => string;
 }
@@ -133,6 +142,15 @@ export function buildComposeReport(input: ComposeReportInput): ComposeReport {
   if (checked.length) {
     md.push('## Lo que sí he comprobado', '');
     for (const c of checked) md.push(`- ${c}`);
+    md.push('');
+  }
+
+  if (input.criteria?.length) {
+    md.push('## Criterios de evaluación', '');
+    md.push('Lo que me diste citaba estos criterios oficiales. Los copio tal cual — no '
+      + 'los compruebo contra ninguna base de datos, así que si uno está mal escrito, '
+      + 'está mal escrito aquí también:', '');
+    for (const c of input.criteria) md.push(`- \`${c}\``);
     md.push('');
   }
 

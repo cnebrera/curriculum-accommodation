@@ -147,7 +147,7 @@ describe('the sheet rewrites what the model sent', () => {
      * would then show an adaptation decision that no recipe ever made.
      */
     const { doc } = buildSheet({
-      title: 'X', lang: 'es', objectives: ['la fotosíntesis'], groups: [],
+      title: 'X', lang: 'es', materialKind: 'worksheet', objectives: ['la fotosíntesis'], groups: [],
       composedOn: '2026-08-31',
       content: contentBlock('data-objective="la fotosíntesis" data-anchor="a1"'
         + ' data-recipe="one-task-per-page@1" data-axis="ATT" data-from="p3"'),
@@ -161,7 +161,7 @@ describe('the sheet rewrites what the model sent', () => {
     // A model-chosen id can collide with a group's or repeat itself, and a
     // duplicate id makes two blocks one for every check that keys on it.
     const { doc } = buildSheet({
-      title: 'X', lang: 'es', objectives: ['la fotosíntesis'], groups: [],
+      title: 'X', lang: 'es', materialKind: 'worksheet', objectives: ['la fotosíntesis'], groups: [],
       composedOn: '2026-08-31',
       content: contentBlock('data-objective="la fotosíntesis" data-anchor="a1"'),
     });
@@ -170,7 +170,7 @@ describe('the sheet rewrites what the model sent', () => {
 
   it('puts the text before the exercises, which is the order he reads them', () => {
     const { doc } = buildSheet({
-      title: 'X', lang: 'es', objectives: ['la fotosíntesis', 'sumar'],
+      title: 'X', lang: 'es', materialKind: 'worksheet', objectives: ['la fotosíntesis', 'sumar'],
       composedOn: '2026-08-31',
       content: contentBlock('data-objective="la fotosíntesis" data-anchor="a1"'),
       groups: [{

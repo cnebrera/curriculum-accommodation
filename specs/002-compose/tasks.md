@@ -94,6 +94,85 @@ the project with no original to compare against, so what replaces
 
 ---
 
+## Phase 6 · The requirements the spec grew after these tasks were written
+
+> **The flow was broken here, by me.** FR-127…FR-131 were added to
+> [spec.md](spec.md) on 2026-08-30 from the SDA-IA analysis, **after** this file
+> existed, and `/speckit-tasks` was never re-run. They sat uncited and unbuilt for a
+> day, and one of them was a live defect.
+>
+> Found on 2026-08-31 by `scripts/check-fr-coverage.sh`, which exists because of this
+> and did not exist before it. `check-spec-kit.sh` could not have caught it: it
+> catches a spec and its implementation arriving in one commit, and a spec that
+> **grows** while its tasks stand still is two commits that both look fine.
+
+- [x] T024 [P] FR-126 · generated material carries a **material kind** and is bound by
+      its prohibitions from the first revision *(**this was the live defect.** The front
+      matter carried `kind: 'generated'`, so `materialKind('generated')` resolved to
+      `null` and a composed sheet reached `runAdaptation` with **no kind rule governing
+      it** — the exact failure `012` exists to prevent, arriving through a door nobody
+      was watching. Two facts were sharing one field and the one that lost was `012`'s.
+      `kind` now holds one of the four, derived from what was composed and never
+      defaulted; `generated: true` carries the other fact; and `isGenerated` still
+      accepts the old spelling, because a vault written before today has documents in
+      it.)*
+- [x] T025 [P] FR-127/FR-128 · an official criterio de evaluación is admissible as the
+      anchor, recorded with its code, and **cited in the report** *(done: `criterioIn`
+      recognises `CE.3.4` and `CE.MAT.2.1` and nothing looser — a pattern that found
+      codes in ordinary prose would cite an invented one on a document that goes to an
+      administration. **Rampa ships no criteria database and validates nothing**: it
+      carries what she pasted, and the report says so, because a code Rampa invented or
+      «corrected» would be worse than none.)*
+- [x] T026 [P] FR-129 · the target curricular level is an **input**, from her or from
+      the overlay, never the application's judgement about the child *(done, and it was
+      a real gap: the level came from `profile.year`, his **enrolled** course. For a
+      learner with a two-year desfase that is the wrong level, and it was being used
+      silently. Now: her choice, then a year her overlay states, then the enrolled
+      course — and the report names which, because «composing at a stated level is a
+      different act from quietly lowering someone else's worksheet, and the difference
+      is who decided». The enrolled fallback says **«nadie lo ha elegido»** and asks.)*
+- [x] T027 [P] FR-130 · material records how many **sessions** it is for *(done, and
+      recorded rather than acted on. Nothing organises around a session — this is her
+      unit written where it belongs, so `017`'s temporalización can say «tres sesiones»
+      instead of only «del 3 de marzo al 12 de junio».)*
+- [ ] T028 FR-131 · objectives choosable from a **PT/AL objective corpus** (`011`)
+      rather than typed **— needs a person.** The corpus does not exist, and nobody
+      here can write one: an objective corpus for PT and AL work is the same class of
+      artefact as `instructions/education/es.md`, which carries
+      `reviewed_by_teacher: false` for exactly this reason. Writing a plausible one
+      would put a list of «what a teacher is allowed to want» in front of her, invented
+      by a language model. FR-101's free text stays either way, which is what makes
+      this an addition rather than a blocker
+
+---
+
+## Coverage · every requirement, and where it is
+
+Not a formality. `check-fr-coverage.sh` fails if a requirement in the spec appears
+nowhere here, and the reason is the one above: **a requirement nobody can point at is
+a requirement nobody is keeping.**
+
+| | Where it is satisfied |
+|---|---|
+| FR-101 | `readObjectives` — free text, one per line. Official criteria via FR-127 |
+| FR-102 | `assertAnchor`, and it fires before the provider is resolved (T017) |
+| FR-103 | **Letter changed, intent kept.** It said «MUST carry `kind: generated`», which FR-126 then needed for the material kind. `generated: true` carries the fact and `isGenerated` still accepts the old spelling. Recorded as a conflict resolved rather than a requirement met |
+| FR-104 | `checkObjectives` / `assertObjectives` (T007/T008) |
+| FR-105 | `buildComposeReport`'s `unchecked`, rendered **first** (T015) |
+| FR-106 | By construction: `runCompose` writes an ordinary `ir.md` and `runAdaptation` takes it unchanged. The one change needed was the extraction gate (T013) |
+| FR-107 | `checklists/review.md` section 0 and section 6 (T020) |
+| FR-108 | **Corpus, not code.** `instructions/compose.md` tells the model to flag and stop where an objective is not achievable. Nothing enforces it, and that is deliberate: «achievable at this learner's level» is a professional judgement, and FR-129's target level plus the shortfall report are what put it in front of her |
+| FR-121 | `readObjective` — the content/skill branch (T006) |
+| FR-122 | `compose/level.ts` (T012) |
+| FR-123 | `arithmetic.solve` + `verify` — rejected, never corrected (T002-T004) |
+| FR-124 | `arithmetic.exercises` — `21 × 3` refused for «con llevadas» (T003) |
+| FR-125 | `compose/unverifiable.ts` (T021) |
+| FR-126 | T024 above |
+| FR-127, FR-128 | T025 above |
+| FR-129 | T026 above |
+| FR-130 | T027 above |
+| FR-131 | T028 above — **not done, needs a person** |
+
 ## Dependencies
 
 - **T000 blocked everything and was overridden** on 2026-08-31 (see above). It

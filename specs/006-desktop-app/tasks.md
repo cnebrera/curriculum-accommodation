@@ -269,3 +269,20 @@ four, and each one found something:
 
 What remains before a teacher sees it is **spec 008** (vision ingest) and the
 first real end-to-end run, which needs a key. Neither is in this spec.
+
+---
+
+## Coverage · every requirement, and where it is
+
+`check-fr-coverage.sh` fails if a requirement in the spec appears nowhere here.
+The reason is the one `002` learned the hard way: **a requirement nobody can point
+at is a requirement nobody is keeping.**
+
+| | Where it is satisfied |
+|---|---|
+| FR-407 | `vault/io.ts` writes Markdown and YAML into one folder she chooses, and `e2e/onboarding.spec.ts` asserts it is remembered and reopened |
+| FR-411 | Light front matter, readable body: `stringifyFrontMatter`, and `vault-standalone.test.ts` asserts a profile is legible with no application |
+| FR-412 | `VAULT` in `paths.ts` — learners, notes, overlays, house style, material, output, handover |
+| FR-415 | `recipes-local/` is loaded after the bundled corpus, so her own recipe wins |
+| FR-420 | The interface resolves names in memory, per keystroke, and the substitution happens at the egress chokepoint — so she reads a name and the provider never does. `chokepoint.test.ts` |
+| FR-426 | **Not done, and it needs an account and money.** Unsigned builds mean an OS security warning on first launch, which FR-426 itself calls a worse first impression than any missing feature. Needs an Apple Developer account and a Windows code-signing certificate — recorded here rather than in a task, because it is a purchase and not work |

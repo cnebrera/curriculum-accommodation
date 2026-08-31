@@ -33,3 +33,27 @@ There is nothing to build. The risk in this spec is the opposite of the usual on
 that its requirements get treated as met because other specs deliver them, without
 anyone checking. Three of the fifteen were found broken by audits written for other
 specs — so the trace is the deliverable, and the gap it names is the point.
+
+---
+
+## Coverage · every requirement, and where it is
+
+`check-fr-coverage.sh` fails if a requirement in the spec appears nowhere here.
+The reason is the one `002` learned the hard way: **a requirement nobody can point
+at is a requirement nobody is keeping.**
+
+| | Where it is satisfied |
+|---|---|
+| FR-002 | `axisLevelOf` returns `undefined` for an unobserved axis and the prompt says «sin observar». **Never `0`**: `0` means «a normal page is fine», which is a claim |
+| FR-003 | `ingest/to-ir.ts` and `ir/parse.ts`, against `docs/ir.md` |
+| FR-004 | `one-task-per-page.md` names renumbering as its first anti-pattern — «the single most common way to make an adapted sheet unusable in a real classroom» — and `signpost-the-page.md` repeats it |
+| FR-005 | `[UNREADABLE]` in place, plus `checkCompleteness`. `008` FR-604 is the same rule for the vision path |
+| FR-006 | `runAdaptation`'s `isVerified` gate. `002` T013 added the one honest exception: composed material has no extraction to verify, and writing `verified: true` into a document that never had one would have been a true-looking field asserting something that did not happen |
+| FR-007 | `applies(recipe, profile)` reads axis levels and nothing else. `018` is the sharpest test of this: pictograms fire from **no** axis, and `pictograms-not-automatic.test.ts` asserts the module cannot see one |
+| FR-008 | `checkProvenance` / `assertProvenance`. `002` T008 and `compose-proposals.test.ts` closed two holes of the same shape in it |
+| FR-009 | `buildReport`, grouped by decision, with «Lo que NO he hecho» first |
+| FR-012 | `render/draft.ts`, derived from the document. `007` FR-509 found the version where a renderer could ask for an unmarked sheet, and `018`'s attribution now follows the same rule for the same reason |
+| FR-013 | `npm run test:isolation` walks every file in `packages/core/src`, in CI as its own step |
+| FR-016, FR-017 | `evidence:` reaches the report. This was the project's **fourth** «parsed and never read» field, and the rule it produced is the one `check-fr-coverage.sh` now enforces at the requirement level |
+| FR-018 | `validate-recipes.sh` accepts a recipe with no `evidence:`. Requiring one would push away a contributor who knows how to adapt material and not how to cite it |
+| FR-019, FR-020 | **Not done** — backlog **G18**. Provenance records the recipe and its version and not which service produced the material. The service **identifier**, never a model name, because `009` FR-702 says she never sees one |

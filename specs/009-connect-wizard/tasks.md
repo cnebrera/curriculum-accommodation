@@ -156,3 +156,27 @@ comparison listing services that cannot be selected is worse than no comparison.
 **Do not run T041 before Phase 6.** Spending a real key on a screen whose failure
 paths are unwired means the first genuine error a teacher could hit is one nobody
 has seen.
+
+---
+
+## Coverage · every requirement, and where it is
+
+`check-fr-coverage.sh` fails if a requirement in the spec appears nowhere here.
+The reason is the one `002` learned the hard way: **a requirement nobody can point
+at is a requirement nobody is keeping.**
+
+| | Where it is satisfied |
+|---|---|
+| FR-701 | `providers/catalogue.ts` reads `instructions/providers/*.md` at run time. `catalogue.test.ts`, and the CI reviewer checklist rejects a cost figure or a jurisdiction claim under `app/` |
+| FR-703 | The catalogue marks a free tier, and `recommend.ts` can reach it. `recommend.test.ts` |
+| FR-704 | `releases.test.ts` and `compatible.test.ts` — a new corpus file and no code, unless the API is not one an existing adapter covers |
+| FR-705 | The OpenAI-compatible adapter, so services sharing that API are corpus entries. `compatible.test.ts` |
+| FR-709 | `ServiceComparison` opens in one action and does not block the recommended path |
+| FR-711 | Dated facts and pointers, never «compliant», «safe» or «approved». `catalogue.test.ts` asserts the vocabulary is absent, and `docs/proteccion-de-datos.md` says the decision is the centre's |
+| FR-712 | `cases/002-model-floor` is the floor; the catalogue carries the marking. **What is not done is running it against six real services** — that is T041, and it needs six accounts and money |
+| FR-714, FR-715, FR-716, FR-718 | The walkthrough, its «what you will see» steps, the blockers stated before step one, and «no encuentro eso» — all per-service corpus. `catalogue.test.ts` asserts every shipped service has them |
+| FR-717 | `shell.openExternal` to the exact key page, **in her browser and never inside the application** — which is also why `corpus/links.ts` is one small file: «what leaves the machine, and when» is answerable by opening it |
+| FR-720 | `providers/key.ts` normalises whitespace, quotes and a `KEY=` prefix — including the non-breaking and zero-width characters a web page inserts — before validating. `provider-key.test.ts` |
+| FR-721 | Five distinct outcomes, each with its own sentence and next step: `key-invalid`, `key-wrong-provider`, `key-no-credit`, `offline`, `rate-limited`. `degradation.test.ts` |
+| FR-723 | The cheapest request the service allows, with **no learner data and no material** — asserted in `chokepoint.test.ts`, because validation is an egress path like any other |
+| FR-725 | `safeStorage` per service, in the OS keychain, **outside the vault** — so a vault backup or a handover cannot carry a key. `credentials.test.ts` |

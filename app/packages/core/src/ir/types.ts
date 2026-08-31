@@ -39,8 +39,22 @@ export interface IRDocument {
 export const isVerified = (d: IRDocument): boolean =>
   (d.frontMatter['extraction'] as Record<string, unknown> | undefined)?.['verified'] === true;
 
+/**
+ * Composed by Rampa rather than read from something (002, corrected for FR-126).
+ *
+ * Reads `generated: true`, **not** `kind`. It read `kind === 'generated'` until
+ * 2026-08-31, which meant a composed sheet's `kind` field said «generated» — so
+ * `materialKind()` resolved it to `null` and the sheet reached adaptation with no
+ * kind rule governing it. Two different facts were sharing one field, and the one
+ * that lost is the one `012` exists for.
+ *
+ * The old spelling is still accepted, because a vault written before this change has
+ * documents in it and a teacher's material must not stop being recognised.
+ */
 export const isGenerated = (d: IRDocument): boolean =>
-  d.frontMatter['kind'] === 'generated';
+  d.frontMatter['generated'] === true
+  || d.frontMatter['kind'] === 'generated'
+  || d.frontMatter['source'] === 'composed';
 
 /**
  * Whether a teacher has signed this document off (007 FR-509).

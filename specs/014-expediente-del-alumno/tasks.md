@@ -119,3 +119,19 @@ orphaned photograph of a worksheet in her folder for ever.
 - T009 needs T002–T007.
 - Phase 5 needs Phases 2–4 to exist to be wrong about.
 - **SC-1201's real test is a teacher a year later**, and it is not a task.
+
+---
+
+## Coverage · every requirement, and where it is
+
+`check-fr-coverage.sh` fails if a requirement in the spec appears nowhere here.
+The reason is the one `002` learned the hard way: **a requirement nobody can point
+at is a requirement nobody is keeping.**
+
+| | Where it is satisfied |
+|---|---|
+| FR-1201 | `paths.ts` keeps the source at `material/<job>/source/` and never under a learner. `learnersOf` derives who read it |
+| FR-1202 | `record/scan.ts` reads the vault and **writes nothing**. `e2e/record.spec.ts` deletes `record.md` and the record still answers |
+| FR-1203 | Stamped by the shell when the adaptation is written — `adapted_on`, `school_year`, the kind — never read from a model (Principle II) |
+| FR-1205 | `RecordEntry.documents`: the source, the IR, the adapted sheet, its revisions and every render. `016` T006 made `adapted` optional, so a composed job appears before it is adapted |
+| FR-1209 | `record-erasure.test.ts`: the plan names the record, the adaptations, the renders and the index, and `verifyForgotten` searches the whole vault rather than trusting a delete list |

@@ -22,7 +22,7 @@ const group = (objective: string, pairs: Array<[string, string]>): SheetGroup =>
 
 const sheet = () => buildSheet({
   title: 'Multiplicar con llevadas',
-  lang: 'es',
+  lang: 'es', materialKind: 'worksheet',
   objectives: ['multiplicar con llevadas'],
   groups: [group('multiplicar con llevadas', [['47 × 8', '376'], ['68 × 7', '476']])],
   composedOn: '2026-08-31',
@@ -81,7 +81,7 @@ describe('the key is keyed to the expression', () => {
 
   it('groups the answers by the objective she wrote', () => {
     const { answers } = buildSheet({
-      title: 'Dos cosas', lang: 'es',
+      title: 'Dos cosas', lang: 'es', materialKind: 'worksheet',
       objectives: ['multiplicar con llevadas', 'restar prestando'],
       groups: [
         group('multiplicar con llevadas', [['47 × 8', '376']]),
@@ -113,7 +113,7 @@ describe('it is a document the rest of the pipeline accepts', () => {
   /** The check is not a formality: a group we did not ask for must fail it. */
   it('fails the objective check if a block claims something she did not ask', () => {
     const { markdown } = buildSheet({
-      title: 'X', lang: 'es',
+      title: 'X', lang: 'es', materialKind: 'worksheet',
       objectives: ['multiplicar con llevadas'],
       groups: [group('dividir entre dos cifras', [['144 ÷ 12', '12']])],
       composedOn: '2026-08-31',
@@ -131,7 +131,7 @@ describe('it is a document the rest of the pipeline accepts', () => {
 
   it('records the objectives she asked for, even one that produced nothing', () => {
     const { doc } = buildSheet({
-      title: 'X', lang: 'es',
+      title: 'X', lang: 'es', materialKind: 'worksheet',
       objectives: ['multiplicar con llevadas', 'los ríos de España'],
       groups: [group('multiplicar con llevadas', [['47 × 8', '376']])],
       composedOn: '2026-08-31',
@@ -143,7 +143,7 @@ describe('it is a document the rest of the pipeline accepts', () => {
 
   it('carries what she must be told into report-notes, never onto the page', () => {
     const { doc } = buildSheet({
-      title: 'X', lang: 'es', objectives: ['sumar'],
+      title: 'X', lang: 'es', materialKind: 'worksheet', objectives: ['sumar'],
       groups: [group('sumar', [['25 + 25', '50']])],
       composedOn: '2026-08-31',
       notes: ['No me consta en qué curso está.'],
@@ -152,5 +152,74 @@ describe('it is a document the rest of the pipeline accepts', () => {
     expect(notes?.content).toContain('No me consta en qué curso está.');
     // And it is the only block without an objective, which is what makes it legal.
     expect(notes?.attrs['data-objective']).toBeUndefined();
+  });
+});
+
+/**
+ * A composed sheet is one of the four kinds like any other (002 FR-126, 012).
+ *
+ * **This was a live defect, and the check that found it was not a test.** It was
+ * `scripts/check-fr-coverage.sh` — written on 2026-08-31 after Carlos pointed out that
+ * a specification which grows while its tasks stand still is drift nothing was
+ * catching. FR-126 had been in `002`'s spec since 30 August, cited in no task, and
+ * never built.
+ *
+ * What it cost: the front matter carried `kind: 'generated'`, so
+ * `materialKind('generated')` resolved to **null**, and a composed sheet reached
+ * `runAdaptation` with no kind rule governing it — the exact failure `012` exists to
+ * prevent, arriving through a door nobody was watching.
+ *
+ * `problems` is the kind that matters most here: a composed arithmetic sheet has a
+ * verified answer key, and that kind's prohibition on changing quantities and
+ * operations is what stops a revision quietly invalidating it.
+ */
+describe('the composed sheet carries a material kind', () => {
+  const built = (materialKind: string) => buildSheet({
+    title: 'X', lang: 'es', materialKind, objectives: ['sumar'], composedOn: '2026-08-31',
+    groups: [{
+      objective: 'sumar', instruction: 'Resuelve estas sumas.',
+      accepted: [{ exercise: { expression: '25 + 25' }, answer: '50' }],
+    }],
+  });
+
+  it('puts one of the four in `kind`, not «generated»', () => {
+    expect(built('worksheet').doc.frontMatter['kind']).toBe('worksheet');
+    expect(built('problems').doc.frontMatter['kind']).toBe('problems');
+  });
+
+  it('and it resolves against the shipped corpus, which «generated» did not', async () => {
+    const { parseMaterialKinds, findKind } = await import('../src/index.js');
+    const { readFileSync } = await import('node:fs');
+    const { join, dirname } = await import('node:path');
+
+    const root = join(dirname(new URL(import.meta.url).pathname), '..', '..', '..', '..');
+    const kinds = parseMaterialKinds(
+      readFileSync(join(root, 'instructions', 'material-kinds.md'), 'utf8'), 'material-kinds.md');
+
+    const declared = built('problems').doc.frontMatter['kind'] as string;
+    const resolved = findKind(kinds, declared);
+
+    expect(resolved, 'a composed sheet must be governed by a kind rule').not.toBeNull();
+    // And the prohibition that protects the answer key.
+    expect(resolved!.forbids).toContain('quantities');
+    expect(resolved!.forbids).toContain('operations');
+
+    // The old value, for contrast: it was in `kind` and resolved to nothing.
+    expect(findKind(kinds, 'generated')).toBeNull();
+  });
+
+  it('still says Rampa made it, by a field of its own', () => {
+    // Two facts were sharing one field, and the one that lost was `012`'s.
+    const { doc, markdown } = built('worksheet');
+    expect(doc.frontMatter['generated']).toBe(true);
+    expect(doc.frontMatter['source']).toBe('composed');
+    expect(isGenerated(parseIR(markdown))).toBe(true);
+  });
+
+  /** A vault written before this change still has documents in it. */
+  it('recognises the old spelling, so her existing material keeps working', () => {
+    const old = parseIR(['---', 'kind: "generated"', '---', '',
+      '::: {#b1 .exercise}', '1. 47 × 8 =', ':::'].join('\n'));
+    expect(isGenerated(old)).toBe(true);
   });
 });

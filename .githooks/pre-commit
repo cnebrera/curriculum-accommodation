@@ -65,6 +65,20 @@ fi
 # twice by people who had read the reminder. See scripts/check-spec-kit.sh.
 if [ "${RAMPA_SKIP_SPECKIT:-0}" != "1" ]; then
     bash scripts/check-spec-kit.sh || exit 1
+
+    # The other half of the flow, and the one that was missing.
+    #
+    # `check-spec-kit.sh` catches a specification and its implementation arriving
+    # together. It cannot catch a specification **growing** while its tasks stand
+    # still — that is two commits and both look fine. On 2026-08-30 five
+    # requirements were added to `002`'s spec and never re-derived into tasks; one
+    # of them was a live defect that sat there for a day.
+    #
+    # Only when a spec or a tasks file is staged: this is not a reason to re-check
+    # 168 requirements on a commit that touches one stylesheet.
+    if printf '%s\n' "$staged" | grep -qE '^specs/.*/(spec|tasks)\.md$'; then
+        bash scripts/check-fr-coverage.sh || exit 1
+    fi
 else
     echo "  ⚠️  Spec Kit gate skipped by RAMPA_SKIP_SPECKIT=1 — say why in the message." >&2
 fi

@@ -135,3 +135,19 @@ saying what will not change before she presses the button (FR-1405).
 **Not verified**: no composition has run against a real provider, here or in
 `002` — there is no key in the e2e suite on purpose. The route is open and tested;
 what comes back down it has met no model.
+
+---
+
+## Coverage · every requirement, and where it is
+
+`check-fr-coverage.sh` fails if a requirement in the spec appears nowhere here.
+The reason is the one `002` learned the hard way: **a requirement nobody can point
+at is a requirement nobody is keeping.**
+
+| | Where it is satisfied |
+|---|---|
+| FR-1401 | T007 · `DoorScreen`'s two `.door` controls, neither pre-selected. `e2e/door.spec.ts` asserts both are `aria-pressed="false"` |
+| FR-1403 | T007 · the kinds come from `012`'s corpus with nothing pre-selected, and `e2e/material.spec.ts` asserts it over all four |
+| FR-1406 | T017 · straight through `005`'s `runBatch`. The door's learner is the **first**, not the only one — the checkbox list stays on the adapt screen, which `e2e/group.spec.ts` caught when it briefly did not |
+| FR-1407 | `job:adapt` calls `refreshRecord` per learner that got a sheet, and `job:compose` calls it too (T006) |
+| FR-1410 | **Satisfied by absence, and it is the requirement this feature could most easily have broken.** No file under `ui/src/door/` or `ui/src/compose/` touches a recipe, an instruction or a prompt. The contract states the test: a diff to `016` that changes `recipes/`, `instructions/` or `prompt/` is specifying something `001`, `002` or `012` owns |

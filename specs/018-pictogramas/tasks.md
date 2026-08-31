@@ -147,3 +147,20 @@ has photocopied a pictogram sheet. The set contract is documented rather than
 reverse-engineered (research R2) precisely because we do not have a sample — and
 if turning a real download into that layout proves to be friction, a teacher will
 say so and we will then have a sample to write a parser against.
+
+---
+
+## Coverage · every requirement, and where it is
+
+`check-fr-coverage.sh` fails if a requirement in the spec appears nowhere here.
+The reason is the one `002` learned the hard way: **a requirement nobody can point
+at is a requirement nobody is keeping.**
+
+| | Where it is satisfied |
+|---|---|
+| FR-1603 | T019 · `attributionFor(doc)` is **derived and takes no parameter**, for the reason `007` FR-509 established: a licence condition passed as an argument is one somebody passes `false`. Asserted with `signedOff: true`, which removes the draft mark and changes nothing about the licence |
+| FR-1604 | T007 · nothing in `pictograms/` names ARASAAC, the set contract is documented rather than reverse-engineered, and `attributionFor` takes a different set's credit. `pictogram-render.test.ts` asserts a non-ARASAAC attribution renders |
+| FR-1606 | T004 · `pictograms.enabled`, `scope` and `decided_on` on the profile. The date is stamped when **she** turns it on, because a flag with no date is indistinguishable from a flag something else set |
+| FR-1610 | T009 · the name check runs **before** the override and before the set, so «Lucía» gets nothing even if her school's override names it and even if the set has a keyword for it |
+| FR-1611 | T012 · `data-picto` records **word=id**, not the id alone — an id by itself cannot be checked by a human reading the document |
+| FR-1613 | T020 · as far as anything here can: a 20 mm minimum from the corpus, and **the word always printed beside the picture**, because on greyscale the colour distinctions its design uses are gone. SC-1605 needs a real photocopier and is recorded as unmet |

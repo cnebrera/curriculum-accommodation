@@ -90,3 +90,40 @@ no instruction about.
 entire reason these fields exist, and it is the task most likely to be dropped as
 "just a prompt line". Without it the model gets three facts and no idea what they
 are for, which is how an age becomes a label instead of a register.
+
+---
+
+## Coverage · every requirement, and where it is
+
+`check-fr-coverage.sh` fails if a requirement in the spec appears nowhere here.
+The reason is the one `002` learned the hard way: **a requirement nobody can point
+at is a requirement nobody is keeping.**
+
+| | Where it is satisfied |
+|---|---|
+| FR-901 | T006 · `age`, `year`, `stage` on the schema, each optional and **absent rather than guessed** |
+| FR-902 | T012 · one choice fills stage and age, both editable, neither corrected afterwards. `e2e/learner.spec.ts` asserts changing the age leaves the year alone |
+| FR-903 | T013 · `whoIsThis` → `buildAdaptPrompt`, after the barriers and before the material |
+| FR-904 | `instructions/education/es.md` states the rule the fields exist for — register to the age, curricular demand to the year — because that is pedagogical judgement |
+| FR-906 | T003 · `instructions/education/*.md`, one per system, with no year, stage or age in code. `education.test.ts` proves the extension point with two |
+| FR-907 | T004 · repair-not-reject: a malformed year is dropped and logged, the rest of the file ships, and a malformed *file* is simply not offered |
+| FR-908 | `es.md` covers Infantil through FP Grado Medio, educación especial and ESPA — and `check-education-freshness.sh` (T022) fails the build past 400 days |
+| FR-909 | T006 · `age` plus `age_recorded`, **never a date of birth**. A stale age is visible rather than drifting silently |
+| FR-912 | T012 · `typical_age: null` fills nothing, and the field help says why. `e2e/learner.spec.ts` covers educación especial |
+| FR-913 | `can:` and `studies:` per year, labelled as orientation in the file itself |
+| FR-915 | T005 · `studies_by_modality`, and `studiesFor` says **nothing** rather than picking one when no modality is known — a Bachillerato learner whose modality is unknown is better served by silence than by Ciencias |
+| FR-916 | `es.md` states in its own text that it is the state minimum and that comunidades develop on top of it |
+| FR-917 | T021/T022 · `last_checked` surfaced beside the choice, marked when stale and never withdrawn, plus the CI check. And `reviewed_by_teacher: false` until a teacher **disagrees** — T026 |
+| FR-919 | **Satisfied and asserted**: `skills:` is optional, and a year without one is valid — the report then says the level was not checked rather than the file being rejected |
+| FR-922 | **Satisfied by absence, and it is the one this corpus could most easily have broken.** No diagnosis, category of disability or clinical label appears anywhere in `instructions/education/`. `017`'s clinical vocabulary is a list of terms to *filter*, in a different file, and filtering a word is the opposite of carrying it |
+
+### Not done, and needing a person
+
+These three arrived from the SDA-IA analysis on 2026-08-30, **after** this file was
+written, and were found uncited on 2026-08-31 by `check-fr-coverage.sh` — the same
+drift as `002` FR-127…131, on the same day, from the same source.
+
+| | Why not |
+|---|---|
+| FR-918 | The official curricular elements per year and subject — competencias específicas, criterios de evaluación, saberes básicos — with their codes. **Rampa ships no curriculum database**, and writing one from memory is how a plausible-looking wrong code reaches a document somebody files. `002` FR-127 takes the honest half: she pastes the criterio, and the code travels with it |
+| FR-920, FR-921 | The PT/AL objective taxonomy. Same class of artefact as `es.md` itself, which carries `reviewed_by_teacher: false` for exactly this reason — and FR-921 forbids copying another application's data file, which is the only shortcut available. Writing a plausible one would put an invented list of «what a specialist is allowed to name» in front of her |

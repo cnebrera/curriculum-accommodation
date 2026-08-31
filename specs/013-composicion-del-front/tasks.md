@@ -94,3 +94,23 @@ wrong. Stop and fix the shell.
 
 **Do not skip T001.** A visual change with no before is a change nobody can
 review — including the person who made it, who by then remembers only the after.
+
+---
+
+## Coverage · every requirement, and where it is
+
+`check-fr-coverage.sh` fails if a requirement in the spec appears nowhere here.
+The reason is the one `002` learned the hard way: **a requirement nobody can point
+at is a requirement nobody is keeping.**
+
+| | Where it is satisfied |
+|---|---|
+| FR-1101 | `ui/src/shell/Page.tsx` — `Page` owns the title, the measure and the rhythm; a screen declares what it is |
+| FR-1102 | `Field` owns the measure, so no screen decides how wide an input is |
+| FR-1103 | `tokens.css`'s spacing scale, with `--rhythm-*` for the three levels. `ui/test/styles.test.tsx` fails on any off-scale padding, margin or gap |
+| FR-1104 | `tokens.css`'s type scale, and `styles.test.tsx` fails on a literal font size |
+| FR-1108 | `ui/src/data/Loaded.tsx` — one component for loading, error and empty, so the three read identically everywhere |
+| FR-1110 | T018 · `packages/shell/src/corpus/` — bundle, recipes, services, education, links |
+| FR-1114 | **Satisfied by absence, deliberately.** There is no pixel-diff suite and ADR 0009 says why: it fails on every intentional change, gets updated without being read, and then asserts whatever the last person accepted |
+| FR-1115 | `e2e/layout.spec.ts`'s width sweep, plus `015` T016's filter-bar case — which found that the sweep had never rendered the bar, because it seeds one learner and the bar appears from six |
+| FR-1117 | `e2e/layout.spec.ts` · «the text scale moves the thresholds»: at 1100 px the rail is a column at `normal` and a strip at `xlarge`, with no second rule saying so — which is why the thresholds are containers in `em` |

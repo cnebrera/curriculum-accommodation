@@ -35,7 +35,7 @@ const report = async (yearId: string | undefined, expressions: string[], wanted:
   const outcome = await run(expressions, wanted);
   const leveled = levelAll([readObjective(objective)], es, yearId);
   const { listing } = buildSheet({
-    title: 'X', lang: 'es', objectives: [objective], composedOn: '2026-08-31',
+    title: 'X', lang: 'es', materialKind: 'worksheet', objectives: [objective], composedOn: '2026-08-31',
     groups: [{ objective, instruction: 'Resuelve.', accepted: outcome.accepted }],
   });
   return buildComposeReport({

@@ -91,3 +91,20 @@
 - T011 blocks all of Phase 3, and it is a design question rather than a task.
 - T020 blocks nothing and gates everything: Phase 4 can be written and cannot be
   known to be right.
+
+---
+
+## Coverage · every requirement, and where it is
+
+`check-fr-coverage.sh` fails if a requirement in the spec appears nowhere here.
+The reason is the one `002` learned the hard way: **a requirement nobody can point
+at is a requirement nobody is keeping.**
+
+| | Where it is satisfied |
+|---|---|
+| FR-1702 | **Satisfied by absence.** No modality-specific adaptation path exists: the ODT, the audio-ready and the braille-ready renderings all take the same adapted IR, and `renderLinear` serves the last two. SC-1707 is the same claim — the IR needed no modality-specific field |
+| FR-1703 | Each modality is its own action, so one failing leaves the others. And within a modality, what cannot be produced **degrades with the reason named** rather than failing: an unlinearisable block is announced, a missing pictogram image is a named gap |
+| FR-1704 | T007 · `odt.test.ts` opens the produced file and checks its structure. SC-1702 — Word and Google Docs specifically — is recorded as needing a person with those programs |
+| FR-1705 | **Satisfied by absence, and checked.** The ODT is hand-written XML in a store-only ZIP built on `node:zlib`; nothing shells out. `documents.test.ts` asserts no compilation step and no native build |
+| FR-1717 | T008 · `recipes/core/response-route.md` changes the answer space and never the question, with «turning everything into multiple choice» named as an anti-pattern because recognising is not producing |
+| FR-1719 | T006/T020 · every modality is produced from the same adapted document, on demand, with no re-run. Which is Principle IV's claim doing its job |

@@ -413,6 +413,37 @@ every moment should have a spec. What it added beyond the seams pass:
    journey sentence → T094). Handover *import* (004 US2) recorded as deliberately
    deferred rather than silently missing.
 
+## G23 · A corrected extraction does not mark the sheets made from it
+
+Found 2026-08-31, by archiving `005`'s requirements against its tasks.
+
+**FR-520**: «Correcting the extraction after adaptations exist MUST be allowed, MUST
+mark the affected sheets stale **by learner name**, and MUST NOT re-run anything on
+its own.»
+
+Two of the three hold. `setPageVerified` lets her un-confirm and correct a page after
+adaptations exist, and nothing re-runs by itself. **Nothing marks the affected sheets
+stale**, and nothing names the learners.
+
+Why it matters, concretely: she photographs a worksheet, adapts it for three learners,
+then notices Rampa read «47 × 8» as «4/ × 8» and fixes it. The three sheets on her desk
+were made from the wrong reading, and Rampa says nothing. She has no way to know which
+of the material in her folder predates the correction — and the sheet is the thing that
+reaches a child.
+
+**Why it is a backlog entry and not a task yet.** The mechanism is not obvious. A
+«stale» flag on an adapted document is a fourth thing in the front matter that has to
+stay true through a re-run, a revision, a sign-off and a hand edit — and `014` already
+found that a stored fact about the vault is a second copy of a truth the filesystem
+already holds. The honest options are: derive staleness by comparing the IR's
+modification time against each `adapted.md`'s (cheap, and wrong the moment she edits
+the IR for an unrelated reason), or record the extraction's verification date on the
+adapted document at the moment it is written (a real fact about the process, like
+`adapted_on`, and the one that survives a hand edit).
+
+The second is probably right, and «probably» is why this is written down rather than
+built at the end of a long day.
+
 ## G22 · The DPO gate on `017` — *WITHDRAWN 2026-08-31*
 
 Not a gap. A gate I invented and Carlos removed, and he was right to.

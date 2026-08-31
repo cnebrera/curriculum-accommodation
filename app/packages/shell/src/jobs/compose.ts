@@ -1,10 +1,11 @@
 import {
   jobDir, jobIR, jobAnswers, jobComposeReport, parseComposeBudget, readObjectives,
-  levelFrom, explainLevel, composeExercises, explainOutcome, arithmetic, buildSheet,
+  levelFrom, explainLevel, targetYear, explainTarget, composeExercises, explainOutcome,
+  arithmetic, buildSheet,
   renderAnswerKey, buildComposeReport, assertObjectives, parseIR, logger, RampaError,
   parseProposals,
   loadLearner, annotateInjection, checkBounds,
-  assertAnchor, readAnchor, renderAnchorForPrompt, checkAnchored, checkObjectives,
+  assertAnchor, readAnchor, renderAnchorForPrompt, checkAnchored, checkObjectives, criteriaIn,
   composeUnverified, verifierFor, UNVERIFIABLE_ES,
   type Leveled, type ProposedExercise, type Skill, type ComposeOutcome,
   type AnswerLine, type SheetGroup, type Verifier, type AnchorPassage, type Block,
@@ -68,7 +69,24 @@ export interface ComposeRequest {
   objectives: readonly string[];
   /** How many exercises per objective. The corpus decides when she does not. */
   perObjective?: number;
+  /**
+   * How many **sessions** this material is for (FR-130).
+   *
+   * «A PT works in sessions and the application has no concept of one.» It still does
+   * not organise anything around them — this records what she said, so the material
+   * and later the ACNS's temporalización can say «esto es para tres sesiones» instead
+   * of the application inventing a unit she does not use.
+   */
+  sessions?: number;
   title?: string;
+  /**
+   * The year the material targets (FR-129).
+   *
+   * **Hers to choose.** For a learner with a two-year desfase his enrolled course is
+   * not the level his material should target, and she is the one who knows which is.
+   * Absent, the enrolled course is used **and the report says nobody chose it**.
+   */
+  targetYear?: string;
   /**
    * What the content must rest on (FR-102): her notes, the textbook page, the
    * three sentences she would say in class.
@@ -152,7 +170,20 @@ export async function runCompose(
   }
 
   const learner = await loadLearner(vault, request.learnerCode);
-  const yearId = learner.profile.year;
+
+  /*
+   * FR-129 · which year the material targets, and **who decided**.
+   *
+   * Her choice, then a year her overlay states, then the enrolled course — and the
+   * report names which, because «composing at a stated level is a different act from
+   * quietly lowering someone else's worksheet, and the difference is who decided».
+   */
+  const target = targetYear({
+    ...(request.targetYear ? { chosen: request.targetYear } : {}),
+    ...(yearInOverlay(learner.overlay) ? { fromOverlay: yearInOverlay(learner.overlay)! } : {}),
+    ...(learner.profile.year ? { enrolled: learner.profile.year } : {}),
+  });
+  const yearId = target.yearId;
   const found = yearId ? await findYearInCorpus(yearId) : null;
   const yearLabel = (id: string): string => (found && id === yearId ? found.year.label : id);
 
@@ -314,6 +345,8 @@ export async function runCompose(
   const title = (request.title ?? kept[0] ?? 'Material generado').trim();
 
   const notes = [
+    // FR-129 · the level, and who chose it. First, because it governs everything else.
+    explainTarget(target, yearId ? yearLabel : undefined),
     ...(unverifiedObjectives.length
       ? [`${UNVERIFIABLE_ES} Concretamente: ${unverifiedObjectives.map((o) => `«${o}»`).join(', ')}.`]
       : []),
@@ -324,8 +357,27 @@ export async function runCompose(
     }).filter((s): s is string => s !== null),
   ];
 
+  /*
+   * What kind of material this is (`002` FR-126, `012`).
+   *
+   * **Derived from what was composed, and never defaulted.** Exercises with a
+   * verified answer key are `problems` when they are word problems and `worksheet`
+   * when they are bare operations; a composed text is `study`. The kind matters most
+   * for `problems`, whose prohibition on changing quantities and operations is what
+   * stops a later revision quietly invalidating the answer key.
+   *
+   * It was `kind: 'generated'` until 2026-08-31, which is not one of the four — so
+   * `materialKind()` resolved it to `null` and a composed sheet reached adaptation
+   * with **no kind rule governing it at all**.
+   */
+  const materialKind = content.length > 0 && groups.length === 0
+    ? 'study'
+    : groups.some((g) => /\bproblema/i.test(g.instruction)) ? 'problems' : 'worksheet';
+
   const sheet = buildSheet({
-    title, lang: 'es', objectives: kept, groups, content, composedOn, notes,
+    title, lang: 'es', materialKind, objectives: kept, groups, content, composedOn, notes,
+    ...(request.sessions && request.sessions > 0
+      ? { sessions: Math.min(20, Math.round(request.sessions)) } : {}),
     ...(anchorRaw ? { anchor: anchorSummary(anchorRaw) } : {}),
     composedFor: { code: request.learnerCode, ...(yearId ? { yearId } : {}) },
   });
@@ -348,8 +400,11 @@ export async function runCompose(
     ...(unverifiedObjectives.length ? { unverifiedObjectives } : {}),
   }));
 
+  const criteria = criteriaIn(anchor.passages);
+
   const report = buildComposeReport({
     title, composedOn, leveled, outcomes, listing: sheet.listing, yearLabel,
+    ...(criteria.length ? { criteria } : {}),
     ...(unverifiedObjectives.length ? { unverifiedObjectives } : {}),
   });
   await vault.writeRaw(jobComposeReport(jobId), report.markdown);
@@ -556,6 +611,19 @@ function anchorSummary(raw: string): string {
 /** A model that wraps IR in a fence has made a punctuation mistake, not an error. */
 function stripFence(raw: string): string {
   return /```(?:\w+)?\s*([\s\S]*?)```/.exec(raw)?.[1] ?? raw;
+}
+
+/**
+ * A year id her overlay states (FR-129's middle case).
+ *
+ * Deliberately narrow: it looks for a year id in the form the corpus uses
+ * (`es:primaria-3`), which is what she or `017`'s guide extraction would have written.
+ * It does **not** try to read «va por tercero» out of prose — inferring a curricular
+ * level from a sentence in a document is precisely the judgement FR-129 says is not
+ * the application's to make.
+ */
+export function yearInOverlay(overlay: string | null): string | undefined {
+  return /\b([a-z]{2}:[a-z]+-[a-z0-9]+)\b/.exec(overlay ?? '')?.[1];
 }
 
 /**

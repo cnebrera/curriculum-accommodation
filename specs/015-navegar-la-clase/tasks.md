@@ -101,3 +101,18 @@ build one is to make it unexpressible in the data path.
 - **SC-1301 and SC-1304 need a person**, and are not tasks. SC-1304 is the one
   this feature is actually judged on: a reviewer given the screens cannot
   construct a ranking from anything the interface offers.
+
+---
+
+## Coverage · every requirement, and where it is
+
+`check-fr-coverage.sh` fails if a requirement in the spec appears nowhere here.
+The reason is the one `002` learned the hard way: **a requirement nobody can point
+at is a requirement nobody is keeping.**
+
+| | Where it is satisfied |
+|---|---|
+| FR-1305 | T006 · `school` on the profile schema, optional and free text |
+| FR-1308 | **Satisfied by absence, and asserted.** This feature added `school` and nothing else. `roster.test.ts` asserts `RosterRow` carries no barrier, and `011`'s fields were already there |
+| FR-1311 | T015 · the view assertion bans the vocabulary of ranking a child, and `groupRoster` keeps members in input order. Rewritten once after my first version banned the legitimate «3 de 30» |
+| FR-1312 | `AxisStrip` renders the corpus's own words, and `compact` shows «8 sin observar» rather than hiding unobserved axes — hiding them would imply no barriers |

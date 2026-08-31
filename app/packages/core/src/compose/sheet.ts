@@ -55,6 +55,25 @@ export interface SheetInput {
   lang: string;
   /** Her objectives, verbatim, in her order — including any that produced nothing. */
   objectives: readonly string[];
+  /**
+   * The material kind this counts as (`012`, and `002` FR-126).
+   *
+   * **A composed sheet is one of the four kinds like any other**, and it must be
+   * bound by that kind's prohibitions from the moment it is first revised. It was
+   * not: the front matter carried `kind: generated`, `materialKind('generated')`
+   * resolved to `null`, and the sheet reached `runAdaptation` with **no kind rule
+   * governing it** — which is precisely the failure `012` exists to prevent, arriving
+   * through a different door.
+   *
+   * `problems` is the one that matters most here. A composed arithmetic sheet has a
+   * verified answer key, and `problems` forbids changing the quantities and the
+   * operations — so it is the prohibition that stops a revision quietly invalidating
+   * the key.
+   *
+   * Chosen by the caller from what was composed, not defaulted: `worksheet` for skill
+   * practice, `problems` for word problems, `study` for a composed text.
+   */
+  materialKind: string;
   /** What the content rests on, for a content composition (FR-102). */
   anchor?: string;
   /**
@@ -75,6 +94,16 @@ export interface SheetInput {
    */
   content?: readonly Block[];
   groups: readonly SheetGroup[];
+  /**
+   * How many sessions this material is for (002 FR-130).
+   *
+   * Recorded, not acted on. «A PT works in sessions and the application has no
+   * concept of one» — so this is her unit written down where it belongs, on the
+   * material, rather than the application organising anything around a unit it does
+   * not understand. `017`'s temporalización can then say «tres sesiones» instead of
+   * only «del 3 de marzo al 12 de junio».
+   */
+  sessions?: number;
   /**
    * The date, passed in. Never computed here: when something happened is a fact
    * about the process (Principle II), and a pure function that reads the clock is
@@ -212,11 +241,14 @@ export function buildSheet(input: SheetInput): ComposedSheet {
   const doc: IRDocument = {
     frontMatter: {
       /*
-       * `kind: generated` is what the rest of the pipeline branches on: the
-       * provenance check keys blocks to objectives rather than to source blocks,
-       * and the adaptation gate knows there was no extraction to verify.
+       * `generated: true` is what the rest of the pipeline branches on: the
+       * provenance check keys blocks to objectives rather than to source blocks, and
+       * the adaptation gate knows there was no extraction to verify.
+       *
+       * It used to be `kind: 'generated'`, which **occupied the field `012` needs**
+       * — see `materialKind` above.
        */
-      kind: 'generated',
+      generated: true,
       /*
        * What the record reads to classify this job (`014` `sourceOf`). It looks
        * for `source: composed` and the objectives beside it — written here so the
@@ -224,10 +256,17 @@ export function buildSheet(input: SheetInput): ComposedSheet {
        * «pegado».
        */
       source: 'composed',
+      /*
+       * The material kind, and `generated` is **not** one (FR-126). It moved to
+       * `composed_as` so both facts survive: what this is (`kind`) and that Rampa
+       * made it (`source: composed`, plus the louder draft mark below).
+       */
+      kind: input.materialKind,
       title: input.title,
       lang: input.lang,
       objectives: [...input.objectives],
       composed_on: input.composedOn,
+      ...(input.sessions ? { sessions: input.sessions } : {}),
       ...(input.anchor ? { anchor: input.anchor } : {}),
       ...(input.composedFor ? { composed_for: input.composedFor.code } : {}),
       ...(input.composedFor?.yearId ? { level_from: input.composedFor.yearId } : {}),

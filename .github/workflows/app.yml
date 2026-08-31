@@ -65,6 +65,14 @@ jobs:
         run: bash ../scripts/check-spec-kit.sh origin/main
         if: runner.os != 'Windows'
 
+      # The other half of the Spec Kit flow. `check-spec-kit.sh` above catches a
+      # spec and its implementation arriving together; this catches a spec that
+      # grew while its tasks stood still — which is how five requirements in
+      # `002` sat uncited for a day, one of them a live defect.
+      - name: Every requirement is accounted for in its tasks
+        run: bash ../scripts/check-fr-coverage.sh
+        if: runner.os != 'Windows'
+
       # T039 · research R3. Fails at 300 days, earlier than the 181-day marker
       # and the 365-day cutoff, so a contributor re-reads the provider's pages
       # before a teacher sees a stale fact or a service quietly disappears.

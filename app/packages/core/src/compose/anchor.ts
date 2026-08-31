@@ -35,6 +35,22 @@ export interface AnchorPassage {
   /** `a1`, `a2`… Assigned by us, never by the model. */
   id: string;
   text: string;
+  /**
+   * An official criterio de evaluación code, where this passage is one
+   * (002 FR-127/FR-128).
+   *
+   * The SDA-IA's strongest decision, and the reason these requirements exist: the
+   * criterios reach the prompt **with their official codes intact**, never from the
+   * model. «Elimina la alucinación curricular», in their words — and it is the
+   * difference between material about carrying in multiplication and material a PT
+   * can put in front of a jefatura de estudios.
+   *
+   * Recognised from her own text rather than looked up: Rampa ships **no criteria
+   * database**, because writing one from memory is how a plausible-looking wrong code
+   * ends up on a document somebody files. She pastes the criterio; the code travels
+   * with it.
+   */
+  criterio?: string;
 }
 
 export interface AnchorReading {
@@ -70,7 +86,10 @@ export function readAnchor(raw: string, limits: AnchorLimits = DEFAULT_ANCHOR_LI
   const all = bounded.split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean);
   const passagesCut = Math.max(0, all.length - limits.maxPassages);
   const passages = all.slice(0, limits.maxPassages)
-    .map((text, i) => ({ id: `a${i + 1}`, text }));
+    .map((text, i) => {
+      const criterio = criterioIn(text);
+      return { id: `a${i + 1}`, text, ...(criterio ? { criterio } : {}) };
+    });
 
   const notices: AnchorReading['notices'] = [];
   for (const p of passages) {
@@ -166,3 +185,23 @@ export function assertAnchored(doc: IRDocument, passages: readonly AnchorPassage
       `${issues.length} bloque(s) no se apoyan en nada de lo que me diste.`, issues);
   }
 }
+
+/**
+ * An official criterio de evaluación code in her pasted text (FR-127).
+ *
+ * Andalusian criteria are written `CE.3.4` / `CE.MAT.2.1` and similar: `CE`, a
+ * subject code where there is one, and two numbers. Recognised **only in that
+ * shape**, because a looser pattern would find codes in ordinary prose and cite them
+ * on a document that goes to an administration.
+ *
+ * Rampa ships no criteria database and does not validate the code against one. It
+ * carries what she pasted, which is the honest limit: a code Rampa invented or
+ * «corrected» would be worse than no code at all.
+ */
+export function criterioIn(text: string): string | undefined {
+  return /\b(CE(?:\.[A-ZÁÉÍÓÚÑ]{2,4})?\.\d{1,2}\.\d{1,2})\b/.exec(text)?.[1];
+}
+
+/** Every criterio code the anchor cited, in order, deduplicated (FR-128). */
+export const criteriaIn = (passages: readonly AnchorPassage[]): string[] =>
+  [...new Set(passages.map((p) => p.criterio).filter((c): c is string => c !== undefined))];

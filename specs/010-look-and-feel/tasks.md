@@ -127,3 +127,31 @@ introduced, and every subsequent screen inherits the guarantee.
 here that fixes a constitutional violation rather than adding a feature, and it is
 also the one most likely to be dropped as unrelated tidying. It is not tidying:
 it is the reason this feature was allowed to touch that component.
+
+---
+
+## Coverage · every requirement, and where it is
+
+`check-fr-coverage.sh` fails if a requirement in the spec appears nowhere here.
+The reason is the one `002` learned the hard way: **a requirement nobody can point
+at is a requirement nobody is keeping.**
+
+| | Where it is satisfied |
+|---|---|
+| FR-801 | `ui/src/styles/tokens.css` is the only place a colour, size, radius or elevation is defined. `ui/test/styles.test.tsx` fails on a literal colour outside it |
+| FR-802 | Hand-written CSS with custom properties, no utility framework — so a contributor reading a class name reads a decision. Asserted by the absence of any framework in `package.json` |
+| FR-803 | The type scale in `tokens.css`; `styles.test.tsx` fails on a literal font size |
+| FR-804 | `--text-base` is **17px**, and `.check input` is 24×24 inside a 44px target — raised from 22px for WCAG 2.2 SC 2.5.8 |
+| FR-805 | `e2e/layout.spec.ts` at 1366×768, every screen, plus every preference at once at 200% zoom |
+| FR-806 | Both themes defined token by token, not inverted. The failure that proves it was real: `--ground` and `--rail-ground` were missing from every non-`:root` theme, so the dark rail was unreadable — an axe contrast failure on every screen, hidden under a stale build |
+| FR-807 | The worksheet renderer and the interface share the typeface and the palette while staying distinct — `render/html.ts` derives from the same tokens |
+| FR-808, FR-810, FR-811, FR-812, FR-813 | `e2e/a11y.spec.ts` runs axe over every screen in four modes and **fails the build**. Colour is never the only carrier: the axis strip, the draft mark and `018`'s pictograms all pair it with words |
+| FR-815 | The CI step, Linux only because it drives a real window. Its first run found a critical unlabelled field and a screen with no `h1` — the target had been a sentence in a specification until then |
+| FR-816 | `DisplayPreferences` — text size, contrast, motion and theme, in one place, in her words |
+| FR-818 | `applyStoredPreferences` runs before the first frame, so the first thing she sees is already the one she chose |
+| FR-820 | In application settings, **never the vault** — so a handover packet or a backup of learner data cannot carry them |
+| FR-821 | `render/draft.ts` — words and form, and it says «no entregar al alumnado» rather than reading as an application error. `002` T016 made it say more for composed material, because there the *content* is unreviewed |
+| FR-822 | The print watermark is per page, so a sheet separated from the first still announces itself |
+| FR-824 | `Loaded`, `Callout` and `EmptyState` — one design each, not per-screen improvisation (`013` FR-1108 is the same requirement from the other side) |
+| FR-825 | `Actions` takes **one** `primary`, singular on purpose. Before it, every button was the same heavy slab, so weight carried no information |
+| FR-827 | The consequence before the control: the erasure plan, the cost gate and `018`'s licence text all state what will happen above the button that does it |

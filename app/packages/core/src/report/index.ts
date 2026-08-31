@@ -188,6 +188,32 @@ export function buildReport(input: ReportInput): Report {
   const md: string[] = ['# Qué he cambiado y por qué', ''];
 
   /*
+   * What this is, in the regulation's own words (017 FR-1501).
+   *
+   * Rampa has been producing **adaptaciones no significativas** since the first
+   * worksheet — an ACNS changes methodology, activities, timing and materials and no
+   * objective, which is Principle III stated as regulation. It had never said so, and
+   * that mattered in both directions:
+   *
+   * - She has to write and register an ACNS in Séneca, and a report that describes its
+   *   contents without naming it leaves her to make the connection.
+   * - Naming it is also a **limit**: what Rampa did is not an ACS, and a document that
+   *   left that open invites somebody to treat it as one.
+   *
+   * Séneca is named in the same breath, because the one thing this must never be
+   * mistaken for is a filed document (`017` FR-1502, SC-1506).
+   */
+  md.push(
+    '> Lo que hay aquí es una **adaptación curricular no significativa (ACNS)**: he',
+    '> cambiado cómo se presenta, en qué orden y cuánto hay por página. **Ningún',
+    '> objetivo ni criterio de evaluación cambia** — eso sería una adaptación',
+    '> significativa, y no la decide una herramienta.',
+    '>',
+    '> Esto no está registrado. El registro es **Séneca**: si esta adaptación va al',
+    '> expediente, la ACNS la coordina el tutor o la tutora y se registra allí.',
+    '');
+
+  /*
    * What it was treated as, first, because it is the rule everything below
    * happened under and she is signing for it.
    */

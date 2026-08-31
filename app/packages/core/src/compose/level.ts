@@ -26,6 +26,62 @@ import { atLevel, type Objective } from './objectives.js';
  * only thing missing is the digit bound — which is what she is told.
  */
 
+/**
+ * Where the **target year** came from (002 FR-129).
+ *
+ * FR-129: «the curricular level the material targets MUST be an input, and it MUST
+ * come from her or from the learner's overlay — never from the application's own
+ * judgement about the child.»
+ *
+ * The distinction that makes this matter: for a learner with a two-year desfase, his
+ * **enrolled** course is not the level his material should target, and the person who
+ * knows which is is her. Using the enrolled course silently is not quite «the
+ * application's judgement» — it is a record — but it produces exactly the wrong
+ * answer for the learner this whole product exists for, and it does it invisibly.
+ *
+ * So: her choice, then the overlay, then his enrolled course — and **which one it was
+ * is reported**, because «composing at a stated level is a different act from quietly
+ * lowering someone else's worksheet, and the difference is who decided».
+ */
+export type TargetSource = 'she-chose' | 'overlay' | 'enrolled';
+
+export interface Target {
+  yearId: string | undefined;
+  from: TargetSource;
+}
+
+/**
+ * Which year the material targets, and who decided.
+ *
+ * Order fixed, and the fallback is the only one that is not a decision: an enrolled
+ * course is what the record says, and the report names it as such so she can see that
+ * nobody chose it.
+ */
+export function targetYear(input: {
+  chosen?: string;
+  /** A year id the overlay states, extracted by the caller from her own document. */
+  fromOverlay?: string;
+  enrolled?: string;
+}): Target {
+  if (input.chosen) return { yearId: input.chosen, from: 'she-chose' };
+  if (input.fromOverlay) return { yearId: input.fromOverlay, from: 'overlay' };
+  return { yearId: input.enrolled, from: 'enrolled' };
+}
+
+/** What the report says about where the level came from (FR-129). */
+export function explainTarget(t: Target, yearLabel?: (id: string) => string): string {
+  const say = t.yearId ? (yearLabel?.(t.yearId) ?? t.yearId) : 'sin curso';
+  switch (t.from) {
+    case 'she-chose':
+      return `Nivel: ${say}, porque tú lo elegiste.`;
+    case 'overlay':
+      return `Nivel: ${say}, según su documento de adaptaciones.`;
+    case 'enrolled':
+      return `Nivel: ${say}, que es el curso en el que está matriculado. **Nadie lo ha `
+        + 'elegido**: si le llevas dos cursos de desfase, dime a qué nivel lo quieres.';
+  }
+}
+
 /** Why the level is or is not known, for the report and for the screen. */
 export type LevelSource =
   /** From the corpus, for this year and this skill. */

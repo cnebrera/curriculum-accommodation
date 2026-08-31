@@ -17,7 +17,7 @@ const adapted = parseIR(['---', 'title: "Ficha"', 'lang: es', '---', '',
   '::: {#b1 .exercise data-from="p1"}', '47 × 8 =', ':::'].join('\n'));
 
 const composed = parseIR(buildSheet({
-  title: 'Multiplicar', lang: 'es', objectives: ['multiplicar con llevadas'],
+  title: 'Multiplicar', lang: 'es', materialKind: 'worksheet', objectives: ['multiplicar con llevadas'],
   groups: [{
     objective: 'multiplicar con llevadas',
     instruction: 'Resuelve.',

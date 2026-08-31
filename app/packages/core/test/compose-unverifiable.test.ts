@@ -80,7 +80,7 @@ describe('the difference is visible on every surface', () => {
   });
 
   const both = () => buildSheet({
-    title: 'Dos cosas', lang: 'es',
+    title: 'Dos cosas', lang: 'es', materialKind: 'worksheet',
     objectives: ['multiplicar con llevadas', 'poner bien las tildes'],
     groups: [group(false), group(true)],
     composedOn: '2026-08-31',
@@ -146,7 +146,7 @@ describe('the difference is visible on every surface', () => {
     const report = buildComposeReport({
       title: 'X', composedOn: '2026-08-31', leveled: [], outcomes: [],
       listing: buildSheet({
-        title: 'X', lang: 'es', objectives: ['multiplicar con llevadas'],
+        title: 'X', lang: 'es', materialKind: 'worksheet', objectives: ['multiplicar con llevadas'],
         groups: [group(false)], composedOn: '2026-08-31',
       }).listing,
     });

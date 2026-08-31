@@ -42,3 +42,16 @@ T003 and T005 are fixes and depend on their assertions. T010 depends on everythi
 Phase 1 first: a module implementing an uncited spec is where the defects are.
 Phase 3 is a decision and belongs after the audit, because what is worth building
 depends on what already works.
+
+---
+
+## Coverage · every requirement, and where it is
+
+`check-fr-coverage.sh` fails if a requirement in the spec appears nowhere here.
+The reason is the one `002` learned the hard way: **a requirement nobody can point
+at is a requirement nobody is keeping.**
+
+| | Where it is satisfied |
+|---|---|
+| FR-308 | `buildReport`'s `notDone` — an inherited item the model relied on and nobody confirmed is a line in «Lo que NO he hecho», not an assumption. `handover.test.ts` |
+| FR-309 | `memory/handover.ts` keeps a disconfirmed item with its history. **Never deleted**: «no longer true» is information about a child, and the person who wrote it deserves to see it was read. `handover.test.ts` |

@@ -130,3 +130,21 @@ cheapest to get right where there is no window in the way.
 - T010 blocks T011 and T013.
 - T016 blocks T017, which blocks T018 and T019.
 - **SC-506 needs a teacher** and is not a task.
+
+---
+
+## Coverage · every requirement, and where it is
+
+`check-fr-coverage.sh` fails if a requirement in the spec appears nowhere here.
+The reason is the one `002` learned the hard way: **a requirement nobody can point
+at is a requirement nobody is keeping.**
+
+| | Where it is satisfied |
+|---|---|
+| FR-501 | `job:adapt` takes one learner or several; `runBatch`. A bare string still returns a `BatchOutcome` of one, so the e2e drives it unchanged |
+| FR-503 | `016` T018 · reuse from a record row passes `presetJobId`, and `runAdapt` no longer calls `job:verify` for a preset job — no provider call for the reading (SC-1405) |
+| FR-504 | `extraction.json` is per job and `verified` is **derived** from its pages, never settable. Three verifications of one page cannot exist because there is one page record |
+| FR-505 | `runBatch` calls `runAdaptation` per learner, and each call loads that learner's profile, notes and overlay. `batch.test.ts` asserts the second failing does not touch the first or third |
+| FR-508 | `job:adapt` accepts a single code, which is how the review screen retries one |
+| FR-517 | `record-erasure.test.ts` and `e2e/erasure.spec.ts`: the shared source stays when another learner still reads it, and the plan says so before touching anything |
+| FR-520 | **Not done, and not silently.** Correcting an extraction after adaptations exist is allowed (`setPageVerified`), and nothing marks the affected sheets stale by learner name. Recorded as backlog **G23** rather than left implicit — the failure it names is a teacher printing a sheet made from a reading she has since corrected |

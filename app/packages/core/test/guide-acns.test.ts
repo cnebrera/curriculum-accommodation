@@ -230,3 +230,59 @@ describe('the overlay section', () => {
     expect(markdown).toContain('No he encontrado ninguna medida');
   });
 });
+
+/**
+ * The interface names what it does in the regulation's vocabulary (017 FR-1501).
+ *
+ * Rampa has been producing **adaptaciones no significativas** since the first
+ * worksheet — an ACNS changes methodology, activities, timing and materials and no
+ * objective, which is Principle III stated as regulation — and it had never said so.
+ *
+ * Found on 2026-08-31 by `check-fr-coverage.sh`: FR-1501 was in the spec, in no task,
+ * and unbuilt.
+ */
+describe('an ordinary adaptation says what it is', () => {
+  it('names the ACNS, in the report she reads before signing', async () => {
+    const { buildReport, parseIR } = await import('../src/index.js');
+    const adapted = parseIR(['---', 'lang: es', '---', '',
+      '::: {#b1 .exercise data-from="p1" data-recipe="one-task-per-page@1" data-axis="COG"}',
+      '1. 47 × 8 =', ':::'].join('\n'));
+
+    /*
+     * Whitespace-collapsed: the sentence is hard-wrapped inside a blockquote, so
+     * «Ningún objetivo ni criterio de evaluación cambia» spans two lines with a `>` in
+     * between. Asserting the raw string failed on its own formatting — the seventh time
+     * in this project, and the reason the helper is now written out every time.
+     */
+    const flat = buildReport({ adapted }).markdown.replace(/^>\s?/gm, '').replace(/\s+/g, ' ');
+
+    expect(flat).toContain('adaptación curricular no significativa (ACNS)');
+    // And the limit, which is the other half of naming it.
+    expect(flat).toContain('Ningún objetivo ni criterio de evaluación cambia');
+    expect(flat).toContain('no la decide una herramienta');
+  });
+
+  /** SC-1506: nothing Rampa produces may be mistaken for a filed document. */
+  it('says Séneca is the register in the same breath', async () => {
+    const { buildReport, parseIR } = await import('../src/index.js');
+    const flat = buildReport({
+      adapted: parseIR(['---', '---', '', '::: {#b1 .exercise}', 'x', ':::'].join('\n')),
+    }).markdown.replace(/^>\s?/gm, '').replace(/\s+/g, ' ');
+
+    expect(flat).toContain('Esto no está registrado');
+    expect(flat).toContain('Séneca');
+    // The tutor coordinates an ACNS — Rampa must not imply the PT authored it.
+    expect(flat).toContain('la coordina el tutor');
+  });
+
+  it('says it before anything it changed', async () => {
+    const { buildReport, parseIR } = await import('../src/index.js');
+    const { markdown } = buildReport({
+      adapted: parseIR(['---', '---', '',
+        '::: {#b1 .exercise data-from="p1" data-recipe="one-task-per-page@1" data-axis="COG"}',
+        'x', ':::'].join('\n')),
+    });
+
+    expect(markdown.indexOf('ACNS')).toBeLessThan(markdown.indexOf('one-task-per-page'));
+  });
+});
