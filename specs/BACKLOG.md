@@ -392,6 +392,25 @@ every moment should have a spec. What it added beyond the seams pass:
    journey sentence → T094). Handover *import* (004 US2) recorded as deliberately
    deferred rather than silently missing.
 
+## G22 · `017` is blocked on one conversation, and the questions are written
+
+Not a gap in the code: a gap in a diary. `017` — read the guide, honour it, help
+write it — is the last unbuilt specification, and it is blocked on the DPO because a
+DIAC contains the summary of the evaluación psicopedagógica and reading it means
+sending that page to a third party.
+
+**What is done**: [`docs/dpo-la-guia.md`](../docs/dpo-la-guia.md) has the four
+questions, what depends on each answer, the three options with two of them named as
+wrong, and the tests the DPO can run rather than believe.
+
+**What is needed**: twenty minutes with a named person. Everything else in this
+backlog that «needs a person» needs a teacher; this one needs a lawyer, and it is the
+only item on the list that a single meeting closes.
+
+**The floor, worth knowing before the meeting**: if the answer is no, `003` FR-209's
+typed overlay already exists. Rampa loses ten minutes of a PT's time per learner per
+year, not a capability.
+
 ## G21 · The bundled font's licence text — *CLOSED 2026-08-31*
 
 Found by writing `018` T001's licence check, which was written to assert that no

@@ -4,7 +4,10 @@
 
 **Created**: 2026-08-30
 
-**Status**: Draft — needs `/speckit-clarify` **and a DPO conversation** before `/speckit-plan`
+**Status**: Draft — **blocked on a DPO conversation**, and the questions for it are
+written: [`docs/dpo-la-guia.md`](../../docs/dpo-la-guia.md). Four questions, what
+depends on each answer, and the floor if the answer is no. Not planned, deliberately:
+the blocker is a prerequisite and not a disclaimer.
 
 **Input**: Carlos, 2026-08-30:
 
@@ -368,7 +371,12 @@ it is the one that most needs the earlier parts working before it is attempted.
 
 ## Dependencies and sequencing
 
-- **Blocked on a DPO/legal conversation.** Stated above; not a formality.
+- **Blocked on a DPO/legal conversation.** Stated above; not a formality. The
+  questions are prepared in [`docs/dpo-la-guia.md`](../../docs/dpo-la-guia.md) so
+  that conversation is twenty minutes rather than a discovery — including the floor:
+  if the answer is no, `003` FR-209's typed overlay already exists, so Rampa loses
+  convenience and not capability. Worth saying in the room, because it changes the
+  tone: nobody is asking permission for the tool to work.
 - `008` supplies ingest; `007` supplies the untrusted-content defences.
 - `014` supplies the recorded work an ACNS is drafted from — **US2 cannot ship
   before it**.
