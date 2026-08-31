@@ -1,71 +1,47 @@
-# Quickstart — validating what the material is
+# Quickstart: proving the material's kind matters
 
-Prerequisites: `cd app && npm ci && npm run bundle:corpus && npm run build`.
+## Offline
 
-## §1 · The kinds come from the corpus
-
-```
-npx vitest run packages/core/test/kinds.test.ts
+```bash
+cd app && npm test
 ```
 
-The four ship, each with a label in her words and a rule that names a prohibition.
-No kind is defined in TypeScript, and no kind exists without something it forbids.
+`packages/core/test/kinds.test.ts` and `selection-baseline.test.ts`:
 
-## §2 · The selection baseline, before and after
+- **the test the spec asks for**: the same document as a worksheet and as an
+  exam, and the prompts differ — the exam one asserts the constraint about this
+  document
+- a recipe scoped `[assessment]` is not offered for a document with no assessment
+  blocks (FR-1004 — the field that was parsed and never read)
+- a recipe scoped `[figure]` **is** offered for an exam containing a figure,
+  because scope is about block classes and not about material kinds
+- `study` does not relax the completeness check (FR-1008)
+- a kind absent from the corpus degrades to «not offered» and logs, like every
+  other corpus file (`011` FR-907) — and an **absent** kind is never written as
+  `worksheet`, which is the defect this spec exists because of
+- the report says what the material was treated as
+- assessment-shaped blocks in a stated worksheet produce a **note to her** and no
+  change of behaviour (FR-1005, Principle IX)
 
-```
-npx vitest run packages/core/test/selection-baseline.test.ts
-```
+## End to end
 
-**Run this before the filter lands.** It records which recipes are selected today
-for a set of representative documents. When `scope` starts filtering, this file
-changes, and the diff is the behaviour change — visible in review rather than
-discovered by a teacher whose worksheets got worse.
-
-## §3 · Scope filters
-
-```
-npx vitest run packages/core/test/recipes.test.ts
-```
-
-A recipe scoped to assessments is not selected for a document with none. A recipe
-with no scope applies anywhere, unchanged. The exam recipe is selected for an exam
-and not for a text.
-
-## §4 · The kind reaches the model, and the disagreement is reported
-
-```
-npx vitest run packages/core/test/prompt.test.ts
+```bash
+cd app && npx playwright test e2e/material.spec.ts
 ```
 
-The kind and its rule are in the prompt. An exam brings the assessment rule. A
-document she called a worksheet whose blocks are assessments produces a report
-line and no silent change either way.
+The interface stops calling everything «una ficha»: she chooses, nothing is
+pre-selected, and the word she chose appears on the screens that follow.
 
-## §5 · Parts
+## The half that needs a key
 
-```
-npx vitest run packages/core/test/parts.test.ts
-```
+**SC-1001.** Adapt the same exam twice — once labelled `exam`, once labelled
+`worksheet` — and compare what changed. The exam version must change no assessed
+criterion and must not reduce the number of items without saying so.
 
-A job with one part behaves as today. A job read from the old layout — `ir.md` at
-the root, no `parts.json` — becomes one part with **kind absent**, never
-`worksheet`. Several photos are pages of one part; several documents are parts.
+Not automated, and until it runs, hard rule 5 is a sentence the model is given
+rather than a behaviour anybody has observed.
 
-## §6 · In the window
+## What none of this proves
 
-```
-npx playwright test e2e/material.spec.ts
-```
-
-She is asked what the material is, with no option preselected. Nothing says «una
-ficha» where it means "material". The report says an exam was treated as an exam.
-
-## §7 · With a teacher — the one that decides it
-
-Give her an exam of hers and let it be adapted as an exam.
-
-The question is not whether it looks good. It is: **has any question's demand
-changed?** She is the only one who can answer that, and it is SC-1001.
-
-Then give her a maths problem sheet and ask the same about the numbers.
+**SC-1003**: that a teacher reading the first screen can tell exams are treated
+differently. One person, once.

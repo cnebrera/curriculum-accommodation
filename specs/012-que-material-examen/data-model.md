@@ -1,88 +1,68 @@
-# Phase 1 — Data model
+# Data model: what the material is
 
-One new entity, one new field, one field that starts being read.
+## The vocabulary lives in the corpus
 
-## Part (new)
+Four kinds ship, and they are **Markdown**, per
+[contracts/material-kinds.md](contracts/material-kinds.md): each carries a label in
+her words and one clause naming what it forbids.
 
-A job is a unit of work. A **part** is one document within it, with its own source
-and its own kind. Today every job has exactly one part; the shape exists from the
-start because retrofitting it would touch every screen, the vault layout, the
-report and sign-off (research R4).
+A kind is defined by what it forbids, and a prohibition about how to adapt is
+pedagogical judgement — so it is corpus, and the fifth kind is a file rather than
+a code change (Principle I).
 
-```
-material/<job>/
-  parts.json                 ← the index: which parts, what each is
-  p1/
-    ir.md
-    extraction.json
-    source/                  ← her photos or files
-  p2/
-    ir.md
-    …
-  <LEARNER-CODE>/            ← unchanged: one extraction, N learners
-    adapted.md
-```
+An earlier draft of this document made it a closed union in TypeScript. That was
+wrong and the correction is recorded in [plan.md](plan.md).
 
-| Field | Notes |
-|---|---|
-| `id` | `p1`, `p2`. Stable, and it prefixes block ids so two parts cannot collide |
-| `kind` | `worksheet` \| `exam` \| `study` \| `problems`. **Asked, never defaulted** |
-| `label` | Her words: «el texto», «la hoja de problemas». Shown, never sent |
-| `source` | `photos` \| `pdf-digital` \| `docx` \| `pasted` — as `008` already records |
+## Where it lives
 
-**Migration:** a job with `ir.md` at its root and no `parts.json` is read as a
-single part `p1` with `kind` absent. Absent, not `worksheet` — the whole finding
-behind this spec is that an unasked kind was written as `worksheet`, and repeating
-it during migration would bake the same lie into her existing material.
-
-## The kind reaches the prompt
-
-```
-## Qué es este material
-Es un examen.
-
-En un examen puedes cambiar CÓMO se pregunta y nunca QUÉ se está evaluando.
-```
-
-The second line comes from the corpus, not from here (FR-1002, Principle I). The
-prompt carries her statement and the rule; `instructions/adapt.md` owns what the
-rule says.
-
-**Where the kind and the block classes disagree** — she said worksheet and the
-document is full of `.assessment` blocks — the report says so (FR-1005). Neither
-is overridden: she may be adapting last year's exam as practice, which genuinely
-makes it a worksheet, and the application does not know that and she does.
-
-## `recipe.scope` starts filtering
-
-Unchanged on disk. What changes is that it is read.
-
-```
-scope: [assessment]     → offered only where the document has .assessment blocks
-scope: [exercise, assessment]  → either
-(absent)                → anywhere
-```
-
-**Absent means anywhere**, deliberately. The alternative would disable every
-recipe nobody has annotated, which is a much larger change wearing the same commit
-message (research R3).
-
-## The kinds live in the corpus
-
-`recipes/kinds.md`, or an equivalent the recipe loader already reads:
+In the IR's front matter, on the **part**:
 
 ```yaml
-- id: exam
-  label: "Un examen o una prueba"
-  rule: >
-    Puedes cambiar cómo se pregunta y nunca qué se está evaluando…
-  forbids: [demand]
-- id: problems
-  label: "Una hoja de problemas"
-  rule: >
-    No cambies las cantidades ni las operaciones que se practican…
-  forbids: [quantities]
+---
+source: "photos"
+kind: "exam"
+extraction: { verified: true }
+---
 ```
 
-`forbids` is machine-readable so a check can exist later; `rule` is what the model
-reads. A fifth kind is this file plus nothing.
+Per part and not per job (clarification). A unit of three documents can be a
+study text, a worksheet and an exam; one kind on the job would force the
+strictest rule onto all three, or the loosest onto the exam. The second is
+dangerous — it is an exam adapted as a worksheet, which is a different exam.
+
+## What reads it
+
+| reader | what it does with it |
+|---|---|
+| `selectRecipes` | nothing — see below |
+| `buildAdaptPrompt` | states what the document is, and asserts the constraint when it is an exam |
+| `buildReport` | says what the material was treated as (Principle VI) |
+| `checkCompleteness` | does not relax for `study` (FR-1008) |
+
+`selectRecipes` deliberately does **not** filter on the material kind. It filters
+on `scope` against the block classes present, which is a different question:
+the kind says what may change, the scope says where a recipe applies.
+
+## Block classes present
+
+```ts
+function blockClassesIn(doc: IRDocument): Set<string>
+```
+
+Derived, never stored. A document's classes are a fact about the document, and
+storing them would be a second copy that a hand-edit in Obsidian could make
+false.
+
+## What is NOT added
+
+**No `kind` on the job directory, no `kind.json`, no kind on the adapted
+document beyond what the IR already carries through.** The adapted document
+inherits the front matter it was built from, which is how `job:revise` keeps the
+kind across a revision without anybody remembering to copy it.
+
+## Material that already exists
+
+`job:create` has written `kind: 'worksheet'` unconditionally since it was
+written, so every vault has worksheets in it — some of which were exams. They
+stay worksheets: they were adapted as one, the report says so, and relabelling
+finished work would make the record disagree with the document.
