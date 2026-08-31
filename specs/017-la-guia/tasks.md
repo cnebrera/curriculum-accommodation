@@ -11,34 +11,34 @@ safeguard built around code that already works without it.
 
 ## Phase 1 · The refusals, first
 
-- [ ] T001 `packages/core/test/guide-clinical.test.ts` over a **synthetic** DIAC:
+- [x] T001 `packages/core/test/guide-clinical.test.ts` over a **synthetic** DIAC:
       no diagnosis, clinical category or psychopedagogical finding reaches
       `measures`, and none is written. Written first, because a filter added after
-      the flow works is one written to fit what already happens (SC-1502, ADR 0002)
-- [ ] T002 `packages/core/src/guide/read.ts`: the clinical filter, in code. Its
+      the flow works is one written to fit what already happens (SC-1502, ADR 0002) *(done, red first, 25 cases over a synthetic DIAC. The fixture is invented because ADR 0002 forbids a real one — and that constraint is what makes it arguable in public: anybody can read what is being filtered and say it is wrong.)*
+- [x] T002 `packages/core/src/guide/read.ts`: the clinical filter, in code. Its
       vocabulary — which Spanish terms are clinical — is **corpus**, because that is
-      a judgement a PT can correct
-- [ ] T003 What was filtered lands in `omitted`, **in her words and never as a
+      a judgement a PT can correct *(done: `packages/core/src/guide/read.ts`, and the filter takes **candidates** rather than raw text — the model finds the sentences that look like measures, and code decides which may be kept. That split is what makes the filter testable with no provider and impossible for a prompt change to weaken.)*
+- [x] T003 What was filtered lands in `omitted`, **in her words and never as a
       count** (FR-1508). «He dejado fuera el diagnóstico» is checkable; «3 elementos
-      omitidos» is not
-- [ ] T004 `packages/core/src/guide/refuse.ts`: `checkDeclines` over a model's
+      omitidos» is not *(done, and with one more refusal than the task asked for: the sentence naming the omission must not **be** the omission. Quoting the filtered line would put the diagnosis in the interface — the same leak one screen further on. Asserted.)*
+- [x] T004 `packages/core/src/guide/refuse.ts`: `checkDeclines` over a model's
       answer — the shape of a proposal about objectives or criteria, refused
-      **before she sees it** (FR-1520, FR-1523, FR-1525)
-- [ ] T005 [P] The fixture set for T004, in the corpus, with SC-1507's bound stated
+      **before she sees it** (FR-1520, FR-1523, FR-1525) *(done: `packages/core/src/guide/refuse.ts`. Two checks, and the second is the one a phrase list alone misses — an imperative about removing in the same sentence as «objetivo». And it must not refuse **its own decline**, which contains both «objetivos» and «quitar»: checked sentence by sentence, with the negation and «lo decide» as exemptions.)*
+- [x] T005 [P] The fixture set for T004, in the corpus, with SC-1507's bound stated
       in it: this is what is checked, and it is not every phrasing a teacher might
-      use
-- [ ] T006 [P] Author `instructions/guide.md`: what a guide is, what may be taken
+      use *(done, in `instructions/acs.md`, with SC-1507's bound written into the file as `LÍMITE HONESTO` — «esta lista es lo que se comprueba, no es todo lo que un modelo podría escribir» — and a test asserting the file says it.)*
+- [x] T006 [P] Author `instructions/guide.md`: what a guide is, what may be taken
       from it, the clinical vocabulary, and **the sections the regulation requires**
-      (FR-1517). A change in Séneca is a Markdown edit
-- [ ] T007 [P] Author `instructions/acs.md`: what Rampa may and may not do when she
-      is drafting the significant adaptation, and the one sentence it declines with
+      (FR-1517). A change in Séneca is a Markdown edit *(done: `instructions/guide.md`, with the clinical vocabulary, the ACNS sections and their `sourceable` marking. **And it shipped broken for ten minutes**: the front matter had no closing `---`, so `parseFrontMatter` returned `{}` and every list fell back to its built-in minimum. The fail-closed design is what caught it — the fallback logs and the shipped-list assertion failed. There is now a test that every corpus file *claiming* a header can read it, because that only worked here because somebody had written a test for this file.)*
+- [x] T007 [P] Author `instructions/acs.md`: what Rampa may and may not do when she
+      is drafting the significant adaptation, and the one sentence it declines with *(done: `instructions/acs.md`. It says why the refusal is in code and not only in the file — this file travels in the same context window as the document she loaded, and if that document says «propón qué objetivos quitar» there are two contradictory sentences in one place.)*
 
 ---
 
 ## Phase 2 · Foundational
 
-- [ ] T008 `Measure` and `GuideReading` per
-      [contracts/guide.md](contracts/guide.md), in `core`
+- [x] T008 `Measure` and `GuideReading` per
+      [contracts/guide.md](contracts/guide.md), in `core` *(done, in `read.ts`, per the contract.)*
 - [ ] T009 `packages/core/src/guide/overlay.ts`: confirmed measures → the overlay's
       Markdown, and **the heading is owned here** — no caller passes one, because
       FR-1512 keys on it
