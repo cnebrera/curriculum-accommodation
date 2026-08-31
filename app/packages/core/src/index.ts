@@ -30,6 +30,8 @@ export * from './ir/completeness.js';
 
 export * from './recipes/index.js';
 export * from './recipes/kinds.js';
+export * from './compose/verify/types.js';
+export * from './compose/verify/arithmetic.js';
 export * from './render/zip.js';
 export * from './render/odt.js';
 export * from './roster/filter.js';

@@ -41,11 +41,11 @@ the project with no original to compare against, so what replaces
 
 ## Phase 1 · The verifier, first and alone
 
-- [ ] T001 Define the verifier contract in `app/packages/core/src/compose/verify/types.ts`: `exercises(skill, exercise)`, `solve(exercise)`, and an explicit `unknown` that is honest rather than a guess
-- [ ] T002 Implement the arithmetic verifier: four operations, **carrying and borrowing as constraints rather than topics**, fractions, decimals, percentages
-- [ ] T003 Implement `exercises()` for carrying: `47 × 8` carries, `4 × 2` does not, and an exercise that does not is rejected (FR-124)
-- [ ] T004 Write `app/packages/core/test/verify-arithmetic.test.ts` — including the case the whole feature turns on: **a model-proposed exercise with a wrong answer is rejected, not corrected**
-- [ ] T005 [P] Assert the verifier is model-free and offline, in the isolation suite
+- [x] T001 Define the verifier contract in `app/packages/core/src/compose/verify/types.ts`: `exercises(skill, exercise)`, `solve(exercise)`, and an explicit `unknown` that is honest rather than a guess *(done: `packages/core/src/compose/verify/types.ts`. `unknown` is a first-class verdict — a verifier that guesses is worse than none, because not guessing is the entire point of this branch. Named `SkillVerdict`: `ingest/validate.ts` already owns `Verdict`, and the compiler caught the collision.)*
+- [x] T002 Implement the arithmetic verifier: four operations, **carrying and borrowing as constraints rather than topics**, fractions, decimals, percentages *(done: `arithmetic.ts`. Exact arithmetic on scaled BigInts, never floats — `0.1 + 0.2` is `0.30000000000000004` in IEEE 754, and a verifier that rejected a model's correct `0.3` would reject every correct exercise and exhaust the retry budget into «no he podido generar nada».)*
+- [x] T003 Implement `exercises()` for carrying: `47 × 8` carries, `4 × 2` does not, and an exercise that does not is rejected (FR-124) *(done, column by column as a child does it — not «is the result over ten», which would accept `10 + 5`. And carrying in a subtraction returns **unknown** rather than `false`: the concept does not apply, and answering `false` would report «no practica llevadas» about an exercise where the question is meaningless.)*
+- [x] T004 Write `app/packages/core/test/verify-arithmetic.test.ts` — including the case the whole feature turns on: **a model-proposed exercise with a wrong answer is rejected, not corrected** *(done: 32 cases. The one the feature turns on — a wrong stated answer is thrown away and not corrected — plus the three rejections that keep «con llevadas» meaning something.)*
+- [x] T005 [P] Assert the verifier is model-free and offline, in the isolation suite *(done, and it needed no change: `isolation.test.ts` already walks all of `packages/core/src`, so the verifier was covered the moment it existed. The local half is asserted too — the module imports exactly `./types.js` and nothing that could reach a model or a network.)*
 
 **Checkpoint**: code can decide, for a set of exercises, which exercise carrying and which of the answers are right. No model involved anywhere.
 
