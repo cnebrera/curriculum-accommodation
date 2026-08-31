@@ -112,12 +112,18 @@ nowhere until `002` exists, and its adapt branch is largely delivered by `012`'s
 kind question. Shipping a door with one side that does nothing is what its own
 FR-1410 calls a lie in the interface, so `016` waits with `002`.
 
-**`017` — the guide.** *(That sentence said «unplannable until the DPO
-conversation». Withdrawn 2026-08-31 — see G22.)* Not
-something engineering sequencing can move.
+**`017` — the guide.** *(This paragraph said «unplannable until the DPO
+conversation, which is not something engineering sequencing can move». Withdrawn
+2026-08-31 — see G22. It was the one blocker on this list that engineering
+sequencing could move, because it was not a blocker.)*
 
-**Next, therefore:** `019` (ODT first, Carlos's choice), the **G20** prose recipe,
-then `018`. Everything else needs a person, and that is not a queue.
+**Next, therefore:** *(written before 2026-08-31, kept as the record of what the
+order was.)* `019` (ODT first, Carlos's choice), the **G20** prose recipe, then
+`018`. Everything else needs a person, and that is not a queue.
+
+**Where it actually ended up, same day:** `002`, `016`, `018`, `012` and `019` all
+closed; G20 and G21 closed; G22 withdrawn. `017` is the only specification left
+unbuilt, and it is now unblocked rather than blocked.
 
 ---
 
