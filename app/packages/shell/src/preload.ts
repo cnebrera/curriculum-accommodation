@@ -101,6 +101,24 @@ const api = {
     use: (root: string) => invoke('pictograms:use', root),
     images: (ids: string[]) => invoke('pictograms:images', ids),
   },
+  /**
+   * The adaptación curricular (`017`).
+   *
+   * **No `ingest` here on purpose**: a guide comes in through `job:ingest` and
+   * through `008`'s verification gate, unchanged. `read` takes a job id that already
+   * passed it.
+   */
+  guide: {
+    read: (jobId: string) => invoke('guide:read', jobId),
+    /** The measures **she confirmed**, which may be fewer than the ones read. */
+    apply: (learner: string, measures: unknown[], document: string, omitted?: string[]) =>
+      invoke('guide:apply', learner, measures, document, omitted),
+    acns: (learner: string) => invoke('guide:acns', learner),
+    ask: (jobId: string, question: string, history?: unknown[]) =>
+      invoke('guide:ask', jobId, question, history),
+    acs: (learner: string, evaluationRecorded: boolean, decided: string) =>
+      invoke('guide:acs', learner, evaluationRecorded, decided),
+  },
   job: {
     /** `kind` is required and never defaulted (012 FR-1003). */
     create: (id: string, text: string, kind: string, lang?: string) =>

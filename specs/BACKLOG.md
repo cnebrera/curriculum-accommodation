@@ -121,9 +121,11 @@ sequencing could move, because it was not a blocker.)*
 order was.)* `019` (ODT first, Carlos's choice), the **G20** prose recipe, then
 `018`. Everything else needs a person, and that is not a queue.
 
-**Where it actually ended up, same day:** `002`, `016`, `018`, `012` and `019` all
-closed; G20 and G21 closed; G22 withdrawn. `017` is the only specification left
-unbuilt, and it is now unblocked rather than blocked.
+**Where it actually ended up, same day:** `002`, `016`, `018`, `012`, `019` **and
+`017`** all closed; G20 and G21 closed; G22 withdrawn. **Every specification in this
+repository is now built.** What remains needs people, not engineering: a PT for
+SC-101…104, SC-1001, SC-1406, SC-1505 and SC-1606; a transcriber for SC-1706; a
+photocopier for SC-1605; and a real DIAC for SC-1502's second half.
 
 ---
 

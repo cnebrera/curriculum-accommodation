@@ -3,6 +3,9 @@ import { useStrings } from './i18n/context.js';
 import { LearnersScreen } from './learners/LearnersScreen.js';
 import { DoorScreen } from './door/DoorScreen.js';
 import { ComposeScreen, ComposeSummary } from './compose/ComposeScreen.js';
+import {
+  GuideScreen, AcnsDraftScreen, GuideConversation, AcsHelpScreen,
+} from './guide/GuideScreen.js';
 import type { ComposeResult } from './data/compose.js';
 import { emptyIntent, reduceIntent } from './door/intent.js';
 import { AdaptScreen } from './adapt/AdaptScreen.js';
@@ -29,7 +32,9 @@ import { detectStep, loadState, saveState, type Step } from './data/onboarding.j
  * structurally: the application's first question stopped being «which file?».
  */
 type View = 'door' | 'learners' | 'adapt' | 'compose' | 'composed'
-  | 'ingest' | 'verify' | 'review' | 'notes' | 'connection' | 'about';
+  | 'ingest' | 'verify' | 'review' | 'notes' | 'connection' | 'about'
+  /** The adaptación curricular (`017`). Four screens, one learner at a time. */
+  | 'guide' | 'guide-ask' | 'acns' | 'acs';
 
 export function App() {
   const { t: es, locale, setLocale, locales } = useStrings();
@@ -50,6 +55,14 @@ export function App() {
   const [intent, dispatch] = useReducer(reduceIntent, undefined, emptyIntent);
   /** A composition waiting for her to decide whether to adapt it (`002`, T013). */
   const [composed, setComposed] = useState<{ jobId: string; result: ComposeResult } | null>(null);
+  /**
+   * The learner whose adaptación curricular she is working on (`017`).
+   *
+   * Held here rather than inside the guide screens for the same reason the door's
+   * intent is: going into the verification screen and back must not lose which child
+   * this is about.
+   */
+  const [guideFor, setGuideFor] = useState<{ code: string; name?: string } | null>(null);
   const [review, setReview] = useState<{ jobId: string; learner: string; recipes: string[] } | null>(null);
   const [learnersNonce, setLearnersNonce] = useState(0);
   /** A service she is reconnecting from the connection screen (009 US5). */
@@ -189,6 +202,34 @@ export function App() {
             onAdapt={() => { setIngested(composed.jobId); setView('adapt'); }}
             onDiscard={() => { setComposed(null); setView('door'); }} />
         ) : null}
+        {view === 'guide' && guideFor ? (
+          <GuideScreen
+            /*
+             * The job comes from `008`'s ingest and its verification gate —
+             * `ingested` is set by exactly that flow, and there is no second path
+             * (FR-1505/1506).
+             */
+            jobId={ingested}
+            learnerCode={guideFor.code}
+            {...(guideFor.name ? { learnerName: guideFor.name } : {})}
+            onDone={() => { setGuideFor(null); setView('learners'); setLearnersNonce((n) => n + 1); }}
+            onBack={() => { setGuideFor(null); setView('learners'); }} />
+        ) : null}
+        {view === 'guide-ask' && ingested ? (
+          <GuideConversation jobId={ingested} onBack={() => setView('learners')} />
+        ) : null}
+        {view === 'acns' && guideFor ? (
+          <AcnsDraftScreen
+            learnerCode={guideFor.code}
+            {...(guideFor.name ? { learnerName: guideFor.name } : {})}
+            onBack={() => { setGuideFor(null); setView('learners'); }} />
+        ) : null}
+        {view === 'acs' && guideFor ? (
+          <AcsHelpScreen
+            learnerCode={guideFor.code}
+            {...(guideFor.name ? { learnerName: guideFor.name } : {})}
+            onBack={() => { setGuideFor(null); setView('learners'); }} />
+        ) : null}
         {view === 'adapt' && !review
           ? <AdaptScreen
               onReview={(jobId, learner, recipes) => { setReview({ jobId, learner, recipes }); setView('review'); }}
@@ -217,6 +258,15 @@ export function App() {
              * provider call is made for the reading (FR-1409, SC-1405). She still
              * picks the learners, because that is the whole point of the reuse.
              */
+            /*
+             * The adaptación curricular (`017`), reached from a learner rather than
+             * from the door: it is about one child's official document, not about a
+             * piece of work.
+             */
+            onGuide={(code, name, what) => {
+              setGuideFor({ code, ...(name ? { name } : {}) });
+              setView(what);
+            }}
             onReuse={(jobId, kind) => {
               setIngested(jobId);
               /*

@@ -190,6 +190,13 @@ export const es = {
      */
     'compose-no-objective': 'Dime primero qué quieres que aprenda.',
     'compose-needs-anchor': 'Eso es contenido, no una destreza que yo pueda comprobar. Necesito algo en lo que apoyarlo: la página del libro, tus apuntes, o las tres frases que dirías en clase.',
+    /*
+     * The guide (017). Neither is a fault: the first is a learner Rampa has not
+     * worked with yet, and the second is a procedural requirement that exists to
+     * protect the child rather than the file.
+     */
+    'guide-no-work': 'Todavía no he adaptado nada para este alumno, así que no tengo con qué redactar la ACNS. Adapta algo primero y vuelve.',
+    'guide-no-evaluation': 'Sin evaluación psicopedagógica una adaptación significativa no puede seguir adelante: es nula de procedimiento. Si existe y no lo he visto, dímelo.',
     /* Reading the material (008). Each one says what she does next. */
     'ingest-empty': 'No has añadido ningún fichero.',
     'ingest-format': 'No sé leer ese tipo de fichero. Fotos (JPG, PNG, HEIC), PDF, Word (.docx) o texto.',

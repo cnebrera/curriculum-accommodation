@@ -47,13 +47,18 @@ function LearnerCard({ row, onOpen }: { row: LearnerRow; onOpen: (code: string) 
   );
 }
 
-export function LearnersScreen({ onReuse }: {
+export function LearnersScreen({ onReuse, onGuide }: {
   /**
    * «Hazlo otra vez para otro alumno», from a row of a learner's record
    * (`016` T018). Threaded through rather than handled here: the routing belongs
    * to whoever owns the views, and this screen owns learners.
    */
   onReuse?: (jobId: string, kind: string) => void;
+  /**
+   * The adaptación curricular (`017`), reached from a learner rather than from the
+   * door — it is about one child's official document, not about a piece of work.
+   */
+  onGuide?: (code: string, name: string | undefined, what: 'guide' | 'acns' | 'acs') => void;
 } = {}) {
   const { t: es } = useStrings();
   /*
@@ -87,6 +92,10 @@ export function LearnersScreen({ onReuse }: {
    * disagree about what is applied — the two-copies-of-one-truth defect, which
    * on this screen would show as a caseload that looks filtered and is not.
    */
+  /** Her name for the child, for a screen title. The code is what reaches disk. */
+  const nameOf = (code: string): string | undefined =>
+    learners.find((l) => l.code === code)?.name;
+
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState<RosterFilter>({});
   const [grouped, setGrouped] = useState(false);
@@ -180,6 +189,50 @@ export function LearnersScreen({ onReuse }: {
             <div className="row">
               <button className="btn btn-sm" onClick={() => setViewing(editing)}>
                 Ver lo que le he preparado
+              </button>
+            </div>
+          </div>
+        ) : null}
+
+        {/*
+          The adaptación curricular (`017`). Here rather than behind the door because
+          it is about **this child's official document**, not about a piece of work —
+          and the ACS card is last and separate, because it is the only thing in this
+          application that touches what is asked of him.
+        */}
+        {editing && onGuide ? (
+          <div className="card stack gap3">
+            <span className="small"><strong>Su adaptación curricular</strong></span>
+            <p className="small" style={{ margin: 0 }}>
+              Si te han dado el documento oficial, puedo quedarme con sus medidas y
+              aplicarlas a todo lo que adapte para él. Y puedo hacerte el borrador de
+              la ACNS con lo que ya llevo hecho — no la escribo yo, la ordeno.
+            </p>
+            <div className="row gap2" style={{ flexWrap: 'wrap' }}>
+              <button className="btn btn-sm"
+                      onClick={() => onGuide(editing, nameOf(editing), 'guide')}>
+                Traer el documento que me han dado
+              </button>
+              <button className="btn btn-sm"
+                      onClick={() => onGuide(editing, nameOf(editing), 'acns')}>
+                Borrador de la ACNS
+              </button>
+            </div>
+          </div>
+        ) : null}
+
+        {editing && onGuide ? (
+          <div className="card card-plain stack gap3">
+            <span className="small"><strong>Si estás redactando una ACS</strong></span>
+            <p className="small" style={{ margin: 0 }}>
+              Una adaptación significativa modifica objetivos y criterios. Eso lo
+              decide el equipo docente con Orientación, no yo — pero cuando ya está
+              decidido, te ayudo a redactarlo.
+            </p>
+            <div className="row">
+              <button className="btn btn-sm"
+                      onClick={() => onGuide(editing, nameOf(editing), 'acs')}>
+                Ayúdame con la ACS
               </button>
             </div>
           </div>

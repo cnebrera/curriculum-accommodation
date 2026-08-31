@@ -10,6 +10,7 @@ import { registerRecordIpc } from './ipc/record.js';
 import { registerAdaptIpc } from './ipc/adapt.js';
 import { registerComposeIpc } from './ipc/compose.js';
 import { registerPictogramIpc } from './ipc/pictograms.js';
+import { registerGuideIpc } from './ipc/guide.js';
 import { registerIngestIpc } from './ipc/ingest.js';
 import { registerPrintIpc } from './ipc/print.js';
 import { registerSignoffIpc } from './ipc/signoff.js';
@@ -128,6 +129,7 @@ else {
     registerAdaptIpc(getWindow);
     registerComposeIpc(getWindow);
     registerPictogramIpc(getWindow);
+    registerGuideIpc(getWindow);
   registerIngestIpc(getWindow);
     registerPrintIpc();
     registerSignoffIpc();

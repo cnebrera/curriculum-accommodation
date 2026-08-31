@@ -198,3 +198,46 @@ describe('the bundle carries every instruction the code reads', () => {
     expect(missing, 'read by the code and absent from the bundle').toEqual([]);
   });
 });
+
+/**
+ * A guide comes in through `008`, unchanged (017 T011, FR-1505/1506).
+ *
+ * A second ingest path would be the modality-specific pipeline Principle IV forbids
+ * — and the document where a misreading matters most would be the one nobody had
+ * checked, because the per-page verification gate lives on the existing path.
+ *
+ * Asserted structurally: the guide job reads a job that already exists, and refuses
+ * one whose extraction is unverified.
+ */
+describe('the guide has no ingest path of its own', () => {
+  it('opens no channel that reads a file', async () => {
+    const src = await readFile(join(appRoot, 'packages', 'shell', 'src', 'ipc', 'guide.ts'), 'utf8');
+
+    // No dialog, no file read, no second ingest.
+    expect(src).not.toMatch(/showOpenDialog|readFile|readdir|runIngest|ingest:/);
+    // Five handlers, all of them about a job that already exists.
+    expect([...src.matchAll(/handle\('guide:(\w+)'/g)].map((m) => m[1]).sort())
+      .toEqual(['acns', 'acs', 'apply', 'ask', 'read']);
+  });
+
+  it('refuses a guide whose extraction she has not confirmed', async () => {
+    const src = await readFile(join(appRoot, 'packages', 'shell', 'src', 'jobs', 'guide.ts'), 'utf8');
+
+    // The same gate as a worksheet, on the document where it matters most.
+    expect(src).toMatch(/if \(!isVerified\(doc\)\)/);
+    expect(src).toContain('ir-unverified');
+  });
+
+  /**
+   * And nothing is written before her confirmation (FR-1506).
+   *
+   * `readGuideJob` is the only thing that runs before the confirmation screen, and
+   * the only write in this whole file is `applyGuide`'s, which she triggers.
+   */
+  it('writes nothing while reading', async () => {
+    const src = await readFile(join(appRoot, 'packages', 'shell', 'src', 'jobs', 'guide.ts'), 'utf8');
+    const readingHalf = src.slice(0, src.indexOf('export async function applyGuide'));
+
+    expect(readingHalf).not.toMatch(/writeRaw|writeBinary|ensureDir/);
+  });
+});

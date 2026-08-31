@@ -34,15 +34,50 @@ async function walk(dir: string): Promise<string[]> {
   return out;
 }
 
-const IMPORTS_ELECTRON = /^\s*import\s[^;]*\bfrom\s+['"]electron['"]/m;
+const IMPORTS_ELECTRON = /^\s*import\s([^;]*)\bfrom\s+['"]electron['"]/m;
 
-async function electronImporters(dir: string): Promise<string[]> {
+/**
+ * **A type-only import is not a dependency**, and counting it as one made this test
+ * grow for the wrong reason.
+ *
+ * `import { type BrowserWindow } from 'electron'` is erased at compile time: there is
+ * no runtime import, and migrating the file costs renaming one type. Three of the
+ * four `ipc/` files that «import electron» import nothing but that type — the
+ * `BrowserWindow` they take comes from their caller.
+ *
+ * Found on 2026-08-31 after the line bound failed **three times in one day** for
+ * `002`, `018` and `017`, each time on a file whose actual Electron cost was zero.
+ * Raising a number three times is a signal about the number, not about the code.
+ *
+ * So the two are counted separately: the value importers are the surface ADR 0008
+ * wants a migration to be able to quote, and the type-only ones are named — because
+ * they still *couple* to the framework conceptually — and excluded from the budget.
+ */
+const isTypeOnly = (clause: string): boolean => {
+  const inner = /\{([^}]*)\}/.exec(clause)?.[1];
+  // `import electron from` or `import * as electron` is a value import.
+  if (!inner || /^\s*type\s/.test(clause) === false && !/\{/.test(clause)) return false;
+  if (/^\s*import\s+type\s/.test(`import ${clause}`)) return true;
+  const bindings = inner.split(',').map((b) => b.trim()).filter(Boolean);
+  return bindings.length > 0 && bindings.every((b) => /^type\s/.test(b));
+};
+
+async function electronImportersSplit(dir: string): Promise<{ value: string[]; typeOnly: string[] }> {
   const files = await walk(join(appRoot, dir));
-  const hits: string[] = [];
+  const value: string[] = [];
+  const typeOnly: string[] = [];
   for (const f of files) {
-    if (IMPORTS_ELECTRON.test(await readFile(f, 'utf8'))) hits.push(relative(appRoot, f));
+    const m = IMPORTS_ELECTRON.exec(await readFile(f, 'utf8'));
+    if (!m) continue;
+    (isTypeOnly(m[1] ?? '') ? typeOnly : value).push(relative(appRoot, f));
   }
-  return hits.sort();
+  return { value: value.sort(), typeOnly: typeOnly.sort() };
+}
+
+/** Every file naming electron at all, type-only or not. */
+async function electronImporters(dir: string): Promise<string[]> {
+  const { value, typeOnly } = await electronImportersSplit(dir);
+  return [...value, ...typeOnly].sort();
 }
 
 describe('nothing outside packages/shell knows it is running in Electron', () => {
@@ -84,9 +119,10 @@ describe('inside packages/shell, the surface is small and named', () => {
   const EXPECTED = [
     'packages/shell/src/corpus/bundle.ts',   // app.isPackaged / getAppPath — where the bundle is
     'packages/shell/src/corpus/links.ts',    // shell.openExternal, app.getVersion — the outbound surface
-    'packages/shell/src/ipc/adapt.ts',       // BrowserWindow, for the progress send
-    'packages/shell/src/ipc/compose.ts',     // BrowserWindow, for the progress send (016 T003)
+    'packages/shell/src/ipc/adapt.ts',       // BrowserWindow (type only), for the progress send
+    'packages/shell/src/ipc/compose.ts',     // BrowserWindow (type only) — 016 T003
     'packages/shell/src/ipc/diagnostics.ts', // app.getPath, shell.showItemInFolder
+    'packages/shell/src/ipc/guide.ts',       // BrowserWindow (type only) — 017 T013
     'packages/shell/src/ipc/ingest.ts',      // dialog.showOpenDialog, app.getPath, progress
     'packages/shell/src/ipc/keys.ts',        // safeStorage — the encrypted key store
     'packages/shell/src/ipc/names.ts',       // safeStorage — the encrypted name map
@@ -134,8 +170,24 @@ describe('inside packages/shell, the surface is small and named', () => {
    * The number ADR 0008 wants a migration to be able to quote. Deliberately
    * bounded from above and not from below: the point is that it does not creep.
    */
+  /**
+   * The three `ipc/` files that take a `BrowserWindow` **as a type** and nothing else.
+   *
+   * Listed rather than invisible: they still couple to the framework conceptually, and
+   * a reader should be able to see which files would need a signature change. They are
+   * excluded from the line budget because their runtime cost is nil.
+   */
+  it('names the files whose electron import is type-only', async () => {
+    const { typeOnly } = await electronImportersSplit(join('packages', 'shell'));
+    expect(typeOnly).toEqual([
+      'packages/shell/src/ipc/adapt.ts',
+      'packages/shell/src/ipc/compose.ts',
+      'packages/shell/src/ipc/guide.ts',
+    ]);
+  });
+
   it('the Electron-specific surface is a few hundred lines, not a few thousand', async () => {
-    const files = await electronImporters(join('packages', 'shell'));
+    const { value: files } = await electronImportersSplit(join('packages', 'shell'));
     let lines = 0;
     for (const f of files) lines += (await readFile(join(appRoot, f), 'utf8')).split('\n').length;
     /*
@@ -166,7 +218,18 @@ describe('inside packages/shell, the surface is small and named', () => {
      * What is left here is a folder dialog and five handlers, which is what an
      * `ipc/` file is for. A bound that only ever moves up is a bound; a bound that
      * makes somebody look twice is a design review.
+     *
+     * **Then it failed a third time, and the third time was the number's fault.**
+     * `017`'s `ipc/guide.ts` imports `{ type BrowserWindow }` and nothing else — an
+     * import erased at compile time, whose migration cost is renaming one type. Two
+     * of the files already counted were the same. So the budget now measures **value
+     * importers only**, which is what ADR 0008 wanted a migration to be able to
+     * quote, and the type-only ones are named in the test above.
+     *
+     * The number went *down* as a result — 1,685 counting everything, 1,431 counting
+     * only what a migration would have to rewrite — which is the tell that the metric
+     * was wrong rather than the code.
      */
-    expect(lines).toBeLessThan(1620);
+    expect(lines).toBeLessThan(1450);
   });
 });

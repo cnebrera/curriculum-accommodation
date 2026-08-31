@@ -22,6 +22,8 @@ export type ErrorKind =
   | 'ingest-failed'          // the bound was exhausted on a page
   | 'compose-no-objective'   // she asked to compose and said nothing to compose
   | 'compose-needs-anchor'   // content, which needs something true to rest on
+  | 'guide-no-work'          // an ACNS drafted from nothing is a form filled in by a model
+  | 'guide-no-evaluation'    // an ACS with no evaluación psicopedagógica is procedurally void
   | 'key-missing' | 'key-invalid' | 'key-wrong-provider' | 'key-no-credit'
   | 'offline' | 'rate-limited' | 'provider-failed';
 
