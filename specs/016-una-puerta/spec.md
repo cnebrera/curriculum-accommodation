@@ -4,7 +4,7 @@
 
 **Created**: 2026-08-30
 
-**Status**: Draft — needs `/speckit-clarify`, then `/speckit-plan`
+**Status**: Planned 2026-08-31 — [plan.md](./plan.md), [tasks.md](./tasks.md). Unblocked by `002` and `012` shipping the same day.
 
 **Input**: Carlos, 2026-08-30:
 
