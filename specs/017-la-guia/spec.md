@@ -4,8 +4,9 @@
 
 **Created**: 2026-08-30
 
-**Status**: Draft — **unblocked 2026-08-31.** The «blocked on a DPO conversation»
-prerequisite below was wrong and is retracted; see *The hard constraint*.
+**Status**: **Built 2026-08-31**, all 26 tasks. The «blocked on a DPO conversation»
+prerequisite below was wrong and is retracted; see *The hard constraint*. Nothing here
+has met a real provider or a real DIAC — see [tasks.md](./tasks.md)'s closing section.
 
 **Input**: Carlos, 2026-08-30:
 
