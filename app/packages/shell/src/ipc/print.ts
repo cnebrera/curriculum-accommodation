@@ -4,7 +4,7 @@ import { resolveInVault, outputDir } from '@rampa/core';
 import { currentVault } from './vault.js';
 import { handle } from './wrap.js';
 import { renderJob, renderPdf, openAdaptedForEditing } from '../jobs/print.js';
-import { renderOdt } from '../jobs/export.js';
+import { renderOdt, renderAudioReady, renderBraille } from '../jobs/export.js';
 
 /**
  * Wiring for what she prints (013 T019, FR-1111).
@@ -51,6 +51,37 @@ export function registerPrintIpc(): void {
     await mkdir(dirname(path), { recursive: true });
     await writeFile(path, bytes);
     return path;
+  });
+
+  /**
+   * For listening (019 US2) and for a transcriber (US3).
+   *
+   * Two channels rather than one with a mode, because they are two documents for
+   * two different people: the audio-ready file is for the learner and says «éste no
+   * te lo puedo leer en orden», and the braille-ready one is for a professional and
+   * says «para el transcriptor». A mode flag would invite one wording for both.
+   *
+   * `announced` comes back to the renderer as well as into the file, because what
+   * could not be read in order is a decision she has to know about — buried in a
+   * text file she may hand to somebody else, it becomes a thing only the learner
+   * discovers.
+   */
+  handle('job:audio', async (jobId: string, learnerCode: string) => {
+    const vault = currentVault();
+    const { text, announced } = await renderAudioReady(jobId, learnerCode);
+    const path = resolveInVault(vault.root, `${outputDir(jobId, learnerCode)}/para-escuchar.txt`);
+    await mkdir(dirname(path), { recursive: true });
+    await writeFile(path, text, 'utf8');
+    return { path, announced };
+  });
+
+  handle('job:brailleReady', async (jobId: string, learnerCode: string) => {
+    const vault = currentVault();
+    const { text, announced } = await renderBraille(jobId, learnerCode);
+    const path = resolveInVault(vault.root, `${outputDir(jobId, learnerCode)}/para-braille.txt`);
+    await mkdir(dirname(path), { recursive: true });
+    await writeFile(path, text, 'utf8');
+    return { path, announced };
   });
 
   handle('job:pdf', async (jobId: string, learnerCode: string) => {

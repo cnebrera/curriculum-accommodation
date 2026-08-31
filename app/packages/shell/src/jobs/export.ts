@@ -1,7 +1,11 @@
-import { renderHTML, renderODT, parseIR, checkOutput, isSignedOff, RampaError } from '@rampa/core';
+import {
+  renderHTML, renderODT, renderLinear, renderBrailleReady, parseAudioCorpus,
+  parseIR, checkOutput, isSignedOff, RampaError,
+} from '@rampa/core';
 import { jobAdapted } from '@rampa/core';
 import { currentVault } from '../ipc/vault.js';
 import { knownNames } from '../ipc/names.js';
+import { loadInstruction } from '../corpus/index.js';
 
 /**
  * Exports that are not printed (019).
@@ -51,4 +55,57 @@ export async function renderOdt(jobId: string, learnerCode: string): Promise<Uin
   if (!check.ok) throw new RampaError('render-learner-data', check.findings.join(' '), check.findings);
 
   return renderODT(doc, { signedOff: isSignedOff(doc) });
+}
+
+/**
+ * The heard and the touched modalities (019 Phase 3 and 4).
+ *
+ * Both from the same adapted IR, both through the same `renderLinear` — and both
+ * through the **same output check** as the HTML and the ODT. A modality that
+ * skipped it would be the first parallel pipeline Principle IV forbids, arriving as
+ * an omission rather than as a design.
+ *
+ * Neither produces audio or braille. `019`'s spec says audio-*ready*: a bundled
+ * speech engine is large and its quality is a per-language problem nobody here can
+ * judge, and claiming to produce braille would be claiming expertise this project
+ * does not have and cannot check.
+ */
+async function linearFor(jobId: string, learnerCode: string) {
+  const vault = currentVault();
+  const raw = await vault.readRaw(jobAdapted(jobId, learnerCode));
+  if (!raw) throw new RampaError('vault-unreadable', 'No encuentro la versión adaptada.');
+  const doc = parseIR(raw);
+
+  const corpus = parseAudioCorpus(await loadInstruction('audio'));
+  const signedOff = isSignedOff(doc);
+
+  // The same gate, on the same document, as every other modality.
+  const asHtml = renderHTML(doc, { signedOff });
+  const check = checkOutput(asHtml, [learnerCode], [...(await knownNames()).values()]);
+  if (!check.ok) throw new RampaError('render-learner-data', check.findings.join(' '), check.findings);
+
+  return { doc, corpus, signedOff };
+}
+
+export async function renderAudioReady(
+  jobId: string, learnerCode: string,
+): Promise<{ text: string; announced: Array<{ id: string; because: string }> }> {
+  const { doc, corpus, signedOff } = await linearFor(jobId, learnerCode);
+  const linear = renderLinear(doc, { ...corpus, modality: 'audio', signedOff });
+  /*
+   * `announced` is returned, not merely written. What could not be read in order is
+   * a decision she has to know about — and burying it inside a text file she may
+   * hand to somebody else would make it a thing only the learner discovers.
+   */
+  return { text: linear.text, announced: linear.announced };
+}
+
+export async function renderBraille(
+  jobId: string, learnerCode: string,
+): Promise<{ text: string; announced: Array<{ id: string; because: string }> }> {
+  const { doc, corpus, signedOff } = await linearFor(jobId, learnerCode);
+  return {
+    text: renderBrailleReady(doc, { ...corpus, signedOff }),
+    announced: renderLinear(doc, { ...corpus, modality: 'braille', signedOff }).announced,
+  };
 }

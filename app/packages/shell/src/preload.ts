@@ -132,6 +132,9 @@ const api = {
     pdf: (id: string, learner: string) => invoke('job:pdf', id, learner),
     /** The editable export she can fix by hand (019). */
     odt: (id: string, learner: string) => invoke('job:odt', id, learner),
+    /** For listening, and for a transcriber (019 US2/US3). Neither is audio or braille. */
+    audio: (id: string, learner: string) => invoke('job:audio', id, learner),
+    brailleReady: (id: string, learner: string) => invoke('job:brailleReady', id, learner),
     /** Opens the adapted file in her own editor (T094). */
     openForEditing: (id: string, learner: string) => invoke('job:openForEditing', id, learner),
     /** The only way the draft mark comes off. */

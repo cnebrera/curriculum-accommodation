@@ -77,3 +77,45 @@ describe('the model is never asked about pictograms', () => {
     expect(found).toEqual([]);
   });
 });
+
+describe('an access arrangement is named as one (019 T010, FR-1718)', () => {
+  const adaptedExam = () => parseIR([
+    '---', 'lang: es', '---', '',
+    '::: {#b1 .assessment data-from="q1" data-recipe="response-route@1" data-axis="MOT"}',
+    '1. Explica por qué llueve.\n\n☐ Contestado',
+    ':::',
+  ].join('\n'));
+
+  const exam = { id: 'exam', label: 'Un examen o una prueba', forbids: ['question-demand'] };
+
+  /**
+   * A changed response route is not a difficulty change — `response-route.md` is
+   * built to guarantee that. But it **is** something a school records and an
+   * inspector asks about, and «he aplicado response-route» in a list of decisions is
+   * invisible to the person who has to declare it.
+   */
+  it('gets its own heading in an exam', () => {
+    const r = buildReport({ adapted: adaptedExam(), kind: exam });
+
+    expect(r.markdown).toContain('## Adaptación de acceso');
+    expect(r.markdown).toContain('no lo que se pregunta');
+    // And it says what it is not, because that is the misreading it exists to stop.
+    expect(r.markdown).toContain('no es que la prueba sea más fácil');
+  });
+
+  it('says nothing about it on a worksheet, where there is nothing to declare', () => {
+    const worksheet = { id: 'worksheet', label: 'Una ficha', forbids: ['numbering'] };
+    expect(buildReport({ adapted: adaptedExam(), kind: worksheet }).markdown)
+      .not.toContain('Adaptación de acceso');
+  });
+
+  it('says nothing when the response route was not touched', () => {
+    const other = parseIR([
+      '---', 'lang: es', '---', '',
+      '::: {#b1 .assessment data-from="q1" data-recipe="one-task-per-page@1" data-axis="ATE"}',
+      '1. Explica por qué llueve.', ':::',
+    ].join('\n'));
+    expect(buildReport({ adapted: other, kind: exam }).markdown)
+      .not.toContain('Adaptación de acceso');
+  });
+});

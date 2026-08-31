@@ -234,6 +234,22 @@ export function buildReport(input: ReportInput): Report {
   }
 
   /*
+   * An access arrangement, named as one (019 T010, FR-1718).
+   *
+   * A changed response route in an exam is **not** a difficulty change — that is
+   * what `recipes/core/response-route.md` is built to guarantee — but it is a thing
+   * a school records and an inspector asks about. It has to appear as its own line
+   * with its own name, because «he aplicado response-route» in a list of decisions
+   * is invisible to the person who has to declare it.
+   */
+  if (input.kind?.id === 'exam' && decisions.some((d) => parseRecipeRef(d.recipe).id === 'response-route')) {
+    md.push('## Adaptación de acceso', '');
+    md.push('He cambiado **cómo contesta**, no lo que se pregunta. Eso es una'
+      + ' adaptación de acceso, y en un examen se registra como tal — no es que la'
+      + ' prueba sea más fácil.', '');
+  }
+
+  /*
    * Pictograms, and the ambiguities first. «He puesto 12» is a count; «hay dos
    * dibujos para "rana" y no he puesto ninguno» is a decision she can make.
    */

@@ -107,6 +107,29 @@ export function useOdt() {
     window.rampa.job.odt(id, learner) as Promise<string>);
 }
 
+/**
+ * For listening (019 US2) and for a transcriber (US3).
+ *
+ * Neither produces audio or braille, and the names say so: `019` promises
+ * audio-*ready*. `announced` comes back so the screen can show what could not be
+ * read in order — buried in a text file she may hand to somebody else, that becomes
+ * a thing only the learner discovers.
+ */
+export interface LinearExport {
+  path: string;
+  announced: Array<{ id: string; because: string }>;
+}
+
+export function useAudioReady() {
+  return useCommand((id: string, learner: string) =>
+    window.rampa.job.audio(id, learner) as Promise<LinearExport>);
+}
+
+export function useBrailleReady() {
+  return useCommand((id: string, learner: string) =>
+    window.rampa.job.brailleReady(id, learner) as Promise<LinearExport>);
+}
+
 export function useOpenForEditing() {
   return useCommand((id: string, learner: string) => window.rampa.job.openForEditing(id, learner));
 }

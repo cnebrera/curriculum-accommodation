@@ -151,3 +151,50 @@ describe('provenance survives a corpus update (T081, 006 FR-416)', () => {
     expect(readme).toContain('last_checked');
   });
 });
+
+/**
+ * Every instruction file the application reads is in the bundle (019/018).
+ *
+ * The corpus-as-truth pattern has one failure mode that ships silently: a new
+ * `instructions/x.md` that `loadInstruction('x')` reads, and that `bundle-corpus.mjs`
+ * copies — until it does not. The consequence is a modality or a family that works
+ * in the repository and throws in the installed application, which is the worst
+ * place to find out.
+ *
+ * So the assertion is over what the code **asks for**, not over a list somebody
+ * maintains beside it.
+ */
+describe('the bundle carries every instruction the code reads', () => {
+  it('finds each `loadInstruction(...)` name in the bundle', async () => {
+    const files = [
+      join(appRoot, 'packages', 'shell', 'src', 'jobs'),
+      join(appRoot, 'packages', 'shell', 'src', 'corpus'),
+      join(appRoot, 'packages', 'shell', 'src', 'ipc'),
+    ];
+
+    const names = new Set<string>();
+    for (const dir of files) {
+      for (const f of await readdir(dir)) {
+        if (!f.endsWith('.ts')) continue;
+        const src = await readFile(join(dir, f), 'utf8');
+        for (const m of src.matchAll(/loadInstruction\(\s*'([a-z-]+)'\s*\)/g)) {
+          names.add(m[1]!);
+        }
+      }
+    }
+
+    // The scan is not passing because it found nothing to scan.
+    expect(names.size).toBeGreaterThan(3);
+
+    const missing: string[] = [];
+    for (const name of names) {
+      try {
+        const s = await stat(join(corpus, 'instructions', `${name}.md`));
+        if (s.size === 0) missing.push(`${name}.md (empty)`);
+      } catch {
+        missing.push(`${name}.md`);
+      }
+    }
+    expect(missing, 'read by the code and absent from the bundle').toEqual([]);
+  });
+});

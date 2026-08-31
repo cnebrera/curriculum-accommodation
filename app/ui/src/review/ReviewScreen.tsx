@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Page } from '../shell/Page.js';
-import { useReportDataCommand, useSignedOffCommand, useRender, usePdf, useOdt, useRevise, useSignOff, useOpenForEditing } from '../data/jobs.js';
+import { useReportDataCommand, useSignedOffCommand, useRender, usePdf, useOdt, useRevise, useSignOff, useOpenForEditing, useAudioReady, useBrailleReady, type LinearExport } from '../data/jobs.js';
 import { useChecklistCommand } from '../data/corpus.js';
 import { useVaultChanged } from '../data/vault.js';
 import { useNames } from '../data/names.js';
@@ -35,6 +35,10 @@ export function ReviewScreen({ jobId, learner, recipes }: { jobId: string; learn
   const renderJob = useRender();
   const pdf = usePdf();
   const odt = useOdt();
+  /** The other two modalities (019 US2/US3). Same adaptation, no re-run. */
+  const audio = useAudioReady();
+  const braille = useBrailleReady();
+  const [linear, setLinear] = useState<{ what: 'audio' | 'braille'; result: LinearExport } | null>(null);
   const reviseJob = useRevise();
   const signOff = useSignOff();
   const openForEditing = useOpenForEditing();
@@ -181,6 +185,21 @@ export function ReviewScreen({ jobId, learner, recipes }: { jobId: string; learn
                 onClick={() => void odt.run(jobId, learner).then((p) => { if (p) setOdtPath(p); })}>
           Descargar para editar
         </button>
+        {/*
+          The heard and the touched modalities (019 US2/US3). Beside the others
+          because that is Principle IV's claim doing its job: one adaptation, N
+          outputs, and no re-run to add one.
+        */}
+        <button className="btn" disabled={audio.busy} aria-busy={audio.busy}
+                onClick={() => void audio.run(jobId, learner)
+                  .then((r) => { if (r) setLinear({ what: 'audio', result: r }); })}>
+          Para escuchar
+        </button>
+        <button className="btn" disabled={braille.busy} aria-busy={braille.busy}
+                onClick={() => void braille.run(jobId, learner)
+                  .then((r) => { if (r) setLinear({ what: 'braille', result: r }); })}>
+          Para braille
+        </button>
         {!signedOff
           ? <button className="btn btn-primary" onClick={() => void sign()}>{es.review.signOff}</button>
           : <span className="badge badge-accent">{es.review.signedOff}</span>}
@@ -194,6 +213,44 @@ export function ReviewScreen({ jobId, learner, recipes }: { jobId: string; learn
         </p>
       ) : null}
       {odt.error ? <Callout intent="danger">{odt.error.message}</Callout> : null}
+      {audio.error ? <Callout intent="danger">{audio.error.message}</Callout> : null}
+      {braille.error ? <Callout intent="danger">{braille.error.message}</Callout> : null}
+
+      {linear ? (
+        <Callout
+          intent={linear.result.announced.length ? 'decide' : 'ok'}
+          title={linear.what === 'audio'
+            ? 'Listo para escuchar'
+            : 'Listo para quien lo transcriba'}>
+          <p>
+            En <code>{linear.result.path}</code>.{' '}
+            {linear.what === 'audio'
+              ? 'Es texto en orden de lectura: lo abre cualquier lector de pantalla. No es audio: Rampa no lleva motor de voz.'
+              : 'Es texto lineal para quien transcriba o para una impresora braille con su software. No es braille, y Rampa no sabe si el resultado sirve.'}
+          </p>
+          {/*
+            What could not be read in order. Shown here rather than only inside the
+            file, because it is a decision she has to know about — and a silent skip
+            is a learner finishing an exercise of eleven questions believing it had
+            ten.
+          */}
+          {linear.result.announced.length ? (
+            <>
+              <p>
+                <strong>
+                  {linear.result.announced.length === 1
+                    ? 'Hay un bloque que no se puede leer en orden'
+                    : `Hay ${linear.result.announced.length} bloques que no se pueden leer en orden`}
+                </strong>
+                {' '}— van anunciados, no inventados ni saltados:
+              </p>
+              <ul className="bullets">
+                {linear.result.announced.map((a) => <li key={a.id}>{a.because}</li>)}
+              </ul>
+            </>
+          ) : null}
+        </Callout>
+      ) : null}
     </Page>
   );
 }
