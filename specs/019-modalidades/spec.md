@@ -4,7 +4,7 @@
 
 **Created**: 2026-08-30
 
-**Status**: Draft — needs `/speckit-clarify`, then `/speckit-plan`
+**Status**: US1 and US4 implemented 2026-08-31 without a plan file — see the note below. US2/US3 unstarted.
 
 **Input**: Backlog **G8**, open and deliberate since 2026-08-27:
 
@@ -74,6 +74,26 @@ format nobody named is not in scope.
   document; what speaks it is the operating system, her player, or a service. A
   bundled speech engine is a large dependency and a per-language quality problem
   nobody here can judge.
+
+## A process note, recorded rather than tidied away
+
+**US1 and US4 were implemented on 2026-08-31 with no `plan.md` and no
+`tasks.md`.** The Spec Kit gate blocks a specification and its implementation in
+one commit, and it does not block this — so nothing stopped it and I did not
+stop either.
+
+What that skipped: the Constitution Check that lives in the plan template, and the
+sequencing pass. Both would have been short here — the feature adds no learner
+data, no provider call and no new screen state — but "it would have been short" is
+what the constitution's own gate exists to stop people saying.
+
+What it did not skip: the clarification session (above), tests before code, and the
+one check that mattered (LibreOffice actually opening the file).
+
+Recorded here rather than in a commit message so it is visible to whoever plans
+US2 and US3, which are the parts that genuinely need a plan: audio has a reading-
+order question this feature has not answered, and braille-ready needs somebody who
+transcribes.
 
 ## User Scenarios & Testing *(mandatory)*
 
