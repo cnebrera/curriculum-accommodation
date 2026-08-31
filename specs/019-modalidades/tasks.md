@@ -37,12 +37,12 @@
 
 ---
 
-## Phase 3 · Audio (US2) — blocked on a question, not on effort
+## Phase 3 · Audio (US2) — unblocked 2026-08-31
 
-- [ ] T011 **Answer the reading-order question first.** What is the order when the
+- [x] T011 **Answer the reading-order question first.** What is the order when the
       visual layout *was* the point — a matching exercise, a number line, a
       two-column comparison? This is where the IR's promise gets tested hardest,
-      and a guess produces an audio file nobody uses
+      and a guess produces an audio file nobody uses *(answered in [research.md](research.md), written before any audio code existed so the answer could not be retrofitted to whatever got built. **Linearise what is honestly linear; announce what is not, and say why.** Guessing was rejected because a matching exercise read as pairs has been *answered aloud* — the linearisation is the answer key — and refusing the whole document was rejected as the opposite failure: nine usable blocks withheld for the tenth. Which structures are spatial is decided from the block's class and content, and the Spanish phrasings that mean «the layout is the exercise» are corpus, because that is a judgement a PT can correct.)*
 - [ ] T012 An audio-ready rendering with an explicit reading order (FR-1708)
 - [ ] T013 A figure spoken by its description; an undescribed one **announced as
       undescribed** rather than skipped (FR-1709)
