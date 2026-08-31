@@ -486,11 +486,25 @@ describe('FR-507 · the output check fails the render', () => {
     expect(check).toMatch(/throw new RampaError\('render-learner-data'/);
   });
 
-  it('checks for the code AND for every known name', () => {
-    // Two channels: the code is what the vault stores, the name is what she reads.
-    // Checking only one leaves the other as the way it gets out.
+  it('checks for the code, every known name, AND his own facts', () => {
+    /*
+     * Three channels now, and the third was added by `011` T018 because the profile
+     * had gained fields this check did not know about: an age, a course, a stage, a
+     * school. **Adding a profile field without extending this check is how the next
+     * one reaches a sheet** — and `015` FR-1306 puts the school in the never-sent set
+     * beside the name precisely because a school plus a course plus a set of barriers
+     * identifies a child far more sharply than a code does.
+     *
+     * The assertion is on the shape of the call rather than its exact text, because
+     * pinning the whole expression made this test fail when a fourth argument was
+     * added *correctly*.
+     */
     const print = stripComments(readFileSync(join(shellSrc, 'jobs', 'print.ts'), 'utf8'));
-    expect(print).toMatch(/checkOutput\(html,\s*\[learnerCode\],\s*\[\.\.\.\(await knownNames\(\)\)\.values\(\)\]\)/);
+    expect(print).toMatch(/checkOutput\(html,\s*\[learnerCode\]/);
+    expect(print).toMatch(/knownNames\(\)\)\.values\(\)\]/);
+    expect(print, 'his own facts must reach the check too').toMatch(/,\s*facts\)/);
+    // And the facts are the identifying ones, assembled from the profile here.
+    expect(print).toMatch(/profile\.school/);
   });
 });
 

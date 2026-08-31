@@ -69,7 +69,19 @@ export async function renderJob(jobId: string, learnerCode: string) {
     ...(pictogramImages ? { pictogramImages } : {}),
   });
 
-  const check = checkOutput(html, [learnerCode], [...(await knownNames()).values()]);
+  /*
+   * Everything about this learner that must not be on his sheet (011 T018, FR-910).
+   *
+   * The school is the one that matters most — `015` FR-1306 puts it in the never-sent
+   * set beside the name, and a school plus a course plus a set of barriers identifies
+   * a child far more sharply than a code does. The course and the stage are here for
+   * the same reason: they are facts about him, and the sheet is for him.
+   */
+  const facts = [
+    learner.profile.school, learner.profile.year, learner.profile.stage,
+  ].filter((f): f is string => typeof f === 'string' && f.trim() !== '');
+
+  const check = checkOutput(html, [learnerCode], [...(await knownNames()).values()], facts);
   if (!check.ok) throw new RampaError('render-learner-data', check.findings.join(' '), check.findings);
 
   return { html, photocopy: checkPhotocopy(html) };

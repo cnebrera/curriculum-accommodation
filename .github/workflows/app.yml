@@ -72,6 +72,22 @@ jobs:
         run: bash ../scripts/check-catalogue-freshness.sh
         if: runner.os != 'Windows'
 
+      # 011 T022 · FR-908. Same shape as the catalogue check above, and for the
+      # same reason: two corpora that make claims about the outside world, one
+      # habit. A curriculum changes, and `last_checked` is the day somebody read
+      # the education authority's pages — not the day the file was edited.
+      - name: Education files are current
+        run: bash ../scripts/check-education-freshness.sh
+        if: runner.os != 'Windows'
+
+      # 011 T025. Its own step because this suite is what stands between a
+      # teacher and a course list that has quietly stopped matching her school —
+      # and because it is where `es.md`'s own parse is asserted, after a regex
+      # edit once put one year's data inside another stage and the only symptom
+      # was the test count dropping.
+      - name: Who the learner is — the education corpus
+        run: npx vitest run packages/core/test/education.test.ts
+
       - name: The vault survives a teacher
         run: npm run test:vault
 

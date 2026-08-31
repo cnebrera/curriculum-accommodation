@@ -709,6 +709,53 @@ That is the honest architecture, and it belongs in this document rather than
 implied: the project's central promise is kept by a person, supported by machinery
 whose job is to make breaking it visible.
 
+## Spec 011 — who the learner is (T023)
+
+| Check | Where | Result |
+|---|---|---|
+| The shipped Spanish file parses, and every year has a stage and a label | `education.test.ts` | **Pass**, and asserted over the *shipped* file — a regex edit once put `primaria-6`'s bounds inside ESO's `years:` and the only symptom was the test count dropping from 874 to 849 with «849 passed» |
+| Repair, not reject | `education.test.ts` | **Pass.** A malformed year is dropped and logged; the rest of the file still ships |
+| Year ids are namespaced by system | `education.test.ts` | **Pass.** `es:primaria-5`, so a scan across systems cannot return the wrong country's year |
+| The extension point works with two systems | `education.test.ts` | **Pass**, against a fixture — see below |
+| Divergence fires at two years and not at one | `education.test.ts`, `e2e/learner.spec.ts` | **Pass.** A sentence that fires on most learners stops being read |
+| One choice fills three fields, and changing the age leaves the year alone | `e2e/learner.spec.ts` | **Pass.** 6 cases in the real window |
+| A year with no typical age fills nothing | `e2e/learner.spec.ts` | **Pass.** Educación especial and adult education say nothing about age, and a plausible guess there gets used |
+| The system is never inferred from the OS language | `e2e/learner.spec.ts` | **Pass**, by absence: no locale is consulted, and with one system shipped no question is asked |
+| The stage is stored as a label, so the YAML reads without this application | `e2e/learner.spec.ts` | **Pass** |
+| His course, stage and school never reach his sheet | `education.test.ts`, `untrusted.test.ts` | **Pass** (T018, FR-910). Extended when the profile gained fields — the rule being enforced is that *adding a field without extending this check is how the next one reaches a sheet* |
+| `last_checked` within 400 days | `check-education-freshness.sh`, in CI | **Pass.** Fails the build, unlike the interface, which marks a stale file and keeps using it |
+
+### The thing this section exists to say
+
+**The Spanish education file is unreviewed, and it was written by a language model.**
+
+`instructions/education/es.md` carries `reviewed_by_teacher: false`, and the standard
+for flipping it is deliberately hard: **not** when a teacher has read it, but when a
+practising teacher has **disagreed with something concrete in it**. Nobody has.
+
+What that means in practice: the typical ages, the stage boundaries and every
+sentence of `can:` and `studies:` are a plausible reconstruction of the Spanish system
+by something that has read about it and never taught in it. They are probably mostly
+right, and «probably mostly right» about which curricular expectations belong to
+4.º de Primaria is exactly the kind of claim that produces material pitched at the
+wrong child with no visible sign of it.
+
+`011` T026 is that conversation and it is not a task anybody here can close.
+
+### Only one system ships, and that is also a finding
+
+T020 asked for a second system file «to demonstrate SC-902, **and delete it again if
+it cannot be written honestly**». It cannot: nobody here can write another country's
+stages, typical ages and curricular expectations to the standard the corpus sets for
+itself, and shipping a plausible `pt.md` would put a claim about somebody else's
+school system in front of a teacher.
+
+So the extension point is proved against a **fixture** in `education.test.ts` — two
+systems load, ids stay namespaced, a duplicate id is dropped rather than letting file
+order decide — and a test asserts that exactly one real file ships. If a second ever
+appears, that test fails and whoever added it has to confirm a teacher of that system
+has read it.
+
 ## Spec 012 — what the baseline diff showed (T022)
 
 `012` T005 turned `recipe.scope` on: a recipe now only applies to block classes the

@@ -1,4 +1,7 @@
 import { useEducationSystems } from '../data/corpus.js';
+import { useSystemChoice } from '../data/education-choice.js';
+import { stalenessOf, stalenessNotice }
+  from '../../../packages/core/src/education/lookup.js';
 
 /**
  * One choice, filling three fields (011 T012, US1).
@@ -20,6 +23,8 @@ export interface EducationStage {
 }
 export interface EducationSystem {
   id: string; label: string; stages: EducationStage[]; reviewedByTeacher: boolean;
+  /** The day somebody read the education authority's pages (011 FR-908). */
+  lastChecked?: string;
 }
 
 export interface Who { age?: number; year?: string; stage?: string }
@@ -29,6 +34,20 @@ export function YearPicker({ value, onChange }: {
   onChange: (who: Who) => void;
 }) {
   const loaded = useEducationSystems();
+  /**
+   * Which system her vault uses (011 T011).
+   *
+   * **Asked, never inferred.** Not from the OS language, not from a locale, not from
+   * a timezone: a teacher in Barcelona whose laptop is in English is not teaching an
+   * English curriculum, and a wrong guess here puts the wrong course list in front of
+   * her with no explanation.
+   *
+   * And **not asked when there is nothing to ask.** With one system shipped, a
+   * question with one answer is friction four times a day. The chooser appears from
+   * the second system — which is exactly what T020's extension point is for, and what
+   * makes «asked, never inferred» a behaviour rather than a promise.
+   */
+  const [chosenId, setChosenId] = useSystemChoice();
 
   /*
    * No `Loaded` wrapper here, and that is the deliberate exception. This is one
@@ -40,10 +59,19 @@ export function YearPicker({ value, onChange }: {
    */
   if (loaded.state !== 'ready') return null;
   const systems = loaded.value as EducationSystem[];
-  // One system per vault, chosen at first run. Until there is a second, this is
-  // simply the one that shipped.
-  const system = systems[0];
+  const system = systems.find((s) => s.id === chosenId) ?? systems[0];
   if (!system) return null;
+
+  /*
+   * Marked, never withdrawn (T021, FR-908).
+   *
+   * A stale provider entry is hidden. Hiding the only education system leaves her
+   * unable to record a course at all — and a slightly out-of-date list of Spanish
+   * school years is far better than no list. So the sentence appears beside the
+   * choice and the choice stays.
+   */
+  const staleness = stalenessOf(system.lastChecked, new Date().toISOString().slice(0, 10));
+  const stale = stalenessNotice(staleness, system.label);
 
   const allYears = system.stages.flatMap((s) => s.years.map((y) => ({ stage: s, year: y })));
   const found = allYears.find((f) => f.year.id === value.year);
@@ -70,6 +98,24 @@ export function YearPicker({ value, onChange }: {
 
   return (
     <div className="stack gap4">
+      {/*
+        The system, from the second one onward. One option is not a question.
+      */}
+      {systems.length > 1 ? (
+        <div className="stack gap2">
+          <label htmlFor="system"><strong>¿Qué sistema educativo?</strong></label>
+          <select className="select" id="system" value={system.id}
+                  onChange={(e) => setChosenId(e.target.value)}>
+            {systems.map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}
+          </select>
+          <p className="small">
+            Se queda guardado: te lo pregunto una vez, no cada vez.
+          </p>
+        </div>
+      ) : null}
+
+      {stale ? <p className="small" role="status">{stale}</p> : null}
+
       <div className="stack gap2">
         <label htmlFor="year"><strong>¿En qué curso está?</strong></label>
         <select className="select" id="year" value={value.year ?? ''}

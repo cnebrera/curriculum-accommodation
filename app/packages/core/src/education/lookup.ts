@@ -81,3 +81,58 @@ export function skillLevelFor(
 /** True when the corpus has anything to say about levels for this year. */
 export const hasSkillLevels = (found: FoundYear): boolean =>
   Object.keys(found.year.skills ?? {}).length > 0;
+
+/**
+ * Is this education file stale? (011 T021/T022, FR-908.)
+ *
+ * A curriculum changes. `last_checked` is the day somebody read the education
+ * authority's pages — not the day the file was edited — so a file nobody has
+ * re-read in over a year is a file making claims about a system that may have moved.
+ *
+ * ## Marked, never withdrawn
+ *
+ * Unlike a stale provider entry, which is hidden. Hiding the only education system
+ * leaves her unable to record a course at all, and a slightly out-of-date list of
+ * Spanish school years is far better than no list — so this returns a **warning**,
+ * and the caller shows it beside the choice rather than removing the choice.
+ *
+ * 400 days rather than 365: a file checked at the start of one school year should not
+ * turn red in the middle of the next one for being six weeks over.
+ */
+export const STALE_AFTER_DAYS = 400;
+
+export interface Staleness {
+  days: number;
+  stale: boolean;
+  /** Null when the file records no `last_checked` at all, which is its own problem. */
+  lastChecked: string | null;
+}
+
+export function stalenessOf(
+  lastChecked: string | undefined,
+  /** Today, passed in: a pure function that reads the clock cannot be asserted. */
+  today: string,
+): Staleness {
+  if (!lastChecked) return { days: Infinity, stale: true, lastChecked: null };
+  const then = Date.parse(lastChecked);
+  const now = Date.parse(today);
+  if (!Number.isFinite(then) || !Number.isFinite(now)) {
+    return { days: Infinity, stale: true, lastChecked };
+  }
+  const days = Math.floor((now - then) / 86_400_000);
+  return { days, stale: days > STALE_AFTER_DAYS, lastChecked };
+}
+
+/** What to tell her, or `null` when there is nothing to say. */
+export function stalenessNotice(s: Staleness, systemLabel: string): string | null {
+  if (!s.stale) return null;
+  if (s.lastChecked === null) {
+    return `No consta cuándo se comprobó la lista de cursos de ${systemLabel}. `
+      + 'Sigue estando, y puede estar desfasada.';
+  }
+  const years = Math.floor(s.days / 365);
+  return `La lista de cursos de ${systemLabel} se comprobó el ${s.lastChecked}, hace `
+    + `${years >= 1 ? `más de ${years} ${years === 1 ? 'año' : 'años'}` : `${s.days} días`}. `
+    + 'La sigo usando — una lista algo desfasada es mejor que ninguna — pero si un '
+    + 'curso no encaja, es por esto.';
+}

@@ -16,6 +16,21 @@ export function checkOutput(
   html: string,
   learnerCodes: readonly string[],
   knownNames: readonly string[] = [],
+  /**
+   * Anything else about this learner that must not be on his sheet
+   * (011 T018, FR-910; `015` FR-1306).
+   *
+   * The profile has gained fields since this check was written — an age, a course,
+   * a stage, a school — and **adding a field without extending this check is how
+   * the next one reaches a sheet.** `011`'s own task says so, and `015`'s school
+   * field is the case that makes it concrete: a school plus a course plus a set of
+   * barriers identifies a child far more sharply than a code does.
+   *
+   * Passed in rather than derived from a profile, because this function must never
+   * be handed a profile: what it takes is the list of strings that would be a
+   * finding, and the caller is the one place that knows the profile.
+   */
+  learnerFacts: readonly string[] = [],
 ): OutputCheckResult {
   const findings: string[] = [];
 
@@ -34,13 +49,32 @@ export function checkOutput(
       }
     }
   }
+  /*
+   * Substring, not word-boundary, and case-insensitively — «CEIP Miguel Hernández»
+   * on a worksheet is a finding whatever the punctuation around it, and a school's
+   * name is exactly the kind of string that arrives with a stray comma.
+   *
+   * Short values are skipped: a stage like «ESO» or an age like «9» would fire on
+   * ordinary content. That is a real limit and it is the honest one — the fields
+   * worth checking are the identifying ones, and a two-character value identifies
+   * nobody on its own.
+   */
+  for (const fact of learnerFacts) {
+    const needle = fact.trim().toLowerCase();
+    if (needle.length < 4) continue;
+    if (visible.includes(needle)) {
+      findings.push(`«${fact.trim()}» aparece en el material del alumno, y es un dato suyo.`);
+    }
+  }
+
   return { ok: findings.length === 0, findings };
 }
 
 export function assertNoLearnerData(
   html: string, learnerCodes: readonly string[], knownNames: readonly string[] = [],
+  learnerFacts: readonly string[] = [],
 ): void {
-  const r = checkOutput(html, learnerCodes, knownNames);
+  const r = checkOutput(html, learnerCodes, knownNames, learnerFacts);
   if (!r.ok) throw new RampaError('render-learner-data', r.findings.join(' '), r.findings);
 }
 

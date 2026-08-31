@@ -5,6 +5,7 @@ import {
 import { jobAdapted } from '@rampa/core';
 import { currentVault } from '../ipc/vault.js';
 import { knownNames } from '../ipc/names.js';
+import { loadLearner } from '@rampa/core';
 import { loadInstruction } from '../corpus/index.js';
 
 /**
@@ -51,7 +52,8 @@ export async function renderOdt(jobId: string, learnerCode: string): Promise<Uin
    * an omission rather than as a design.
    */
   const asHtml = renderHTML(doc, { signedOff: isSignedOff(doc) });
-  const check = checkOutput(asHtml, [learnerCode], [...(await knownNames()).values()]);
+  const check = checkOutput(asHtml, [learnerCode], [...(await knownNames()).values()],
+    await learnerFacts(learnerCode));
   if (!check.ok) throw new RampaError('render-learner-data', check.findings.join(' '), check.findings);
 
   return renderODT(doc, { signedOff: isSignedOff(doc) });
@@ -81,7 +83,8 @@ async function linearFor(jobId: string, learnerCode: string) {
 
   // The same gate, on the same document, as every other modality.
   const asHtml = renderHTML(doc, { signedOff });
-  const check = checkOutput(asHtml, [learnerCode], [...(await knownNames()).values()]);
+  const check = checkOutput(asHtml, [learnerCode], [...(await knownNames()).values()],
+    await learnerFacts(learnerCode));
   if (!check.ok) throw new RampaError('render-learner-data', check.findings.join(' '), check.findings);
 
   return { doc, corpus, signedOff };
@@ -108,4 +111,17 @@ export async function renderBraille(
     text: renderBrailleReady(doc, { ...corpus, signedOff }),
     announced: renderLinear(doc, { ...corpus, modality: 'braille', signedOff }).announced,
   };
+}
+
+/**
+ * The learner's own facts, for `checkOutput` (011 T018, FR-910).
+ *
+ * One helper rather than three copies: every modality reads it, and a modality that
+ * forgot to would be the parallel pipeline Principle IV forbids arriving as an
+ * omission. The school is the sharpest of the three (`015` FR-1306).
+ */
+async function learnerFacts(learnerCode: string): Promise<string[]> {
+  const learner = await loadLearner(currentVault(), learnerCode);
+  return [learner.profile.school, learner.profile.year, learner.profile.stage]
+    .filter((f): f is string => typeof f === 'string' && f.trim() !== '');
 }

@@ -88,6 +88,23 @@ servicios, **ninguno se ha conectado de verdad todavía**: los adaptadores está
 probados contra respuestas simuladas, no contra una cuenta real. Está dicho en
 `specs/006-desktop-app/validation.md`, no olvidado.
 
+### 0b · Antes de nada: quién es Hugo
+
+Marta dice **«5.º de Primaria»** y ya está. No teclea una edad: sale del curso. Y
+cuando el niño tiene catorce y está en 5.º —que es el caso por el que existe media
+herramienta— cambia la edad y **el curso se queda donde estaba**: nadie le corrige
+sobre un alumno que tiene delante.
+
+Lo que Rampa hace con eso: le habla como a su edad y le da el contenido de su curso.
+Y a partir de dos años de diferencia lo dice; a un año no dice nada, porque una frase
+que salta con casi todos los alumnos deja de leerse y se lleva por delante el caso
+que importaba.
+
+*Cubierto por:* 011 · *pendiente:* **el fichero español no lo ha revisado ninguna PT**
+(T026). Lo escribió un modelo de lenguaje, y «probablemente casi todo bien» sobre qué
+se espera en 4.º de Primaria es exactamente la clase de afirmación que produce
+material mal calibrado sin que se note.
+
 ### 1 · Martes, hueco de 45 minutos: la ficha de Hugo
 
 La ficha de naturales de esta semana existe como dos fotos de móvil — el libro
@@ -328,6 +345,7 @@ herramienta, dicho explícitamente.
 | Crear material desde objetivos, con ancla | **v1** | 002 (2026-08-31) — verificador aritmético, nivel desde `011`, soluciones aparte; SC-101…104 esperan PT |
 | Entrada real: foto, PDF, digital, con verificación | **v1** | 008 |
 | Perfil por barreras + calibración de ejes | **v1** | profile-schema, axis-calibration (G2 espera PT) |
+| Decir el curso una vez, y no teclear nunca una edad | **v1** | 011 — una elección rellena curso, etapa y edad; cambiar la edad no toca el curso |
 | Aplicar el documento oficial de adaptaciones (overlay) | **v1** (a mano) | 003 FR-209; leerlo del documento es 017 |
 | Que las correcciones no se repitan | **v1** | 003, T084-086 |
 | Consolidar lo aprendido, con confirmación | dif. | 003 US3, T093 |

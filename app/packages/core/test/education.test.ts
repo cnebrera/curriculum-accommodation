@@ -239,3 +239,244 @@ describe('what is studied, given a modality', () => {
     expect(studiesFor(findYear(es, 'es:primaria-5')!)).toMatch(/Fracciones/);
   });
 });
+
+/**
+ * The output check knows about the profile's newer fields (011 T018, FR-910).
+ *
+ * The rule the task states: **adding a profile field without extending this check is
+ * how the next one reaches a sheet.** The school is the sharpest case — `015` FR-1306
+ * puts it in the never-sent set beside the name, because a school plus a course plus
+ * a set of barriers identifies a child far more sharply than a code does.
+ */
+describe('a learner\'s own facts never reach his sheet', () => {
+  const sheet = (text: string) =>
+    `<html><body><main><section id="b1">${text}</section></main></body></html>`;
+
+  it('fails a render carrying his school', async () => {
+    const { checkOutput } = await import('../src/index.js');
+    const r = checkOutput(sheet('Rodea la casa. CEIP Miguel Hernández'), ['A1B2'], [],
+      ['CEIP Miguel Hernández', 'es:primaria-5', 'Primaria']);
+
+    expect(r.ok).toBe(false);
+    expect(r.findings.join(' ')).toContain('CEIP Miguel Hernández');
+    expect(r.findings.join(' ')).toContain('es un dato suyo');
+  });
+
+  it('fails a render carrying his course id', async () => {
+    const { checkOutput } = await import('../src/index.js');
+    expect(checkOutput(sheet('Ficha de es:primaria-5'), ['A1B2'], [], ['es:primaria-5']).ok)
+      .toBe(false);
+  });
+
+  it('passes an ordinary sheet', async () => {
+    const { checkOutput } = await import('../src/index.js');
+    expect(checkOutput(sheet('Rodea la casa con un círculo.'), ['A1B2'], [],
+      ['CEIP Miguel Hernández', 'es:primaria-5', 'Primaria']).ok).toBe(true);
+  });
+
+  /**
+   * Short values are skipped, and that is a stated limit rather than an oversight.
+   * «ESO» or an age of «9» would fire on ordinary content, and a two-character value
+   * identifies nobody on its own — so the check covers the identifying fields and
+   * says so.
+   */
+  it('does not fire on a value too short to identify anybody', async () => {
+    const { checkOutput } = await import('../src/index.js');
+    expect(checkOutput(sheet('Esto es una prueba de la ESO.'), ['A1B2'], [], ['ESO', '9']).ok)
+      .toBe(true);
+  });
+
+  it('is case- and punctuation-insensitive, because a school name arrives with a comma', async () => {
+    const { checkOutput } = await import('../src/index.js');
+    expect(checkOutput(sheet('ceip miguel hernández, 5.º'), ['A1B2'], [],
+      ['CEIP Miguel Hernández']).ok).toBe(false);
+  });
+});
+
+/**
+ * Staleness, and why a stale education file is **marked** rather than withdrawn
+ * (011 T021/T022, FR-908).
+ *
+ * A stale provider entry is hidden. Hiding the only education system would leave her
+ * unable to record a course at all — and a slightly out-of-date list of Spanish school
+ * years is far better than no list. So this produces a sentence, and the caller keeps
+ * the choice.
+ */
+describe('a curriculum goes out of date', () => {
+  it('is not stale inside the window', async () => {
+    const { stalenessOf, stalenessNotice } = await import('../src/index.js');
+    const s = stalenessOf('2026-08-01', '2026-08-31');
+
+    expect(s).toEqual({ days: 30, stale: false, lastChecked: '2026-08-01' });
+    expect(stalenessNotice(s, 'España')).toBeNull();
+  });
+
+  /**
+   * 400 days rather than 365: a file checked at the start of one school year should
+   * not turn red in the middle of the next one for being six weeks over.
+   */
+  it('gives a school year of slack past the year mark', async () => {
+    const { stalenessOf, STALE_AFTER_DAYS } = await import('../src/index.js');
+    expect(STALE_AFTER_DAYS).toBe(400);
+    expect(stalenessOf('2025-08-31', '2026-08-31').stale).toBe(false);
+    expect(stalenessOf('2025-06-01', '2026-08-31').stale).toBe(true);
+  });
+
+  it('says how old it is, and that it is still being used', async () => {
+    const { stalenessOf, stalenessNotice } = await import('../src/index.js');
+    const said = stalenessNotice(stalenessOf('2024-01-10', '2026-08-31'), 'España');
+
+    expect(said).toContain('2024-01-10');
+    // The half that matters: it is not an error, and the list still works.
+    expect(said).toContain('La sigo usando');
+    expect(said).toContain('mejor que ninguna');
+  });
+
+  it('treats a missing date as stale, and says that instead', async () => {
+    const { stalenessOf, stalenessNotice } = await import('../src/index.js');
+    const s = stalenessOf(undefined, '2026-08-31');
+
+    expect(s.stale).toBe(true);
+    expect(s.lastChecked).toBeNull();
+    expect(stalenessNotice(s, 'España')).toContain('No consta cuándo se comprobó');
+  });
+
+  it('treats an unreadable date as stale rather than as fresh', async () => {
+    // Failing open here would mean a file with `last_checked: "el martes"` never
+    // ageing, which is the one direction that must not happen silently.
+    const { stalenessOf } = await import('../src/index.js');
+    expect(stalenessOf('el martes', '2026-08-31').stale).toBe(true);
+  });
+
+  /** The shipped file, so the CI check and the interface cannot disagree. */
+  it('the shipped Spanish file is inside the window', async () => {
+    const { stalenessOf, parseEducationSystem } = await import('../src/index.js');
+    const { readFileSync } = await import('node:fs');
+    const { join, dirname } = await import('node:path');
+
+    const root = join(dirname(new URL(import.meta.url).pathname), '..', '..', '..', '..');
+    const system = parseEducationSystem(
+      readFileSync(join(root, 'instructions', 'education', 'es.md'), 'utf8'), 'es.md');
+    if (!system) throw new Error('instructions/education/es.md no longer parses');
+
+    const s = stalenessOf(system.lastChecked, new Date().toISOString().slice(0, 10));
+    expect(s.lastChecked, 'es.md must record last_checked').not.toBeNull();
+    expect(s.stale,
+      `es.md was last checked ${s.days} days ago — read the authority's pages and update it`)
+      .toBe(false);
+  });
+});
+
+/**
+ * The extension point, exercised rather than claimed (011 T020, SC-902).
+ *
+ * ## Why this is a fixture and not a second shipped file
+ *
+ * T020 said: «prove it by adding one — a second system file, enough to demonstrate
+ * SC-902, **and delete it again if it cannot be written honestly**.»
+ *
+ * It cannot. The corpus's own standard is that a file is false until a practising
+ * teacher disagrees with something concrete in it, and nobody here can write another
+ * country's stages, typical ages and curricular expectations to that standard. Shipping
+ * a plausible `pt.md` or `fr.md` would put a claim about somebody else's school system
+ * in front of a teacher, which is exactly the failure `es.md`'s own header warns about.
+ *
+ * So the extension point is proved **here**, against a fixture, and the honest
+ * statement is recorded: adding a real second system is a Markdown file and no code —
+ * and nobody has written one, because writing one honestly needs somebody who teaches
+ * in it.
+ */
+describe('a second education system is a Markdown file and no code', () => {
+  const SECOND = [
+    '---',
+    'id: zz',
+    'label: Sistema de prueba',
+    'last_checked: "2026-08-31"',
+    'reviewed_by_teacher: false',
+    'stages:',
+    '  - id: primero',
+    '    label: Primer ciclo',
+    '    years:',
+    '      - id: p1',
+    '        label: Año 1',
+    '        typical_age: 7',
+    '        can: >',
+    '          Una frase.',
+    '        studies: >',
+    '          Otra frase.',
+    '---',
+    '',
+    '# Sistema de prueba',
+    '',
+    'Fixture. No es un sistema real y no se distribuye.',
+    '',
+  ].join('\n');
+
+  it('loads beside the shipped one, without touching a line of code', async () => {
+    const { loadEducationSystems } = await import('../src/index.js');
+    const { readFileSync } = await import('node:fs');
+    const { join, dirname } = await import('node:path');
+
+    const root = join(dirname(new URL(import.meta.url).pathname), '..', '..', '..', '..');
+    const es = readFileSync(join(root, 'instructions', 'education', 'es.md'), 'utf8');
+
+    const systems = loadEducationSystems([
+      { path: 'es.md', raw: es },
+      { path: 'zz.md', raw: SECOND },
+    ]);
+
+    expect(systems).toHaveLength(2);
+    expect(systems.map((s) => s.id).sort()).toEqual(['es', 'zz']);
+  });
+
+  /** SC-902's actual content: no year id can be confused across systems. */
+  it('namespaces every year, so no lookup can return the wrong country\'s', async () => {
+    const { loadEducationSystems, findYear } = await import('../src/index.js');
+    const { readFileSync } = await import('node:fs');
+    const { join, dirname } = await import('node:path');
+
+    const root = join(dirname(new URL(import.meta.url).pathname), '..', '..', '..', '..');
+    const systems = loadEducationSystems([
+      { path: 'es.md', raw: readFileSync(join(root, 'instructions', 'education', 'es.md'), 'utf8') },
+      { path: 'zz.md', raw: SECOND },
+    ]);
+
+    const zz = systems.find((s) => s.id === 'zz')!;
+    const es = systems.find((s) => s.id === 'es')!;
+
+    expect(zz.stages[0]!.years[0]!.id).toBe('zz:p1');
+    // The Spanish system does not contain the fixture's year, and vice versa.
+    expect(findYear(es, 'zz:p1')).toBeNull();
+    expect(findYear(zz, 'es:primaria-5')).toBeNull();
+    // And a bare id matches nothing, which is what makes a profile portable.
+    expect(findYear(zz, 'p1')).toBeNull();
+  });
+
+  it('drops a duplicate id rather than letting file order decide', async () => {
+    const { loadEducationSystems } = await import('../src/index.js');
+    const systems = loadEducationSystems([
+      { path: 'a.md', raw: SECOND },
+      { path: 'b.md', raw: SECOND.replace('label: Sistema de prueba', 'label: Otro') },
+    ]);
+    expect(systems).toHaveLength(1);
+    expect(systems[0]!.label).toBe('Sistema de prueba');
+  });
+
+  /**
+   * The honest statement, asserted so it cannot quietly become false: **one** system
+   * ships. If a second real one is ever added, this fails and whoever added it has to
+   * confirm a teacher of that system has read it.
+   */
+  it('and exactly one real system ships, because nobody has written a second honestly', async () => {
+    const { readdirSync } = await import('node:fs');
+    const { join, dirname } = await import('node:path');
+
+    const root = join(dirname(new URL(import.meta.url).pathname), '..', '..', '..', '..');
+    const files = readdirSync(join(root, 'instructions', 'education'))
+      .filter((f) => f.endsWith('.md') && f !== 'README.md');
+
+    expect(files,
+      'a second system shipped — has a teacher of that system read it? See 011 T020')
+      .toEqual(['es.md']);
+  });
+});
