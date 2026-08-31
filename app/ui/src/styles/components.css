@@ -662,3 +662,54 @@ body { container: window / inline-size; }
 @container page (max-width: 34em) {
   .roster-filter { min-width: 100%; }
 }
+
+/* ═══ THE DOOR · spec 016 ════════════════════════════════════════════════════
+   Two choices as peers, and a list of children that is a list and not a grid.
+
+   `.door` and `.pick` are the same idea at two sizes: a target big enough to hit
+   without aiming, whose whole surface is the control. A radio with a label beside
+   it puts the target in a 24px circle and the meaning three centimetres away —
+   fine in a form, wrong for the choice a screen exists to make. */
+.door-choices { display: grid; grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr));
+  gap: var(--s4); }
+
+.door, .pick {
+  display: flex; flex-direction: column; gap: var(--s2); width: 100%;
+  text-align: left; padding: var(--s4) var(--s5);
+  background: var(--paper); color: var(--ink);
+  border: 2px solid var(--line); border-radius: var(--radius-panel);
+  cursor: pointer;
+  /* Named properties, never `all`: `transition: all` animates `outline-width`
+     from 0, so the focus ring fades in — found on `.check` and fixed there. */
+  transition: background-color var(--dur) var(--ease), border-color var(--dur) var(--ease);
+}
+.door:hover, .pick:hover { border-color: var(--accent); }
+.door:focus-visible, .pick:focus-visible {
+  outline: var(--focus-ring); outline-offset: 2px; }
+
+/* Chosen is a border and a tint, never colour alone: «no confíes sólo en el
+   color» is the same rule the axis strip follows. `aria-pressed` carries it for
+   a screen reader either way. */
+.door-on, .pick-on { border-color: var(--accent); background: var(--accent-soft); }
+.door-on::after, .pick-on::after { content: '✓'; position: absolute; }
+.door, .pick { position: relative; }
+.door-on::after, .pick-on::after {
+  top: var(--s3); right: var(--s4); color: var(--accent); font-weight: 700; }
+
+.door strong, .pick strong { font-size: var(--text-lg); }
+.door .small, .pick .small { color: var(--ink-soft); }
+
+/* The learner list. One column: two would invite scanning across children,
+   which is the reading a caseload must not support (Principle V). */
+.pick-list { display: flex; flex-direction: column; gap: var(--s3);
+  list-style: none; margin: 0; padding: 0; }
+.pick { padding: var(--s3) var(--s4); gap: 2px; }
+.pick strong { font-size: var(--text-base); }
+
+/* A plain list where the content is prose she reads, not data she scans. */
+.bullets { margin: 0; padding-left: var(--s5); display: flex; flex-direction: column;
+  gap: var(--s2); }
+
+@container page (max-width: 34em) {
+  .door-choices { grid-template-columns: 1fr; }
+}

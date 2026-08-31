@@ -2,6 +2,7 @@ import { test, expect, _electron as electron, type Page, type ElectronApplicatio
 import { mkdtemp, mkdir, readdir } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { RAIL_WORK, throughDoorToAdapt } from './door.js';
 
 /**
  * One worksheet, three learners (005 T018-T020).
@@ -60,7 +61,12 @@ test.describe('one worksheet, several learners', () => {
     const { app, page, vault } = await launch();
     await seedThree(page, vault);
 
-    await page.getByRole('button', { name: 'Adaptar material' }).click();
+    /*
+      Through the door since `016`: the rail opens it, and it asks learner → work →
+      material before either branch. The learner picked there is the first, not the
+      only one — the checkboxes below are still where she adds the rest (FR-1411).
+    */
+    await throughDoorToAdapt(page);
     const boxes = page.locator('.fieldset-bare input[type="checkbox"]');
     await expect(boxes).toHaveCount(3);
 
@@ -83,10 +89,7 @@ test.describe('one worksheet, several learners', () => {
   test('adding a learner does not disturb what she already typed', async () => {
     const { app, page, vault } = await launch();
     await seedThree(page, vault);
-    await page.getByRole('button', { name: 'Adaptar material' }).click();
-
-    // Since 012 the primary control also needs a kind, chosen and never defaulted.
-    await page.getByRole('radio', { name: /Una ficha/ }).check();
+    await throughDoorToAdapt(page);
 
     const paste = page.locator('#text');
     await paste.fill('Un enunciado que ya había escrito antes de acordarme de Mateo.');
@@ -112,7 +115,7 @@ test.describe('one worksheet, several learners', () => {
     await seedThree(page, vault);
 
     const forbidden = /firmar (todo|todas|las tres|los tres)|firmar en bloque|sign all/i;
-    for (const screen of ['Adaptar material', 'Mis alumnos', 'Mis notas', 'Acerca de']) {
+    for (const screen of [RAIL_WORK, 'Mis alumnos', 'Mis notas', 'Acerca de']) {
       await page.getByRole('button', { name: screen }).click();
       await page.waitForTimeout(150);
       const labels = await page.evaluate(() =>

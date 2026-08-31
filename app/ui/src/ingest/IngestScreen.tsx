@@ -91,8 +91,13 @@ export function IngestScreen({ onIngested, onResume }: {
 
   const needsWarning = warned === false && paths.some((p) => /\.(jpe?g|png|heic|heif|pdf)$/i.test(p));
 
+  /*
+   * «Adaptar material» was this screen's title too, and FR-1402 covers it: the
+   * interface must stop using one word for several things. This screen is about
+   * one thing — getting the material in — so it says that.
+   */
   return (
-    <Page title="Adaptar material"
+    <Page title="Traer el material"
           lede="Trae la ficha como la tengas. Si está en la plataforma de la editorial y no se puede descargar, hazle una foto: es lo normal, no el plan B.">
 
       {/*

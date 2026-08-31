@@ -100,6 +100,16 @@ export function registerAdaptIpc(getWindow: () => BrowserWindow | null): void {
     const raw = (await vault.readRaw(path)) ?? '';
     const doc = parseIR(raw);
     const source = String(doc.frontMatter['source'] ?? '');
+    /*
+     * Composed material has no reading to confirm (`002` T013), so this gate does
+     * not apply to it — and saying «viene de un fichero» about a sheet Rampa wrote
+     * would send her looking for a file that never existed.
+     */
+    if (source === 'composed' || source === 'generated') {
+      throw new RampaError('ir-unverified',
+        'Esto lo he generado yo: no hay una lectura que confirmar. Lo que hay que '
+        + 'revisar es el contenido, y eso va después.');
+    }
     if (source && source !== 'pegado' && source !== 'pasted') {
       throw new RampaError('ir-unverified',
         'Este material viene de un fichero, así que hay que confirmarlo página a página.');

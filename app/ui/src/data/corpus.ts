@@ -20,9 +20,17 @@ export function useServices(): Loadable<Service[]> {
 }
 
 /** What the material can be (012). She picks one; nothing is preselected. */
-export function useMaterialKinds(): Loadable<Array<{ id: string; label: string }>> {
+/**
+ * The material kinds (`012`), with the sentence she reads before starting.
+ *
+ * `before` is optional because a corpus edit may not have written one yet, and a
+ * kind without one says nothing rather than having a promise invented for it.
+ */
+export interface MaterialKindChoice { id: string; label: string; before?: string }
+
+export function useMaterialKinds(): Loadable<MaterialKindChoice[]> {
   return useAsync(() =>
-    window.rampa.corpus.materialKinds() as Promise<Array<{ id: string; label: string }>>, []);
+    window.rampa.corpus.materialKinds() as Promise<MaterialKindChoice[]>, []);
 }
 
 export function useEducationSystems(): Loadable<unknown[]> {

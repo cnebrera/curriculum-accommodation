@@ -25,7 +25,21 @@ export type RecordSource =
 export interface RecordDocuments {
   /** What Rampa read: `material/<job>/ir.md`. */
   ir: string;
-  adapted: string;
+  /**
+   * The learner's sheet — **absent while a composed job is still unadapted**
+   * (`016` T006).
+   *
+   * It was required until composing existed, because every job arrived by being
+   * ingested and only became a learner's when it was adapted. A composed job is
+   * hers from the moment it is written: she asked for it for this child, and the
+   * `ir.md` records `composed_for`. If it appeared in no record until it had been
+   * adapted, she would compose, be interrupted, and find nothing — which is the
+   * opposite of «todo lo que se genere se queda ligado al alumno».
+   */
+  adapted?: string;
+  /** The answer key and the composition report, for a composed job (`002`). */
+  answers?: string;
+  composeReport?: string;
   report?: string;
   /** Superseded versions, oldest first (001). */
   revisions: string[];
@@ -49,6 +63,14 @@ export interface RecordEntry {
   signedOff: boolean;
   /** 1 for the original; higher when she has corrected it (001). */
   revision: number;
+  /**
+   * Composed and not yet adapted (`016` T006).
+   *
+   * A state, not a fault. She has a sheet; nobody has presented it for this
+   * learner yet, and the record says which of the two it is rather than showing a
+   * row that looks finished.
+   */
+  pending?: boolean;
   source: RecordSource;
   documents: RecordDocuments;
   /**

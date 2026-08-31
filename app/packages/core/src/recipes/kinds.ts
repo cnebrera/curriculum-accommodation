@@ -20,6 +20,18 @@ export interface MaterialKind {
   label: string;
   /** Machine-readable, for the report: which of the prohibitions govern. */
   forbids: string[];
+  /**
+   * What she is told **before** it runs (`016` FR-1405).
+   *
+   * `rule` is for the model and `forbids` is for the report; this is the one of
+   * the three she reads while deciding whether to spend. In the corpus rather than
+   * in the interface for the same reason as `rule`: it is a promise about what will
+   * and will not be touched, and that is judgement (Principle I).
+   *
+   * Optional, so a corpus written before this field still loads — and a kind
+   * without one simply says nothing rather than having a sentence invented for it.
+   */
+  before?: string;
   /** Sent to the model verbatim, alongside the hard rules, which outrank it. */
   rule: string;
 }
@@ -65,7 +77,13 @@ export function parseMaterialKinds(raw: string, path = 'material-kinds.md'): Mat
       continue;
     }
     seen.add(id);
-    out.push({ id, label, forbids: list(e['forbids']), rule });
+    const before = str(e['before']);
+    out.push({
+      id, label, forbids: list(e['forbids']), rule,
+      // Absent is silence, not a default sentence: an invented promise about what
+      // will not be touched is worse than none.
+      ...(before ? { before } : {}),
+    });
   }
 
   if (out.length === 0) logger.error('kinds.empty', { path, entriesFound: entries.length });

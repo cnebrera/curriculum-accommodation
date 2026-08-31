@@ -8,7 +8,7 @@ import type { PartialStrings } from './types.js';
  * in Spanish, which is the honest failure mode.
  */
 export const en: PartialStrings = {
-  nav: { learners: 'My learners', adapt: 'Adapt a worksheet', notes: 'My notes', about: 'About' },
+  nav: { learners: 'My learners', work: 'Prepare material', notes: 'My notes', about: 'About' },
   onboarding: {
     welcome: "Let's get you set up",
     intro: 'Three steps. You can close this and carry on tomorrow: nothing is lost.',

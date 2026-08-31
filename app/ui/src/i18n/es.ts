@@ -11,7 +11,13 @@ export const es = {
   // 012 FR-1011. It used to say «Adaptar una ficha» here and on four more
   // screens, so a teacher who reads it everywhere concludes the application does
   // not do exams — which was true of the interface and never of the pipeline.
-  nav: { learners: 'Mis alumnos', adapt: 'Adaptar material', notes: 'Mis notas',
+  /*
+   * `work` replaced `adapt` (016 FR-1402). «Adaptar material» named one of the two
+   * things this application does, on the control that leads to both — and `012`
+   * FR-1011 forbids exactly that: the interface must stop using one word for
+   * several things.
+   */
+  nav: { learners: 'Mis alumnos', work: 'Preparar material', notes: 'Mis notas',
          connection: 'Mi servicio de IA', about: 'Acerca de' },
 
   onboarding: {

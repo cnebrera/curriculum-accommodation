@@ -93,6 +93,15 @@ const api = {
     create: (id: string, text: string, kind: string, lang?: string) =>
       invoke('job:create', id, text, kind, lang),
     verify: (id: string) => invoke('job:verify', id),
+    /**
+     * Compose from objectives (`002`, reachable since `016`).
+     *
+     * It writes the sheet and stops. Adapting it is `adapt` below, with the same
+     * job id — one composition, N presentations, and a decision point in between
+     * where she reads what nothing could check.
+     */
+    compose: (id: string, request: unknown) => invoke('job:compose', id, request),
+    composeDocs: (id: string) => invoke('job:composeDocs', id),
     /** One learner or several — 005 FR-501. */
     adapt: (id: string, learners: string | string[]) => invoke('job:adapt', id, learners),
     /** Re-run with what she just corrected, on this worksheet, now. */

@@ -36,7 +36,12 @@ function human(iso: string): string {
   return d && m && y ? `${d}/${m}/${y}` : (iso || 'sin fecha');
 }
 
-function Entry({ entry, onOpen }: { entry: RecordEntry; onOpen: (path: string) => void }) {
+function Entry({ entry, onOpen, onReuse }: {
+  entry: RecordEntry;
+  onOpen: (path: string) => void;
+  /** «Hazlo otra vez para otro alumno» (016 T018, FR-1409). */
+  onReuse?: (jobId: string, kind: string) => void;
+}) {
   const gone = (path: string): boolean => entry.missing.includes(path);
   /* Pulled out of the JSX because a closure loses the narrowing on a
      discriminated union, and `!` inside a handler is how a real null gets in. */
@@ -50,7 +55,15 @@ function Entry({ entry, onOpen }: { entry: RecordEntry; onOpen: (path: string) =
           {/* Text, never markup — see the note above. */}
           {entry.subject ? <span className="small">{entry.subject}</span> : null}
         </span>
-        <Badge>{entry.signedOff ? 'Firmada' : 'Sin firmar'}</Badge>
+        {/*
+          A composed job she has not adapted yet is not «sin firmar» — there is
+          nothing to sign. Three states, said in three ways, rather than a binary
+          that files one of them under the wrong word.
+        */}
+        <Badge>
+          {entry.pending ? 'Pendiente de adaptar'
+            : entry.signedOff ? 'Firmada' : 'Sin firmar'}
+        </Badge>
       </div>
 
       {entry.revision > 1 ? (
@@ -61,10 +74,19 @@ function Entry({ entry, onOpen }: { entry: RecordEntry; onOpen: (path: string) =
       ) : null}
 
       <div className="row gap2" style={{ flexWrap: 'wrap' }}>
-        <button className="btn btn-sm" disabled={gone(entry.documents.adapted)}
-                onClick={() => onOpen(entry.documents.adapted)}>
-          Lo adaptado
-        </button>
+        {entry.documents.adapted ? (
+          <button className="btn btn-sm" disabled={gone(entry.documents.adapted)}
+                  onClick={() => onOpen(entry.documents.adapted!)}>
+            Lo adaptado
+          </button>
+        ) : null}
+
+        {/* The key, for a composed job. Hers, and never on his sheet (`002` T014). */}
+        {entry.documents.answers ? (
+          <button className="btn btn-sm" onClick={() => onOpen(entry.documents.answers!)}>
+            Las soluciones
+          </button>
+        ) : null}
 
         {/*
           What she gave it, which is not always a file. A pasted job has no
@@ -86,6 +108,25 @@ function Entry({ entry, onOpen }: { entry: RecordEntry; onOpen: (path: string) =
         {entry.documents.report ? (
           <button className="btn btn-sm" onClick={() => onOpen(entry.documents.report!)}>
             El informe
+          </button>
+        ) : null}
+
+        {entry.documents.composeReport ? (
+          <button className="btn btn-sm" onClick={() => onOpen(entry.documents.composeReport!)}>
+            Cómo lo generé
+          </button>
+        ) : null}
+
+        {/*
+          T018 · «adaptar el examen del año pasado para el niño de este año» is a
+          real task, and this is the whole of it. The extraction is reused — no
+          provider call for the reading (FR-1409, SC-1405), which is also why it is
+          a button here rather than a re-upload there.
+        */}
+        {onReuse && !gone(entry.documents.ir) ? (
+          <button className="btn btn-sm"
+                  onClick={() => onReuse(entry.jobId, entry.kind)}>
+            Hacerlo otra vez para otro alumno
           </button>
         ) : null}
       </div>
@@ -111,10 +152,18 @@ function Entry({ entry, onOpen }: { entry: RecordEntry; onOpen: (path: string) =
   );
 }
 
-export function RecordScreen({ code, name, onBack }: {
+export function RecordScreen({ code, name, onBack, onReuse }: {
   code: string;
   name?: string;
   onBack: () => void;
+  /**
+   * Reuse this job for somebody else (T018).
+   *
+   * Optional so the screen still works where nothing can route out of it — which
+   * is the case inside the handover flow, and would otherwise mean a button that
+   * does nothing.
+   */
+  onReuse?: (jobId: string, kind: string) => void;
 }) {
   const record = useRecord(code);
   const open = useOpenInVault();
@@ -144,7 +193,8 @@ export function RecordScreen({ code, name, onBack }: {
                 <Section key={year || 'sin'} title={year || 'Sin curso escolar'}>
                   {entries.filter((e) => e.schoolYear === year).map((e) => (
                     <Entry key={`${e.jobId}-${e.learner}`} entry={e}
-                           onOpen={(path) => void open.run(path)} />
+                           onOpen={(path) => void open.run(path)}
+                           {...(onReuse ? { onReuse } : {})} />
                   ))}
                 </Section>
               ))}

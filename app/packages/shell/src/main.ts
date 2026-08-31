@@ -8,6 +8,7 @@ import { registerCostIpc } from './ipc/cost.js';
 import { registerMemoryIpc } from './ipc/memory.js';
 import { registerRecordIpc } from './ipc/record.js';
 import { registerAdaptIpc } from './ipc/adapt.js';
+import { registerComposeIpc } from './ipc/compose.js';
 import { registerIngestIpc } from './ipc/ingest.js';
 import { registerPrintIpc } from './ipc/print.js';
 import { registerSignoffIpc } from './ipc/signoff.js';
@@ -124,6 +125,7 @@ else {
     registerMemoryIpc();
     registerRecordIpc();
     registerAdaptIpc(getWindow);
+    registerComposeIpc(getWindow);
   registerIngestIpc(getWindow);
     registerPrintIpc();
     registerSignoffIpc();

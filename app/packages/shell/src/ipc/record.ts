@@ -48,8 +48,13 @@ export function registerRecordIpc(): void {
       const fields = [e.subject ?? '', ...(e.objectives ?? []), e.kind, e.jobId].join(' ').toLowerCase();
       if (fields.includes(needle)) return e;
 
-      // The material's own text, read only when the cheap fields miss.
-      const raw = (await vault.readRaw(e.documents.adapted)) ?? '';
+      /*
+       * The material's own text, read only when the cheap fields miss. For a
+       * composed job not yet adapted there is no sheet, so the searchable text is
+       * the composed `ir.md` — which is what «esto lo hice el año pasado» is
+       * actually looking for.
+       */
+      const raw = (await vault.readRaw(e.documents.adapted ?? e.documents.ir)) ?? '';
       return raw.toLowerCase().includes(needle) ? e : null;
     }));
 

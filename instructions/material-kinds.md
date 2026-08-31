@@ -14,6 +14,9 @@ reviewed_by_teacher: false
 kinds:
   - id: worksheet
     label: Una ficha o unos ejercicios
+    before: >
+      Voy a cambiar cómo se ve y cuánto hay por página. Lo que se pide y la
+      numeración se quedan igual.
     forbids: [curricular-demand, numbering]
     rule: >
       Es material de trabajo de clase. Puedes cambiar la presentación, la
@@ -23,6 +26,9 @@ kinds:
 
   - id: exam
     label: Un examen o una prueba
+    before: >
+      Es un examen: voy a cambiar cómo se lee y cómo contesta, y nada de lo que
+      se pregunta. Si sale más fácil, es otro examen.
     forbids: [question-demand, item-count, curricular-demand, numbering]
     rule: >
       Es una prueba de evaluación. Cambia SÓLO la vía de acceso y la vía de
@@ -34,6 +40,9 @@ kinds:
 
   - id: study
     label: Apuntes o un texto para estudiar
+    before: >
+      Son apuntes para estudiar solo: puedo cambiarlo todo salvo lo que dice. No
+      voy a resumir ni a dejar fuera ningún apartado.
     forbids: [content, coverage]
     rule: >
       Es el material con el que va a estudiar solo, probablemente en casa y sin
@@ -44,6 +53,9 @@ kinds:
 
   - id: problems
     label: Una hoja de problemas
+    before: >
+      Son problemas: voy a cambiar el enunciado y el formato. Las cantidades y
+      las operaciones que practica se quedan igual.
     forbids: [quantities, operations, curricular-demand, numbering]
     rule: >
       Son problemas que practican una operación concreta. Puedes cambiar el
@@ -66,6 +78,16 @@ línea de código.
 
 Ver [`specs/012-que-material-examen/contracts/material-kinds.md`](../specs/012-que-material-examen/contracts/material-kinds.md)
 para lo que promete quien añade uno.
+
+## `before:` — lo que se le dice antes de empezar
+
+`rule` es para el modelo; `before` es para ella, **antes** de pulsar el botón
+(`016` FR-1405). El informe ya dice después bajo qué regla se hizo (`012`
+FR-1006), y eso es lo que lee al firmar. Esto es lo que lee al decidir si gasta.
+
+Está aquí y no en la interfaz por la misma razón que `rule`: es una promesa sobre
+lo que se va a tocar y lo que no, y eso es juicio. Un tipo nuevo trae su frase sin
+que cambie ni una línea de código.
 
 ## Cómo se usa
 

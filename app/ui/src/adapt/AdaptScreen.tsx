@@ -6,6 +6,7 @@ import { useNameCheck, useSetName } from '../data/names.js';
 import { useNewLearnerCode } from '../data/learners.js';
 import { useCostEstimate } from '../data/cost.js';
 import { useCreateJob, useVerifyJob, useAdapt, useJobProgress, type BatchOutcome } from '../data/jobs.js';
+import { useBlocksCommand } from '../data/ingest.js';
 import { Callout } from '../components/Callout.js';
 import { Page, Section, Field, Actions } from '../shell/Page.js';
 import { ReportView, type Decision } from '../review/ReportView.js';
@@ -32,7 +33,9 @@ const stageIndex = (s?: string): number => {
 
 interface JobNotice { block: string | null; notice: { kind: string; quote: string; message: string } }
 
-export function AdaptScreen({ onReview, onChooseFile, presetJobId }: {
+export function AdaptScreen({
+  onReview, onChooseFile, presetJobId, presetLearners, presetKind,
+}: {
   onReview: (jobId: string, learner: string, recipes: string[]) => void;
   /**
    * The other door (008). Pasting text is now the minority case: the worksheet
@@ -40,8 +43,22 @@ export function AdaptScreen({ onReview, onChooseFile, presetJobId }: {
    * photograph — and a gate over text she typed herself checks nothing.
    */
   onChooseFile?: () => void;
-  /** A job whose extraction she has already verified. Skips the paste and the gate. */
+  /**
+   * A job whose extraction she has already verified — from `008`'s ingest, or a
+   * composed sheet (`002`), or a reuse from the record (`016` T018). Skips the
+   * paste box: the material is in the vault, not in this component.
+   */
   presetJobId?: string;
+  /**
+   * Answers the door already has (`016`, contracts/door.md rule 1).
+   *
+   * **No screen re-asks what the intent already holds.** That is the failure every
+   * wizard has: she answers «para quién» on the door and is asked again here, and
+   * concludes the first answer did not register. So when these arrive, the two
+   * questions are not rendered — she can still change them from the door.
+   */
+  presetLearners?: readonly string[];
+  presetKind?: string;
 }) {
   const { t: es } = useStrings();
   /*
@@ -59,7 +76,7 @@ export function AdaptScreen({ onReview, onChooseFile, presetJobId }: {
    * second learner must not feel like a correction to a flow that started with
    * one, which is a statement about this select and nothing else.
    */
-  const [learners, setLearners] = useState<string[]>([]);
+  const [learners, setLearners] = useState<string[]>([...(presetLearners ?? [])]);
   const learner = learners[0] ?? '';
   const [text, setText] = useState('');
   /**
@@ -70,7 +87,7 @@ export function AdaptScreen({ onReview, onChooseFile, presetJobId }: {
    * worksheet before the model saw it — silently, and the hard rule about
    * preserving the criterion had nothing telling it which documents it governed.
    */
-  const [kind, setKind] = useState<string | null>(null);
+  const [kind, setKind] = useState<string | null>(presetKind ?? null);
   const kinds = useMaterialKinds();
   const [stage, setStage] = useState<Stage>('compose');
   const [jobId, setJobId] = useState('');
@@ -108,6 +125,33 @@ export function AdaptScreen({ onReview, onChooseFile, presetJobId }: {
     (choices.state === 'ready' ? choices.value.find((c) => c.code === code)?.name : undefined) ?? code;
 
   useJobProgress(setProgress);
+  const blocksFor = useBlocksCommand();
+
+  /**
+   * A job that already exists, brought in from somewhere else.
+   *
+   * **This was a live defect until 016 T018.** `presetJobId` was declared, typed
+   * and passed in by `App.tsx` after every ingest — and never read. So a teacher
+   * who photographed a worksheet, waited for the extraction and confirmed every
+   * page landed on this screen with an empty paste box and no job: the whole
+   * photograph path could not reach an adaptation. The seventh instance in this
+   * project of a field written, typed and read by nothing.
+   *
+   * The text is read back from the vault rather than carried in state, because for
+   * a composed sheet or a reused job there is no state to carry it in — and
+   * `006`'s premise is that the vault is the truth.
+   */
+  useEffect(() => {
+    if (!presetJobId) return;
+    setJobId(presetJobId);
+    setStage('verify');
+    void blocksFor.run(presetJobId).then((blocks) => {
+      if (!blocks) return;
+      setText((blocks as Array<{ content: string }>).map((b) => b.content).join('\n\n'));
+    });
+    // `blocksFor` is a stable command; including it would re-read on every render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [presetJobId]);
 
   // The first learner is selected once the roster arrives, and only if she has
   // not already picked someone.
@@ -150,7 +194,20 @@ export function AdaptScreen({ onReview, onChooseFile, presetJobId }: {
     setCostGate(null);
     setStage('working');
 
-    if (await verifyJob.run(jobId) === undefined) { setStage('verify'); return; }
+    /*
+     * The gate applies to **text she pasted**, and only to that.
+     *
+     * An ingested job was confirmed page by page on `008`'s verification screen,
+     * and a composed one has no reading to confirm (`002` T013). Calling
+     * `job:verify` for either throws — which is the second half of the
+     * `presetJobId` defect: even once the job id arrived, the flow bounced back
+     * here with «hay que confirmarlo página a página» about a page she had already
+     * confirmed.
+     */
+    if (!presetJobId && await verifyJob.run(jobId) === undefined) {
+      setStage('verify');
+      return;
+    }
     const r = await adapt.run(jobId, who);
     if (!r) { setStage('verify'); return; }
 
@@ -186,7 +243,8 @@ export function AdaptScreen({ onReview, onChooseFile, presetJobId }: {
               A real fieldset so the question and its answers are one group to a
               screen reader rather than N unrelated checkboxes.
             */}
-            <fieldset className="fieldset-bare">
+            <fieldset className="fieldset-bare"
+                      hidden={presetLearners !== undefined && presetLearners.length > 0}>
               {/* h2, not h3: this fieldset is the section's own heading and the
                   page title above it is the h1. `ConnectionScreen`'s fieldsets
                   use h3 because a Section h2 precedes them — copying the markup
@@ -210,7 +268,13 @@ export function AdaptScreen({ onReview, onChooseFile, presetJobId }: {
             </fieldset>
           </Section>
 
-          <fieldset className="fieldset-bare">
+          {/*
+            Hidden rather than removed when the door already asked (`016`).
+            `hidden` keeps one markup path: a second branch rendering a different
+            tree is where the two copies start to drift, and this screen has
+            already been that.
+          */}
+          <fieldset className="fieldset-bare" hidden={presetKind !== undefined}>
             <legend><h2>¿Qué es?</h2></legend>
             {kinds.state === 'ready' ? kinds.value.map((k) => (
               <label key={k.id} className="check" htmlFor={`kind-${k.id}`}>

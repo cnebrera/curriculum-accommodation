@@ -85,6 +85,7 @@ describe('inside packages/shell, the surface is small and named', () => {
     'packages/shell/src/corpus/bundle.ts',   // app.isPackaged / getAppPath — where the bundle is
     'packages/shell/src/corpus/links.ts',    // shell.openExternal, app.getVersion — the outbound surface
     'packages/shell/src/ipc/adapt.ts',       // BrowserWindow, for the progress send
+    'packages/shell/src/ipc/compose.ts',     // BrowserWindow, for the progress send (016 T003)
     'packages/shell/src/ipc/diagnostics.ts', // app.getPath, shell.showItemInFolder
     'packages/shell/src/ipc/ingest.ts',      // dialog.showOpenDialog, app.getPath, progress
     'packages/shell/src/ipc/keys.ts',        // safeStorage — the encrypted key store
@@ -136,8 +137,18 @@ describe('inside packages/shell, the surface is small and named', () => {
     const files = await electronImporters(join('packages', 'shell'));
     let lines = 0;
     for (const f of files) lines += (await readFile(join(appRoot, f), 'utf8')).split('\n').length;
-    // Recorded 2026-08-30 at 1,010 lines across 12 files, of a ~2,000-line shell
-    // package and a ~15,000-line application.
-    expect(lines).toBeLessThan(1400);
+    /*
+     * Recorded 2026-08-30 at 1,010 lines across 12 files, of a ~2,000-line shell
+     * package and a ~15,000-line application. **Raised once**, on 2026-08-31, when
+     * `016` added `ipc/compose.ts` — and this test doing its job is what made that
+     * a decision rather than a drift.
+     *
+     * It was worth it: the alternative was putting the compose channels into
+     * `ipc/adapt.ts`, and one file owning the wiring for two different jobs is the
+     * fusion `013` T019 split apart. Growing by one small file of pure wiring is
+     * the shape of growth this bound is meant to permit; growing because
+     * orchestration crept back in is the shape it is meant to catch.
+     */
+    expect(lines).toBeLessThan(1500);
   });
 });

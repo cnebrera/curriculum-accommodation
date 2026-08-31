@@ -2,6 +2,7 @@ import { test, expect, _electron as electron, type Page, type ElectronApplicatio
 import { mkdtemp, mkdir } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { RAIL_WORK, throughDoorToAdapt } from './door.js';
 
 /**
  * Layout, on the screen she actually has (spec 010 T017/T030, SC-802/SC-804).
@@ -131,7 +132,7 @@ async function checkLayout(page: Page, where: string): Promise<void> {
   expect(await overlappingControls(page), `${where}: overlapping controls`).toEqual([]);
 }
 
-const SCREENS = ['Adaptar material', 'Mis alumnos', 'Mis notas', 'Mi servicio de IA', 'Acerca de'];
+const SCREENS = [RAIL_WORK, 'Mis alumnos', 'Mis notas', 'Mi servicio de IA', 'Acerca de'];
 
 test.describe('layout at 1366×768', () => {
   test('onboarding fits', async () => {
@@ -210,7 +211,7 @@ test.describe('layout at 1366×768', () => {
     await page.reload();
     await page.waitForLoadState('domcontentloaded');
 
-    await page.getByRole('button', { name: 'Adaptar material' }).click();
+    await throughDoorToAdapt(page);
     await page.getByRole('button', { name: /Traer una foto/ }).click();
     await checkLayout(page, 'ingest');
 

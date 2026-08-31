@@ -1,7 +1,9 @@
 import { parseIR } from '../ir/parse.js';
 import { isSignedOff } from '../ir/types.js';
-import { VAULT, jobDir, jobIR, jobSourceDir, jobLearnerDir, jobAdapted, jobReport, outputDir }
-  from '../vault/paths.js';
+import {
+  VAULT, jobDir, jobIR, jobSourceDir, jobLearnerDir, jobAdapted, jobReport, outputDir,
+  jobAnswers, jobComposeReport,
+} from '../vault/paths.js';
 import type { Vault } from '../vault/io.js';
 import { schoolYearOf, type RecordEntry, type RecordSource } from './entry.js';
 
@@ -61,14 +63,26 @@ const allJobs = (vault: Vault): Promise<string[]> => vault.list(VAULT.material);
 export async function entryFor(vault: Vault, jobId: string, learner: string): Promise<RecordEntry | null> {
   const adaptedPath = jobAdapted(jobId, learner);
   const adaptedRaw = await vault.readRaw(adaptedPath);
-  if (adaptedRaw === null) return null;
-
-  const adapted = parseIR(adaptedRaw);
-  const fm = adapted.frontMatter;
 
   const irPath = jobIR(jobId);
   const irRaw = await vault.readRaw(irPath);
   const irFm = irRaw ? parseIR(irRaw).frontMatter : {};
+
+  /*
+   * A composed job is hers before it is adapted (`016` T006).
+   *
+   * Until composing existed, a job became a learner's only by being adapted for
+   * her — every job arrived by being ingested and belonged to nobody until then.
+   * A composed job is different: she asked for it for this child, and `ir.md`
+   * records `composed_for`. Without this branch she would compose, be
+   * interrupted, and find nothing in the record — the opposite of «todo lo que se
+   * genere se queda ligado al alumno».
+   */
+  const composedForThisLearner = str(irFm['composed_for']) === learner;
+  if (adaptedRaw === null && !composedForThisLearner) return null;
+
+  const adapted = adaptedRaw !== null ? parseIR(adaptedRaw) : null;
+  const fm = adapted?.frontMatter ?? irFm;
 
   const sourceFiles = (await vault.list(jobSourceDir(jobId)))
     .map((f) => `${jobSourceDir(jobId)}/${f}`);
@@ -85,10 +99,17 @@ export async function entryFor(vault: Vault, jobId: string, learner: string): Pr
   const reportPath = jobReport(jobId, learner);
   const hasReport = await vault.exists(reportPath);
 
+  const hasAnswers = await vault.exists(jobAnswers(jobId));
+  const hasComposeReport = await vault.exists(jobComposeReport(jobId));
+
   const documents = {
     ir: irPath,
-    adapted: adaptedPath,
+    ...(adaptedRaw !== null ? { adapted: adaptedPath } : {}),
     ...(hasReport ? { report: reportPath } : {}),
+    // The key and the composition report belong to the job, not to a learner:
+    // one composition, N presentations (Principle IV).
+    ...(hasAnswers ? { answers: jobAnswers(jobId) } : {}),
+    ...(hasComposeReport ? { composeReport: jobComposeReport(jobId) } : {}),
     revisions,
     rendered,
   };
@@ -111,7 +132,11 @@ export async function entryFor(vault: Vault, jobId: string, learner: string): Pr
    * A document written before that stamp existed falls back to the file's own
    * modification time, so FR-1204 holds for vaults that predate this feature.
    */
-  const date = str(fm['adapted_on']) ?? (await vault.modifiedAt(adaptedPath)) ?? '';
+  const date = str(fm['adapted_on'])
+    // A composed job stamps `composed_on`; an adapted one stamps `adapted_on`.
+    ?? str(irFm['composed_on'])
+    ?? (await vault.modifiedAt(adaptedRaw !== null ? adaptedPath : irPath))
+    ?? '';
 
   return {
     jobId,
@@ -120,7 +145,10 @@ export async function entryFor(vault: Vault, jobId: string, learner: string): Pr
     schoolYear: str(fm['school_year']) ?? schoolYearOf(date),
     kind: str(fm['kind']) ?? 'material',
     ...(str(fm['subject']) ? { subject: str(fm['subject'])! } : {}),
-    signedOff: isSignedOff(adapted),
+    // No sheet, no signature. `isSignedOff` over the IR would read a flag from a
+    // document nobody signs.
+    signedOff: adapted !== null && isSignedOff(adapted),
+    ...(adaptedRaw === null ? { pending: true } : {}),
     revision: revisions.length + 1,
     source: sourceOf(irFm, sourceFiles),
     documents,
@@ -131,8 +159,9 @@ export async function entryFor(vault: Vault, jobId: string, learner: string): Pr
 /**
  * Everything ever made for one learner, newest first.
  *
- * A job that was ingested and never adapted for anybody appears in **no**
- * record: it belongs to nobody yet (FR / US1-4).
+ * A job that was **ingested** and never adapted for anybody appears in no record:
+ * it belongs to nobody yet. A job that was **composed** for her does appear, marked
+ * `pending`, because it was hers from the moment she asked for it (`016` T006).
  */
 export async function recordFor(vault: Vault, learner: string): Promise<RecordEntry[]> {
   const entries: RecordEntry[] = [];

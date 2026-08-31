@@ -67,8 +67,18 @@ export function renderRecord(learner: string, entries: readonly RecordEntry[]): 
 
     const what = KIND[e.kind] ?? 'Material';
     lines.push(`### ${human(e.date)} · ${what}${e.subject ? ` · ${e.subject}` : ''}`, '');
-    lines.push(`- [Lo adaptado](${up(e.documents.adapted)})`
-      + (e.signedOff ? ' — firmado' : ' — **sin firmar**'));
+    /*
+     * A composed job she has not adapted yet has no sheet to link (`016` T006).
+     * Saying so is the point: «pendiente de adaptar» is a next step, where a link
+     * to a file that is not there is a fault she will try to debug.
+     */
+    if (e.documents.adapted) {
+      lines.push(`- [Lo adaptado](${up(e.documents.adapted)})`
+        + (e.signedOff ? ' — firmado' : ' — **sin firmar**'));
+    } else {
+      lines.push('- **Pendiente de adaptar** — el material está hecho, todavía no lo he'
+        + ' preparado para él.');
+    }
 
     // What she gave it, which is not always a file (see `entry.ts`).
     if (e.source.of === 'file') {

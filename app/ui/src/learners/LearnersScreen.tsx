@@ -47,7 +47,14 @@ function LearnerCard({ row, onOpen }: { row: LearnerRow; onOpen: (code: string) 
   );
 }
 
-export function LearnersScreen() {
+export function LearnersScreen({ onReuse }: {
+  /**
+   * «Hazlo otra vez para otro alumno», from a row of a learner's record
+   * (`016` T018). Threaded through rather than handled here: the routing belongs
+   * to whoever owns the views, and this screen owns learners.
+   */
+  onReuse?: (jobId: string, kind: string) => void;
+} = {}) {
   const { t: es } = useStrings();
   /*
    * One hook, and the join lives in it (013 FR-1107). This screen used to list
@@ -114,7 +121,10 @@ export function LearnersScreen() {
 
   if (viewing) {
     const who = learners.find((l) => l.code === viewing);
-    return <RecordScreen code={viewing} name={who?.name} onBack={() => setViewing(null)} />;
+    return (
+      <RecordScreen code={viewing} name={who?.name} onBack={() => setViewing(null)}
+                    {...(onReuse ? { onReuse } : {})} />
+    );
   }
 
   if (handing) {

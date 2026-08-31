@@ -17,9 +17,17 @@ export interface RecordEntry {
   objectives?: string[];
   signedOff: boolean;
   revision: number;
+  /** Composed and not yet adapted for this learner (`016` T006). */
+  pending?: boolean;
   source: RecordSource;
   documents: {
-    ir: string; adapted: string; report?: string;
+    ir: string;
+    /** Absent while a composed job is still unadapted. */
+    adapted?: string;
+    report?: string;
+    /** A composed job's own two documents (`002`). */
+    answers?: string;
+    composeReport?: string;
     revisions: string[]; rendered: string[];
   };
   missing: string[];
