@@ -66,6 +66,19 @@ export const profileSchema = z.object({
   age_recorded: yamlDate.optional(),
   year: z.string().optional(),
   stage: z.string().optional(),
+  /**
+   * Her school (015 FR-1305).
+   *
+   * Optional, because a teacher in one school never needs it, and free text
+   * because a taxonomy of Spanish schools is a project of its own that would be
+   * wrong the week it shipped. Itinerant PTs and orientadores work across
+   * centres, which is why this is on the learner rather than on the teacher.
+   *
+   * **It joins the never-sent set beside the name** (FR-1306). It is not needed
+   * for any adaptation, and a school plus a course plus a set of barriers
+   * identifies a child far more sharply than a code does.
+   */
+  school: z.string().optional(),
 });
 export type Profile = z.infer<typeof profileSchema> & {
   _unparsed?: Record<string, unknown>;

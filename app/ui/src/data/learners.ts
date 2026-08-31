@@ -8,6 +8,11 @@ export interface LearnerRow {
   axes: Record<string, number>;
   works: number;
   avoid: number;
+  /** For filtering (015). An `011` year id, e.g. `es:primaria-5`. */
+  year?: string;
+  stage?: string;
+  /** Never sent — see `roster-privacy.test.ts` (015 FR-1306). */
+  school?: string;
 }
 
 /**
@@ -27,7 +32,10 @@ export function useLearners(): Loadable<LearnerRow[]> {
     const names = (await window.rampa.names.all()) as Record<string, string>;
     const rows = await Promise.all(codes.map(async (code): Promise<LearnerRow> => {
       const l = (await window.rampa.learners.load(code)) as {
-        profile: { axes?: Record<string, number>; works?: unknown[]; avoid?: unknown[] };
+        profile: {
+          axes?: Record<string, number>; works?: unknown[]; avoid?: unknown[];
+          year?: string; stage?: string; school?: string;
+        };
       };
       return {
         code,
@@ -35,6 +43,9 @@ export function useLearners(): Loadable<LearnerRow[]> {
         axes: l.profile.axes ?? {},
         works: (l.profile.works ?? []).length,
         avoid: (l.profile.avoid ?? []).length,
+        ...(l.profile.year ? { year: l.profile.year } : {}),
+        ...(l.profile.stage ? { stage: l.profile.stage } : {}),
+        ...(l.profile.school ? { school: l.profile.school } : {}),
       };
     }));
     return rows;

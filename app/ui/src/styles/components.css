@@ -637,3 +637,28 @@ body { container: window / inline-size; }
 .ds-sw { border: 1px solid var(--line); border-radius: var(--radius-control); overflow: hidden; }
 .ds-sw .chip { height: 52px }
 .ds-sw .lbl { padding: 6px var(--s2); font-family: var(--font-mono); font-size: 0.6875rem; color: var(--ink-soft); }
+
+/* ═══ FINDING A LEARNER · spec 015 ═══════════════════════════════════════════
+   A filter bar, and deliberately not a table header. The columns a table would
+   offer are the nine axis values, and a grid of children sortable by their
+   barriers is a league table of disability (Principle V). There is no sort
+   control here because `filterRoster` accepts no ordering — the interface has
+   nothing to ask for. */
+.roster-bar { padding-bottom: var(--s2); border-bottom: 1px solid var(--line); }
+
+/* «3 sin observar» beside the barriers that were. Reads as a caption rather than
+   as a tenth axis, because it is a fact about the record and not about him. */
+.axes-unobserved { align-self: center; font-size: var(--text-xs); color: var(--ink-faint);
+  font-style: italic; }
+
+/* Wraps rather than scrolls: at 560px and at the largest text scale these
+   stack, which is what `013` FR-1115 is about — a filter bar is chrome, and
+   chrome is what gets crushed first. */
+.roster-filters { display: flex; flex-wrap: wrap; gap: var(--s3) var(--s4); }
+
+.roster-filter { display: flex; flex-direction: column; gap: 2px; min-width: 10rem; }
+.roster-filter .select { min-height: 40px; }
+
+@container page (max-width: 34em) {
+  .roster-filter { min-width: 100%; }
+}

@@ -156,6 +156,24 @@ export function buildAdaptPrompt(input: AdaptPromptInput): { prompt: string; not
   const { profile, recipes, material } = input;
   const out: string[] = [];
 
+  /*
+   * `school` is never sent (015 FR-1306).
+   *
+   * This function reads named fields — `works`, `avoid`, `interests`, `response`
+   * — and never spreads the profile, so a school is not sent because nothing
+   * sends it. That is a weaker guarantee than a chokepoint, and it is the honest
+   * one available here: there is no single place a prompt passes through that
+   * could strip a field.
+   *
+   * So the enforcement is a test, not a line of code. `roster-privacy.test.ts`
+   * builds a prompt from a profile carrying a school and asserts the string is
+   * absent — which fails the day somebody adds a spread, and cannot be satisfied
+   * by a comment.
+   *
+   * (The learner's *name* is handled a level down, at the egress chokepoint,
+   * because it has to survive routes this function is not on.)
+   */
+
   out.push(section('Perfil del alumno (barreras, no diagnóstico)',
     AXES.map((a) => `${a}: ${axisLevelOf(profile, a) ?? 'sin observar'}`).join(' · ')));
 

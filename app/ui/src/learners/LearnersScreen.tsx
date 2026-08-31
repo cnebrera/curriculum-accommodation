@@ -1,13 +1,19 @@
 import { useState } from 'react';
-import { Page } from '../shell/Page.js';
+import { Page, Section, Actions } from '../shell/Page.js';
 import { ProfileEditor } from './ProfileEditor.js';
 import { ForgetLearner } from './ForgetLearner.js';
 import { HandoverReview } from './HandoverReview.js';
 import { RecordScreen } from './RecordScreen.js';
 import { AxisStrip } from './AxisStrip.js';
 import { Badge } from '../components/Badge.js';
+import { Callout } from '../components/Callout.js';
 import { useStrings } from '../i18n/context.js';
 import { useLearners, type LearnerRow } from '../data/learners.js';
+import { RosterFilters, whyNothingMatched } from './RosterFilters.js';
+import { filterRoster, searchRoster, facetsOf, groupRoster, type RosterFilter }
+  from '../../../packages/core/src/roster/filter.js';
+import { useEducationSystems } from '../data/corpus.js';
+import { useWorkedYears } from '../data/record.js';
 import { Loaded } from '../data/Loaded.js';
 
 /**
@@ -17,6 +23,30 @@ import { Loaded } from '../data/Loaded.js';
  * axis strip is the fastest way for her to remember who this is, and it is the
  * thing she is actually looking for when she opens this screen.
  */
+/**
+ * One learner, as a row.
+ *
+ * Extracted so the list view and the grouped view render the identical card. Two
+ * copies would drift, and the way they would drift on this screen is one of them
+ * growing a column — which is how a caseload becomes a table (Principle V).
+ */
+function LearnerCard({ row, onOpen }: { row: LearnerRow; onOpen: (code: string) => void }) {
+  return (
+    <button className="card card-action stack gap3" onClick={() => onOpen(row.code)}>
+      <div className="row" style={{ justifyContent: 'space-between' }}>
+        <span className="row gap2">
+          <strong>{row.name}</strong>
+          <Badge>{row.code}</Badge>
+        </span>
+        <span className="small">
+          {row.works} {row.works === 1 ? 'apoyo' : 'apoyos'} · {row.avoid} a evitar
+        </span>
+      </div>
+      <AxisStrip axes={row.axes} compact />
+    </button>
+  );
+}
+
 export function LearnersScreen() {
   const { t: es } = useStrings();
   /*
@@ -28,6 +58,7 @@ export function LearnersScreen() {
   const roster = useLearners();
   const learners: LearnerRow[] = roster.state === 'ready' ? roster.value : [];
   const refresh = roster.reload;
+
   /**
    * A learner she is removing (003 US4).
    *
@@ -41,6 +72,45 @@ export function LearnersScreen() {
   /** A learner whose record she is reading (014). */
   const [viewing, setViewing] = useState<string | null>(null);
   const [editing, setEditing] = useState<string | null | undefined>(undefined);
+
+  /*
+   * Finding a learner among thirty (015).
+   *
+   * Both live here rather than in the filter bar so the list and the bar cannot
+   * disagree about what is applied — the two-copies-of-one-truth defect, which
+   * on this screen would show as a caseload that looks filtered and is not.
+   */
+  const [query, setQuery] = useState('');
+  const [filter, setFilter] = useState<RosterFilter>({});
+  const [grouped, setGrouped] = useState(false);
+
+  /*
+   * Filter, then search. Order matters for the count she is shown: «3 de 30»
+   * should mean three of her caseload, not three of whatever the last dropdown
+   * left behind.
+   */
+  const visible = searchRoster(
+    filterRoster(learners, filter, (code) => workedIn[code] ?? []), query) as LearnerRow[];
+  const facets = facetsOf(learners);
+
+  /* Which school years she has worked in, and with whom (014, via the data
+     layer — a screen never calls `window.rampa`, 013 FR-1107). */
+  const workedIn = useWorkedYears(learners.map((l) => l.code));
+
+  const schoolYears = [...new Set(Object.values(workedIn).flat())].sort().reverse();
+
+  /** Courses in her words. Falls back to the id, which is at least stable. */
+  const systems = useEducationSystems();
+  const yearLabel = (id: string): string => {
+    if (systems.state !== 'ready') return id;
+    for (const sys of systems.value as Array<{ stages: Array<{ years: Array<{ id: string; label: string }> }> }>) {
+      for (const st of sys.stages) {
+        const y = st.years.find((yy) => yy.id === id);
+        if (y) return y.label;
+      }
+    }
+    return id;
+  };
 
   if (viewing) {
     const who = learners.find((l) => l.code === viewing);
@@ -154,25 +224,66 @@ export function LearnersScreen() {
       >
         {(rows) => (
           <>
-            <div className="stack gap3">
-              {rows.map((l) => (
-                <button className="card card-action stack gap3" key={l.code} onClick={() => setEditing(l.code)}>
-                  <div className="row" style={{ justifyContent: 'space-between' }}>
-                    <span className="row gap2">
-                      <strong>{l.name}</strong>
-                      <Badge>{l.code}</Badge>
-                    </span>
-                    <span className="small">
-                      {l.works} {l.works === 1 ? 'apoyo' : 'apoyos'} · {l.avoid} a evitar
-                    </span>
-                  </div>
-                  <AxisStrip axes={l.axes} />
+            {/* The bar only earns its space once there are enough learners to
+                need it. At five, a filter is one more thing to read. */}
+            {rows.length >= 6 ? (
+              <RosterFilters
+                query={query} onQuery={setQuery}
+                filter={filter} onFilter={setFilter}
+                facets={facets}
+                schoolYears={schoolYears}
+                matched={visible.length} total={rows.length}
+                label={yearLabel}
+              />
+            ) : null}
+
+            {visible.length === 0 ? (
+              /* Names the filter responsible rather than saying «sin
+                 resultados» — she set three, and the useful information is
+                 which one to loosen (FR-1304). */
+              <Callout intent="info" title="Aquí no hay nadie">
+                <p>{whyNothingMatched(filter, query)}</p>
+                <div className="row">
+                  <button className="btn btn-sm" onClick={() => { setQuery(''); setFilter({}); }}>
+                    Quitar los filtros
+                  </button>
+                </div>
+              </Callout>
+            ) : grouped ? (
+              /*
+                 Grouped, never ranked (FR-1310). Groups answer «para quién
+                 preparo mañana», which is the actual question, and carry no
+                 ordering between children. Within a group the order is the
+                 caseload's own and encodes nothing.
+              */
+              <>
+                {groupRoster(visible, yearLabel).map(([heading, members]) => (
+                  <Section key={heading} title={heading}>
+                    {(members as LearnerRow[]).map((l) => <LearnerCard key={l.code} row={l} onOpen={setEditing} />)}
+                  </Section>
+                ))}
+              </>
+            ) : (
+              <div className="stack gap3">
+                {visible.map((l) => <LearnerCard key={l.code} row={l} onOpen={setEditing} />)}
+              </div>
+            )}
+
+            <Actions
+              primary={
+                <button className="btn btn-primary" onClick={() => setEditing(null)}>
+                  Añadir un alumno
                 </button>
-              ))}
-            </div>
-            <div>
-              <button className="btn btn-primary" onClick={() => setEditing(null)}>Añadir un alumno</button>
-            </div>
+              }>
+              {/* Two ways of looking, and no third. There is deliberately no
+                  table: see the note in `RosterFilters.tsx`. */}
+              {rows.length >= 6 ? (
+                <button className="btn btn-sm" aria-pressed={grouped}
+                        onClick={() => setGrouped((g) => !g)}>
+                  {grouped ? 'Ver la lista' : 'Agrupar por curso'}
+                </button>
+              ) : null}
+            </Actions>
           </>
         )}
       </Loaded>

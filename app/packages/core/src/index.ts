@@ -30,6 +30,7 @@ export * from './ir/completeness.js';
 
 export * from './recipes/index.js';
 export * from './recipes/kinds.js';
+export * from './roster/filter.js';
 export * from './record/entry.js';
 export * from './record/scan.js';
 export * from './record/markdown.js';
