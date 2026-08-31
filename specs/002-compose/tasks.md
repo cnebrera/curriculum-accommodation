@@ -10,10 +10,32 @@ the project with no original to compare against, so what replaces
 
 ## Phase 0 · Not before this
 
-- [ ] T000 **Do not start until a teacher has answered `001` SC-001.** Not a
+- [x] T000 **Do not start until a teacher has answered `001` SC-001.** Not a
       formality: if she does not find an adapted worksheet usable, composing new
       ones is not the next problem. Recorded as a task so it is a decision rather
       than a drift
+
+      **OVERRIDDEN 2026-08-31 by Carlos, explicitly and with the reason stated:**
+      «lo sé, sé que nadie lo ha visto, pero montemos todo y luego ya vamos
+      probando e iterando flujo a flujo.»
+
+      I raised this gate, he reaffirmed the direction, and it is his call to make.
+      Recorded as an override rather than a tick, because the risk it names does
+      not go away by being accepted:
+
+      - Every part of `002` assumes an answer nobody has. The verifier, the anchor
+        requirement and the compose loop are all real work built on «adaptation
+        produces something a teacher uses».
+      - If the answer turns out to be no, the wasted work is this whole
+        specification and not a screen.
+      - The mitigation that comes with the decision is his own words: **flow by
+        flow**. So the sequencing below still puts the verifier first and alone,
+        because it is the part that would survive a pivot — an arithmetic checker
+        is right or wrong independently of whether anybody wants composed
+        material.
+
+      What has **not** changed: SC-101…104 still need a teacher, and none of them
+      is satisfied by this being built.
 
 ---
 
@@ -74,7 +96,8 @@ the project with no original to compare against, so what replaces
 
 ## Dependencies
 
-- **T000 blocks everything**, and it is a person.
+- **T000 blocked everything and was overridden** on 2026-08-31 (see above). It
+  is still the case that SC-101…104 need a person.
 - Phase 1 blocks Phase 3. The verifier exists before anything generates.
 - `011` blocks T010 and T012.
 - `012` blocks T007 — generated material carries a kind.
