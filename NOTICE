@@ -25,14 +25,18 @@ Third-party assets bundled with the application
 
     Files: app/ui/src/assets/fonts/AtkinsonHyperlegible-Regular.woff2
            app/ui/src/assets/fonts/AtkinsonHyperlegible-Bold.woff2
+    Licence text: app/ui/src/assets/fonts/OFL.txt (the full OFL 1.1, as
+           published by SIL, with the typeface's own copyright line)
 
     The typeface was chosen for the reason it exists: its letterforms are
     distinguished from each other rather than from a style, which is what makes
     b/d, I/l/1 and 0/O separable for a reader who is guessing. It is the one
     third-party asset in this repository.
 
-    **The full OFL 1.1 text must accompany any distribution of these files.** It
-    is not reproduced here: see backlog G21.
+    The full OFL 1.1 text accompanies these files in the same directory, and
+    `bundle-corpus.mjs` is not what carries it — the fonts are bundled by the
+    renderer build, and the licence sits beside them so it cannot be separated
+    from what it licenses.
 
 Not bundled, deliberately
 -------------------------

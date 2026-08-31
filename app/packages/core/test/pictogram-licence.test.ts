@@ -87,9 +87,9 @@ describe('no pictogram asset is in this repository', () => {
    * requires the copyright notice to accompany the files.
    *
    * The same class of failure the whole of `018` is built around, found in our own
-   * repository while writing the check meant to catch it elsewhere. Recorded as
-   * backlog G21, because the OFL text itself is still missing and is not being
-   * reproduced from memory.
+   * repository while writing the check meant to catch it elsewhere. **Closed the
+   * same day** (backlog G21): the authoritative OFL 1.1 text was fetched from SIL's
+   * own site rather than reproduced from memory, and sits beside the fonts.
    */
   it('credits every third-party asset it does bundle', async () => {
     const notice = await readFile(join(repoRoot, 'NOTICE'), 'utf8');
@@ -99,6 +99,28 @@ describe('no pictogram asset is in this repository', () => {
     // And it says what Rampa deliberately does not bundle, so a reader of NOTICE
     // learns the rule rather than inferring it from an absence.
     expect(notice).toMatch(/ARASAAC/);
+  });
+
+  /**
+   * The licence text itself, beside the files it licenses.
+   *
+   * In the fonts' own directory rather than a central licence folder, because a
+   * licence that can be separated from what it licenses is a licence that will be.
+   */
+  it('ships the OFL text, whole, with the fonts', async () => {
+    const ofl = await readFile(
+      join(appRoot, 'ui', 'src', 'assets', 'fonts', 'OFL.txt'), 'utf8');
+
+    // Every section, so a truncated paste fails rather than passing quietly.
+    for (const section of ['PREAMBLE', 'DEFINITIONS', 'PERMISSION & CONDITIONS',
+      'TERMINATION', 'DISCLAIMER']) {
+      expect(ofl, `OFL.txt is missing ${section}`).toContain(section);
+    }
+    expect(ofl).toContain('SIL OPEN FONT LICENSE Version 1.1 - 26 February 2007');
+    // And the copyright line for the typeface actually bundled, not the template's
+    // `<Copyright Holder>` placeholder.
+    expect(ofl).toContain('Braille Institute of America');
+    expect(ofl).not.toContain('<Copyright Holder>');
   });
 
   /**
