@@ -106,6 +106,31 @@ describe('selection after scope filtering', () => {
   }
 });
 
+describe('MOT finally selects something (019 US4)', () => {
+  /**
+   * A live defect rather than a missing feature: the teacher set the axis, zero
+   * recipes read it, and she believed she had told us. `recipes/core/response-route.md`
+   * is the corpus half; this is the assertion that it reaches a profile.
+   */
+  it('a learner who cannot write by hand gets a recipe about how he answers', () => {
+    const p = profile('B05', { MOT: 2 });
+    const ids = selectRecipes(corpus, p, 'es', ['instruction', 'exercise']).selected.map((r) => r.id);
+    expect(ids, 'MOT>=2 selects nothing: 019 US4 has regressed').toContain('response-route');
+  });
+
+  it('and not for a learner who writes normally', () => {
+    const p = profile('B06', { MOT: 0 });
+    const ids = selectRecipes(corpus, p, 'es', ['instruction', 'exercise']).selected.map((r) => r.id);
+    expect(ids).not.toContain('response-route');
+  });
+
+  it('applies to an exam, because a response route is an access arrangement', () => {
+    const p = profile('B05', { MOT: 3 });
+    const ids = selectRecipes(corpus, p, 'es', ['assessment']).selected.map((r) => r.id);
+    expect(ids).toContain('response-route');
+  });
+});
+
 describe('the coverage gap the filter revealed', () => {
   /**
    * **A finding, not a failure**, and the reason T001 was worth writing.

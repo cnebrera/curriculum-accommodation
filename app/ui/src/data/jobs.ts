@@ -101,6 +101,12 @@ export function usePdf() {
     window.rampa.job.pdf(id, learner) as Promise<string>);
 }
 
+/** The editable export (019 US1). */
+export function useOdt() {
+  return useCommand((id: string, learner: string) =>
+    window.rampa.job.odt(id, learner) as Promise<string>);
+}
+
 export function useOpenForEditing() {
   return useCommand((id: string, learner: string) => window.rampa.job.openForEditing(id, learner));
 }

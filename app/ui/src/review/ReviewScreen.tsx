@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Page } from '../shell/Page.js';
-import { useReportDataCommand, useSignedOffCommand, useRender, usePdf, useRevise, useSignOff, useOpenForEditing } from '../data/jobs.js';
+import { useReportDataCommand, useSignedOffCommand, useRender, usePdf, useOdt, useRevise, useSignOff, useOpenForEditing } from '../data/jobs.js';
 import { useChecklistCommand } from '../data/corpus.js';
 import { useVaultChanged } from '../data/vault.js';
 import { useNames } from '../data/names.js';
@@ -24,6 +24,7 @@ export function ReviewScreen({ jobId, learner, recipes }: { jobId: string; learn
   const [checklist, setChecklist] = useState('');
   const [signedOff, setSignedOff] = useState(false);
   const [pdfPath, setPdfPath] = useState<string | null>(null);
+  const [odtPath, setOdtPath] = useState<string | null>(null);
   const [photocopy, setPhotocopy] = useState<Array<{ message: string }>>([]);
   const [corrections, setCorrections] = useState<Array<{ text: string; scope: 'learner' | 'practice' | 'corpus' }>>([]);
   const [revision, setRevision] = useState(1);
@@ -33,6 +34,7 @@ export function ReviewScreen({ jobId, learner, recipes }: { jobId: string; learn
   const checklist_ = useChecklistCommand();
   const renderJob = useRender();
   const pdf = usePdf();
+  const odt = useOdt();
   const reviseJob = useRevise();
   const signOff = useSignOff();
   const openForEditing = useOpenForEditing();
@@ -169,12 +171,29 @@ export function ReviewScreen({ jobId, learner, recipes }: { jobId: string; learn
           Corregir a mano
         </button>
         <button className="btn" onClick={() => void render()}>{es.adapt.print}</button>
+        {/*
+          The editable export (019 US1). Beside the PDF rather than instead of it:
+          the PDF is what she photocopies, and this is what she corrects — and a
+          teacher who can change the last two words does not abandon a sheet that
+          is 95% right.
+        */}
+        <button className="btn" disabled={odt.busy} aria-busy={odt.busy}
+                onClick={() => void odt.run(jobId, learner).then((p) => { if (p) setOdtPath(p); })}>
+          Descargar para editar
+        </button>
         {!signedOff
           ? <button className="btn btn-primary" onClick={() => void sign()}>{es.review.signOff}</button>
           : <span className="badge badge-accent">{es.review.signedOff}</span>}
       </div>
 
       {pdfPath ? <p className="small muted">Guardado en <code>{pdfPath}</code></p> : null}
+      {odtPath ? (
+        <p className="small muted">
+          Para editar, en <code>{odtPath}</code>. Se abre con LibreOffice o con Word.
+          {' '}Si lo cambias ahí, vuelve aquí y genera el PDF otra vez.
+        </p>
+      ) : null}
+      {odt.error ? <Callout intent="danger">{odt.error.message}</Callout> : null}
     </Page>
   );
 }

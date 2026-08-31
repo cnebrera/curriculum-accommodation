@@ -1,0 +1,54 @@
+import { renderHTML, renderODT, parseIR, checkOutput, isSignedOff, RampaError } from '@rampa/core';
+import { jobAdapted } from '@rampa/core';
+import { currentVault } from '../ipc/vault.js';
+import { knownNames } from '../ipc/names.js';
+
+/**
+ * Exports that are not printed (019).
+ *
+ * Its own file, and the boundary test is why. `renderOdt` started life next to
+ * the PDF in `jobs/print.ts` — which imports `electron` for the offscreen
+ * `BrowserWindow` that turns HTML into a PDF, ADR 0008's one surviving argument.
+ * `boundary.test.ts` counts the lines of every file that imports Electron, and
+ * adding 30 lines of ODF to one of them pushed the recorded surface past its
+ * ceiling and failed.
+ *
+ * The test was right and the fix is not the ceiling. **Nothing in here touches
+ * Electron**: an ODT is a ZIP of XML, and putting it beside the PDF renderer made
+ * it look like it needed a browser engine when it does not. Moved, and the
+ * Electron surface goes back to being a number that means something.
+ */
+/**
+ * The editable export (019 US1).
+ *
+ * Built from the same adapted IR as the HTML and the PDF — Principle IV, and the
+ * claim it makes: a new modality needs no re-adaptation. This function is the
+ * first evidence for that claim, and it needed no field the IR did not already
+ * have.
+ *
+ * The draft mark is **derived from the document**, exactly as the print path
+ * derives it, rather than accepted as a parameter. `job:render` used to take
+ * `signedOff` from the renderer, which meant an unmarked worksheet could be
+ * produced with no sign-off having happened (007 FR-509). One reader of one
+ * truth.
+ */
+export async function renderOdt(jobId: string, learnerCode: string): Promise<Uint8Array> {
+  const vault = currentVault();
+  const raw = await vault.readRaw(jobAdapted(jobId, learnerCode));
+  if (!raw) throw new RampaError('vault-unreadable', 'No encuentro la versión adaptada.');
+  const doc = parseIR(raw);
+
+  /*
+   * The same output checks as the HTML path, on the same document.
+   *
+   * A learner's data reaching a learner-facing document is a learner's data
+   * reaching it whatever the file extension — and a modality that skipped the
+   * check would be the first parallel pipeline Principle IV forbids, arriving as
+   * an omission rather than as a design.
+   */
+  const asHtml = renderHTML(doc, { signedOff: isSignedOff(doc) });
+  const check = checkOutput(asHtml, [learnerCode], [...(await knownNames()).values()]);
+  if (!check.ok) throw new RampaError('render-learner-data', check.findings.join(' '), check.findings);
+
+  return renderODT(doc, { signedOff: isSignedOff(doc) });
+}

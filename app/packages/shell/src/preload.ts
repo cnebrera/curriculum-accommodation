@@ -108,6 +108,8 @@ const api = {
      */
     render: (id: string, learner: string) => invoke('job:render', id, learner),
     pdf: (id: string, learner: string) => invoke('job:pdf', id, learner),
+    /** The editable export she can fix by hand (019). */
+    odt: (id: string, learner: string) => invoke('job:odt', id, learner),
     /** Opens the adapted file in her own editor (T094). */
     openForEditing: (id: string, learner: string) => invoke('job:openForEditing', id, learner),
     /** The only way the draft mark comes off. */

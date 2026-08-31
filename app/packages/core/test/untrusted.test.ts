@@ -392,9 +392,20 @@ describe('FR-509 · only sign-off removes the draft mark', () => {
      * count did not change, which is the thing this test is actually about — a
      * reorganisation that changed *which* files may sign would have failed here,
      * and did not.
+     *
+     * **A fifth arrived on 2026-08-31 and it is justified**, which is exactly the
+     * conversation this list exists to force. `jobs/export.ts` is the ODT
+     * renderer (`019`), and it **reads** the mark from the document via
+     * `isSignedOff` for the same reason the print path does — so an unsigned
+     * export announces itself. It writes no sign-off state and cannot: only
+     * `job:signOff` does.
+     *
+     * The test failed on the count before it failed on anything else, which is
+     * the right order: a new file in this list should be a decision, and now it
+     * has been one.
      */
     expect(writers.sort()).toEqual([
-      'ipc/signoff.ts', 'jobs/print.ts', 'main.ts', 'preload.ts',
+      'ipc/signoff.ts', 'jobs/export.ts', 'jobs/print.ts', 'main.ts', 'preload.ts',
     ]);
   });
 

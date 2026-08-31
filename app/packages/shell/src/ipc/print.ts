@@ -4,6 +4,7 @@ import { resolveInVault, outputDir } from '@rampa/core';
 import { currentVault } from './vault.js';
 import { handle } from './wrap.js';
 import { renderJob, renderPdf, openAdaptedForEditing } from '../jobs/print.js';
+import { renderOdt } from '../jobs/export.js';
 
 /**
  * Wiring for what she prints (013 T019, FR-1111).
@@ -34,6 +35,22 @@ export function registerPrintIpc(): void {
     await mkdir(dirname(htmlPath), { recursive: true });
     await writeFile(htmlPath, html, 'utf8');
     return { htmlPath, photocopy };
+  });
+
+  /**
+   * The one she can fix by hand (019 US1).
+   *
+   * Written beside the PDF rather than instead of it: the PDF is what she
+   * photocopies and the ODT is what she corrects, and a teacher who can change
+   * the last two words does not abandon a sheet that is 95% right.
+   */
+  handle('job:odt', async (jobId: string, learnerCode: string) => {
+    const vault = currentVault();
+    const bytes = await renderOdt(jobId, learnerCode);
+    const path = resolveInVault(vault.root, `${outputDir(jobId, learnerCode)}/sheet.odt`);
+    await mkdir(dirname(path), { recursive: true });
+    await writeFile(path, bytes);
+    return path;
   });
 
   handle('job:pdf', async (jobId: string, learnerCode: string) => {
