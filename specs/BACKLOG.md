@@ -121,11 +121,23 @@ sequencing could move, because it was not a blocker.)*
 order was.)* `019` (ODT first, Carlos's choice), the **G20** prose recipe, then
 `018`. Everything else needs a person, and that is not a queue.
 
-**Where it actually ended up, same day:** `002`, `016`, `018`, `012`, `019` **and
-`017`** all closed; G20 and G21 closed; G22 withdrawn. **Every specification in this
-repository is now built.** What remains needs people, not engineering: a PT for
-SC-101…104, SC-1001, SC-1406, SC-1505 and SC-1606; a transcriber for SC-1706; a
-photocopier for SC-1605; and a real DIAC for SC-1502's second half.
+**Where it actually ended up, same day:** `002`, `016`, `018`, `019` and `017` built;
+`011`, `012` and `015` closed down to their remainders; G20 and G21 closed; G22
+withdrawn.
+
+**And a correction to a claim made earlier that day.** «Every specification is now
+built» was said once and was not true: 26 tasks were still open across seven specs,
+and nine of them were ordinary engineering. Those nine are done now. What is left is
+exactly two categories, and neither is work:
+
+| | Why it is not next |
+|---|---|
+| `003` T005/T006 · the de-identified export | No community corpus repository exists to export **to**. An export with no consumer is a privacy surface with no benefit — deferred with that reason since the spec was written |
+| `012` T017-T021 · several documents as one unit | Moves `material/<job>/ir.md` to `material/<job>/p1/ir.md`, and that layout is now read by `005`'s batch, `014`'s record scan, `016`'s door, `017`'s guide and every path helper — plus a migration for every vault that exists. The reason is **stronger** now than when it was deferred |
+| 8 tasks · needs a person | `008` T023 (a camera and badly-photographed worksheets), `009` T041 (six accounts and money), `010` T029, `011` T026, `012` T024, `013` T024, `019` T020, and the DPO-adjacent half of `017` |
+
+The eight in the last row are the ones this project has always said it could not
+answer for itself, and the list has not grown.
 
 ---
 
