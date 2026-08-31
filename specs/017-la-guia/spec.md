@@ -4,10 +4,8 @@
 
 **Created**: 2026-08-30
 
-**Status**: Draft — **blocked on a DPO conversation**, and the questions for it are
-written: [`docs/dpo-la-guia.md`](../../docs/dpo-la-guia.md). Four questions, what
-depends on each answer, and the floor if the answer is no. Not planned, deliberately:
-the blocker is a prerequisite and not a disclaimer.
+**Status**: Draft — **unblocked 2026-08-31.** The «blocked on a DPO conversation»
+prerequisite below was wrong and is retracted; see *The hard constraint*.
 
 **Input**: Carlos, 2026-08-30:
 
@@ -85,11 +83,40 @@ that page. That is the same honest limitation already stated for a photograph wi
 a handwritten name on it (`009`), and it must be said in the same words, at the
 same point, before she uploads anything.
 
-> **This feature must not be planned until the DPO and legal have been asked.**
-> It is education, minors, and health data in a regulated sector, and the
-> difference between "read and discard" and "store" is a difference they get to
-> rule on, not this document. Named here as a blocking prerequisite, not as a
-> disclaimer.
+### The prerequisite this section used to declare, and why it was wrong
+
+This section said, in bold: *«This feature must not be planned until the DPO and
+legal have been asked.»* **Retracted 2026-08-31, by Carlos, and he is right.**
+
+Rampa is open-source software that runs on one machine. It receives nothing, stores
+nothing and has no service behind it. **It is not a controller and not a processor.**
+Whoever uses it is the controller — a teacher, on her school's behalf — and their
+data protection officer's opinion is a fact about *their* deployment, not a gate on
+whether this software may have a feature.
+
+The parallel that makes it obvious: nobody blocks a feature in LibreOffice because a
+school might store an informe psicopedagógico in a `.odt`. The tool has an obligation
+to be honest about what it sends and where; it has no obligation to obtain permission
+to exist.
+
+**What was actually hiding behind that gate were three things, and two are ours:**
+
+1. **What the tool does with a diagnosis** — read it, extract the measures, store
+   none of it. That is a design decision, it is made, and
+   [ADR 0002](../../docs/decisions/0002-no-clinical-material.md) already made it. Not
+   a legal question.
+2. **What the tool tells her before she uploads** — that the page goes to her
+   provider *entire*, whatever Rampa keeps. That is an honesty requirement, it is
+   **FR-1509** below, and it is the same sentence `009` already shows for a
+   photograph with a name in it. Not a legal question either.
+3. **Whether a given school may do this at all** — genuinely not ours to answer, and
+   genuinely not a blocker. It is a question a school's DPO answers about their own
+   deployment, and [`docs/proteccion-de-datos.md`](../../docs/proteccion-de-datos.md)
+   is the document written for them to answer it with.
+
+So the honest constraint is unchanged and much smaller than a prerequisite: **say
+what leaves the machine, before it leaves, in her language.** The rest was caution
+wearing a compliance costume.
 
 ## What this is not
 
@@ -371,12 +398,13 @@ it is the one that most needs the earlier parts working before it is attempted.
 
 ## Dependencies and sequencing
 
-- **Blocked on a DPO/legal conversation.** Stated above; not a formality. The
-  questions are prepared in [`docs/dpo-la-guia.md`](../../docs/dpo-la-guia.md) so
-  that conversation is twenty minutes rather than a discovery — including the floor:
-  if the answer is no, `003` FR-209's typed overlay already exists, so Rampa loses
-  convenience and not capability. Worth saying in the room, because it changes the
-  tone: nobody is asking permission for the tool to work.
+- **Not blocked on anybody's legal opinion.** See *The hard constraint*: the
+  prerequisite this spec used to declare was retracted on 2026-08-31. What survives
+  is **FR-1509** — say what leaves the machine before it leaves — which is a
+  requirement on us and not permission from somebody else.
+- **`003` FR-209's typed overlay is the floor and already ships.** A teacher who
+  cannot or will not upload a guide types the measures, and every adaptation honours
+  them. This feature makes that faster; it does not make it possible.
 - `008` supplies ingest; `007` supplies the untrusted-content defences.
 - `014` supplies the recorded work an ACNS is drafted from — **US2 cannot ship
   before it**.

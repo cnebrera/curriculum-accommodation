@@ -112,7 +112,8 @@ nowhere until `002` exists, and its adapt branch is largely delivered by `012`'s
 kind question. Shipping a door with one side that does nothing is what its own
 FR-1410 calls a lie in the interface, so `016` waits with `002`.
 
-**`017` — the guide.** Unplannable until the DPO conversation, which is not
+**`017` — the guide.** *(That sentence said «unplannable until the DPO
+conversation». Withdrawn 2026-08-31 — see G22.)* Not
 something engineering sequencing can move.
 
 **Next, therefore:** `019` (ODT first, Carlos's choice), the **G20** prose recipe,
@@ -392,37 +393,41 @@ every moment should have a spec. What it added beyond the seams pass:
    journey sentence → T094). Handover *import* (004 US2) recorded as deliberately
    deferred rather than silently missing.
 
-## G22 · `017` is blocked on one conversation, and the questions are written
+## G22 · The DPO gate on `017` — *WITHDRAWN 2026-08-31*
 
-Not a gap in the code: a gap in a diary. `017` — read the guide, honour it, help
-write it — is the last unbuilt specification, and it is blocked on the DPO because a
-DIAC contains the summary of the evaluación psicopedagógica and reading it means
-sending that page to a third party.
+Not a gap. A gate I invented and Carlos removed, and he was right to.
 
-**What is done**: [`docs/dpo-la-guia.md`](../docs/dpo-la-guia.md) has the four
-questions, what depends on each answer, the three options with two of them named as
-wrong, and the tests the DPO can run rather than believe.
+`017`'s spec said, in bold: «this feature must not be planned until the DPO and legal
+have been asked», and I spent two documents preparing that conversation — including
+one, `docs/dpo-la-guia.md`, working out *which* DPO. Then Carlos pointed out what
+should have been obvious from the first line of the README:
 
-**What is needed**: twenty minutes with **the data protection officer of the
-controller** — which is the school for a private or concertado centre and normally
-the Consejería for a public Andalusian one. Not VASS's DPO: Rampa is not a VASS
-product and VASS does not process this data, so it can give an internal read as a
-favour and cannot authorise anything. The whole repository said «the DPO» as if there
-were one, which was itself the defect; `docs/dpo-la-guia.md` now names which.
+> «esto es una puta herramienta ahora mismo open source que se ejecuta como una
+> aplicación en local… el responsable será el que use la herramienta»
 
-**And it may not be time to ask.** Phase 0 — the validation with the identified PT —
-does not need `017`. If the pilot runs on option D, there is **no new processing to
-authorise**: no page of the DIAC leaves her machine. `017` blocks `017`, not the
-project, and spending a favour with a Consejería DPO on a convenience before one
-teacher has said the rest works is spending it at the wrong moment.
+**Rampa is not a controller and not a processor.** It receives nothing, stores
+nothing, and there is no service behind it. Whoever runs it is the controller, and
+their DPO's opinion is a fact about their deployment — not a precondition for the
+software having a feature. Nobody blocks a feature in LibreOffice because a school
+might save an informe psicopedagógico as a `.odt`.
 
-What *is* worth asking now, and is free: whether her school lets her use her own AI
-key with classroom material. «No lo sé» is the commonest answer and it is a fact
-about Phase 0, not about `017`.
+**What was hiding behind the gate, and where each piece went:**
 
-**The floor, worth knowing before the meeting**: if the answer is no, `003` FR-209's
-typed overlay already exists. Rampa loses ten minutes of a PT's time per learner per
-year, not a capability.
+| | Whose question | Where it lives now |
+|---|---|---|
+| What the tool does with a diagnosis — read it, keep the measures, store none of it | **Ours.** A design decision, already made | ADR 0002, and `017` FR-1507 |
+| What she is told before she uploads — the page goes to her provider entire | **Ours.** An honesty requirement | `017` FR-1509 |
+| Whether a given school may do this | Theirs, and not a blocker | `docs/proteccion-de-datos.md`, which is written for them |
+
+`docs/dpo-la-guia.md` is deleted: three of its four questions were ours to answer,
+which was the whole of Carlos's point. The half of it worth keeping — the table of
+claims a reader can *check* rather than believe — moved into
+`proteccion-de-datos.md`, where a school that adopts this can use it.
+
+**Why keep the entry rather than delete it.** Because the failure mode is worth
+naming: caution wearing a compliance costume. It cost two documents and a spec that
+sat unplannable while the actual requirement — *say what leaves the machine before it
+leaves* — was one line and already written.
 
 ## G21 · The bundled font's licence text — *CLOSED 2026-08-31*
 

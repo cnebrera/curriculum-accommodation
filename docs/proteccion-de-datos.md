@@ -103,6 +103,21 @@ conservarla, da clase a ese niño—, así que sigue siendo dato personal
 (considerando 26 RGPD) y le siguen aplicando las reglas de transferencia. La
 seudonimización reduce el riesgo de forma real; no hace desaparecer el análisis.
 
+## Lo que se puede comprobar, no creer
+
+Ninguna afirmación de este documento hay que aceptarla por buena. Cada una tiene un
+test público que corre en cada cambio, y el código es abierto:
+
+| Afirmación | Dónde se comprueba |
+|---|---|
+| El núcleo no tiene red ni acceso a claves | `npm run test:isolation`, sobre todos los ficheros de `packages/core` |
+| Un solo punto de salida, con sustitución de nombres, y bloqueo si sobreviviera uno | `packages/providers/test/chokepoint.test.ts` |
+| El nombre del alumno no se escribe nunca en su perfil | `packages/core/test/roster-privacy.test.ts` |
+| El colegio tampoco sale hacia el proveedor | el mismo fichero |
+| El borrado por alumno borra, y lo dice si algo sobrevive | `record-erasure.test.ts` · e2e `erasure.spec.ts` |
+| El material que intenta dar órdenes no se obedece | `untrusted.test.ts`, `injection.test.ts` |
+| No se distribuye contenido de terceros sin su licencia | `pictogram-licence.test.ts` |
+
 ## Lista de comprobación para el DPO
 
 - [ ] Proveedor de IA elegido y su contrato/condiciones revisados (retención,
@@ -116,6 +131,14 @@ seudonimización reduce el riesgo de forma real; no hace desaparecer el análisi
       respuesta más frecuente
 - [ ] Periodo de retención decidido y el borrado por alumno probado una vez
 - [ ] Este documento revisado y, donde no encaje, corregido
+
+Y una pregunta que aparece si el centro decide usar la lectura de guías oficiales
+(spec `017`, adaptaciones curriculares): **la página de un DIAC que se envía para
+leerla contiene todo lo impreso en ella**, incluido el resumen de la evaluación
+psicopedagógica, aunque Rampa sólo se quede con las medidas. Si eso entra en el art.
+9 RGPD y con qué excepción del 9.2 es una decisión del centro sobre su propio
+tratamiento. La aplicación lo advierte antes de que nadie suba nada, y no leer guías
+sigue funcionando: las medidas se pueden teclear.
 
 ---
 

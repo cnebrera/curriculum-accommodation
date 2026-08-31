@@ -328,7 +328,7 @@ herramienta, dicho explícitamente.
 | Crear material desde objetivos, con ancla | **v1** | 002 (2026-08-31) — verificador aritmético, nivel desde `011`, soluciones aparte; SC-101…104 esperan PT |
 | Entrada real: foto, PDF, digital, con verificación | **v1** | 008 |
 | Perfil por barreras + calibración de ejes | **v1** | profile-schema, axis-calibration (G2 espera PT) |
-| Aplicar el documento oficial de adaptaciones (overlay) | **v1** (a mano) | 003 FR-209; el copilot de la guía es 017, **bloqueado en el DPO** |
+| Aplicar el documento oficial de adaptaciones (overlay) | **v1** (a mano) | 003 FR-209; leerlo del documento es 017 |
 | Que las correcciones no se repitan | **v1** | 003, T084-086 |
 | Consolidar lo aprendido, con confirmación | dif. | 003 US3, T093 |
 | Misma ficha, N alumnos (hojas separadas) | **v1** | 005 · la puerta pregunta por alumnos, no por uno (016 FR-1411) |
