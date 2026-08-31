@@ -4,7 +4,7 @@
 
 **Created**: 2026-08-30
 
-**Status**: Draft — needs `/speckit-clarify`, then `/speckit-plan`
+**Status**: Planned 2026-08-31 — [plan.md](./plan.md), [tasks.md](./tasks.md). The clarifications were answered from the constitution and from specifications already written; the licence conclusion needed no clarification because it is not a preference.
 
 **Input**: Backlog **G19** (filed as G16; renumbered 2026-08-30). The vision
 document planned a visual-support and pictogram family in §6 and nothing since has
