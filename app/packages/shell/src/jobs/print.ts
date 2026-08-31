@@ -1,11 +1,13 @@
 import { BrowserWindow, shell } from 'electron';
 import { renderHTML, renderODT, parseIR, checkOutput, checkPhotocopy, checkEssentialFigures,
-         presentationFor, jobAdapted, outputDir, loadLearner, RampaError, AXES, axisLevelOf, isSignedOff } from '@rampa/core';
+         presentationFor, jobAdapted, outputDir, loadLearner, RampaError, AXES, axisLevelOf, isSignedOff,
+         parsePicto } from '@rampa/core';
 import { currentVault } from '../ipc/vault.js';
 import { knownNames } from '../ipc/names.js';
 import { writeFile, mkdir } from 'node:fs/promises';
 import { dirname } from 'node:path';
 import { resolveInVault } from '@rampa/core';
+import { pictogramImagesFor } from '../pictograms/access.js';
 
 /**
  * HTML and PDF are produced by the application itself (006 FR-425): nothing for
@@ -49,7 +51,23 @@ export async function renderJob(jobId: string, learnerCode: string) {
   const learner = await loadLearner(vault, learnerCode);
   const levels = Object.fromEntries(AXES.map((a) => [a, axisLevelOf(learner.profile, a)]));
 
-  const html = renderHTML(doc, { presentation: presentationFor(levels), signedOff });
+  /*
+   * The pictograms this document actually asked for (018 T020).
+   *
+   * Read from the document rather than from the profile: what is on the sheet was
+   * decided when it was adapted, and re-deciding it at print time would let a sheet
+   * gain or lose pictures between the review she signed and the page she printed.
+   *
+   * An id whose file is gone is simply absent from the map, and the renderer draws a
+   * named gap (FR-1616) — a moved set must not fail a render.
+   */
+  const ids = [...new Set(doc.blocks.flatMap((b) => parsePicto(b.attrs['data-picto']).map((p) => p.id)))];
+  const pictogramImages = ids.length > 0 ? await pictogramImagesFor(ids) : undefined;
+
+  const html = renderHTML(doc, {
+    presentation: presentationFor(levels), signedOff,
+    ...(pictogramImages ? { pictogramImages } : {}),
+  });
 
   const check = checkOutput(html, [learnerCode], [...(await knownNames()).values()]);
   if (!check.ok) throw new RampaError('render-learner-data', check.findings.join(' '), check.findings);

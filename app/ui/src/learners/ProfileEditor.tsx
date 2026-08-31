@@ -5,6 +5,7 @@ import { useStrings } from '../i18n/context.js';
 import { AxisEditor } from './AxisEditor.js';
 import { YearPicker, type Who } from './YearPicker.js';
 import { Notice } from '../components/Notice.js';
+import { PictogramSetSection } from '../pictograms/PictogramSetSection.js';
 import { RepairNotice } from '../components/RepairNotice.js';
 
 export function ProfileEditor({ code, onSaved }: { code: string | null; onSaved: (code: string) => void }) {
@@ -18,6 +19,17 @@ export function ProfileEditor({ code, onSaved }: { code: string | null; onSaved:
   const [who, setWho] = useState<Who>({});
   const [interests, setInterests] = useState('');
   const [response, setResponse] = useState('');
+  /**
+   * Pictogram support (018 T017, FR-1605/1606).
+   *
+   * A control and not an inference. This is the one family that **adds** to the
+   * page, and it is the most visible difference there is — a child in an aula
+   * ordinaria holding a sheet covered in pictograms while thirty classmates hold a
+   * plain one is being marked out by the tool meant to include him. No axis value
+   * reaches it, so this checkbox is the only way it turns on.
+   */
+  const [pictos, setPictos] = useState<{ enabled: boolean; scope: string }>(
+    { enabled: false, scope: 'vocabulary' });
   /**
    * Everything the schema knows and this form does not (T092c).
    *
@@ -43,7 +55,7 @@ export function ProfileEditor({ code, onSaved }: { code: string | null; onSaved:
         if (!raw) return;
         const l = raw as any;
         const { code: _c, axes, works, avoid, interests, response,
-                age, year, stage, age_recorded: _ar, ...rest } = l.profile ?? {};
+                age, year, stage, age_recorded: _ar, pictograms, ...rest } = l.profile ?? {};
         setCurrent(l.profile.code);
         setAxes(axes ?? {});
         setWho({ age, year, stage });
@@ -51,7 +63,19 @@ export function ProfileEditor({ code, onSaved }: { code: string | null; onSaved:
         setAvoid((avoid ?? []).join('\n'));
         setInterests((interests ?? []).join(', '));
         setResponse(Object.entries(response ?? {}).map(([k, v]) => `${k}: ${v}`).join('\n'));
-        setCarried(rest);
+        setPictos({
+          enabled: pictograms?.enabled === true,
+          scope: pictograms?.scope ?? 'vocabulary',
+        });
+        /*
+         * `overrides` is carried rather than surfaced: her school's own picture for
+         * «recreo» is a thing she edits in the vault, and a form field for a map
+         * would be a worse editor than a text file.
+         */
+        setCarried({
+          ...rest,
+          ...(pictograms?.overrides ? { _pictoOverrides: pictograms.overrides } : {}),
+        });
         setRepairs(l.repairs ?? []);
       });
       void resolveName.run(code).then((n) => setName(n ?? ''));
@@ -72,6 +96,9 @@ export function ProfileEditor({ code, onSaved }: { code: string | null; onSaved:
       // Carried fields first so the form's own values win, and nothing the
       // teacher wrote by hand is dropped just because this form has no input.
       ...carried,
+      // Not a profile field: it is where this form parks her overrides while it
+      // edits everything else.
+      _pictoOverrides: undefined,
       code: current, axes,
       works: lines(works),
       avoid: lines(avoid),
@@ -84,6 +111,23 @@ export function ProfileEditor({ code, onSaved }: { code: string | null; onSaved:
        * silently. Only stamped when there is an age to stamp.
        */
       ...(who.age !== undefined ? { age_recorded: new Date().toISOString().slice(0, 10) } : {}),
+      /*
+       * FR-1606 · the **decision**, not the setting.
+       *
+       * `decided_on` is stamped when she turns it on, because SC-1603 is «no
+       * profile enables pictograms without a recorded human decision» — and a flag
+       * with no date is indistinguishable from a flag something else set. When it
+       * is off the whole object is omitted rather than written as `false`: absent
+       * means off, and there is nothing to date.
+       */
+      ...(pictos.enabled ? {
+        pictograms: {
+          enabled: true,
+          scope: pictos.scope,
+          decided_on: new Date().toISOString().slice(0, 10),
+          overrides: (carried['_pictoOverrides'] as Record<string, string>) ?? {},
+        },
+      } : {}),
     });
     // Nothing follows a failed save. The screen used to set `saved` and call
     // `onSaved` unconditionally, so a profile that never reached disk still said
@@ -143,6 +187,46 @@ export function ProfileEditor({ code, onSaved }: { code: string | null; onSaved:
         <textarea className="textarea" id="response" value={response} onChange={(e) => setResponse(e.target.value)}
                   placeholder={'Una por línea, con dos puntos\nPor ejemplo: escritura: dicta y un adulto transcribe'} />
       </div>
+
+      {/*
+        The one decision in this form that is about how a child is seen rather than
+        about what he can do. It says what it costs, because «por si acaso» has a
+        social cost here that no other family has.
+      */}
+      <fieldset className="fieldset-bare">
+        <legend><h3>Pictogramas</h3></legend>
+        <label className="check" htmlFor="pictos-on">
+          <input type="checkbox" id="pictos-on" checked={pictos.enabled}
+                 onChange={(e) => setPictos((p) => ({ ...p, enabled: e.target.checked }))} />
+          <span>Usa pictogramas</span>
+        </label>
+        <p className="field-help">
+          Sólo si ya los usa. Si lee, aunque sea despacio, los pictogramas le añaden
+          trabajo — y una hoja llena de dibujos en un aula donde nadie más la tiene
+          se ve desde la última fila.
+        </p>
+        {pictos.enabled ? (
+          <div className="field">
+            <label htmlFor="pictos-scope">Dónde</label>
+            <select className="select" id="pictos-scope" value={pictos.scope}
+                    onChange={(e) => setPictos((p) => ({ ...p, scope: e.target.value }))}>
+              <option value="vocabulary">Sólo en el vocabulario clave</option>
+              <option value="instructions">Sólo en lo que hay que hacer</option>
+              <option value="all">En todo</option>
+            </select>
+            <p className="field-help">
+              «En todo» es para quien lee con pictogramas como vía principal. Es el
+              caso menos frecuente.
+            </p>
+            {/*
+              The set, at the moment it becomes necessary. A settings page she has
+              to find first would mean turning the family on and getting nothing,
+              with no idea why.
+            */}
+            <PictogramSetSection compact />
+          </div>
+        ) : null}
+      </fieldset>
 
       <div className="row">
         <button className="btn btn-primary" disabled={!current || saveLearner.busy}

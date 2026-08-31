@@ -61,7 +61,13 @@ export * from './education/parse.js';
 export * from './education/lookup.js';
 export * from './redact/names.js';
 
+export * from './pictograms/set.js';
+export * from './pictograms/match.js';
+export * from './pictograms/apply.js';
+export * from './pictograms/note.js';
+export * from './pictograms/images.js';
 export * from './render/draft.js';
+export * from './render/attribution.js';
 export * from './render/html.js';
 export * from './render/check.js';
 export * from './render/photocopy.js';

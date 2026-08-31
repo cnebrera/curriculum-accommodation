@@ -27,6 +27,27 @@ export interface AppSettings {
    * either — the warning is about her workflow, not about a child.
    */
   photoNameWarningAcknowledged?: boolean;
+  /**
+   * Where her pictogram set is (018 T014, FR-1601).
+   *
+   * Here and **not in the vault**, for the same reason `vaultRoot` is: it is an
+   * absolute path on this machine, and a vault has to stay portable. What goes in
+   * the vault is a note saying a set is in use and under which licence — so a
+   * colleague who opens the folder learns what is required without inheriting a
+   * path that does not exist on their laptop (US1 scenario 3).
+   *
+   * The set itself is never copied here and never indexed here: a cached index
+   * would be a plaintext copy of somebody else's licensed content living inside
+   * our vault.
+   */
+  pictogramSet?: {
+    root: string;
+    /** What the set's own LICENSE file said, when it had one. Shown, never parsed. */
+    licence?: string;
+    /** «1.243 imágenes · 980 palabras en español», as read at configuration time. */
+    summary?: string;
+    configuredOn: string;
+  };
   display?: {
     theme?: 'light' | 'dark' | 'system';
     text?: 'normal' | 'large' | 'xlarge';

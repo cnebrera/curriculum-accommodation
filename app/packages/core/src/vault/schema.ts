@@ -79,6 +79,34 @@ export const profileSchema = z.object({
    * identifies a child far more sharply than a code does.
    */
   school: z.string().optional(),
+
+  /**
+   * Pictogram support, **decided by her** (018 T004, FR-1605/1606).
+   *
+   * Absent means off, and that is the only default there is. No axis value enables
+   * this family: it is the one that *adds* to the page, and it is the most visible
+   * difference there is — a child in an aula ordinaria holding a sheet covered in
+   * pictograms while thirty classmates hold a plain one is being marked out by the
+   * tool meant to include him.
+   *
+   * `decided_on` is here because FR-1606 asks for the **decision** rather than the
+   * setting: a flag with no date is indistinguishable from a flag something else
+   * set, and SC-1603 is «no profile enables pictograms without a recorded human
+   * decision».
+   */
+  pictograms: z.object({
+    enabled: z.boolean().default(false),
+    /** Everywhere, on instructions only, or on key vocabulary only. */
+    scope: z.enum(['all', 'instructions', 'vocabulary']).default('vocabulary'),
+    decided_on: yamlDate.optional(),
+    /**
+     * Her own vocabulary: her school uses a different picture for «recreo».
+     *
+     * Word → pictogram id, and hers wins over the set's (FR-1612). Not an error to
+     * be corrected — it is the set being wrong for her school.
+     */
+    overrides: z.record(z.string(), z.string()).default({}),
+  }).optional(),
 });
 export type Profile = z.infer<typeof profileSchema> & {
   _unparsed?: Record<string, unknown>;

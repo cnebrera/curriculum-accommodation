@@ -14,3 +14,35 @@ Licensing is split by the nature of the content:
     (CC BY-SA 4.0). See LICENSE-CONTENT.md.
 
 See LICENSE-CONTENT.md for the exact list of paths each licence covers.
+
+Third-party assets bundled with the application
+-----------------------------------------------
+
+  * Atkinson Hyperlegible
+    Copyright (c) 2020, Braille Institute of America, Inc.
+    Licensed under the SIL Open Font License, Version 1.1.
+    https://www.brailleinstitute.org/freefont
+
+    Files: app/ui/src/assets/fonts/AtkinsonHyperlegible-Regular.woff2
+           app/ui/src/assets/fonts/AtkinsonHyperlegible-Bold.woff2
+
+    The typeface was chosen for the reason it exists: its letterforms are
+    distinguished from each other rather than from a style, which is what makes
+    b/d, I/l/1 and 0/O separable for a reader who is guessing. It is the one
+    third-party asset in this repository.
+
+    **The full OFL 1.1 text must accompany any distribution of these files.** It
+    is not reproduced here: see backlog G21.
+
+Not bundled, deliberately
+-------------------------
+
+  * ARASAAC pictograms — property of the Gobierno de Aragón, created by Sergio
+    Palao, distributed under CC BY-NC-SA. **Rampa does not bundle, redistribute
+    or download them** (spec 018 FR-1601): NonCommercial is incompatible with
+    Apache-2.0, and BY-NC-SA cannot be merged into our CC BY-SA content. A
+    teacher fetches the set herself, under terms she accepts directly, and Rampa
+    reads it from where she put it.
+
+    `app/packages/core/test/pictogram-licence.test.ts` fails if any image asset
+    that is not one of ours appears in this repository.

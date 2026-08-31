@@ -88,6 +88,19 @@ const api = {
     validateCode: (c: string) => invoke('learners:validateCode', c),
     nameRisk: () => invoke('learners:nameRisk'),
   },
+  /**
+   * Her pictogram set (`018`). **There is no `download`**, deliberately: the
+   * relationship with the licence is hers, and a download button makes us the
+   * distributor of CC BY-NC-SA content inside an Apache-2.0 application.
+   */
+  pictograms: {
+    current: () => invoke('pictograms:current'),
+    choose: () => invoke('pictograms:choose'),
+    /** Read a folder and say what is in it, without configuring anything. */
+    inspect: (root: string) => invoke('pictograms:inspect', root),
+    use: (root: string) => invoke('pictograms:use', root),
+    images: (ids: string[]) => invoke('pictograms:images', ids),
+  },
   job: {
     /** `kind` is required and never defaulted (012 FR-1003). */
     create: (id: string, text: string, kind: string, lang?: string) =>

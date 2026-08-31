@@ -1,4 +1,6 @@
 import { draftMark } from './draft.js';
+import { attributionFor, pictogramAlt } from './attribution.js';
+import { parsePicto } from '../pictograms/apply.js';
 import { createRenderer, learnerFacing } from '../ir/parse.js';
 import type { IRDocument, Block } from '../ir/types.js';
 
@@ -36,6 +38,17 @@ export interface RenderOptions {
   signedOff?: boolean;
   title?: string;
   lang?: string;
+  /**
+   * Pictogram id → `data:` URI (018 T020).
+   *
+   * The renderer never reads a file: `core` is side-effect-free and the isolation
+   * suite walks it. The shell reads her set — the one place that knows which paths
+   * are allowed — and hands over the bytes already encoded.
+   *
+   * An id absent from the map renders a named gap (FR-1616), so a moved or deleted
+   * set degrades the sheet rather than failing the render.
+   */
+  pictogramImages?: ReadonlyMap<string, string>;
 }
 
 export interface Presentation {
@@ -81,6 +94,22 @@ h1,h2,h3{line-height:1.25;margin:2em 0 .6em;font-weight:700}
 .figure{margin:1.6em 0}.figure img{max-width:100%;height:auto}
 .figure blockquote{border-left:4px solid var(--accent);margin:.8em 0 0;padding:.2em 0 .2em 1em;font-size:.95em}
 .note{font-size:.95em;border-left:4px solid var(--rule);padding-left:1em}
+/* Pictograms (018). Never the picture alone: on a greyscale photocopy — which is
+   the delivery format, not an edge case — a pictogram loses the colour
+   distinctions its design uses, and the word is what still works. The minimum
+   size comes from instructions/pictograms.md and is stated here in mm because
+   this stylesheet is for paper. */
+.pictos{display:flex;flex-wrap:wrap;gap:1em;margin:.8em 0}
+.picto{display:flex;flex-direction:column;align-items:center;gap:.2em;
+  min-width:20mm}
+.picto img{width:20mm;height:20mm;object-fit:contain}
+.picto-word{font-size:.85em}
+.picto-missing .picto-gap{display:flex;align-items:center;justify-content:center;
+  width:20mm;height:20mm;border:2px dashed var(--rule);border-radius:6px;
+  font-weight:700;color:var(--rule)}
+/* The licence line. Small, at the foot, and there is no setting for it. */
+.picto-credit{margin-top:2.5em;padding-top:.8em;border-top:1px solid var(--rule);
+  font-size:.75em;color:var(--ink)}
 ${p.oneTaskPerPage ? '.exercise,.assessment{break-after:page;page-break-after:always}' : ''}
 .draft-banner{position:sticky;top:0;z-index:10;background:#8a2f2c;color:#fff;
   padding:.7em 1.2em;font-weight:700;font-size:.9rem;letter-spacing:.04em;text-align:center}
@@ -97,14 +126,57 @@ a{color:var(--accent)}
 :focus-visible{outline:3px solid var(--accent);outline-offset:2px}`;
 }
 
-export function renderBlock(md: ReturnType<typeof createRenderer>, b: Block): string {
+export function renderBlock(
+  md: ReturnType<typeof createRenderer>, b: Block,
+  /**
+   * Pictogram id → a `data:` URI (018 T020).
+   *
+   * Passed in, and embedded rather than linked: a sheet emailed to a colleague who
+   * does not have the set must still show the pictures (FR-1615), and a `file://`
+   * path would leak where her set lives into a document she sends.
+   *
+   * An id with no image renders a **named gap** (FR-1616): the word, marked as a
+   * missing picture, with the id it wanted still in `data-picto`.
+   */
+  images?: ReadonlyMap<string, string>,
+): string {
   const cls = b.classes.join(' ');
   const data = Object.entries(b.attrs)
     .filter(([k]) => k.startsWith('data-'))
     .map(([k, v]) => ` ${k}="${esc(v)}"`).join('');
   const number = b.attrs['data-number'];
   const label = number ? `<span class="n">${esc(number)}.</span> ` : '';
-  return `<section id="${esc(b.id)}" class="${esc(cls)}"${data}>${label}${md.render(b.content)}</section>`;
+  const pictos = renderPictos(b, images);
+  return `<section id="${esc(b.id)}" class="${esc(cls)}"${data}>${label}`
+    + `${md.render(b.content)}${pictos}</section>`;
+}
+
+/**
+ * The pictograms for one block, each **with its word beside it**.
+ *
+ * Never the picture alone: on a black-and-white photocopy — which is the delivery
+ * format and not an edge case (`006` FR-427) — a pictogram loses the colour
+ * distinctions its design uses, and the word is what still works.
+ */
+function renderPictos(b: Block, images?: ReadonlyMap<string, string>): string {
+  const pairs = parsePicto(b.attrs['data-picto']);
+  if (pairs.length === 0) return '';
+
+  const items = pairs.map(({ word, id }) => {
+    const src = images?.get(id);
+    if (!src) {
+      // A named gap, not a broken image and not a silent omission.
+      return `<span class="picto picto-missing" role="img"`
+        + ` aria-label="${esc(pictogramAlt(word))} (falta la imagen)">`
+        + `<span class="picto-gap" aria-hidden="true">?</span>`
+        + `<span class="picto-word">${esc(word)}</span></span>`;
+    }
+    return `<span class="picto">`
+      + `<img src="${esc(src)}" alt="${esc(pictogramAlt(word))}">`
+      + `<span class="picto-word">${esc(word)}</span></span>`;
+  }).join('');
+
+  return `<div class="pictos">${items}</div>`;
 }
 
 export function renderHTML(doc: IRDocument, opts: RenderOptions = {}): string {
@@ -119,10 +191,22 @@ export function renderHTML(doc: IRDocument, opts: RenderOptions = {}): string {
   const mark = draftMark(doc, opts.signedOff);
   // learnerFacing excludes the model's report notes: structural, not a check the
   // model is asked to respect (007 FR-506's shape applied to T087).
-  const body = doc.blocks.filter(learnerFacing).map((b) => renderBlock(md, b)).join('\n');
+  const body = doc.blocks.filter(learnerFacing)
+    .map((b) => renderBlock(md, b, opts.pictogramImages)).join('\n');
 
   const banner = mark === null ? '' :
     `<div class="draft-banner" role="status">${esc(mark.banner)}</div>`;
+
+  /*
+   * The attribution (018 FR-1603), derived from the document and with no option to
+   * remove it. At the foot: the draft mark has to stop her handing the sheet out,
+   * and this is a legal line about a document that is otherwise fine.
+   *
+   * If it were dropped, **her** sheet would be the infringing document, not ours.
+   */
+  const attribution = attributionFor(doc);
+  const credit = attribution === null ? '' :
+    `<footer class="picto-credit">${esc(attribution)}</footer>`;
 
   return `<!DOCTYPE html>
 <html lang="${esc(lang)}">
@@ -133,6 +217,7 @@ export function renderHTML(doc: IRDocument, opts: RenderOptions = {}): string {
 ${banner}
 <main>
 ${body}
+${credit}
 </main>
 </body>
 </html>`;

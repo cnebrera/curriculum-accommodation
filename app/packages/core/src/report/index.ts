@@ -47,6 +47,18 @@ export interface ReportInput {
    * nothing rather than claiming a rule governed something it did not.
    */
   kind?: { id: string; label: string; forbids: string[] } | null;
+  /**
+   * Pictograms, **only when she turned them on** (018 FR-1607).
+   *
+   * Absent means she did not, and the report then says nothing at all about them.
+   * Not «no pictograms were added»: a tool that keeps mentioning pictograms is a
+   * tool arguing with her about how a child is seen, and she has already answered.
+   */
+  pictograms?: {
+    used: Array<{ blockId: string; word: string; id: string }>;
+    /** Ambiguities, in her words. She chooses; we do not (FR-1609). */
+    skipped: string[];
+  };
 }
 
 export interface Report {
@@ -218,6 +230,25 @@ export function buildReport(input: ReportInput): Report {
   if (declared.other.length) {
     md.push('## Otras notas sobre la adaptación', '');
     for (const o of declared.other) md.push(`- ${o}`);
+    md.push('');
+  }
+
+  /*
+   * Pictograms, and the ambiguities first. «He puesto 12» is a count; «hay dos
+   * dibujos para "rana" y no he puesto ninguno» is a decision she can make.
+   */
+  if (input.pictograms) {
+    md.push('## Pictogramas', '');
+    for (const s of input.pictograms.skipped) md.push(`- ${s}`);
+    if (input.pictograms.used.length) {
+      const words = [...new Set(input.pictograms.used.map((u) => u.word))];
+      md.push(`- He puesto pictograma en: ${words.join(', ')}.`);
+      md.push('  > La atribución va en la hoja y no se puede quitar: es condición de'
+        + ' la licencia.');
+    } else if (input.pictograms.skipped.length === 0) {
+      md.push('- No he encontrado ninguna palabra del juego de pictogramas en este'
+        + ' material.');
+    }
     md.push('');
   }
 

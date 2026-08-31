@@ -90,6 +90,7 @@ describe('inside packages/shell, the surface is small and named', () => {
     'packages/shell/src/ipc/ingest.ts',      // dialog.showOpenDialog, app.getPath, progress
     'packages/shell/src/ipc/keys.ts',        // safeStorage — the encrypted key store
     'packages/shell/src/ipc/names.ts',       // safeStorage — the encrypted name map
+    'packages/shell/src/ipc/pictograms.ts',  // dialog.showOpenDialog, app.getPath (018 T014)
     'packages/shell/src/ipc/vault.ts',       // dialog.showOpenDialog, the watcher
     'packages/shell/src/ipc/wrap.ts',        // ipcMain.handle — the channel itself
     'packages/shell/src/jobs/print.ts',      // BrowserWindow.printToPDF — ADR 0008's one surviving argument
@@ -148,7 +149,24 @@ describe('inside packages/shell, the surface is small and named', () => {
      * fusion `013` T019 split apart. Growing by one small file of pure wiring is
      * the shape of growth this bound is meant to permit; growing because
      * orchestration crept back in is the shape it is meant to catch.
+     *
+     * **Raised again on the same day** for `018`'s `ipc/pictograms.ts` — and it
+     * refused the first two attempts to pass, which is the whole value of it:
+     *
+     * 1. The file arrived at 200 lines carrying 70 lines of Spanish prose for a
+     *    vault note and the id→data-URI logic. Both moved into `core`
+     *    (`pictograms/note.ts`, `pictograms/images.ts`), where they are testable
+     *    and do not need to know what a window is.
+     * 2. It grew again when the adapt and print jobs needed set access. That moved
+     *    to `packages/shell/src/pictograms/access.ts`, which takes the settings
+     *    directory as an argument — so the module that does the reading is off the
+     *    Electron surface entirely, and the one fact it needs is injected once at
+     *    startup.
+     *
+     * What is left here is a folder dialog and five handlers, which is what an
+     * `ipc/` file is for. A bound that only ever moves up is a bound; a bound that
+     * makes somebody look twice is a design review.
      */
-    expect(lines).toBeLessThan(1500);
+    expect(lines).toBeLessThan(1620);
   });
 });

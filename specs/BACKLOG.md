@@ -392,6 +392,29 @@ every moment should have a spec. What it added beyond the seams pass:
    journey sentence → T094). Handover *import* (004 US2) recorded as deliberately
    deferred rather than silently missing.
 
+## G21 · The bundled font's licence text is not in the repository
+
+Found 2026-08-31, by writing `018` T001's licence check — which was written to
+assert that no ARASAAC asset is here and found something else instead.
+
+**Atkinson Hyperlegible** (`app/ui/src/assets/fonts/`) is bundled and was credited
+**nowhere**: not in `NOTICE`, not in `LICENSE-CONTENT.md`, not in the built
+application. It is SIL Open Font License 1.1, Copyright (c) 2020 Braille Institute
+of America, and the OFL requires the copyright notice and the licence to accompany
+the files.
+
+Half fixed in the same commit: `NOTICE` now credits it, names the files and links
+the source. **What is still missing is the OFL 1.1 text itself**, and it is not
+being reproduced from memory — a licence file with a word wrong is worse than a
+pointer to the right one. Somebody needs to fetch the canonical text and add it as
+`app/ui/src/assets/fonts/LICENSE-OFL.txt`, and `007`'s licence-compliance
+inspection of the built AppImage needs a row for it.
+
+**Why this is worth a backlog entry rather than a quiet fix**: it is the same class
+of failure the whole of `018` is built around — using somebody else's licensed
+content without carrying the condition that came with it. We found it in our own
+repository while writing the check meant to catch it elsewhere.
+
 ## G20 · No recipe reduces load in explanatory prose
 
 Found 2026-08-31, by `012` T005 turning `recipe.scope` on and the selection

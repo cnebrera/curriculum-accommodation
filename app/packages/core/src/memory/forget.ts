@@ -76,7 +76,14 @@ export async function planForget(vault: Vault, code: string): Promise<ForgetPlan
       // 015 FR-1307. It is inside profile.yaml, so `learnerDir` already takes it —
       // but a plan that lists what goes must name the fields she would worry
       // about, and «el colegio» is one a school's DPO will ask about by name.
-      'Se va todo lo del alumno: su perfil, su edad, su curso, su colegio, tus notas sobre él y sus fichas adaptadas.',
+      /*
+       * `018` T006 adds «los pictogramas»: it lives in profile.yaml so `learnerDir`
+       * already takes it, and a plan that lists what goes must name the fields she
+       * would worry about. This one is a **recorded decision about how a child is
+       * seen**, which is closer to the reason erasure exists than a course is.
+       */
+      'Se va todo lo del alumno: su perfil, su edad, su curso, su colegio, si usaba '
+      + 'pictogramas, tus notas sobre él y sus fichas adaptadas.',
       ...(sharedKept.length ? [
         `${sharedKept.length} ${sharedKept.length === 1 ? 'material se queda' : 'materiales se quedan'} `
         + 'en tu carpeta porque otros alumnos tuyos también lo usan. Lo suyo de este alumno sí se borra.',

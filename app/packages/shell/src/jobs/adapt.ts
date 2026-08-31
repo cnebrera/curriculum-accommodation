@@ -5,7 +5,7 @@ import {
   selectRecipes, loadLearner, buildReport, loadForRun, RampaError, isGenerated,
   stringifyFrontMatter, injectionNotices, logger, buildAdaptPrompt, schoolYearOf, blockClassesIn,
   checkStructurallyComplete, checkCompleteness, completenessNotice,
-  assertProvenance, findUnaccountedBlocks, divergence, studiesFor,
+  assertProvenance, findUnaccountedBlocks, divergence, studiesFor, applyPictograms,
   type Notice, type CompletenessIssue,
 } from '@rampa/core';
 import { sendRedacted } from '@rampa/providers';
@@ -13,6 +13,7 @@ import { currentVault } from '../ipc/vault.js';
 import { knownNames, unknownNamesIn } from '../ipc/names.js';
 import { activeProvider } from '../ipc/keys.js';
 import { allRecipes, assertCorpus, loadInstruction, findYearInCorpus, materialKind } from '../corpus/index.js';
+import { currentPictogramSet } from '../pictograms/access.js';
 import { recordCost } from '../ipc/cost.js';
 
 /**
@@ -303,6 +304,20 @@ export async function runAdaptation(
       unaccounted.map((b) => b.id));
   }
 
+  /*
+   * Pictograms (018), applied **after** the model and only if she said so.
+   *
+   * Here rather than in a recipe, and that is the whole design: a recipe is
+   * selected by an axis and applied by a model, and both are wrong for this family.
+   * No axis value may enable it (FR-1605) — it is the one family that *adds* to the
+   * page and the most visible difference there is — and inserting a pictogram is a
+   * deterministic lookup, not judgement (FR-1608).
+   *
+   * So `selectRecipes` never sees pictograms, and the only thing that turns them on
+   * is `profile.pictograms.enabled`, written by her with a date.
+   */
+  const pictos = await applyPictogramsIfSheSaidSo(adapted, learner, doc);
+
   onProgress({ stage: 'Guardando' });
   /*
    * Stamp when this was made, and which school year it belonged to (014 FR-1203).
@@ -320,6 +335,12 @@ export async function runAdaptation(
 
   const report = buildReport({
     adapted, selection,
+    /*
+     * Only when they are on (FR-1607). Where she has left them off the report says
+     * nothing at all — a tool that keeps proposing pictograms is a tool arguing with
+     * her about how a child is seen.
+     */
+    ...(pictos ? { pictograms: pictos } : {}),
     // Under which rule this happened (012 FR-1006), and the disagreement check
     // that reports without acting (FR-1005).
     kind: await materialKind(
@@ -378,6 +399,49 @@ export async function runAdaptation(
     recipes: selection.selected.map((r) => r.id),
     retried,
   };
+}
+
+/**
+ * Insert pictograms, if she decided this learner uses them (018 T012/T018).
+ *
+ * Returns `null` when she has not — and `null` is what keeps the report silent
+ * about it. The three ways this returns nothing are all «she said no or said
+ * nothing», never «it did not work»: no decision recorded, no set configured, or a
+ * set whose language does not match the material.
+ */
+async function applyPictogramsIfSheSaidSo(
+  adapted: ReturnType<typeof parseIR>,
+  learner: Awaited<ReturnType<typeof loadLearner>>,
+  original: ReturnType<typeof parseIR>,
+): Promise<{ used: Array<{ blockId: string; word: string; id: string }>; skipped: string[] } | null> {
+  const decision = (learner.profile as { pictograms?: { enabled?: boolean; scope?: string; overrides?: Record<string, string> } }).pictograms;
+  if (decision?.enabled !== true) return null;
+
+  const set = await currentPictogramSet();
+  if (!set) {
+    // She turned it on and there is no set. Said in the report rather than
+    // silently producing a sheet without them.
+    logger.warn('pictograms.no-set', {});
+    return { used: [], skipped: ['No tengo ningún juego de pictogramas configurado, así que esta hoja no lleva ninguno.'] };
+  }
+
+  const lang = typeof adapted.frontMatter['lang'] === 'string' ? adapted.frontMatter['lang'] : 'es';
+  const kind = typeof original.frontMatter['kind'] === 'string' ? original.frontMatter['kind'] : '';
+
+  const applied = applyPictograms(adapted, set, {
+    language: lang,
+    scope: (decision.scope as 'all' | 'instructions' | 'vocabulary') ?? 'vocabulary',
+    ...(decision.overrides ? { overrides: decision.overrides } : {}),
+    /*
+     * The names she knows, normalised — so «Lucía» never gets a pictogram
+     * (FR-1610). `core` never learns a learner's name, so the set of them is
+     * assembled here and passed in as words.
+     */
+    names: new Set([...(await knownNames()).values()].map((n) => n.toLowerCase())),
+    isExam: kind === 'exam',
+  });
+
+  return { used: applied.used, skipped: applied.skipped };
 }
 
 /** Revision 1 is the first attempt; each re-run after a correction adds one. */
