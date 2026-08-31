@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, dirname } from 'node:path';
-import { parseRecipe, selectRecipes, type Recipe, type Profile } from '../src/index.js';
+import { parseRecipe, selectRecipes, inScope, type Recipe, type Profile } from '../src/index.js';
 
 /**
  * What recipe selection produces **today** (012 T001).
@@ -21,6 +21,16 @@ import { parseRecipe, selectRecipes, type Recipe, type Profile } from '../src/in
  * **This is not a test of correctness.** Several of the expectations below are
  * arguably wrong — that is the point. It asserts what is, so that what changes is
  * visible.
+ *
+ * ## Updated 2026-08-31, in the commit that turned `scope` on (T005/T006)
+ *
+ * Both sides are now recorded. The `before` snapshots are unchanged and still
+ * pass, because filtering is **opt-in**: a caller that passes no document gets
+ * exactly what it got yesterday, which is what makes this a change somebody chose
+ * rather than a change that happened.
+ *
+ * The `after` snapshots are the same four profiles against three real documents.
+ * The difference between the two sets is the review.
  */
 const repoRoot = join(dirname(new URL(import.meta.url).pathname), '..', '..', '..', '..');
 
@@ -43,11 +53,16 @@ const corpus: Recipe[] = (() => {
 })();
 
 /** Four profiles that between them trigger most of the corpus. */
+const profile = (code: string, axes: Record<string, 0 | 1 | 2 | 3>): Profile => ({
+  code, axes, works: [], avoid: [], interests: [],
+  response: {}, language: {},
+} as Profile);
+
 const PROFILES: Array<{ name: string; profile: Profile }> = [
-  { name: 'cognitive load and attention', profile: { code: 'B01', axes: { COG: 3, ATE: 2 } } as Profile },
-  { name: 'executive function', profile: { code: 'B02', axes: { EJE: 3, DEC: 2 } } as Profile },
-  { name: 'visual access', profile: { code: 'B03', axes: { 'PER-V': 3 } } as Profile },
-  { name: 'reading, in Spanish', profile: { code: 'B04', axes: { DEC: 3, LIN: 2 } } as Profile },
+  { name: 'cognitive load and attention', profile: profile('B01', { COG: 3, ATE: 2 }) },
+  { name: 'executive function', profile: profile('B02', { EJE: 3, DEC: 2 }) },
+  { name: 'visual access', profile: profile('B03', { 'PER-V': 3 }) },
+  { name: 'reading, in Spanish', profile: profile('B04', { DEC: 3, LIN: 2 }) },
 ];
 
 const selected = (p: Profile, lang?: string): string[] =>
@@ -73,23 +88,91 @@ describe('selection today, per profile', () => {
   }
 });
 
-describe('the case T005 will change most', () => {
+/** Three documents, by the block classes they contain. */
+const DOCUMENTS: Array<{ name: string; classes: string[] }> = [
+  { name: 'a worksheet: instructions and exercises', classes: ['instruction', 'exercise'] },
+  { name: 'an exam: assessments and a figure', classes: ['assessment', 'figure', 'instruction'] },
+  { name: 'a study text: explanation only', classes: ['explanation', 'example'] },
+];
+
+describe('selection after scope filtering', () => {
+  for (const doc of DOCUMENTS) {
+    for (const { name, profile } of PROFILES) {
+      it(`${doc.name} · ${name}`, () => {
+        expect(selectRecipes(corpus, profile, 'es', doc.classes).selected.map((r) => r.id).sort())
+          .toMatchSnapshot();
+      });
+    }
+  }
+});
+
+describe('the coverage gap the filter revealed', () => {
   /**
-   * `exam-access-not-difficulty` is scoped `[assessment]`. Today it is offered to
-   * any profile whose axes match, for **any** document — including a study text
-   * with no assessment blocks in it at all.
+   * **A finding, not a failure**, and the reason T001 was worth writing.
    *
-   * After T005 it should be offered only where the document has assessment
-   * blocks. This assertion is here to fail then, loudly, in the commit that makes
-   * it true.
+   * With `scope` honoured, a study text made of `explanation` and `example`
+   * blocks selects **zero** recipes for a learner with high cognitive load or
+   * weak executive function. Every load recipe in the corpus is scoped to
+   * `exercise` or `assessment`.
+   *
+   * Before the filter, that learner got `one-task-per-page` (which is about
+   * exercises and was being applied to prose anyway) and
+   * `exam-access-not-difficulty` (which is about exams and was nonsense here).
+   * So the coverage was never real — it was two misapplied recipes.
+   *
+   * The filter is right and the corpus has a hole: nothing reduces load in
+   * explanatory prose. Recorded as backlog **G20** rather than papered over by
+   * loosening a scope, which would put the misapplication back and hide it again.
    */
-  it('an assessment-scoped recipe is currently offered regardless of the document', () => {
+  it('a study text selects nothing for a load profile — see backlog G20', () => {
+    const studyText = ['explanation', 'example'];
+    for (const name of ['cognitive load and attention', 'executive function']) {
+      const p = PROFILES.find((x) => x.name === name)!.profile;
+      expect(selectRecipes(corpus, p, 'es', studyText).selected,
+        `${name}: if this is no longer empty, G20 has been closed — update this test`)
+        .toEqual([]);
+    }
+  });
+});
+
+describe('what changed, stated rather than left to the snapshots', () => {
+  /**
+   * The finding this whole spec rests on, now fixed and asserted from both ends.
+   */
+  it('an assessment-scoped recipe is no longer offered for a document with no assessments', () => {
     const examOnly = corpus.find((r) => r.id === 'exam-access-not-difficulty');
     expect(examOnly, 'the fixture recipe is gone; update this baseline').toBeDefined();
     expect(examOnly!.scope).toEqual(['assessment']);
 
-    // `selectRecipes` takes no document, which IS the finding: it cannot filter
-    // on scope because it has never been given anything to filter against.
-    expect(selectRecipes.length, 'selectRecipes still takes (all, profile, lang)').toBe(3);
+    const study = ['explanation', 'example'];
+    const exam = ['assessment', 'instruction'];
+
+    expect(inScope(examOnly!, study), 'offered for a study text').toBe(false);
+    expect(inScope(examOnly!, exam), 'not offered for an exam').toBe(true);
+
+    // And end to end, for the profile the baseline shows it reaching.
+    const before = selectRecipes(corpus, PROFILES[0]!.profile, 'es').selected.map((r) => r.id);
+    const after = selectRecipes(corpus, PROFILES[0]!.profile, 'es', study).selected.map((r) => r.id);
+    expect(before).toContain('exam-access-not-difficulty');
+    expect(after).not.toContain('exam-access-not-difficulty');
+  });
+
+  /**
+   * Opt-in, and that is load-bearing rather than cautious: it is what makes the
+   * old snapshots still pass, and therefore what makes the diff in this commit
+   * the whole of the behaviour change rather than part of it.
+   */
+  it('passing no document changes nothing', () => {
+    for (const { profile } of PROFILES) {
+      expect(selectRecipes(corpus, profile, 'es').selected.map((r) => r.id))
+        .toEqual(selectRecipes(corpus, profile, 'es', undefined).selected.map((r) => r.id));
+    }
+  });
+
+  /** A recipe declaring no restriction is not given one on its author's behalf. */
+  it('a recipe with no scope applies anywhere', () => {
+    const unscoped = { id: 'x', scope: [] } as unknown as Recipe;
+    expect(inScope(unscoped, ['explanation'])).toBe(true);
+    expect(inScope(unscoped, [])).toBe(true);
   });
 });

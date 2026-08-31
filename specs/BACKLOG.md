@@ -66,6 +66,7 @@ disagreed with it. G3 remains open; G6 is moot.
 | G16 | `instructions/education/es.md` is unreviewed and partly wrong | Medium | `011` T026 — see below |
 | G19 | Corpus families missing for `MOT`, `PER-A`, `REG`, and pictograms | Medium | `recipes/core/` — pictograms **specified** as `018-pictogramas`; `MOT` as `019` US4; `PER-A` and `REG` still open corpus work |
 | ~~G18~~ | Provenance does not record which service produced the material | **Specified** 2026-08-30 | `001` FR-019/020 |
+| G20 | Nothing in the corpus reduces cognitive load in explanatory prose | Medium | `recipes/core/` — see below |
 
 ---
 
@@ -346,6 +347,29 @@ every moment should have a spec. What it added beyond the seams pass:
    surfacing (003 US3 → T093) and fix-two-things-by-hand in review (001's own
    journey sentence → T094). Handover *import* (004 US2) recorded as deliberately
    deferred rather than silently missing.
+
+## G20 · No recipe reduces load in explanatory prose
+
+Found 2026-08-31, by `012` T005 turning `recipe.scope` on and the selection
+baseline making the consequence visible.
+
+With scope honoured, a **study text** — `explanation` and `example` blocks, no
+exercises — selects **zero** recipes for a learner with `COG>=2` or `EJE>=2`.
+Every load recipe in the corpus is scoped to `exercise` or `assessment`.
+
+The coverage was never real. Before the filter that learner received
+`one-task-per-page`, which is about exercises and was being applied to prose, and
+`exam-access-not-difficulty`, which is about exams and was nonsense there. Two
+misapplied recipes are not coverage; they are two wrong answers that happened to
+be present.
+
+**Do not close this by loosening a scope.** That puts the misapplication back and
+hides it again. What is missing is a recipe about prose: chunking, headings,
+one idea per paragraph, a summary box — the things a PT actually does to a page of
+apuntes. It is also, like the rest of G19, a natural first community contribution.
+
+Asserted in `packages/core/test/selection-baseline.test.ts`, which fails if the
+emptiness stops being true — so closing this gap is noticed rather than assumed.
 
 ## G19 · Corpus families missing for three axes
 

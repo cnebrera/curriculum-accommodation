@@ -1,5 +1,76 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`selection after scope filtering > a study text: explanation only · cognitive load and attention 1`] = `[]`;
+
+exports[`selection after scope filtering > a study text: explanation only · executive function 1`] = `[]`;
+
+exports[`selection after scope filtering > a study text: explanation only · reading, in Spanish 1`] = `
+[
+  "keep-curricular-terms",
+  "lectura-facil-es",
+]
+`;
+
+exports[`selection after scope filtering > a study text: explanation only · visual access 1`] = `
+[
+  "non-visual-access",
+]
+`;
+
+exports[`selection after scope filtering > a worksheet: instructions and exercises · cognitive load and attention 1`] = `
+[
+  "one-task-per-page",
+]
+`;
+
+exports[`selection after scope filtering > a worksheet: instructions and exercises · executive function 1`] = `
+[
+  "explicit-steps",
+]
+`;
+
+exports[`selection after scope filtering > a worksheet: instructions and exercises · reading, in Spanish 1`] = `
+[
+  "keep-curricular-terms",
+  "lectura-facil-es",
+]
+`;
+
+exports[`selection after scope filtering > a worksheet: instructions and exercises · visual access 1`] = `
+[
+  "non-visual-access",
+]
+`;
+
+exports[`selection after scope filtering > an exam: assessments and a figure · cognitive load and attention 1`] = `
+[
+  "exam-access-not-difficulty",
+  "one-task-per-page",
+]
+`;
+
+exports[`selection after scope filtering > an exam: assessments and a figure · executive function 1`] = `
+[
+  "exam-access-not-difficulty",
+  "explicit-steps",
+]
+`;
+
+exports[`selection after scope filtering > an exam: assessments and a figure · reading, in Spanish 1`] = `
+[
+  "exam-access-not-difficulty",
+  "keep-curricular-terms",
+  "lectura-facil-es",
+]
+`;
+
+exports[`selection after scope filtering > an exam: assessments and a figure · visual access 1`] = `
+[
+  "exam-access-not-difficulty",
+  "non-visual-access",
+]
+`;
+
 exports[`selection today, per profile > cognitive load and attention — before scope filtering 1`] = `
 [
   "exam-access-not-difficulty",

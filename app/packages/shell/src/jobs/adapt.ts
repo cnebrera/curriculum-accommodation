@@ -3,7 +3,7 @@ import {
   Vault, VAULT, jobDir, jobIR, jobLearnerDir, jobAdapted, jobAdaptedRevision,
   jobRejected, jobReport, parseIR, annotateInjection, checkBounds, isVerified,
   selectRecipes, loadLearner, buildReport, loadForRun, RampaError,
-  stringifyFrontMatter, injectionNotices, logger, buildAdaptPrompt, schoolYearOf,
+  stringifyFrontMatter, injectionNotices, logger, buildAdaptPrompt, schoolYearOf, blockClassesIn,
   checkStructurallyComplete, checkCompleteness, completenessNotice,
   assertProvenance, findUnaccountedBlocks, divergence, studiesFor,
   type Notice, type CompletenessIssue,
@@ -145,7 +145,14 @@ export async function runAdaptation(
   // with the curriculum unprotected, which is worse than not adapting.
   await assertCorpus();
   const lang = typeof doc.frontMatter['lang'] === 'string' ? doc.frontMatter['lang'] : 'es';
-  const selection = selectRecipes(await allRecipes(), learner.profile, lang);
+  /*
+   * Now filtered by what is actually in this document (012 T005, FR-1004).
+   *
+   * Before this, `recipe.scope` was parsed and read by nothing, so a recipe about
+   * assessments was offered for a study text. The behaviour change is real and
+   * `packages/core/test/selection-baseline.test.ts` records both sides of it.
+   */
+  const selection = selectRecipes(await allRecipes(), learner.profile, lang, blockClassesIn(doc));
 
   // Memory is never loaded wholesale: only entries for the recipes selected.
   const memory = await loadForRun(vault, selection.selected.map((r) => r.id));

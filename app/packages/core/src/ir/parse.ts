@@ -106,3 +106,22 @@ export function parseIR(raw: string, file?: string): IRDocument {
  */
 export const learnerFacing = (b: Block): boolean =>
   !b.classes.includes('reference') && !b.classes.includes('report-notes');
+
+/**
+ * Which block classes a document actually contains (012 T005).
+ *
+ * Derived, never stored: a document's classes are a fact about the document, and
+ * a stored copy is one a hand-edit in Obsidian could make false — which the vault
+ * explicitly permits.
+ *
+ * `report-notes` is excluded. It is the model's channel into the report and never
+ * learner-facing, so a recipe scoped to it would be a recipe about our own
+ * plumbing.
+ */
+export function blockClassesIn(doc: { blocks: Array<{ classes: string[] }> }): string[] {
+  const seen = new Set<string>();
+  for (const b of doc.blocks) {
+    for (const c of b.classes) if (c !== 'report-notes') seen.add(c);
+  }
+  return [...seen].sort();
+}

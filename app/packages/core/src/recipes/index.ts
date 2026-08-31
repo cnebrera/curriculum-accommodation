@@ -87,8 +87,51 @@ export interface Selection {
  * and `avoid`, then access beats optimisation, then the higher level, then the
  * more conservative option. A conflict is never resolved silently.
  */
-export function selectRecipes(all: Recipe[], profile: Profile, lang?: string): Selection {
-  const candidates = all.filter((r) => applies(r, profile) && (!r.lang || r.lang === lang));
+/**
+ * Does this recipe apply anywhere in this document?
+ *
+ * Set intersection over parsed front matter — deterministic, no model
+ * (Principle II).
+ *
+ * Two absences both mean "yes", and for different reasons. **No document** means
+ * the caller is not filtering, which is every caller that predates `012`. **No
+ * scope** on a recipe means it declares no restriction, so restricting it would
+ * be inventing one on the author's behalf.
+ */
+export function inScope(recipe: Recipe, presentClasses?: readonly string[]): boolean {
+  if (!presentClasses) return true;
+  if (recipe.scope.length === 0) return true;
+  return recipe.scope.some((c) => presentClasses.includes(c));
+}
+
+export function selectRecipes(
+  all: Recipe[], profile: Profile, lang?: string,
+  /**
+   * The block classes present in the document being adapted (012 T005, FR-1004).
+   *
+   * **Optional, and its absence means "do not filter".** Every existing caller
+   * passes nothing, so omitting it preserves today's behaviour exactly — which
+   * matters because turning this on changes selection for every document this
+   * application has ever adapted, and `selection-baseline.test.ts` exists to make
+   * that diff visible rather than silent.
+   *
+   * ## Why this parameter had to exist at all
+   *
+   * `recipe.scope` has been parsed into the `Recipe` type since recipes were
+   * introduced, populated across all nine corpus files, and **read by nothing**.
+   * It could not be read: this function had never been given a document to
+   * compare a scope against. So `exam-access-not-difficulty`, scoped
+   * `[assessment]`, was offered for a study text with no assessment block in it —
+   * for all four baseline profiles.
+   *
+   * Fifth instance of the same shape in this project, after the corpus journal
+   * dates, `planForget`, the injection notices and `evidence:`.
+   */
+  presentClasses?: readonly string[],
+): Selection {
+  const candidates = all
+    .filter((r) => applies(r, profile) && (!r.lang || r.lang === lang))
+    .filter((r) => inScope(r, presentClasses));
   const byId = new Map(candidates.map((r) => [r.id, r]));
   const dropped = new Set<string>();
   const resolved: Selection['resolved'] = [];

@@ -10,18 +10,18 @@ the change it protects, which is unusual enough to be its own task.
 ## Phase 1 · Make the behaviour change visible before making it
 
 - [x] T001 Write `app/packages/core/test/selection-baseline.test.ts`: for a set of representative documents, record which recipes `selectRecipes` returns **today**. Commit it before anything else changes. `scope` is populated across the corpus and read by nothing, so turning it on changes selection for every document and no test asserts what today produces *(done, and the baseline is damning: **`exam-access-not-difficulty`, scoped `[assessment]`, is currently selected for all four profiles** — including one whose document is a study text. It is offered to everything, which is what «parsed and never read» looks like when you write it down.)*
-- [ ] T002 Author the kinds in the corpus per contracts/material-kinds.md: four, each with a label in her words and a rule naming one prohibition
+- [x] T002 Author the kinds in the corpus per contracts/material-kinds.md: four, each with a label in her words and a rule naming one prohibition *(done: `instructions/material-kinds.md`. Four kinds, each with a label in her words and a clause naming what it forbids. `reviewed_by_teacher: false`, and the note says what most needs reviewing — the **order** of the list, because she is asked before she starts and a badly ordered list is friction four times a day.)*
 
 ---
 
 ## Phase 2 · Foundational
 
-- [ ] T003 Parse the kinds in `app/packages/core/src/recipes/kinds.ts`, repair-not-reject, with `forbids` machine-readable and `rule` the text the model reads
+- [x] T003 Parse the kinds in `app/packages/core/src/recipes/kinds.ts`, repair-not-reject, with `forbids` machine-readable and `rule` the text the model reads *(done: `packages/core/src/recipes/kinds.ts`, repair-not-reject. A kind with no `rule` is **dropped** rather than kept: the rule is the whole point, and a label with nothing behind it puts an option in front of her that changes nothing.)*
 - [ ] T004 Add `kind` to the part/document schema, optional, **absent by default** — the finding behind this spec is an unasked kind written as `worksheet`, and a default repeats it
-- [ ] T005 Make `scope` filter in `selectRecipes` (FR-1004): offered where the document has a declared block class; **absent scope means anywhere**
-- [ ] T006 Update the baseline from T001 in the same commit as T005, so the diff is the behaviour change and a reviewer sees it
+- [x] T005 Make `scope` filter in `selectRecipes` (FR-1004): offered where the document has a declared block class; **absent scope means anywhere** *(done, and **opt-in** — `selectRecipes` gains an optional list of the document's block classes, and passing nothing behaves exactly as before. That is load-bearing rather than cautious: it is what keeps the T001 snapshots passing, so the diff in this commit is the whole behaviour change rather than part of it.)*
+- [x] T006 Update the baseline from T001 in the same commit as T005, so the diff is the behaviour change and a reviewer sees it *(done, in the same commit. Both sides recorded — and the diff revealed a real coverage gap, now **backlog G20**: a study text selects zero recipes for a load profile, because every load recipe is scoped to exercises. The old coverage was two misapplied recipes rather than coverage.)*
 - [ ] T007 [P] Write `app/packages/core/test/kinds.test.ts` covering quickstart §1
-- [ ] T008 Export from `app/packages/core/src/index.ts`
+- [x] T008 Export from `app/packages/core/src/index.ts` *(done.)*
 
 **Checkpoint**: the baseline diff is reviewed and understood. Do not proceed past a diff nobody can explain.
 

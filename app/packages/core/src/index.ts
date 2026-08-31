@@ -29,6 +29,7 @@ export * from './ir/bounds.js';
 export * from './ir/completeness.js';
 
 export * from './recipes/index.js';
+export * from './recipes/kinds.js';
 export * from './record/entry.js';
 export * from './record/scan.js';
 export * from './record/markdown.js';
