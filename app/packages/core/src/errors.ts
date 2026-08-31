@@ -13,6 +13,7 @@ export type ErrorKind =
   | 'render-learner-data'    // learner data reached learner-facing output
   | 'render-undescribed'     // an essential figure with no description
   | 'input-too-large'
+  | 'material-kind-missing'  // she was not asked what the material is, or said something unknown
   | 'ingest-empty'           // nothing dropped
   | 'ingest-format'          // a file type we cannot read, or a mixed drop
   | 'ingest-unusable'        // a photo too dark or too small to be worth a call

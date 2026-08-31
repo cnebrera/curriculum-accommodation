@@ -29,6 +29,16 @@ export interface Correction {
 export interface AdaptPromptInput {
   profile: Profile;
   /**
+   * What the material is (012 FR-1002), from `instructions/material-kinds.md`.
+   *
+   * `null` when she has not said — which is every document in every vault that
+   * predates `012`, and which must not be silently read as a worksheet. When it
+   * is null the prompt says nothing about the kind rather than asserting the
+   * loosest rule, because asserting the loosest rule about an exam is the exact
+   * failure this whole feature exists to prevent.
+   */
+  kind?: { id: string; label: string; rule: string } | null;
+  /**
    * Who the learner is (011). Resolved by the caller against the education
    * corpus, so this module stays free of any knowledge about school systems —
    * it renders a paragraph, it does not know what Bachillerato is.
@@ -164,6 +174,26 @@ export function buildAdaptPrompt(input: AdaptPromptInput): { prompt: string; not
    */
   const who = whoIsThis(input);
   if (who) out.push(section('Quién es este alumno', who));
+
+  /*
+   * What this document is, and what that forbids (012 FR-1002).
+   *
+   * `instructions/hard-rules.md` rule 5 already says «Exams preserve the
+   * criterion», and it was being sent with every request — a correct sentence
+   * about exams, given to the model while adapting a study text, with nothing
+   * anywhere saying which this document was.
+   *
+   * So the rule is now **asserted about this document** rather than recited in
+   * general: «Esto es un examen. Cambia sólo la vía de acceso…». The hard rules
+   * still outrank it, which the corpus file says in as many words.
+   *
+   * Absent kind means an absent section. Never a default: a defaulted worksheet
+   * rule applied to an exam is the failure, and it is silent.
+   */
+  if (input.kind) {
+    out.push(section('Qué es este material',
+      `${input.kind.label}.\n\n${input.kind.rule.trim()}`));
+  }
 
   if (profile.works.length) {
     out.push(section('Lo que ya funciona con este alumno',

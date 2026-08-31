@@ -19,6 +19,12 @@ export function useServices(): Loadable<Service[]> {
   return useAsync(() => window.rampa.corpus.services() as Promise<Service[]>, []);
 }
 
+/** What the material can be (012). She picks one; nothing is preselected. */
+export function useMaterialKinds(): Loadable<Array<{ id: string; label: string }>> {
+  return useAsync(() =>
+    window.rampa.corpus.materialKinds() as Promise<Array<{ id: string; label: string }>>, []);
+}
+
 export function useEducationSystems(): Loadable<unknown[]> {
   return useAsync(() => window.rampa.corpus.educationSystems() as Promise<unknown[]>, []);
 }

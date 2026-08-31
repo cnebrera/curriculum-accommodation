@@ -10,6 +10,20 @@ import { defineConfig } from '@playwright/test';
  * by nature, so they must never be the thing a contributor skips because the
  * fast suite takes too long.
  */
+/*
+ * The suite launches real Electron windows — that is the point of it — and each
+ * one used to appear on top of whatever the developer was doing and take the
+ * keyboard with it. Fifty-seven of those, several times an hour, makes the suite
+ * something you avoid running, which is the opposite of what a suite is for.
+ *
+ * Set here rather than in `use.launchOptions`, which only reaches browser
+ * launches and not `_electron.launch`. This file is loaded by the runner and by
+ * every worker, and each test spreads `process.env` into its launch — so the flag
+ * arrives wherever a window is created. `main.ts` reads it and shows the window
+ * inactive, with the dock icon hidden.
+ */
+process.env['RAMPA_TEST'] = '1';
+
 export default defineConfig({
   testDir: './e2e',
   // Never against a stale `out/`. See e2e/build.setup.ts.

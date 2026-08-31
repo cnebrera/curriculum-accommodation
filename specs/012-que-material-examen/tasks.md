@@ -20,7 +20,7 @@ the change it protects, which is unusual enough to be its own task.
 - [ ] T004 Add `kind` to the part/document schema, optional, **absent by default** — the finding behind this spec is an unasked kind written as `worksheet`, and a default repeats it
 - [x] T005 Make `scope` filter in `selectRecipes` (FR-1004): offered where the document has a declared block class; **absent scope means anywhere** *(done, and **opt-in** — `selectRecipes` gains an optional list of the document's block classes, and passing nothing behaves exactly as before. That is load-bearing rather than cautious: it is what keeps the T001 snapshots passing, so the diff in this commit is the whole behaviour change rather than part of it.)*
 - [x] T006 Update the baseline from T001 in the same commit as T005, so the diff is the behaviour change and a reviewer sees it *(done, in the same commit. Both sides recorded — and the diff revealed a real coverage gap, now **backlog G20**: a study text selects zero recipes for a load profile, because every load recipe is scoped to exercises. The old coverage was two misapplied recipes rather than coverage.)*
-- [ ] T007 [P] Write `app/packages/core/test/kinds.test.ts` covering quickstart §1
+- [x] T007 [P] Write `app/packages/core/test/kinds.test.ts` covering quickstart §1 *(done: `packages/core/test/kinds.test.ts`, 20 cases, including the one the spec asks for by name — the same document as a worksheet and as an exam, and the prompts differ.)*
 - [x] T008 Export from `app/packages/core/src/index.ts` *(done.)*
 
 **Checkpoint**: the baseline diff is reviewed and understood. Do not proceed past a diff nobody can explain.
@@ -29,13 +29,13 @@ the change it protects, which is unusual enough to be its own task.
 
 ## Phase 3 · US1 + US2 — she says what it is, and it changes what happens (P1) 🎯 MVP
 
-- [ ] T009 [US1] Stop writing `kind: 'worksheet'` in `job:create` (FR-1003)
-- [ ] T010 [US1] Ask what the material is, with **no option preselected**, on the ingest screen and on the paste path
-- [ ] T011 [US2] Carry the kind and its corpus rule into `buildAdaptPrompt` (FR-1002)
+- [x] T009 [US1] Stop writing `kind: 'worksheet'` in `job:create` (FR-1003) *(done, and it needed a new error kind. `material-kind-missing` rather than reusing `input-too-large`, because the sentence she reads has to name the fix: «Dime primero qué es esto». An unrecognised kind is refused rather than coerced — the same argument as `resolveInVault`.)*
+- [x] T010 [US1] Ask what the material is, with **no option preselected**, on the ingest screen and on the paste path *(done: four radios, **nothing preselected**, with a help line saying why she is being asked before she starts.)*
+- [x] T011 [US2] Carry the kind and its corpus rule into `buildAdaptPrompt` (FR-1002) *(done. And the point is the wording: hard rule 5 has always said «Exams preserve the criterion» and was being sent with every request, including while adapting a study text. It is now **asserted about this document** — and absent when she has not said, which is every document that predates `012`.)*
 - [ ] T012 [US2] Add what each kind means to `instructions/adapt.md` — the pedagogical half, in the corpus (Principle I)
-- [ ] T013 [US2] Report when the stated kind and the block classes disagree (FR-1005), overriding neither: she may be adapting last year's exam as practice
-- [ ] T014 [US2] Say in the report that an exam was treated as an assessment (FR-1006), so the rule that governed it is visible before she signs
-- [ ] T015 [P] [US1] Stop saying «una ficha» where the application means "material" (FR-1011) — a teacher who reads it on every screen concludes it does not do exams
+- [x] T013 [US2] Report when the stated kind and the block classes disagree (FR-1005), overriding neither: she may be adapting last year's exam as practice *(done, in **one direction only**: assessment-shaped blocks in something she called anything else. A document that could promote itself to an exam could also demote an exam to a worksheet, and that is the dangerous direction — Principle IX. It also says she may be adapting last year's exam as practice, which is ordinary rather than a mistake.)*
+- [x] T014 [US2] Say in the report that an exam was treated as an assessment (FR-1006), so the rule that governed it is visible before she signs *(done, and it goes **first** in the report, because it is the rule everything below happened under and she is signing for it. The prohibitions print in her words, not as corpus ids — a report saying `curricular-demand` would ask her to learn our vocabulary to read her own document.)*
+- [x] T015 [P] [US1] Stop saying «una ficha» where the application means "material" (FR-1011) — a teacher who reads it on every screen concludes it does not do exams *(done across the rail, five screens and the strings file. «Adaptar material», and «ficha» demoted to one kind among four.)*
 - [ ] T016 [P] Write `app/e2e/material.spec.ts` covering quickstart §6
 
 **Checkpoint**: the same document adapted as a worksheet and as an exam produces different prompts.

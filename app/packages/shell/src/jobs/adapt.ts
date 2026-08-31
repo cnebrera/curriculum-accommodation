@@ -12,7 +12,7 @@ import { sendRedacted } from '@rampa/providers';
 import { currentVault } from '../ipc/vault.js';
 import { knownNames, unknownNamesIn } from '../ipc/names.js';
 import { activeProvider } from '../ipc/keys.js';
-import { allRecipes, assertCorpus, loadInstruction, findYearInCorpus } from '../corpus/index.js';
+import { allRecipes, assertCorpus, loadInstruction, findYearInCorpus, materialKind } from '../corpus/index.js';
 import { recordCost } from '../ipc/cost.js';
 
 /**
@@ -222,6 +222,14 @@ export async function runAdaptation(
       recipes: selection.selected,
       corrections: [...corrections, ...extra],
       material: raw,
+      /*
+       * What she said this is (012 FR-1002). `null` for every document that
+       * predates `012`, and the prompt says nothing rather than asserting the
+       * loosest rule — because asserting the worksheet rule about an exam is the
+       * silent failure this feature exists to prevent.
+       */
+      kind: await materialKind(
+        typeof doc.frontMatter['kind'] === 'string' ? doc.frontMatter['kind'] : undefined),
     });
     if (notesOmitted > 0) {
       logger.info('adapt.notes-bounded', { jobId, omittedSections: notesOmitted });
@@ -297,6 +305,10 @@ export async function runAdaptation(
 
   const report = buildReport({
     adapted, selection,
+    // Under which rule this happened (012 FR-1006), and the disagreement check
+    // that reports without acting (FR-1005).
+    kind: await materialKind(
+      typeof doc.frontMatter['kind'] === 'string' ? doc.frontMatter['kind'] : undefined),
     /*
      * What was **loaded**, not what to report (003 FR-210).
      *

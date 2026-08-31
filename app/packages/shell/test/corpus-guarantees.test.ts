@@ -100,7 +100,17 @@ describe('provenance survives a corpus update (T081, 006 FR-416)', () => {
     // the bundle ships @2. Asserted over the code because the alternative is
     // shipping two corpus versions in a test fixture.
     const corpusIpc = await corpusModule();
-    expect(corpusIpc).not.toMatch(/material|adapted\.md|jobDir/);
+    /*
+     * `material/` with the slash, and `material-kinds.md` excluded.
+     *
+     * The pattern was a bare `material`, which started matching on 2026-08-31
+     * when `012` added `instructions/material-kinds.md` to the corpus — a corpus
+     * file, read-only, and exactly the sort of thing this module is for. The
+     * claim being made is about the vault's `material/` directory, so the
+     * assertion should say so rather than matching a word.
+     */
+    expect(corpusIpc.replace(/material-kinds/g, ''))
+      .not.toMatch(/['"`]material\/|VAULT\.material|adapted\.md|jobDir/);
   });
 
   it('the bundle carries both licences, or it is not distributable', async () => {

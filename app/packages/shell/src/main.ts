@@ -16,8 +16,25 @@ import { startLogging, registerDiagnosticsIpc } from './ipc/diagnostics.js';
 let win: BrowserWindow | null = null;
 const getWindow = () => win;
 
+/**
+ * Under test, never steal the screen.
+ *
+ * The e2e suite launches real windows — that is the point of it — and on a
+ * developer's machine each one appears on top of whatever they were doing and
+ * takes the keyboard with it. Fifty-seven of them, several times an hour, makes
+ * the suite something you avoid running, which is the opposite of what a suite
+ * is for.
+ *
+ * So: `RAMPA_TEST=1` creates the window inactive and hides the dock icon. The
+ * window is still real, still painted and still measurable — `showInactive()`
+ * rather than `show: false`, because a hidden window's layout is not reliably the
+ * layout a teacher gets, and the layout suite exists to check exactly that.
+ */
+const underTest = process.env['RAMPA_TEST'] === '1';
+
 function createWindow(): void {
   win = new BrowserWindow({
+    show: !underTest,
     width: 1180, height: 820,
     /*
      * The floor was 900×640, which is not a size chosen for a teacher — it is
@@ -60,6 +77,12 @@ function createWindow(): void {
 
   // External links open in the browser, never inside the app.
   win.webContents.setWindowOpenHandler(({ url }) => { void shell.openExternal(url); return { action: 'deny' }; });
+
+  if (underTest) {
+    win.showInactive();
+    // macOS keeps a dock icon bouncing for each launch otherwise.
+    if (process.platform === 'darwin') app.dock?.hide();
+  }
 
   const devUrl = process.env['ELECTRON_RENDERER_URL'];
   if (devUrl) void win.loadURL(devUrl);

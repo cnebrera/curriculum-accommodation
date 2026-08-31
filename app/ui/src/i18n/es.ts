@@ -2,11 +2,16 @@
  * The interface speaks the teacher's language (006 FR-406).
  *
  * No project jargon anywhere a teacher can see it: no "IR", no "corpus", no
- * "axis", no "harness", no "ingest". She says ficha, adaptación, informe, alumno.
+ * "axis", no "harness", no "ingest". She says examen, ficha, apuntes, adaptación,
+ * informe, alumno — and «ficha» is one kind of material among four (012 FR-1011),
+ * not the word for all of it.
  */
 export const es = {
   app: 'Rampa',
-  nav: { learners: 'Mis alumnos', adapt: 'Adaptar una ficha', notes: 'Mis notas',
+  // 012 FR-1011. It used to say «Adaptar una ficha» here and on four more
+  // screens, so a teacher who reads it everywhere concludes the application does
+  // not do exams — which was true of the interface and never of the pipeline.
+  nav: { learners: 'Mis alumnos', adapt: 'Adaptar material', notes: 'Mis notas',
          connection: 'Mi servicio de IA', about: 'Acerca de' },
 
   onboarding: {
@@ -21,11 +26,11 @@ export const es = {
     connectGet: 'Abrir la página para conseguir la clave',
     connectPaste: 'Pega aquí la clave',
     connectCheck: 'Comprobar',
-    connectOk: (cost: string) => `✓ Conectado. ${cost} por ficha.`,
+    connectOk: (cost: string) => `✓ Conectado. ${cost} por documento.`,
     noCard: 'sin tarjeta',
     learnerTitle: 'Tu primer alumno',
     learnerWhy: 'Cuéntame cómo va en clase. No hace falta ningún diagnóstico: con lo que ves tú es suficiente.',
-    done: '¡Listo! Ya puedes adaptar tu primera ficha.',
+    done: '¡Listo! Ya puedes adaptar tu primer material.',
   },
 
   /**
@@ -53,7 +58,7 @@ export const es = {
      * machine, because that would be false: a name handwritten on a photographed
      * worksheet travels inside the image.
      */
-    residual: 'Rampa cambia los nombres de tus alumnos por códigos antes de enviar nada, y sus barreras y tus notas viajan sin nombre. Lo que no puede cambiar es lo que va dentro de una foto: si en la ficha que fotografías hay un nombre escrito a mano, ese nombre llega al servicio.',
+    residual: 'Rampa cambia los nombres de tus alumnos por códigos antes de enviar nada, y sus barreras y tus notas viajan sin nombre. Lo que no puede cambiar es lo que va dentro de una foto: si en la hoja que fotografías hay un nombre escrito a mano, ese nombre llega al servicio.',
 
     recommendTitle: 'Te recomiendo este',
     recommendWhy: '¿Por qué este?',
@@ -134,11 +139,11 @@ export const es = {
   },
 
   adapt: {
-    title: 'Adaptar una ficha',
-    paste: 'Pega aquí el texto de la ficha',
+    title: 'Adaptar material',
+    paste: 'O pega aquí el texto',
     forWhom: '¿Para quién?',
     verifyTitle: 'Comprueba que lo he leído bien',
-    verifyWhy: 'Si aquí hay un error, se cuela en todo lo demás y luego no se nota, porque la ficha se lee perfectamente.',
+    verifyWhy: 'Si aquí hay un error, se cuela en todo lo demás y luego no se nota, porque el documento se lee perfectamente.',
     verifyOk: 'Está bien leído, sigue',
     run: 'Adaptar',
     working: 'Trabajando',
@@ -170,12 +175,15 @@ export const es = {
     'render-learner-data': 'Iba a aparecer información de tu alumno en su propia ficha. Lo he parado.',
     'render-undescribed': 'Hay una imagen imprescindible sin describir. Sin ella, el ejercicio no se puede resolver.',
     'input-too-large': 'Esta ficha es muy larga. Pártela en dos y lo hacemos por trozos.',
+    // 012 FR-1003. Deliberately not "algo ha ido mal": the fix is one click and
+    // she is the only one who knows the answer.
+    'material-kind-missing': 'Dime primero qué es esto: una ficha, un examen, apuntes o una hoja de problemas.',
     /* Reading the material (008). Each one says what she does next. */
     'ingest-empty': 'No has añadido ningún fichero.',
     'ingest-format': 'No sé leer ese tipo de fichero. Fotos (JPG, PNG, HEIC), PDF, Word (.docx) o texto.',
     'ingest-unusable': 'La foto no se puede leer. Vuelve a hacerla con más luz, y con la hoja lo más plana y recta que puedas.',
     'ingest-many-sheets': 'Parece que hay más de una hoja en la misma foto. Haz una foto de cada hoja por separado.',
-    'ingest-no-vision': 'El servicio que tienes conectado no lee fotos. Cámbialo en «Mi servicio de IA», o pega el texto de la ficha.',
+    'ingest-no-vision': 'El servicio que tienes conectado no lee fotos. Cámbialo en «Mi servicio de IA», o pega el texto a mano.',
     'ingest-failed': 'No he podido leer ninguna página. Mira los avisos de cada una: casi siempre es la luz o el encuadre.',
     'key-missing': 'Todavía no has conectado Rampa con tu servicio de IA.',
     'key-invalid': 'La clave ya no vale. Habrá que ponerla otra vez.',

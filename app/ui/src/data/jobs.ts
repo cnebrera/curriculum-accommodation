@@ -46,8 +46,8 @@ export function useSignedOffCommand() {
 }
 
 export function useCreateJob() {
-  return useCommand((id: string, text: string, lang?: string) =>
-    window.rampa.job.create(id, text, lang));
+  return useCommand((id: string, text: string, kind: string, lang?: string) =>
+    window.rampa.job.create(id, text, kind, lang));
 }
 
 export function useVerifyJob() {

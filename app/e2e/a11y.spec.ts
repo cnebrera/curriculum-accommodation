@@ -155,7 +155,7 @@ test.describe('accessibility · WCAG 2.2 AA', () => {
     await seed(page, vault);
 
     // Navigate by the rail, which is how she does it.
-    const screens = ['Adaptar una ficha', 'Mis alumnos', 'Mis notas', 'Mi servicio de IA', 'Acerca de'];
+    const screens = ['Adaptar material', 'Mis alumnos', 'Mis notas', 'Mi servicio de IA', 'Acerca de'];
     for (const label of screens) {
       await page.getByRole('button', { name: label }).click();
       await page.waitForTimeout(200);
@@ -216,7 +216,7 @@ test.describe('accessibility · WCAG 2.2 AA', () => {
     const { app, page, vault } = await launch();
     await seed(page, vault);
 
-    for (const label of ['Adaptar una ficha', 'Mis alumnos', 'Mis notas', 'Mi servicio de IA', 'Acerca de']) {
+    for (const label of ['Adaptar material', 'Mis alumnos', 'Mis notas', 'Mi servicio de IA', 'Acerca de']) {
       await page.getByRole('button', { name: label }).click();
       await page.waitForTimeout(200);
 
@@ -310,9 +310,9 @@ test.describe('accessibility · WCAG 2.2 AA', () => {
     const { app, page, vault } = await launch();
     await seed(page, vault);
 
-    await page.getByRole('button', { name: 'Adaptar una ficha' }).click();
+    await page.getByRole('button', { name: 'Adaptar material' }).click();
     await page.getByRole('button', { name: /Traer una foto/ }).click();
-    await page.getByRole('heading', { name: /Adaptar una ficha/ }).waitFor();
+    await page.getByRole('heading', { name: 'Adaptar material' }).waitFor();
     for (const m of MODES) { await setMode(page, m); await scan(page, `ingest · ${m.name}`); }
 
     /*
@@ -328,7 +328,7 @@ test.describe('accessibility · WCAG 2.2 AA', () => {
     await seedExtraction(page);
     await page.reload();
     await page.waitForLoadState('domcontentloaded');
-    await page.getByRole('button', { name: 'Adaptar una ficha' }).click();
+    await page.getByRole('button', { name: 'Adaptar material' }).click();
     await page.getByRole('button', { name: /Traer una foto/ }).click();
     await page.getByRole('button', { name: 'Seguir con esto' }).click();
     await page.getByRole('heading', { name: /Comprueba que lo he leído bien/ })

@@ -74,7 +74,7 @@ await page.screenshot({ path: join(out, '6-perfil.png'), fullPage: true });
  * so they are the last strip and the first column, which is where a shell breaks
  * if it is going to.
  */
-await page.getByRole('button', { name: 'Adaptar una ficha' }).click();
+await page.getByRole('button', { name: 'Adaptar material' }).click();
 await page.waitForTimeout(400);
 for (const width of [560, 700, 880, 892, 1024, 1280, 1920]) {
   await page.setViewportSize({ width, height: 800 });

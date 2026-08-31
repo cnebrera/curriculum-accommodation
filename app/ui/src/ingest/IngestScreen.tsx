@@ -92,7 +92,7 @@ export function IngestScreen({ onIngested, onResume }: {
   const needsWarning = warned === false && paths.some((p) => /\.(jpe?g|png|heic|heif|pdf)$/i.test(p));
 
   return (
-    <Page title="Adaptar una ficha"
+    <Page title="Adaptar material"
           lede="Trae la ficha como la tengas. Si está en la plataforma de la editorial y no se puede descargar, hazle una foto: es lo normal, no el plan B.">
 
       {/*

@@ -140,7 +140,9 @@ test.describe('the first ten minutes', () => {
       interests: [], response: {}, language: { instruction: 'es' },
     }), code);
 
-    await page.evaluate(() => window.rampa.job.create('e2e-job', 'Las plantas fabrican su alimento.', 'es'));
+    // `kind` is required since 012 FR-1003 — there is no default, on purpose.
+    await page.evaluate(() =>
+      window.rampa.job.create('e2e-job', 'Las plantas fabrican su alimento.', 'worksheet', 'es'));
 
     // The verification gate holds before anything else (001 FR-006).
     const beforeVerify = await page.evaluate((c) =>

@@ -131,7 +131,7 @@ async function checkLayout(page: Page, where: string): Promise<void> {
   expect(await overlappingControls(page), `${where}: overlapping controls`).toEqual([]);
 }
 
-const SCREENS = ['Adaptar una ficha', 'Mis alumnos', 'Mis notas', 'Mi servicio de IA', 'Acerca de'];
+const SCREENS = ['Adaptar material', 'Mis alumnos', 'Mis notas', 'Mi servicio de IA', 'Acerca de'];
 
 test.describe('layout at 1366×768', () => {
   test('onboarding fits', async () => {
@@ -210,7 +210,7 @@ test.describe('layout at 1366×768', () => {
     await page.reload();
     await page.waitForLoadState('domcontentloaded');
 
-    await page.getByRole('button', { name: 'Adaptar una ficha' }).click();
+    await page.getByRole('button', { name: 'Adaptar material' }).click();
     await page.getByRole('button', { name: /Traer una foto/ }).click();
     await checkLayout(page, 'ingest');
 

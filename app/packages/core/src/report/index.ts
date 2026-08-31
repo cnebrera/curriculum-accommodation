@@ -35,16 +35,62 @@ export interface ReportInput {
    * never saw the correction.
    */
   memoryAvailable?: Array<{ recipe: string; source: string }>;
+  /**
+   * What she said the material is, and what that forbade (012 FR-1006).
+   *
+   * The report claims to record every decision, and until now it recorded which
+   * recipes applied and never **under which rule** — so a teacher signing an
+   * adapted exam had no line telling her it had been treated as one. That is the
+   * thing she is signing for.
+   *
+   * `null` or absent for material that predates `012`, and the report then says
+   * nothing rather than claiming a rule governed something it did not.
+   */
+  kind?: { id: string; label: string; forbids: string[] } | null;
 }
 
 export interface Report {
   decisions: Decision[];
   notDone: string[];
+  /**
+   * The stated kind disagrees with what the blocks look like (012 FR-1005).
+   *
+   * **Reported, never acted on.** Ingested material is attacker-controllable
+   * (Principle IX), so a document that could promote itself to an exam could
+   * equally demote an exam to a worksheet — and the second direction is the
+   * dangerous one. She may also be adapting last year's exam as practice, which
+   * is a perfectly ordinary thing to do and not a mistake to correct.
+   */
+  kindDisagreement: string | null;
   notices: Array<{ block: string | null; notice: Notice }>;
   /** Prior learning that verifiably changed something (003 FR-210). */
   memoryApplied: Array<{ recipe: string; source: string; effect: string }>;
   markdown: string;
 }
+
+/**
+ * The prohibitions, in her words rather than as corpus ids.
+ *
+ * The ids are machine-readable on purpose (`forbids: [quantities, operations]`)
+ * so the report can name them; a report that printed `curricular-demand` would be
+ * asking her to learn our vocabulary to read her own document.
+ *
+ * An unknown id falls through as itself rather than being dropped: a new
+ * prohibition added to the corpus should read oddly for one release, not vanish.
+ */
+const FORBIDS_LABELS: Record<string, string> = {
+  'curricular-demand': 'la exigencia curricular',
+  numbering: 'la numeración original',
+  'question-demand': 'lo que pregunta cada pregunta',
+  'item-count': 'cuántas preguntas se evalúan',
+  content: 'lo que dice el texto',
+  coverage: 'nada de lo que había que cubrir',
+  quantities: 'las cantidades',
+  operations: 'las operaciones que se practican',
+};
+
+const FORBIDS_ES = (ids: readonly string[]): string =>
+  ids.map((i) => FORBIDS_LABELS[i] ?? i).join(', ');
 
 const titleFor = (recipeId: string, count: number): string => {
   const many = count > 1 ? `${count} bloques` : 'un bloque';
@@ -110,7 +156,39 @@ export function buildReport(input: ReportInput): Report {
     ...adapted.blocks.flatMap((b: Block) => b.notices.map((n) => ({ block: b.id, notice: n }))),
   ];
 
+  /*
+   * FR-1005. Assessment-shaped blocks in something she called anything else.
+   *
+   * One direction only, and deliberately: an exam mislabelled as a worksheet is
+   * the dangerous case, because it gets adapted under the loose rule. A worksheet
+   * containing an `.assessment` block is ordinary — most worksheets end with one.
+   */
+  const assessmentBlocks = adapted.blocks.filter((b: Block) => b.classes.includes('assessment'));
+  const kindDisagreement =
+    input.kind && input.kind.id !== 'exam' && assessmentBlocks.length > 0
+      ? `Dijiste que esto es «${input.kind.label.toLowerCase()}», y he encontrado `
+        + `${assessmentBlocks.length === 1 ? 'un bloque' : `${assessmentBlocks.length} bloques`}`
+        + ' con forma de pregunta de examen. Lo he adaptado como me dijiste — puede que'
+        + ' estés usando un examen del año pasado para practicar, que es normal. Si era un'
+        + ' examen de verdad, dímelo y lo vuelvo a hacer con la regla de exámenes.'
+      : null;
+
   const md: string[] = ['# Qué he cambiado y por qué', ''];
+
+  /*
+   * What it was treated as, first, because it is the rule everything below
+   * happened under and she is signing for it.
+   */
+  if (input.kind) {
+    md.push(`## Lo he tratado como: ${input.kind.label.toLowerCase()}`, '');
+    if (input.kind.forbids.length) {
+      md.push(`Eso quiere decir que no he tocado: ${FORBIDS_ES(input.kind.forbids)}.`, '');
+    }
+  }
+
+  if (kindDisagreement) {
+    md.push('## Una cosa sobre lo que es este material', '', kindDisagreement, '');
+  }
 
   if (notDone.length) {
     md.push('## Lo que NO he hecho', '');
@@ -156,5 +234,5 @@ export function buildReport(input: ReportInput): Report {
     md.push('_No he cambiado nada. Revisa si el perfil tiene ejes sin observar._', '');
   }
 
-  return { decisions, notDone, notices, memoryApplied, markdown: md.join('\n') };
+  return { decisions, notDone, kindDisagreement, notices, memoryApplied, markdown: md.join('\n') };
 }

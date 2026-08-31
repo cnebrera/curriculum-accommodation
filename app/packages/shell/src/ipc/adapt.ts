@@ -6,6 +6,7 @@ import { handle } from './wrap.js';
 import { runAdaptation, type Correction } from '../jobs/adapt.js';
 import { runBatch } from '../jobs/batch.js';
 import { refreshRecord } from './record.js';
+import { materialKind } from '../corpus/index.js';
 
 /**
  * Wiring, and only wiring (013 T019, FR-1111).
@@ -55,9 +56,26 @@ export function registerAdaptIpc(getWindow: () => BrowserWindow | null): void {
     return files.filter((f) => /^adapted(\.r\d+)?\.md$/.test(f)).sort();
   });
 
-  handle('job:create', async (jobId: string, sourceText: string, lang = 'es') => {
+  /**
+   * Create a job from pasted text (012 T009, FR-1003).
+   *
+   * `kind` is **required and never defaulted.** This handler used to write
+   * `kind: 'worksheet'` unconditionally, for every document anybody ever brought
+   * — so an exam became a worksheet before the model saw it, silently, and the
+   * hard rule about preserving the criterion had nothing telling it which
+   * documents it governed.
+   *
+   * An unrecognised kind is refused rather than coerced, the same argument as
+   * `resolveInVault`: a value that should not exist is a signal, and rewriting it
+   * into something plausible hides the event worth seeing.
+   */
+  handle('job:create', async (jobId: string, sourceText: string, kind: string, lang = 'es') => {
     const vault = currentVault();
-    const fm = { source: 'pegado', lang, kind: 'worksheet', extraction: { method: 'manual', verified: false } };
+    if (!kind || !(await materialKind(kind))) {
+      throw new RampaError('material-kind-missing',
+        'No sé qué es este material. Dime si es una ficha, un examen, apuntes o problemas.');
+    }
+    const fm = { source: 'pegado', lang, kind, extraction: { method: 'manual', verified: false } };
     const body = `::: {#b1 .explanation}\n${sourceText.trim()}\n:::\n`;
     await vault.writeRaw(jobIR(jobId), stringifyFrontMatter(fm, body));
     return jobId;

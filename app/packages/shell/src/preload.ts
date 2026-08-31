@@ -53,6 +53,8 @@ const api = {
     /** The judgement layer, read from the bundle. Never editable from the UI. */
     instruction: (name: string) => invoke('corpus:instruction', name),
     checklist: (name: string) => invoke('corpus:checklist', name),
+    /** What the material can be — she picks one, nothing is preselected (012). */
+    materialKinds: () => invoke('corpus:materialKinds'),
     /** Axis descriptors, so the interface never shows an axis code (T014). */
     axes: () => invoke('corpus:axes'),
     /**
@@ -87,7 +89,9 @@ const api = {
     nameRisk: () => invoke('learners:nameRisk'),
   },
   job: {
-    create: (id: string, text: string, lang?: string) => invoke('job:create', id, text, lang),
+    /** `kind` is required and never defaulted (012 FR-1003). */
+    create: (id: string, text: string, kind: string, lang?: string) =>
+      invoke('job:create', id, text, kind, lang),
     verify: (id: string) => invoke('job:verify', id),
     /** One learner or several — 005 FR-501. */
     adapt: (id: string, learners: string | string[]) => invoke('job:adapt', id, learners),

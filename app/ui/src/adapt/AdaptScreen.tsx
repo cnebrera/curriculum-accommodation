@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useStrings } from '../i18n/context.js';
 import { useLearnerChoices } from '../data/learners.js';
+import { useMaterialKinds } from '../data/corpus.js';
 import { useNameCheck, useSetName } from '../data/names.js';
 import { useNewLearnerCode } from '../data/learners.js';
 import { useCostEstimate } from '../data/cost.js';
@@ -61,6 +62,16 @@ export function AdaptScreen({ onReview, onChooseFile, presetJobId }: {
   const [learners, setLearners] = useState<string[]>([]);
   const learner = learners[0] ?? '';
   const [text, setText] = useState('');
+  /**
+   * What the material is (012 FR-1001/1003).
+   *
+   * `null` until she says, and there is **no default**. `job:create` wrote
+   * `kind: 'worksheet'` unconditionally until today, so an exam became a
+   * worksheet before the model saw it — silently, and the hard rule about
+   * preserving the criterion had nothing telling it which documents it governed.
+   */
+  const [kind, setKind] = useState<string | null>(null);
+  const kinds = useMaterialKinds();
   const [stage, setStage] = useState<Stage>('compose');
   const [jobId, setJobId] = useState('');
   const [progress, setProgress] = useState<
@@ -112,7 +123,8 @@ export function AdaptScreen({ onReview, onChooseFile, presetJobId }: {
     if (!check) return;  // the failure is on screen already
     if (check.flagged.length) { setFlagged(check.flagged); return; }
     const id = `${new Date().toISOString().slice(0, 10)}-${Math.random().toString(36).slice(2, 6)}`;
-    if (await createJob.run(id, text, 'es') === undefined) return;
+    if (!kind) return;   // the primary control is disabled; belt and braces
+    if (await createJob.run(id, text, kind, 'es') === undefined) return;
     setJobId(id);
     setStage('verify');
   };
@@ -158,7 +170,7 @@ export function AdaptScreen({ onReview, onChooseFile, presetJobId }: {
 
   return (
     <Page title={es.adapt.title}
-          lede="Trae la ficha como la tengas y dime para quién es.">
+          lede="Trae el material como lo tengas y dime para quién es y qué es.">
       {!online ? <Callout intent="decide">{es.errors['offline']}</Callout> : null}
 
       {stage === 'compose' ? (
@@ -192,13 +204,29 @@ export function AdaptScreen({ onReview, onChooseFile, presetJobId }: {
                 </label>
               )) : null}
               <p className="field-help">
-                Puedes marcar varios. La ficha se lee una sola vez y sale una
+                Puedes marcar varios. El material se lee una sola vez y sale una
                 versión para cada uno — no se paga la lectura tres veces.
               </p>
             </fieldset>
           </Section>
 
-          <Section title="¿De dónde sacamos la ficha?">
+          <fieldset className="fieldset-bare">
+            <legend><h2>¿Qué es?</h2></legend>
+            {kinds.state === 'ready' ? kinds.value.map((k) => (
+              <label key={k.id} className="check" htmlFor={`kind-${k.id}`}>
+                <input type="radio" id={`kind-${k.id}`} name="material-kind"
+                       checked={kind === k.id}
+                       onChange={() => setKind(k.id)} />
+                <span>{k.label}</span>
+              </label>
+            )) : null}
+            <p className="field-help">
+              Un examen no se adapta como una ficha: cambio cómo se lee y cómo
+              contesta, y no lo que se pregunta. Por eso te lo pregunto antes.
+            </p>
+          </fieldset>
+
+          <Section title="¿De dónde sacamos el material?">
             {/*
               Two doors, and the file one is the common case: the worksheet lives
               on a publisher's platform with no export, so what she has is a
@@ -240,14 +268,15 @@ export function AdaptScreen({ onReview, onChooseFile, presetJobId }: {
           <Actions
             primary={
               <button className="btn btn-primary btn-lg"
-                      disabled={!text.trim() || learners.length === 0 || !online}
+                      disabled={!text.trim() || learners.length === 0 || !kind || !online}
                       onClick={() => void startJob()}>
                 Continuar
               </button>
             }
             note={
-              !text.trim() && learners.length > 0 ? 'Trae la ficha o pega el texto para seguir.'
-              : learners.length === 0 ? 'Marca al menos un alumno.'
+              learners.length === 0 ? 'Marca al menos un alumno.'
+              : !kind ? 'Dime qué es: una ficha, un examen, apuntes o problemas.'
+              : !text.trim() ? 'Trae el material o pega el texto para seguir.'
               : undefined
             }
           />
@@ -261,8 +290,8 @@ export function AdaptScreen({ onReview, onChooseFile, presetJobId }: {
           {error ? <Callout intent="danger">{error}</Callout> : null}
 
           {costGate ? (
-            <Callout intent="decide" title="Esta ficha va a costar más de lo normal">
-              <p>Serían unos {costGate.formatted}, más que tus fichas habituales. Tú decides.</p>
+            <Callout intent="decide" title="Esto va a costar más de lo normal">
+              <p>Serían unos {costGate.formatted}, más de lo que te cuesta normalmente. Tú decides.</p>
               <div className="row">
                 <button className="btn btn-primary" onClick={() => void runAdapt(true, costGate.who)}>Adelante</button>
                 <button className="btn" onClick={() => setCostGate(null)}>Mejor no</button>
@@ -305,7 +334,7 @@ export function AdaptScreen({ onReview, onChooseFile, presetJobId }: {
           <div className="stack">
             <Callout intent="ok" title="Listo">
               Está adaptado y sin firmar. Ahora tienes que mirarlo tú.
-              {cost !== null ? ` Esta ficha ha costado unos ${cost} céntimo${cost === 1 ? '' : 's'}.` : ''}
+              {cost !== null ? ` Ha costado unos ${cost} céntimo${cost === 1 ? '' : 's'}.` : ''}
             </Callout>
 
             {/* Anything the material tried to do, or that could not be read. */}
