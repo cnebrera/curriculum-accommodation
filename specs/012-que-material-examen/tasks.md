@@ -77,8 +77,8 @@ the change it protects, which is unusual enough to be its own task.
 
 ## Phase 5 · Polish
 
-- [ ] T022 Record in `specs/006-desktop-app/validation.md` what the baseline diff showed, and that SC-1001 needs a teacher and her own exam
-- [ ] T023 [P] Update `docs/escenario.md`, which describes adapting «una ficha» throughout
+- [x] T022 Record in `specs/006-desktop-app/validation.md` what the baseline diff showed, and that SC-1001 needs a teacher and her own exam *(done, and the diff was not what «filter out what does not apply» sounds like: a study text went from two recipes to **zero**, because the two it had were `one-task-per-page` on prose and `exam-access-not-difficulty` on apuntes. The coverage that filtering removed had never been coverage. Recorded as G20 with the closing instruction written down, because the tempting fix — loosen a scope — is the wrong one.)*
+- [x] T023 [P] Update `docs/escenario.md`, which describes adapting «una ficha» throughout *(done, and the honest reading of this task is not a search-and-replace: most uses of «ficha» in that document are correct, because Hugo's worksheet **is** a ficha. What was missing was every moment the new specs cover. Momento 4 (el examen) now records the hole `012` closed — the application wrote `kind: worksheet` for everything, so the hard rule about the criterion had nothing telling it which documents it governed — and momentos 5, 6 and 7 are new: composing from objectives, Iván who reads with pictograms, and Vega who does not see the sheet. The capability table gained six rows and changed six more.)*
 - [ ] T024 Take an exam and a problem sheet to a teacher (quickstart §7). **The question is not whether it looks good — it is whether any question's demand changed**, and she is the only one who can answer it
 
 ---

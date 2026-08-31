@@ -174,6 +174,64 @@ decisión es del equipo docente y del expediente, no de una herramienta.
 reglas duras 4-5, escalado de adaptación significativa · *medido por:* SC-006,
 SC-003.
 
+**Ampliado 2026-08-31, cuando `012` y `016` shipearon.** Este momento tenía un
+agujero que la historia no veía: la aplicación no le preguntaba **qué era** el
+material. Escribía `kind: worksheet` para todo, así que el examen de Hugo llegaba
+al modelo etiquetado como ficha y la regla dura sobre el criterio no tenía nada
+que le dijera a qué documentos gobernaba.
+
+Ahora se lo pregunta antes de empezar, sin opción por defecto, y se lo dice **en
+el botón que va a pulsar**: «Es un examen: voy a cambiar cómo se lee y cómo
+contesta, y nada de lo que se pregunta. Si sale más fácil, es otro examen.»
+
+*Cubierto por:* 012 FR-1001…1006 · 016 FR-1403/1405.
+
+### 5 · Miércoles: no tiene nada, y sabe qué le hace falta
+
+Sara tiene que aprender a multiplicar con llevadas y no hay ficha que adaptar. No
+hay libro a mano, no hay fotocopia, no hay nada: hay un objetivo.
+
+Marta escribe «multiplicar con llevadas», dice cuántos ejercicios quiere, y Rampa
+propone — y **comprueba las cuentas una a una, con código, sin preguntarle al
+modelo**. Los que no llevan ninguna se tiran. Los que le salen mal al modelo se
+tiran enteros, no se corrigen. Si no llega a diez, le da ocho y le dice por qué.
+
+Las soluciones van en una hoja aparte, para ella. En la del alumno no aparecen.
+
+*Cubierto por:* 002 (verificador, bucle, nivel desde `011`, hoja de soluciones) ·
+016 (la puerta que lo hace alcanzable) · *pendiente:* SC-101…104 necesitan una PT,
+y nada de esto los satisface por estar construido.
+
+### 6 · Iván, que lee con pictogramas
+
+Iván usa pictogramas en su agenda y en su panel de clase. Marta lo marca en su
+perfil — **ningún eje del perfil lo activa solo**, porque una hoja llena de
+dibujos en un aula donde nadie más la tiene se ve desde la última fila, y un chico
+de quince con dislexia no quiere una ficha que parece de un niño de cinco.
+
+Trae ella el juego de ARASAAC: Rampa no lo descarga y no lo trae dentro, porque su
+licencia y la nuestra no son compatibles y la hoja que salga es obra derivada. La
+atribución va en cada hoja y no se puede quitar.
+
+Cuando hay dos dibujos posibles para una palabra, **no pone ninguno** y se lo dice.
+
+*Cubierto por:* 018 · *pendiente:* SC-1605 (una fotocopia real) y SC-1606, que es
+la mitad negativa: una PT que **no** usa pictogramas dice que Rampa nunca la
+empujó hacia ellos.
+
+### 7 · Vega, que no ve la hoja
+
+La misma adaptación, otra salida: un fichero en orden de lectura que abre cualquier
+lector de pantalla. No es audio — Rampa no lleva motor de voz y lo dice.
+
+Lo que importa es lo que **no** hace: el ejercicio de unir con flechas no se lee
+como pares, porque leerlo así ya lo contesta. Se anuncia y se para ahí. Y no se
+salta en silencio: un salto en silencio es Vega terminando un ejercicio de once
+preguntas convencida de que tenía diez.
+
+*Cubierto por:* 019 US2 · *pendiente:* que a Vega le sirva. Eso no lo sabe nadie
+aquí.
+
 ### 5 · Cada pocas semanas: lo aprendido
 
 La aplicación le propone — nunca aplica sola: «esto de Hugo se ha repetido tres
@@ -267,18 +325,20 @@ herramienta, dicho explícitamente.
 |---|---|---|
 | Adaptar ficha / lectura / unidad | **v1** | 001, 006, 008, recetas |
 | Adaptar examen sin tocar el criterio | **v1** | `exam-access-not-difficulty`, reglas 4-5 |
-| Crear material desde objetivos, con ancla | dif. | 002, post-Fase 0 por su propia spec |
+| Crear material desde objetivos, con ancla | **v1** | 002 (2026-08-31) — verificador aritmético, nivel desde `011`, soluciones aparte; SC-101…104 esperan PT |
 | Entrada real: foto, PDF, digital, con verificación | **v1** | 008 |
 | Perfil por barreras + calibración de ejes | **v1** | profile-schema, axis-calibration (G2 espera PT) |
-| Aplicar el documento oficial de adaptaciones (overlay) | **v1** (a mano) | 003 FR-209; UI diferida (tasks F12) |
+| Aplicar el documento oficial de adaptaciones (overlay) | **v1** (a mano) | 003 FR-209; el copilot de la guía es 017, **bloqueado en el DPO** |
 | Que las correcciones no se repitan | **v1** | 003, T084-086 |
 | Consolidar lo aprendido, con confirmación | dif. | 003 US3, T093 |
-| Misma ficha, N alumnos (hojas separadas) | dif. | modelo de datos listo (T092b); flujo = spec 005 (G3) |
+| Misma ficha, N alumnos (hojas separadas) | **v1** | 005 · la puerta pregunta por alumnos, no por uno (016 FR-1411) |
 | **Una** hoja para un grupo mixto (aula de apoyo, UDL) | **no-obj.** | G17 — vuelve solo si la Fase 0 lo pide |
-| Pictogramas / apoyo visual (ARASAAC) | dif. | G16 ampliado — familia + licencia NC por resolver |
-| Vía de respuesta (MOT), acceso auditivo (PER-A), REG directo | dif. | G16 — primera contribución natural |
+| Pictogramas / apoyo visual (ARASAAC) | **v1** | 018 (2026-08-31) — el juego lo trae ella; ningún eje lo activa; SC-1605/1606 esperan persona |
+| Vía de respuesta (MOT) | **v1** | 019 US4 · `response-route` · declarada como adaptación de acceso en un examen (FR-1718) |
+| Acceso auditivo (PER-A), REG directo | dif. | G19 — primera contribución natural |
 | Salidas: HTML + PDF fotocopiable | **v1** | 006 FR-425/427 |
-| Audio, braille-ready, ODT | dif. | G8, deliberado; el IR ya lo permite sin re-adaptar |
+| ODT editable | **v1** | 019 US1 |
+| Audio-ready, braille-ready | **v1** (sin validar) | 019 US2/US3 (2026-08-31) — el IR no necesitó ni un campo nuevo (SC-1707). SC-1706 necesita transcriptor |
 | Compartir con el tutor / la familia | **v1** (PDF firmado) | camino mejor: 4.10, registrado |
 | Traspaso en junio (export revisado, prosa) | dif. | 004 export; import post-Fase 0 |
 | Borrado completo de un alumno | **v1** | 003 US5 |
@@ -290,6 +350,11 @@ herramienta, dicho explícitamente.
 | Sus ficheros suyos, legibles, portables | **v1** | 006 US3 |
 | Horarios, actas, evaluación continua, DIAC | **fuera** | V0 "Qué NO es"; Additio/Séneca existen |
 
+| Varios documentos como una unidad de trabajo | dif. | 012 Fase 4 — diferido con motivo: mueve el layout del vault y lo leen ya tres features |
+| Decir qué es el material (ficha/examen/apuntes/problemas) | **v1** | 012 (2026-08-31) |
+| Una puerta que pregunta qué va a hacer, no qué fichero tiene | **v1** | 016 (2026-08-31) — SC-1406 la juzga una persona |
+| Buscar lo que hizo el año pasado con este alumno | **v1** | 014 · 016 T018 reutiliza la lectura sin volver a pagarla |
+
 La regla de mantenimiento: una función nueva entra en esta tabla **antes** de
 entrar en ninguna spec, y una fila nunca se borra — cambia de estado.
 
@@ -300,4 +365,5 @@ entrar en ninguna spec, y una fila nunca se borra — cambia de estado.
 | **Antes de Fase 0** | ¿Cuál es el modelo mínimo que da calidad suficiente? | `cases/002-model-floor/` — la validación corre sobre ese suelo o por encima |
 | **Fase 0** | ¿Los momentos 0-4 le sirven a una PT real, sola, con retoques menores? | SC-401/407, SC-001…006, protocolo del quickstart — **la PT está identificada** (2026-08-28) |
 | Después | ¿La curva baja? (momento 3 sostenido en el tiempo) | SC-204, cuatro semanas |
-| Después | ¿El grupo (momento 2 cómodo), el import del traspaso, audio/braille? | 005, 004-import, G8 |
+| Después | ¿El grupo (momento 2 cómodo), el import del traspaso, audio/braille? | 005 ✔, 004-import, 019 ✔ (sin validar) |
+| Después | ¿Los momentos 5-7 — crear desde objetivos, pictogramas, escuchar — le sirven? | 002, 018, 019 · **ninguno lo ha visto una PT** |

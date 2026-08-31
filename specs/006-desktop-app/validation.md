@@ -709,6 +709,44 @@ That is the honest architecture, and it belongs in this document rather than
 implied: the project's central promise is kept by a person, supported by machinery
 whose job is to make breaking it visible.
 
+## Spec 012 — what the baseline diff showed (T022)
+
+`012` T005 turned `recipe.scope` on: a recipe now only applies to block classes the
+document actually contains. `packages/core/test/selection-baseline.test.ts` records
+both sides of that change, and the diff was not what «filter out what does not
+apply» sounds like.
+
+**A study text went from two recipes to zero.** The two it had been getting were
+`one-task-per-page` on prose and `exam-access-not-difficulty` on apuntes — both
+misapplied, both invisible in the output because the model receives judgement it
+cannot use and quietly ignores it. So the *coverage* that filtering removed had
+never been coverage.
+
+That is recorded as backlog **G20**, with the closing instruction written down
+because the tempting fix is the wrong one: **do not loosen a scope.** The gap is
+that no recipe in the corpus reduces load in explanatory prose, and the answer is
+to write one, not to let an exam recipe apply to a textbook page.
+
+| Check | Where | Result |
+|---|---|---|
+| An exam is adapted under the exam rule | `kinds.test.ts` | **Pass.** 20 cases; `kind` is required and never defaulted |
+| The kind reaches the report | `pipeline.test.ts` | **Pass.** «Lo he tratado como…» plus what it forbade |
+| A stated kind that disagrees with the blocks is **reported, never acted on** | `report` | **Pass.** One direction only: an exam mislabelled as a worksheet is the dangerous case, and a document that could promote itself could equally demote one |
+| Scope filtering, both sides | `selection-baseline.test.ts` | **Pass**, and it surfaced G20 |
+| The interface stops calling everything «una ficha» | `016` | **Pass** (FR-1402) |
+
+### NOT verified
+
+- **SC-1001 needs a teacher and her own exam.** The question is not whether the
+  adapted paper looks good — it is whether **any question's demand changed**, and
+  she is the only person who can answer it. `012` T024 is that conversation and it
+  is not a task anybody here can close.
+- **Phase 4 (several documents as one unit) is deferred**, with the reason in its
+  own task list: it moves `material/<job>/ir.md` to `material/<job>/p1/ir.md`, and
+  that layout is now read by `005`'s batch, `014`'s record scan and every path
+  helper — plus a migration for every vault that exists. A layout migration
+  touching three shipped features, for a convenience, is the wrong order.
+
 ## Spec 002 — built on 2026-08-31, and what it can actually check (T022)
 
 Composing was deferred for the reason recorded in the spec's own header:
