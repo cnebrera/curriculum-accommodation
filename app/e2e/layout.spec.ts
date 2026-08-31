@@ -321,6 +321,65 @@ test.describe('every width the window can be', () => {
    * queries measured in pixels: at `xlarge` the shell collapses at 1248px, not
    * at 832px, without a second rule saying so.
    */
+  /**
+   * `015` T016 — the filter bar at 560px and at the largest text scale.
+   *
+   * Left unverified when `015` shipped, because the e2e suite was paused. It needs
+   * **seven** learners: the bar appears from six, so the whole width sweep above
+   * has never rendered it — one learner, no bar, and a green test.
+   *
+   * A filter bar is chrome, and chrome is what gets crushed first (FR-1115).
+   */
+  test('the filter bar holds at 560px and at the largest text', async () => {
+    const { app, page, vault } = await launch();
+    await seed(page, vault);
+
+    // Six more, so the bar appears at all.
+    for (const name of ['Mateo', 'Iván', 'Sara', 'Noa', 'Hugo', 'Elena']) {
+      const code: string = await page.evaluate(() => window.rampa.learners.newCode());
+      await page.evaluate(([c, n]) => window.rampa.learners.save({
+        code: c as string, axes: { COG: 2 }, works: [], avoid: [], interests: [],
+        response: {}, language: {}, year: 'es:primaria-4', school: `CEIP ${n as string}`,
+      }), [code, name] as [string, string]);
+      await page.evaluate(([c, n]) => window.rampa.names.set(c as string, n as string),
+        [code, name] as [string, string]);
+    }
+    await page.reload();
+    await page.waitForLoadState('domcontentloaded');
+    await page.getByRole('navigation', { name: /Secciones/ }).waitFor({ timeout: 15000 });
+
+    for (const width of [560, 700, 1366]) {
+      for (const scale of ['normal', 'xlarge']) {
+        await page.setViewportSize({ width, height: 800 });
+        await page.evaluate((s) => document.documentElement.setAttribute('data-text', s), scale);
+        await page.getByRole('button', { name: 'Mis alumnos' }).click();
+        await page.locator('.roster-bar').waitFor();
+        await page.waitForTimeout(180);
+
+        const label = `filtros @ ${width}px · ${scale}`;
+        await checkLayout(page, label);
+
+        /*
+         * The selects stack rather than shrink below a usable width. A dropdown
+         * 40px wide is a control she cannot read the current value of, which is
+         * worse than a control that took a whole line.
+         */
+        const narrowest = await page.evaluate(() => Math.min(
+          ...[...document.querySelectorAll('.roster-filter select')]
+            .map((el) => el.getBoundingClientRect().width)));
+        expect(narrowest, `${label}: a select is ${Math.round(narrowest)}px wide`)
+          .toBeGreaterThan(100);
+
+        // And the search box, which is the control she actually uses at 30 learners.
+        const search = page.locator('.roster-bar input[type="search"]');
+        await expect(search, label).toBeVisible();
+      }
+    }
+
+    await page.evaluate(() => document.documentElement.setAttribute('data-text', 'normal'));
+    await app.close();
+  });
+
   test('the text scale moves the thresholds, because it moves how much fits', async () => {
     const { app, page, vault } = await launch();
     await seed(page, vault);

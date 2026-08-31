@@ -76,8 +76,8 @@ build one is to make it unexpressible in the data path.
 - [x] T015 Extend `005` T019's assertion to the new views: no table containing
       axis values, no row holding two learners' strips, no total or count of
       barriers per child (FR-1309…1311) *(done, and rewritten once: my first version banned `total` and `average` and flagged `total={rows.length}` — the legitimate «3 de 30» count. A test that flags a correct line gets deleted rather than fixed, so it now bans the vocabulary of ranking a child and leaves the structural half to `groupRoster` and `filterRoster`'s signature.)*
-- [ ] T016 Hold at 560 px and at the largest text scale (`013` FR-1115). A filter
-      bar is chrome, and chrome is what gets crushed first at `xlarge` *(**not verified.** The CSS stacks the filters at `@container page (max-width: 34em)` and the bar wraps, but the width sweep has not been run since — I have stopped running the e2e suite at Carlos's request. Unverified rather than done.)*
+- [x] T016 Hold at 560 px and at the largest text scale (`013` FR-1115). A filter
+      bar is chrome, and chrome is what gets crushed first at `xlarge` *(**verified 2026-08-31**, and the delay found something: the existing width sweep seeds **one** learner, and the bar only appears from six — so every green run of that sweep had never rendered the thing this task is about. The new test seeds seven and checks 560/700/1366 px against `normal` and `xlarge`: the selects stack rather than shrink below 100 px, because a dropdown 40 px wide is a control whose current value she cannot read, and the search box stays visible at every combination.)*
 
 ---
 
