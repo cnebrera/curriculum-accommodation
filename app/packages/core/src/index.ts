@@ -35,6 +35,7 @@ export * from './compose/generated.js';
 export * from './compose/budget.js';
 export * from './compose/loop.js';
 export * from './compose/proposals.js';
+export * from './compose/anchor.js';
 export * from './compose/level.js';
 export * from './compose/sheet.js';
 export * from './compose/verify/types.js';

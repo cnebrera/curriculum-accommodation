@@ -54,6 +54,15 @@ export interface SheetInput {
    * thing that says the bounds were somebody else's.
    */
   composedFor?: { code: string; yearId?: string };
+  /**
+   * Content blocks the model wrote, already checked against her objectives and
+   * against the anchor (002 T017-T019).
+   *
+   * They arrive **before** the exercises, because that is the order he reads them
+   * in: the explanation, then the practice. Their ids and attributes are rewritten
+   * here — see `contentBlock`.
+   */
+  content?: readonly Block[];
   groups: readonly SheetGroup[];
   /**
    * The date, passed in. Never computed here: when something happened is a fact
@@ -95,6 +104,27 @@ export function buildSheet(input: SheetInput): ComposedSheet {
     blocks.push({ ...b, line, notices: [] });
     line += 3;
   };
+
+  /*
+   * The model's content, with its ids and attributes **rewritten by us**.
+   *
+   * Ids because a model-chosen id can collide with a group's or repeat itself, and
+   * a duplicate id makes two blocks one for every check downstream that keys on
+   * it. Attributes because the only two it may set are the two that trace it —
+   * left alone, a model could add `data-recipe` and `data-axis` and the report
+   * would show a decision that no recipe made.
+   */
+  for (const [c, b] of (input.content ?? []).entries()) {
+    push({
+      id: `c${c + 1}`,
+      classes: b.classes,
+      attrs: {
+        ...(b.attrs['data-objective'] ? { 'data-objective': b.attrs['data-objective'] } : {}),
+        ...(b.attrs['data-anchor'] ? { 'data-anchor': b.attrs['data-anchor'] } : {}),
+      },
+      content: b.content,
+    });
+  }
 
   for (const [g, group] of input.groups.entries()) {
     if (group.accepted.length === 0) continue;

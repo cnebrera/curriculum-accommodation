@@ -4,6 +4,29 @@ Fill this in with the actual decisions from the job, in this order. The order is
 the point: the first four sections are where adapted material goes wrong in ways
 that are invisible in the finished PDF.
 
+## 0 · Si este material lo ha generado Rampa (`kind: generated`)
+
+**Empieza por la sección 6, antes que por nada.** Y cuenta con más tiempo, no con
+menos: revisar material generado cuesta más que revisar una adaptación.
+
+Por qué. Cuando Rampa adapta, hay un original que dice qué es verdad, y lo que
+revisas es si los cambios están bien. Cuando Rampa genera, no hay original:
+**nadie ha leído este contenido**. Lo que se puede comprobar con una cuenta está
+comprobado — la aritmética es exacta y los ejercicios practican lo que pediste —
+pero si el texto es cierto, si enseña lo que querías y si va en el orden que tiene
+sentido, eso no lo ha mirado nadie todavía.
+
+Y dos secciones de abajo no aplican, para que no te den una sensación de
+comprobado que no te has ganado:
+
+- La **sección 1** (fidelidad de la lectura) no aplica: no había nada que leer.
+- La **sección 4** (integridad curricular) se convierte en la sección 6, que es la
+  misma pregunta hecha donde no hay original contra el que compararla.
+
+Si al terminar la 6 no puedes decir «esto es cierto y enseña lo que pedí», no lo
+firmes. Un borrador devuelto no ha costado nada; una hoja con un dato falso la
+corrige un niño y la da por buena.
+
 ## 1 · Extraction faithfulness
 
 - [ ] Every `[UNREADABLE]` flag resolved or accepted
@@ -38,12 +61,22 @@ that are invisible in the finished PDF.
 - [ ] Register is age-appropriate — accessible, not infantilised
 - [ ] Response format matches what the learner can actually produce
 
-## 6 · Generated material *(only when `kind: generated`)*
+## 6 · Generated material *(only when `kind: generated`)* — **primero, no sexto**
+
+Ver la sección 0. Esta es la sección donde se decide si el material sirve.
 
 - [ ] Every factual claim is true and traces to the anchor
 - [ ] Unsupported claims are marked and listed
 - [ ] The material actually teaches the stated objectives
 - [ ] No objective was quietly replaced with an easier one
+- [ ] Cada bloque cita un trozo de lo que dí como anclaje, y el trozo dice lo que
+      el bloque afirma *(que la cita exista lo comprueba el programa; que diga lo
+      que el bloque afirma, no)*
+- [ ] Los ejercicios están en un nivel que le encaja *(si el informe dice que no
+      pudo comprobar el nivel, esto es tuyo entero)*
+- [ ] He mirado la hoja de soluciones y las cuentas son las de los ejercicios que
+      están en la hoja
+- [ ] Lo que el informe lista como «no comprobado» lo he comprobado yo
 
 ## 7 · Memory
 

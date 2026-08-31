@@ -22,6 +22,11 @@ proposals_per_objective: 30
 
 # Objectives in one job. More than this is a term's planning, not a worksheet.
 objectives_per_job: 6
+
+# The anchor is what she pastes, and a paste can be a whole chapter. Bounded
+# because it is sent to the model — reaching the bound is reported, never silent.
+anchor_max_chars: 20000
+anchor_max_passages: 40
 ---
 
 # Generating material from learning objectives

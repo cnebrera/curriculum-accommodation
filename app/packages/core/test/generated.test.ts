@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { checkObjectives, assertObjectives, assertAnchored, parseIR } from '../src/index.js';
+import { checkObjectives, assertObjectives, assertAnchorRecorded, parseIR } from '../src/index.js';
 
 /**
  * Generated material has to account for itself (002 T007/T008, FR-102/103/104).
@@ -110,13 +110,13 @@ describe('no anchor, no composition', () => {
    * teaches something wrong is worse than a dense one that teaches it right.
    */
   it('refuses rather than warning', () => {
-    expect(() => assertAnchored({ kind: 'generated' })).toThrow(/apoyarlo/);
-    expect(() => assertAnchored({ anchor: '   ' })).toThrow();
+    expect(() => assertAnchorRecorded({ kind: 'generated' })).toThrow(/apoyarlo/);
+    expect(() => assertAnchorRecorded({ anchor: '   ' })).toThrow();
   });
 
   it('accepts the least she can give', () => {
     // «The three sentences you would say out loud in class» is an anchor.
-    expect(() => assertAnchored({ anchor: 'Las plantas fabrican su alimento con la luz.' }))
+    expect(() => assertAnchorRecorded({ anchor: 'Las plantas fabrican su alimento con la luz.' }))
       .not.toThrow();
   });
 });

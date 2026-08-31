@@ -19,12 +19,17 @@ export interface ComposeBudgetLimits {
   exercisesPerObjective: number;
   proposalsPerObjective: number;
   objectivesPerJob: number;
+  /** The anchor is her paste, and a paste can be a whole textbook chapter. */
+  anchorMaxChars: number;
+  anchorMaxPassages: number;
 }
 
 export const DEFAULT_COMPOSE_BUDGET: ComposeBudgetLimits = {
   exercisesPerObjective: 10,
   proposalsPerObjective: 30,
   objectivesPerJob: 6,
+  anchorMaxChars: 20_000,
+  anchorMaxPassages: 40,
 };
 
 /** Bounds that protect her from the file, not values the file chooses. */
@@ -32,6 +37,8 @@ const LIMITS = {
   exercisesPerObjective: [1, 40],
   proposalsPerObjective: [1, 200],
   objectivesPerJob: [1, 20],
+  anchorMaxChars: [500, 200_000],
+  anchorMaxPassages: [1, 200],
 } as const;
 
 export function parseComposeBudget(
@@ -62,5 +69,7 @@ export function parseComposeBudget(
     exercisesPerObjective: Math.round(read('exercisesPerObjective', 'exercises_per_objective')),
     proposalsPerObjective: Math.round(read('proposalsPerObjective', 'proposals_per_objective')),
     objectivesPerJob: Math.round(read('objectivesPerJob', 'objectives_per_job')),
+    anchorMaxChars: Math.round(read('anchorMaxChars', 'anchor_max_chars')),
+    anchorMaxPassages: Math.round(read('anchorMaxPassages', 'anchor_max_passages')),
   };
 }

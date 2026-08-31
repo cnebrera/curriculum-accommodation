@@ -27,7 +27,8 @@ export interface GeneratedFrontMatter {
    * What the content rests on (FR-102). Free text: the teacher's own notes, the
    * textbook page, an official criterion.
    *
-   * Absent is a **refusal**, not a warning — see `assertAnchored`.
+   * Absent is a **refusal**, not a warning — see `assertAnchor` for the input gate
+   * and `assertAnchorRecorded` for the document one.
    */
   anchor?: string;
   /** The objectives she asked for, verbatim, in her order. */
@@ -127,7 +128,13 @@ export function assertObjectives(doc: IRDocument, objectives: readonly string[])
  * A refusal rather than a warning, because a warning on a screen she is moving
  * quickly through is a warning she will pass.
  */
-export function assertAnchored(fm: Record<string, unknown>): void {
+/*
+ * Renamed from `assertAnchored` when `compose/anchor.ts` arrived: that module owns
+ * the gate on **her input**, and this one asserts the **document** recorded what
+ * it rested on. Two different moments, and a single name for both is a name
+ * somebody reads as the other.
+ */
+export function assertAnchorRecorded(fm: Record<string, unknown>): void {
   const anchor = typeof fm['anchor'] === 'string' ? fm['anchor'].trim() : '';
   if (!anchor) {
     throw new RampaError('ir-no-provenance',

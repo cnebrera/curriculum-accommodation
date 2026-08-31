@@ -4,8 +4,10 @@ import {
   renderAnswerKey, buildComposeReport, assertObjectives, parseIR, logger, RampaError,
   parseProposals,
   loadLearner, annotateInjection, checkBounds,
+  assertAnchor, readAnchor, renderAnchorForPrompt, checkAnchored, checkObjectives,
   type Leveled, type ProposedExercise, type Skill, type ComposeOutcome,
-  type AnswerLine, type SheetGroup, type Verifier,
+  type AnswerLine, type SheetGroup, type Verifier, type AnchorPassage, type Block,
+  type Notice,
 } from '@rampa/core';
 import { sendRedacted } from '@rampa/providers';
 import { currentVault } from '../ipc/vault.js';
@@ -66,6 +68,15 @@ export interface ComposeRequest {
   /** How many exercises per objective. The corpus decides when she does not. */
   perObjective?: number;
   title?: string;
+  /**
+   * What the content must rest on (FR-102): her notes, the textbook page, the
+   * three sentences she would say in class.
+   *
+   * Required the moment any objective is content, and refused rather than warned
+   * about — a warning on a screen she is moving quickly through is a warning she
+   * passes, and the cost of passing it is a page of confident falsehoods.
+   */
+  anchor?: string;
 }
 
 export interface ComposeResult {
@@ -81,6 +92,10 @@ export interface ComposeResult {
   needsAnchor: string[];
   /** Objectives dropped because the job bound was reached. Never silent. */
   cutObjectives: string[];
+  /** Everything she must see about her own anchor (Principle IX). */
+  anchorNotices: Array<{ passage: string; notice: Notice }>;
+  /** Reaching the anchor bound is reported, never silent. */
+  anchorCut: { chars: number; passages: number };
   costCents: number;
 }
 
@@ -143,12 +158,26 @@ export async function runCompose(
     .map((l) => l.objective.text);
 
   const skills = leveled.filter((l) => l.objective.kind === 'skill');
-  if (skills.length === 0) {
-    throw new RampaError('compose-needs-anchor',
-      'Lo que me pides es contenido, no una destreza que yo pueda comprobar. Para eso '
-      + 'necesito algo en lo que apoyarlo: la página del libro que sustituye, tus '
-      + 'apuntes, o las tres frases que dirías en clase.',
-      needsAnchor);
+
+  /*
+   * The anchor gate (T017), and it is a **refusal**.
+   *
+   * It fires the moment one objective is content, before the provider is even
+   * resolved, so nothing is sent and nothing is charged. She gets the objectives
+   * back that caused it, because «necesito un anclaje» about an unnamed objective
+   * is a message she cannot act on when she typed four.
+   */
+  const anchorRaw = needsAnchor.length > 0 ? assertAnchor(request.anchor) : '';
+  const anchor = anchorRaw
+    ? readAnchor(anchorRaw, {
+        maxChars: limits.anchorMaxChars, maxPassages: limits.anchorMaxPassages,
+      })
+    : { passages: [] as AnchorPassage[], notices: [], charsCut: 0, passagesCut: 0 };
+
+  if (anchor.charsCut > 0 || anchor.passagesCut > 0) {
+    logger.warn('compose.anchor-bound', {
+      charsCut: anchor.charsCut, passagesCut: anchor.passagesCut,
+    });
   }
 
   const active = await activeProvider();
@@ -207,6 +236,34 @@ export async function runCompose(
     if (short) logger.warn('compose.short', { objective: text, accepted: outcome.accepted.length });
   }
 
+  /*
+   * Content, once there is an anchor to rest it on (T017-T019).
+   *
+   * After the exercises rather than before, and that is a cost decision: the
+   * verifiable half is the half that can fail cheaply and be told about. If the
+   * skill objectives produced nothing at all, this still runs — she asked for a
+   * text and a text does not depend on the multiplications.
+   */
+  const contentObjectives = leveled
+    .filter((l) => l.objective.kind === 'content')
+    .map((l) => l.objective.text);
+
+  let content: Block[] = [];
+  if (contentObjectives.length > 0 && anchor.passages.length > 0) {
+    onProgress({ stage: 'Escribiendo el texto', detail: contentObjectives.join(' · ') });
+    const written = await composeContent({
+      provider, key, known, system,
+      objectives: contentObjectives, allObjectives: kept,
+      passages: anchor.passages,
+      interests: learner.profile.interests ?? [],
+      yearLabel: yearId ? yearLabel(yearId) : undefined,
+      canDo: found?.year.can,
+      onProgress: (detail) => onProgress({ stage: 'Escribiendo el texto', detail }),
+    });
+    costCents += written.cents;
+    content = written.blocks;
+  }
+
   onProgress({ stage: 'Guardando' });
 
   /*
@@ -225,7 +282,8 @@ export async function runCompose(
   ];
 
   const sheet = buildSheet({
-    title, lang: 'es', objectives: kept, groups, composedOn, notes,
+    title, lang: 'es', objectives: kept, groups, content, composedOn, notes,
+    ...(anchorRaw ? { anchor: anchorSummary(anchorRaw) } : {}),
     composedFor: { code: request.learnerCode, ...(yearId ? { yearId } : {}) },
   });
 
@@ -265,6 +323,8 @@ export async function runCompose(
     answers: sheet.answers,
     needsAnchor,
     cutObjectives,
+    anchorNotices: anchor.notices,
+    anchorCut: { chars: anchor.charsCut, passages: anchor.passagesCut },
     costCents,
   };
 }
@@ -334,6 +394,119 @@ async function propose(args: {
   }
 
   return { proposed: parseProposals(raw), cents };
+}
+
+/**
+ * Content, written by the model and checked by us (T017-T019).
+ *
+ * Two checks, and neither is negotiable: every block traces to an objective **she**
+ * wrote (T008) and every claim rests on a passage of the anchor **she** gave
+ * (T019). One bounded retry, decided here, with the issues fed back — the same
+ * shape as the adaptation's completeness gate, and for the same reason: a second
+ * attempt often fixes a format mistake, and a third costs her money to produce the
+ * same answer.
+ *
+ * If it still fails, nothing is written to the sheet. Not «the blocks that
+ * passed»: a text missing the third of its four paragraphs is a text that reads as
+ * complete and teaches two thirds of the objective.
+ */
+async function composeContent(args: {
+  provider: Parameters<typeof sendRedacted>[0];
+  key: string;
+  known: ReadonlyMap<string, string>;
+  system: string;
+  /** The content objectives, which is what this call is for. */
+  objectives: readonly string[];
+  /** Her whole list, because the objective check is against all of it. */
+  allObjectives: readonly string[];
+  passages: readonly AnchorPassage[];
+  interests: readonly string[];
+  yearLabel?: string;
+  canDo?: string;
+  onProgress: (detail: string) => void;
+}): Promise<{ blocks: Block[]; cents: number }> {
+  let cents = 0;
+
+  const ask = async (extra: string[]): Promise<{ raw: string }> => {
+    const lines: string[] = [
+      'Escribe material sobre esto, con las palabras de la maestra:',
+      args.objectives.map((o) => `- ${o}`).join('\n'),
+      '',
+      'Todo lo que afirmes tiene que apoyarse en esto, y sólo en esto. Cada bloque '
+      + 'dice en qué trozo se apoya con `data-anchor="a2"`. Si algo que hace falta no '
+      + 'está aquí, no lo inventes: dilo en un bloque `.report-notes`.',
+      '',
+      renderAnchorForPrompt(args.passages),
+    ];
+    if (args.yearLabel) lines.push('', `Es para ${args.yearLabel}.`);
+    if (args.canDo) lines.push(`A esa edad: ${args.canDo}`);
+    if (args.interests.length) {
+      lines.push(`Le interesan: ${args.interests.join(', ')}. Úsalo en los ejemplos.`);
+    }
+    if (extra.length) lines.push('', 'El intento anterior tenía estos problemas:',
+      extra.map((e) => `- ${e}`).join('\n'));
+
+    const { stream } = sendRedacted(
+      args.provider,
+      { system: args.system, messages: [{ role: 'user', content: lines.join('\n') }], maxTokens: 4000 },
+      args.key, args.known, { maxAttempts: 1 },
+    );
+
+    let raw = '';
+    for await (const chunk of stream) {
+      if (chunk.text) { raw += chunk.text; args.onProgress(`${raw.length} caracteres`); }
+      if (chunk.usage) cents += args.provider.price(chunk.usage);
+    }
+    return { raw };
+  };
+
+  const CONTENT_FORMAT = 'Devuelve sólo bloques en el formato del documento intermedio, '
+    + 'cada uno con `data-objective` y `data-anchor`:\n'
+    + '::: {#c1 .explanation data-objective="…" data-anchor="a1"}\ntexto\n:::';
+
+  let problems: string[] = [];
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    const { raw } = await ask(attempt === 1 ? [CONTENT_FORMAT] : [CONTENT_FORMAT, ...problems]);
+    const parsed = parseIR(stripFence(raw));
+
+    const objectiveIssues = checkObjectives(parsed, args.allObjectives);
+    const anchorIssues = checkAnchored(parsed, args.passages);
+    problems = [
+      ...objectiveIssues.map((i) => i.message),
+      ...anchorIssues.map((i) => i.message),
+    ];
+
+    if (problems.length === 0 && parsed.blocks.length > 0) {
+      // Annotated like any other material: her anchor's text is now inside blocks
+      // written by a model, and Principle IX does not stop applying at that point.
+      return { blocks: annotateInjection(parsed).blocks, cents };
+    }
+
+    logger.warn('compose.content-rejected', { attempt, problems: problems.length });
+  }
+
+  throw new RampaError('ir-no-provenance',
+    'He escrito el texto dos veces y las dos se apoyaba en cosas que no me diste. '
+    + 'No te lo doy. Prueba a darme un poco más de lo que quieres que use.',
+    problems);
+}
+
+/**
+ * What the document records as its anchor.
+ *
+ * The **whole** anchor would put a chapter of somebody's textbook into the
+ * material she keeps — and `007` already refuses to store copyrighted source
+ * material. So the document records that there was one and what it began with,
+ * enough for her to recognise it, and her original paste is hers.
+ */
+function anchorSummary(raw: string): string {
+  const oneLine = raw.replace(/\s+/g, ' ').trim();
+  return oneLine.length > 240 ? `${oneLine.slice(0, 239)}…` : oneLine;
+}
+
+/** A model that wraps IR in a fence has made a punctuation mistake, not an error. */
+function stripFence(raw: string): string {
+  return /```(?:\w+)?\s*([\s\S]*?)```/.exec(raw)?.[1] ?? raw;
 }
 
 /** Which verifier covers this skill, or none — and none is an answer (FR-125). */
