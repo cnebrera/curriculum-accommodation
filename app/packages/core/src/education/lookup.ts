@@ -59,3 +59,25 @@ export function studiesFor(found: FoundYear, modality?: string): string | undefi
   if (year.studiesByModality && !modality) return undefined;
   return year.studies;
 }
+
+/**
+ * The bounds for one skill at one year (002 FR-122).
+ *
+ * `undefined` means **the corpus does not say**, and that is a real answer rather
+ * than a reason to fall back on anything. What the caller must do with it is not
+ * guess: nothing is constrained and the report says the level was not checked.
+ *
+ * The alternative — a default, or the model's own sense of what a ten-year-old
+ * handles — is the exact substitution FR-122 exists to forbid, and it would be
+ * invisible: a sheet of four-digit multiplications for a third-year looks like a
+ * sheet of multiplications.
+ */
+export function skillLevelFor(
+  found: FoundYear, skillId: string,
+): { maxDigits?: number; decimals?: boolean } | undefined {
+  return found.year.skills?.[skillId];
+}
+
+/** True when the corpus has anything to say about levels for this year. */
+export const hasSkillLevels = (found: FoundYear): boolean =>
+  Object.keys(found.year.skills ?? {}).length > 0;

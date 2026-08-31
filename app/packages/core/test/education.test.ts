@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync, readdirSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { parseEducationSystem, loadEducationSystems } from '../src/education/parse.js';
-import { findYear, allYears, divergence, studiesFor, DIVERGENCE_YEARS } from '../src/education/lookup.js';
+import { findYear, allYears, divergence, studiesFor, skillLevelFor, hasSkillLevels, DIVERGENCE_YEARS } from '../src/education/lookup.js';
 
 /**
  * The education corpus (011 T006, quickstart §1 and §2).
@@ -163,6 +163,34 @@ describe('repair, not reject', () => {
   it('treats a system that does not claim review as unreviewed', () => {
     const silent = raw.replace('reviewed_by_teacher: false', '');
     expect(parseEducationSystem(silent, 'x.md')!.reviewedByTeacher).toBe(false);
+  });
+});
+
+describe('the shipped Spanish file parses at all', () => {
+  /**
+   * Added 2026-08-31, after a corpus edit broke the YAML and **the suite got
+   * quieter rather than louder**: `es` came back undefined, every test that used
+   * it failed to collect, and the reported total dropped from 874 to 849 with
+   * "849 passed" beside it.
+   *
+   * A file that stops parsing must fail one assertion by name, not remove
+   * twenty-five. This is that assertion.
+   */
+  it('is a system with stages and years', () => {
+    expect(es, 'instructions/education/es.md did not parse — check the YAML').toBeDefined();
+    expect(es.stages.length).toBeGreaterThanOrEqual(8);
+    expect(es.stages.every((st) => st.years.length > 0)).toBe(true);
+  });
+
+  it('carries machine-readable skill bounds for the primary years (002 FR-122)', () => {
+    const p3 = findYear(es, 'es:primaria-3');
+    expect(p3, '3.º de Primaria is missing').toBeDefined();
+    expect(skillLevelFor(p3!, 'arith.multiply')).toEqual({ maxDigits: 2, decimals: false });
+
+    // And silence where the corpus says nothing, which is a real answer.
+    expect(skillLevelFor(p3!, 'lengua.ortografia')).toBeUndefined();
+    const eso = findYear(es, 'es:eso-1');
+    expect(hasSkillLevels(eso!), 'ESO has no bounds yet, and that is fine').toBe(false);
   });
 });
 

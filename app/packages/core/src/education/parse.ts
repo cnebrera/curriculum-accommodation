@@ -32,6 +32,57 @@ export interface EducationYear {
   studies?: string;
   /** Bachillerato only today: content genuinely differs by modality. */
   studiesByModality?: Record<string, string>;
+  /**
+   * Machine-readable bounds for skill practice (002 FR-122).
+   *
+   * `can` and `studies` are prose for the model to read; this is for code to
+   * check, and the distinction is the requirement: **the level of a skill
+   * exercise comes from here and never from a model's sense of what a ten-year-old
+   * handles.**
+   *
+   * Optional per year and per skill. A year with none is still valid, and what
+   * happens then is written down rather than guessed: nothing is constrained and
+   * the report says the level was not checked. Inventing a bound would be worse
+   * than admitting there is none.
+   */
+  skills?: Record<string, { maxDigits?: number; decimals?: boolean }>;
+}
+
+/**
+ * `skills:` for one year, repaired rather than rejected (011 FR-907's rule).
+ *
+ * A malformed entry is dropped and the rest of the year survives — and a bound
+ * that is not a number is dropped rather than coerced, because `max_digits: "dos"`
+ * coerced to `NaN` would compare false against everything and silently accept any
+ * exercise at all.
+ */
+function parseSkills(raw: unknown, path: string, yearId: string):
+  Record<string, { maxDigits?: number; decimals?: boolean }> | undefined {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return undefined;
+  const out: Record<string, { maxDigits?: number; decimals?: boolean }> = {};
+
+  for (const [skillId, value] of Object.entries(raw as Record<string, unknown>)) {
+    if (!value || typeof value !== 'object') {
+      logger.warn('education.skill-malformed', { path, yearId, skillId });
+      continue;
+    }
+    const v = value as Record<string, unknown>;
+    const bounds: { maxDigits?: number; decimals?: boolean } = {};
+
+    const digits = v['max_digits'];
+    if (typeof digits === 'number' && Number.isInteger(digits) && digits > 0) {
+      bounds.maxDigits = digits;
+    } else if (digits !== undefined) {
+      logger.warn('education.skill-bad-digits', { path, yearId, skillId, got: String(digits) });
+    }
+
+    if (typeof v['decimals'] === 'boolean') bounds.decimals = v['decimals'];
+
+    // A skill entry with nothing usable in it is not an entry.
+    if (Object.keys(bounds).length > 0) out[skillId] = bounds;
+  }
+
+  return Object.keys(out).length > 0 ? out : undefined;
 }
 
 export interface EducationStage {
@@ -126,6 +177,7 @@ export function parseEducationSystem(raw: string, path: string): EducationSystem
           ? Object.fromEntries(Object.entries(byModality as Record<string, unknown>)
               .map(([k, v]) => [k, String(v)]))
           : undefined,
+        skills: parseSkills(year['skills'], path, yid),
       });
     }
 

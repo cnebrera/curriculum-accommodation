@@ -53,11 +53,11 @@ the project with no original to compare against, so what replaces
 
 ## Phase 2 · Foundational
 
-- [ ] T006 Objectives and skills in `app/packages/core/src/compose/`: a skill parsed as a constraint, not a topic
+- [x] T006 Objectives and skills in `app/packages/core/src/compose/`: a skill parsed as a constraint, not a topic *(done: `packages/core/src/compose/objectives.ts`. A skill is a constraint, not a topic — and **a negated constraint is not the absence of one**: «sin llevadas» is a request for the easier case on purpose, and reading it as «no constraint» hands her exercises that carry, on the sheet for the child not ready for it. When in doubt it falls to `content`, because that path asks a human.)*
 - [ ] T007 The generated-IR contract: `kind: generated`, `data-objective` per block, the anchor in front matter
 - [ ] T008 Extend the provenance check: a generated block tracing to no objective fails the render, exactly as an unaccounted block does (`007` FR-512)
-- [ ] T009 Author `instructions/compose.md`: what a good exercise for an objective looks like. The judgement, in the corpus
-- [ ] T010 [P] Wire `011`'s education corpus as the level source (FR-122) — never the model's own sense of what a ten-year-old handles
+- [x] T009 Author `instructions/compose.md`: what a good exercise for an objective looks like. The judgement, in the corpus *(done. `instructions/compose.md` already covered the anchor, the level line and the IR contract; what it lacked was **what a good exercise looks like** — including that the model states its answer only so the code can compare it, and that a mismatch throws the exercise away rather than correcting it.)*
+- [x] T010 [P] Wire `011`'s education corpus as the level source (FR-122) — never the model's own sense of what a ten-year-old handles *(done, and it needed a corpus addition: `can` and `studies` are prose for the model, and FR-122 needs bounds for **code**. `instructions/education/es.md` now carries an optional `skills:` block per year — and a year without one is still valid, with what happens then written down rather than guessed: nothing is constrained and the report says the level was not checked.)*
 
 ---
 

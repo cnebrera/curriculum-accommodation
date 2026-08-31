@@ -12,6 +12,18 @@ last_checked: "2026-08-29"
 # estar mal.
 reviewed_by_teacher: false
 
+# `skills` por curso, añadido 2026-08-31 para `002` FR-122: el nivel de una
+# práctica de destreza sale de aquí y NUNCA del sentido que tenga un modelo sobre
+# lo que maneja un niño de diez años.
+#
+# Es opcional por curso y por destreza. Un curso sin `skills` sigue siendo válido
+# — y lo que pasa entonces está escrito en el código: no se limita nada y el
+# informe dice que el nivel no se comprobó. Fingir un límite sería peor.
+#
+# Los números de abajo son de las partes MENOS revisadas de este fichero. Son
+# plausibles y no están confirmados: si una PT dice que en 3.º ya se multiplica
+# por dos cifras con decimales, tiene razón ella.
+
 stages:
   - id: infantil
     label: Educación Infantil
@@ -60,6 +72,9 @@ stages:
           Lee párrafos de dos o tres frases. Sostiene dos pasos. Sigue necesitando
           apoyo visual para lo que no es rutina.
         studies: "Sumas y restas con llevadas, iniciación a la multiplicación, textos narrativos breves."
+        skills:
+          arith.add:      { max_digits: 2, decimals: false }
+          arith.subtract: { max_digits: 2, decimals: false }
       - id: primaria-3
         label: 3.º de Primaria
         typical_age: 8
@@ -67,6 +82,10 @@ stages:
           Lee para enterarse, no sólo para descifrar. Aguanta un texto de media
           página. Dos o tres pasos.
         studies: "Multiplicación, iniciación a la división, medida, textos narrativos y descriptivos."
+        skills:
+          arith.add:      { max_digits: 3, decimals: false }
+          arith.subtract: { max_digits: 3, decimals: false }
+          arith.multiply: { max_digits: 2, decimals: false }
       - id: primaria-4
         label: 4.º de Primaria
         typical_age: 9
@@ -74,6 +93,11 @@ stages:
           Textos de una página. Empieza a manejar lo que no tiene delante, aunque
           se apoya en lo concreto en cuanto se complica.
         studies: "División por dos cifras, iniciación a las fracciones, textos expositivos sencillos."
+        skills:
+          arith.add:      { max_digits: 4, decimals: false }
+          arith.subtract: { max_digits: 4, decimals: false }
+          arith.multiply: { max_digits: 2, decimals: false }
+          arith.divide:   { max_digits: 3, decimals: false }
       - id: primaria-5
         label: 5.º de Primaria
         typical_age: 10
@@ -82,6 +106,11 @@ stages:
           de dos o tres pasos. La abstracción ya está ahí y todavía se apoya en
           ejemplos.
         studies: "Fracciones y decimales, proporcionalidad sencilla, textos expositivos."
+        skills:
+          arith.add:      { max_digits: 5, decimals: true }
+          arith.subtract: { max_digits: 5, decimals: true }
+          arith.multiply: { max_digits: 3, decimals: true }
+          arith.divide:   { max_digits: 4, decimals: false }
       - id: primaria-6
         label: 6.º de Primaria
         typical_age: 11
@@ -89,6 +118,11 @@ stages:
           Textos largos si están bien estructurados. Trabaja solo un rato. Maneja
           lo abstracto si se le ancla en algo.
         studies: "Porcentajes, proporcionalidad, geometría, textos argumentativos sencillos."
+        skills:
+          arith.add:      { max_digits: 6, decimals: true }
+          arith.subtract: { max_digits: 6, decimals: true }
+          arith.multiply: { max_digits: 3, decimals: true }
+          arith.divide:   { max_digits: 5, decimals: true }
 
   - id: eso
     label: ESO
