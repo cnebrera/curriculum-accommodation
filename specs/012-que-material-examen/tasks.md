@@ -9,7 +9,7 @@ the change it protects, which is unusual enough to be its own task.
 
 ## Phase 1 · Make the behaviour change visible before making it
 
-- [ ] T001 Write `app/packages/core/test/selection-baseline.test.ts`: for a set of representative documents, record which recipes `selectRecipes` returns **today**. Commit it before anything else changes. `scope` is populated across the corpus and read by nothing, so turning it on changes selection for every document and no test asserts what today produces
+- [x] T001 Write `app/packages/core/test/selection-baseline.test.ts`: for a set of representative documents, record which recipes `selectRecipes` returns **today**. Commit it before anything else changes. `scope` is populated across the corpus and read by nothing, so turning it on changes selection for every document and no test asserts what today produces *(done, and the baseline is damning: **`exam-access-not-difficulty`, scoped `[assessment]`, is currently selected for all four profiles** — including one whose document is a study text. It is offered to everything, which is what «parsed and never read» looks like when you write it down.)*
 - [ ] T002 Author the kinds in the corpus per contracts/material-kinds.md: four, each with a label in her words and a rule naming one prohibition
 
 ---

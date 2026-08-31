@@ -1,0 +1,30 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`selection today, per profile > cognitive load and attention — before scope filtering 1`] = `
+[
+  "exam-access-not-difficulty",
+  "one-task-per-page",
+]
+`;
+
+exports[`selection today, per profile > executive function — before scope filtering 1`] = `
+[
+  "exam-access-not-difficulty",
+  "explicit-steps",
+]
+`;
+
+exports[`selection today, per profile > reading, in Spanish — before scope filtering 1`] = `
+[
+  "exam-access-not-difficulty",
+  "keep-curricular-terms",
+  "lectura-facil-es",
+]
+`;
+
+exports[`selection today, per profile > visual access — before scope filtering 1`] = `
+[
+  "exam-access-not-difficulty",
+  "non-visual-access",
+]
+`;
