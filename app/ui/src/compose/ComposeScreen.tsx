@@ -166,10 +166,25 @@ export function ComposeScreen({ learners, onComposed, onBack }: {
           {(rows) => (
             <fieldset className="fieldset-bare">
               <legend className="sr-only">Qué tipo de material</legend>
-              <div className="stack gap2">
+              {/*
+                `door-choices`, and `door-on` when it is chosen.
+
+                The first version set `aria-pressed` and nothing else — so the state
+                changed, the primary control unlocked, and **she saw no difference at
+                all**. Carlos: «no me deja seleccionar el que quiero que prepare». It let
+                him; it just never said so.
+
+                `aria-pressed` alone is the assistive half. `door-on` is the half a person
+                looking at the screen needs — a border, a tint and a tick, which is
+                `010` FR-812's rule that a state carried by one channel is a state
+                somebody cannot perceive.
+              */}
+              <div className="door-choices">
                 {(rows as Array<{ id: string; label: string; before?: string;
                                   composing?: { before?: string } }>).map((k) => (
-                  <button key={k.id} className="door" aria-pressed={kind === k.id}
+                  <button key={k.id}
+                          className={kind === k.id ? 'door door-on' : 'door'}
+                          aria-pressed={kind === k.id}
                           onClick={() => setKind(k.id)}>
                     <strong>{k.label}</strong>
                     {/*

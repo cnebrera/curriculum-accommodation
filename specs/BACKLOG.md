@@ -413,6 +413,51 @@ every moment should have a spec. What it added beyond the seams pass:
    journey sentence → T094). Handover *import* (004 US2) recorded as deliberately
    deferred rather than silently missing.
 
+## G26 · A selected state marked only in the accessibility tree — *CLOSED 2026-09-01*
+
+Reported by Carlos, using it: «no me deja seleccionar el que quiero que prepare». It did
+let him. It just never said so.
+
+The new kind picker set `aria-pressed` and nothing else, and the stylesheet paints a
+chosen `.door` from the class `.door-on`. So the state flipped, the primary control
+unlocked, and **the screen looked identical before and after the click**. A person cannot
+use a control whose only feedback is in the accessibility tree.
+
+### The one that was worse, found by looking for others
+
+`ScopeQuestion` — the box where she tells Rampa what to change — did
+`className={scope === 'learner' ? 'primary' : ''}`, and **`.primary` has not existed
+since the v2 rewrite renamed it to `.btn .btn-primary`**. That is the exact rename
+`ui/test/styles.test.tsx` was written to catch, and it had been sitting there ever since:
+she picked one of three scopes and all three looked the same.
+
+### Why the detector was blind, and what it does now
+
+`styles.test.tsx` collected classes from **static `className="…"` only**. A conditional
+class is precisely where a *selected state* lives, so the one category of class that a
+stylesheet rename breaks invisibly was the one category it never read. The control still
+works, so nothing fails, and only somebody looking at the screen notices.
+
+It now also collects string literals in **result position** inside `className={…}` —
+after a `?` or a `:`. Refined twice while writing it, and both refinements are recorded in
+the file because they are the difference between a detector and a nuisance:
+
+1. Taking *every* literal in the braces reported `variant === 'wide'` and
+   `tone === 'neutral'` — values being compared, not classes being applied.
+2. The static pass read the raw file, so it had always been counting classes **quoted in
+   prose**. It surfaced when a comment explaining this very fix cited the broken
+   `className="…"` it replaced. Thirteenth time a test here tripped over its own
+   documentation.
+
+Verified by reintroducing the defect: the detector names it.
+
+### What this says about the e2e that passed
+
+`e2e/compose-kind.spec.ts` asserted `aria-pressed` and that the primary control unlocked.
+Both were true. **Neither was what he needed.** The spec now checks both channels — the
+assistive one and the visible one — because `010` FR-812 says a state carried by one
+channel is a state somebody cannot perceive, and here that somebody was everybody.
+
 ## G25 · The eleventh field nobody read, and what finally caught it — *CLOSED 2026-09-01*
 
 Found while implementing `021` US2, by an end-to-end test rather than by a review.

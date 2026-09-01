@@ -70,23 +70,35 @@ export function ScopeQuestion({ learner, recipes, onCaptured }: {
         <div className="stack">
           <strong>{es.review.scopeQuestion}</strong>
           <p className="small muted" style={{ margin: 0 }}>{es.review.scopeWhy}</p>
-          <div className="row">
-            <button aria-pressed={scope === 'learner'} className={scope === 'learner' ? 'primary' : ''}
+          {/*
+            `.segmented`, which already paints `[aria-pressed="true"]`.
+
+            These carried `className={… ? 'primary' : ''}` — and **`.primary` has not
+            existed since the v2 rewrite renamed it to `.btn .btn-primary`**. So the
+            chosen scope was marked in the accessibility tree and nowhere on the screen:
+            she picked one of three and all three looked the same.
+
+            It survived because `styles.test.tsx` reads static `className="…"` only, so
+            every conditional class — which is exactly where a selected state lives — was
+            invisible to it. Fixed there too.
+          */}
+          <div className="segmented">
+            <button aria-pressed={scope === 'learner'}
                     onClick={() => setScope('learner')}>{es.review.scopeLearner}</button>
-            <button aria-pressed={scope === 'practice'} className={scope === 'practice' ? 'primary' : ''}
+            <button aria-pressed={scope === 'practice'}
                     onClick={() => setScope('practice')}>{es.review.scopePractice}</button>
-            <button aria-pressed={scope === 'corpus'} className={scope === 'corpus' ? 'primary' : ''}
+            <button aria-pressed={scope === 'corpus'}
                     onClick={() => setScope('corpus')}>{es.review.scopeCorpus}</button>
           </div>
           {scope === 'learner' ? (
             <div className="stack">
               <strong>¿Dónde lo guardo?</strong>
-              <div className="row">
-                <button aria-pressed={destination === 'avoid'} className={destination === 'avoid' ? 'primary' : ''}
+              <div className="segmented">
+                <button aria-pressed={destination === 'avoid'}
                         onClick={() => setDestination('avoid')}>En «lo que hay que evitar»</button>
-                <button aria-pressed={destination === 'works'} className={destination === 'works' ? 'primary' : ''}
+                <button aria-pressed={destination === 'works'}
                         onClick={() => setDestination('works')}>En «lo que ya funciona»</button>
-                <button aria-pressed={destination === 'note'} className={destination === 'note' ? 'primary' : ''}
+                <button aria-pressed={destination === 'note'}
                         onClick={() => setDestination('note')}>Solo como nota</button>
               </div>
               <p className="small muted" style={{ margin: 0 }}>

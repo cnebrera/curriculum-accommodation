@@ -64,6 +64,38 @@ test.describe('what kind of material she wants', () => {
     await app.close();
   });
 
+  test('shows her which one she chose', async () => {
+    /*
+     * The assertion that was missing, and Carlos found what it cost: «no me deja
+     * seleccionar el que quiero que prepare». It did let him — `aria-pressed` flipped and
+     * the primary control unlocked — but the CSS paints the chosen state from `door-on`,
+     * which was not there. So the screen looked identical before and after the click.
+     *
+     * The first version of this spec checked `aria-pressed`, which is the assistive
+     * channel, and nothing about the visible one. A state carried by one channel is a
+     * state somebody cannot perceive (`010` FR-812) — and here *everybody* could not.
+     */
+    const { app, page, vault } = await launch();
+    await seedOne(page, vault);
+    await throughDoorToCompose(page, { kind: 'Un examen o una prueba' });
+
+    const exam = page.locator('.door', { hasText: 'Un examen o una prueba' });
+    const worksheet = page.locator('.door', { hasText: 'Una ficha o unos ejercicios' });
+
+    // Both channels, on the one she chose.
+    await expect(exam).toHaveAttribute('aria-pressed', 'true');
+    await expect(exam).toHaveClass(/door-on/);
+    // And neither on the ones she did not.
+    await expect(worksheet).toHaveAttribute('aria-pressed', 'false');
+    await expect(worksheet).not.toHaveClass(/door-on/);
+
+    // Choosing another moves it, rather than adding a second.
+    await worksheet.click();
+    await expect(worksheet).toHaveClass(/door-on/);
+    await expect(exam).not.toHaveClass(/door-on/);
+    await app.close();
+  });
+
   test('will not start until she has said which', async () => {
     const { app, page, vault } = await launch();
     await seedOne(page, vault);

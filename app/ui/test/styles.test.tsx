@@ -34,13 +34,58 @@ const tsxFiles = walk(join(uiRoot, 'src'), '.tsx');
 const defined = new Set<string>();
 for (const m of css.matchAll(/\.(-?[_a-zA-Z][\w-]*)/g)) defined.add(m[1]!);
 
-/** Every class the components ask for, from static `className="..."` only. */
+/**
+ * Every class the components ask for — static **and** conditional.
+ *
+ * ## Why the conditional half was added
+ *
+ * This read `className="…"` only. On 2026-09-01 Carlos reported that the compose screen
+ * «no me deja seleccionar el que quiero que prepare» — it did, but nothing on screen
+ * changed. Looking for others found `ScopeQuestion` doing
+ * `className={scope === 'learner' ? 'primary' : ''}`, and **`.primary` has not existed
+ * since the v2 rewrite renamed it to `.btn .btn-primary`** — the very rename this file's
+ * header is about. So the chosen scope was marked in the accessibility tree and nowhere
+ * a person could see, in the box where she tells Rampa what to change.
+ *
+ * It survived two years of this test because a conditional class is exactly where a
+ * **selected state** lives, and a selected state is exactly what a stylesheet rename
+ * breaks invisibly: the control still works, so nothing fails, and only somebody looking
+ * at it notices.
+ *
+ * String literals inside `className={…}` are collected too. Deliberately crude — it
+ * cannot follow a variable — so a class assembled from one is still invisible here. What
+ * it catches is the common shape, which is the one that has now caused this twice.
+ */
 const used = new Map<string, string[]>();
 for (const file of tsxFiles) {
   const src = readFileSync(file, 'utf8');
-  for (const m of src.matchAll(/className="([^"{}]*)"/g)) {
-    for (const cls of m[1]!.split(/\s+/).filter(Boolean)) {
+  const record = (raw: string): void => {
+    for (const cls of raw.split(/\s+/).filter(Boolean)) {
       used.set(cls, [...(used.get(cls) ?? []), file.replace(uiRoot + '/', '')]);
+    }
+  };
+  /*
+   * Comments stripped, for **both** passes.
+   *
+   * The static pass read the raw file, so it had always been counting classes *quoted in
+   * prose* as classes in use — invisible until a comment explaining this very fix cited
+   * the broken `className="…"` it replaced, and the detector reported `.…` as an
+   * undefined class. Thirteenth time a test in this project tripped over its own
+   * documentation.
+   */
+  const code = src.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '');
+  for (const m of code.matchAll(/className="([^"{}]*)"/g)) record(m[1]!);
+  for (const m of code.matchAll(/className=\{([^}]*)\}/g)) {
+    /*
+     * Only literals in **result** position — after a `?` or a `:`.
+     *
+     * The first version took every literal inside the braces and reported three
+     * non-classes: `variant === 'wide'`, `tone === 'neutral'`. Those are values being
+     * compared, not classes being applied, and a detector that cries about them is one
+     * somebody switches off. The ternary is the shape that matters and this is it.
+     */
+    for (const lit of m[1]!.matchAll(/[?:]\s*'([^']*)'|[?:]\s*"([^"]*)"|[?:]\s*`([^`${}]*)`/g)) {
+      record(lit[1] ?? lit[2] ?? lit[3] ?? '');
     }
   }
 }
