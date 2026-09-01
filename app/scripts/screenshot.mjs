@@ -59,11 +59,50 @@ for (const [file, label] of [
   await page.screenshot({ path: join(out, `${file}.png`) });
 }
 
+/*
+ * Inside a learner (`020`), which is now most of the application.
+ *
+ * One rail that becomes the learner's — captured because the reason the previous
+ * design died was that nobody looked at it until it was built: a learner menu
+ * beside the rail put 501px of chrome in front of a worksheet.
+ */
 await page.getByRole('button', { name: 'Mis alumnos' }).click();
 await page.waitForTimeout(400);
 await page.locator('.card-action').first().click();
 await page.waitForTimeout(900);
-await page.screenshot({ path: join(out, '6-perfil.png'), fullPage: true });
+await page.screenshot({ path: join(out, '6-alumno-quien-es.png'), fullPage: true });
+
+for (const [file, label] of [
+  ['6b-alumno-preparado', 'Lo que le he preparado'],
+  ['6c-alumno-curricular', 'Su adaptación curricular'],
+]) {
+  await page.getByRole('navigation', { name: /^Apartados de/ })
+    .getByRole('button', { name: label, exact: true }).click();
+  await page.waitForTimeout(700);
+  await page.screenshot({ path: join(out, `${file}.png`) });
+}
+
+/*
+ * And the learner's rail at the widths where it turns into a strip. This is where
+ * option A either holds or does not, and it cannot be asserted — only looked at
+ * (`013` FR-1113/FR-1118, `020` SC-1805).
+ */
+for (const width of [560, 880, 892, 1024]) {
+  await page.setViewportSize({ width, height: 800 });
+  await page.waitForTimeout(400);
+  await page.screenshot({ path: join(out, `alumno-w-${width}.png`) });
+}
+await page.setViewportSize({ width: 1366, height: 768 });
+await page.waitForTimeout(300);
+
+/*
+ * Back out to the caseload first: inside a learner the rail is **theirs**, so the
+ * top-level controls are not on screen at all. That is option A working, and it is
+ * also why this walk needs the step — the previous version of this script timed out
+ * here looking for a control the rail no longer holds.
+ */
+await page.getByRole('button', { name: /^(← )?Mis alumnos$/ }).first().click();
+await page.waitForTimeout(400);
 
 /*
  * And the same screen at the widths the window can actually be (013 T027,
@@ -79,7 +118,7 @@ await page.screenshot({ path: join(out, '6-perfil.png'), fullPage: true });
  * so they are the last strip and the first column, which is where a shell breaks
  * if it is going to.
  */
-await page.getByRole('button', { name: 'Adaptar material' }).click();
+await page.getByRole('button', { name: 'Preparar material' }).click();
 await page.waitForTimeout(400);
 for (const width of [560, 700, 880, 892, 1024, 1280, 1920]) {
   await page.setViewportSize({ width, height: 800 });

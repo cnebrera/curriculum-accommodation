@@ -244,3 +244,57 @@
   --rhythm-section: var(--s6);
   --rhythm-field: var(--s4);
 }
+
+/* ── The learner as a place (020 T009, option A) ───────────────────────────
+   There is no second menu. The first build put the learner's sections in their
+   own column beside the rail, and the measurement is why it went: 248px of rail
+   plus 221px of menu plus the gap is 501px of chrome before the content — 37% of
+   a 1366px window, and 43% at the large text scale, in an application whose
+   content is a worksheet.
+
+   So the rail becomes the learner's, and these rules only dress what it holds:
+   the way back, their name, and the rule above the two lifecycle sections. The
+   rail's own layout is untouched — including `.rail button[aria-current]`, which
+   already carries the active state with a fill, bold weight and a shadow rather
+   than with colour alone (FR-1810). Which is also why this option costs no
+   layout or accessibility test. */
+.rail-back { color: var(--accent-ink); font-size: var(--text-sm);
+  text-align: left; padding: var(--s2); border: 0; background: transparent;
+  border-radius: var(--radius-control); cursor: pointer; min-height: 44px;
+  display: flex; align-items: center; width: 100%; }
+.rail-back:hover { background: var(--surface-2); }
+
+.rail-who { font-size: var(--text-base); font-weight: 700; line-height: 1.2;
+  margin: var(--s2) 0 var(--s3); padding: 0 var(--s2); }
+/* The code under the name, in mono, because it is an identifier and not a word —
+   and because it is what she will find in her folder. */
+.rail-who span { display: block; font-family: var(--font-mono);
+  font-size: var(--text-xs); font-weight: 400; color: var(--ink-faint); }
+
+.rail hr { border: 0; border-top: 1px solid var(--line);
+  margin: var(--s3) var(--s2) var(--s2); width: auto; }
+
+/* At the narrowest width the rail is already a horizontal strip (see the
+   `.rail-foot` rules above), so the learner's rail turns with it: the code hides,
+   the name stops being a column heading, and the rule between the four sections
+   and the two lifecycle ones becomes vertical — a top border would cut the strip
+   in half. Same move, same reason (`013` FR-1116). */
+@container window (max-width: 52em) {
+  .rail-back { width: auto; }
+  .rail-who { margin: 0 var(--s2) 0 0; padding: 0; align-self: center;
+    font-size: var(--text-sm); white-space: nowrap; }
+  .rail-who span { display: none; }
+  /*
+     A full-width break rather than a vertical hairline.
+     
+     The vertical version is what `.rail-foot` does and it is right for a foot; here it
+     disappeared into the wrap at 560px, leaving «Borrar todo lo suyo» sitting beside
+     «Su adaptación curricular» as though they were the same kind of thing. It is a
+     destructive action and the rule above it is the only thing saying so — so the rule
+     takes a line of its own and the two lifecycle controls fall below it.
+
+     Found by looking at the screenshot, which is the entire reason FR-1118 exists.
+  */
+  .rail hr { flex-basis: 100%; border-top: 1px solid var(--line); border-left: 0;
+    margin: var(--s2) 0 var(--s1); }
+}

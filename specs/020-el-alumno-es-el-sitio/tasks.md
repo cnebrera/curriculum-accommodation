@@ -14,7 +14,7 @@ is the model for T001, and it exists because the door forgot which child it was 
 
 ## Phase 1 · Setup
 
-- [ ] T001 Write `app/ui/test/route.test.ts` **first**, red, from
+- [x] T001 Write `app/ui/test/route.test.ts` **first**, red, from
       [quickstart.md](quickstart.md) §1. Six cases, each one a defect this project has
       had or is one move away from: entering a learner lands on a section rather than on
       nothing; the current section pressed again starts over; changing learner mid-flow
@@ -27,27 +27,27 @@ is the model for T001, and it exists because the door forgot which child it was 
 
 **Blocking**: nothing in Phase 3 or later may start until this phase is green.
 
-- [ ] T002 `app/ui/src/nav/route.ts` — `Route`, `LearnerTab`, `Flow`, `SettingsPane` and
+> **Corrected 2026-09-01, during implementation.** T006 and T007 — the `for_learner`
+> field and `ingest:pending` returning it — started in this phase, on the plan's
+> reasoning that «the field goes in before the marker that reads it». Writing T005
+> showed that argument only holds *inside* one phase: US1 has no writer for the field
+> (a job gains its learner in `Preparar`, which is US2) and no reader either, so
+> shipping them here would leave a field written by nobody and read by nobody across
+> two phases — **the exact defect this project has found ten times.** Moved to Phase 4,
+> immediately before T026/T027, which are its first reader and writer.
+ *(done, red first — 11 cases, four more than planned: settings as a place, no duplicate when she picks the entered learner explicitly, and starting a flow from another section.)*
+- [x] T002 `app/ui/src/nav/route.ts` — `Route`, `LearnerTab`, `Flow`, `SettingsPane` and
       a pure `reduceRoute`, per [data-model.md](data-model.md). The route holds a
       **code, never a name** (FR-1806): a name in navigation state is a name a future
-      «restore where I was» could try to persist
-- [ ] T003 `also` MUST always contain the entered learner, enforced in the reducer
+      «restore where I was» could try to persist *(done. `startRoute`, `reduceRoute`, `learnerTabs` and `MAIN_TABS` — the menu renders from the exported list rather than a second copy, because two lists of «which sections exist» is where one gains a destination and the other does not.)*
+- [x] T003 `also` MUST always contain the entered learner, enforced in the reducer
       (FR-1814). Modelling it as «the others» is how `016` FR-1411 gets broken by a data
-      structure instead of by a screen
-- [ ] T004 [P] A `Flow` MUST be unrepresentable outside `tab: 'prepare'` — by the type,
-      so no screen can render a step outside the section that owns it
-- [ ] T005 [P] Nothing is persisted across restarts; restarting lands on the caseload.
-      Same argument `015` applied to filters
-- [ ] T006 `packages/shell/src/jobs/ingest.ts` writes `for_learner` into `ir.md` at
-      creation, and `packages/core` gains `startedFor(frontMatter)` reading
-      **`for_learner` first and `composed_for` as the older spelling** (research R3).
-      One reader, two spellings — `002` already writes this fact under the second name,
-      and two names for one fact is this project's most-repeated defect
-- [ ] T007 `ingest:pending` returns `learner?`, from **one** walk of `material/`
-      (FR-1828). Optional and it must stay optional: every job in every vault today has
-      no such field, and treating its absence as an error would break the first vault it
-      met
-- [ ] T008 Rewrite `app/e2e/door.ts` as `app/e2e/nav.ts` — the one place that knows how
+      structure instead of by a screen *(done, in `withSelf`, and it deduplicates: she can tick the entered learner explicitly without him appearing twice.)*
+- [x] T004 [P] A `Flow` MUST be unrepresentable outside `tab: 'prepare'` — by the type,
+      so no screen can render a step outside the section that owns it *(done. `flow/start` from another section moves her to `prepare` rather than refusing silently — a refusal that looks like a dead button is the FR-1105 defect wearing a different hat.)*
+- [x] T005 [P] Nothing is persisted across restarts; restarting lands on the caseload.
+      Same argument `015` applied to filters *(done, and asserted over the **source**: no `localStorage`, `sessionStorage` or `indexedDB` anywhere in the file. The tempting version of «be helpful» is one call away.)*
+- [x] T008 Rewrite `app/e2e/door.ts` as `app/e2e/nav.ts` — the one place that knows how
       to walk to a screen. Done now rather than at the end so every later step is
       verified by a suite that already agrees with the new shape. **Routes change; what
       they assert does not**
@@ -65,34 +65,51 @@ consultation tasks stop being buried.
 **Independent Test**: open the application, pick a learner, read who they are, open what
 has been prepared for them, go back — **without ever opening a form to get somewhere**.
 
+> **Design corrected 2026-09-01, by looking at it.** T009 first built the learner's menu
+> as a **second column beside the rail** — which is what the specification's own
+> Assumptions described, and what Carlos rejected the moment he saw it. He was right and
+> it is measurable: 248px of rail + 221px of menu + 32px gap is **501px of chrome before
+> the content**, 37% of a 1366px window, and 43% at the large text scale, in an
+> application whose content is a worksheet.
+>
+> Four options were mocked up to scale in the real palette. The one taken — **A** — has
+> the rail *become* the learner's: outside a learner it holds her caseload and the
+> settings; inside one it holds the way back, their name, and their sections. One column,
+> one place to look, 253px handed back to the sheet, and **no change to the shell** — so
+> it costs no layout or accessibility test.
+>
+> What it costs, stated: «Configuración» is not visible from inside a learner. It is a
+> destination reached twice a month and it lives in the rail's foot, beside the cost
+> badge and the text-size control.
+
 **This phase removes nothing.** «Preparar material» stays in the top level until US2
 replaces it, so at no point is there a Rampa where the work cannot be done. FR-1802's
 «exactly two destinations» is therefore satisfied at T037, not here — stated so it is a
 sequencing decision and not a requirement quietly unmet.
-
-- [ ] T009 [US1] `app/ui/src/nav/LearnerShell.tsx` — the learner's heading (name, code,
+ *(done: `e2e/door.ts` → `e2e/nav.ts`, with the learner walks added and the door's half kept and marked with the task that deletes it. Five specs re-pointed. Both shapes live there at once because US1 removes nothing.)*
+- [x] T009 [US1] `app/ui/src/nav/LearnerShell.tsx` — the learner's heading (name, code,
       their own axis strip per FR-1806) and their menu, with the sections rendered
-      inside it. The menu MUST stay visible during flows (FR-1807)
-- [ ] T010 [US1] The caseload becomes the opening screen (FR-1801), keeping every filter,
-      search, facet and grouping `015` built
-- [ ] T011 [P] [US1] `Quién es` renders `ProfileEditor` and the pictogram section, and
-      **nothing else**
-- [ ] T012 [P] [US1] `Lo que le he preparado` renders `014`'s record as a destination in
-      its own right (FR-1805). This is the assertion the whole specification exists for
-- [ ] T013 [P] [US1] Handover and erasure at the foot of the learner's menu, set apart
-      from the four (FR-1804)
-- [ ] T014 [US1] **Strip the six cards out of `ProfileEditor`** — record, guide, ACNS,
+      inside it. The menu MUST stay visible during flows (FR-1807) *(done as **option A**: `nav/Rail.tsx`, one rail that changes with where she is. `LearnerShell.tsx` was written, built, looked at and deleted — see the note above.)*
+- [x] T010 [US1] The caseload becomes the opening screen (FR-1801), keeping every filter,
+      search, facet and grouping `015` built *(done. `LearnersScreen` went from 355 lines to 199: it lists, and it says which learner she picked. The four sub-views it held in local state are destinations now.)*
+- [x] T011 [P] [US1] `Quién es` renders `ProfileEditor` and the pictogram section, and
+      **nothing else** *(done — the editor and the pictogram section, and nothing else.)*
+- [x] T012 [P] [US1] `Lo que le he preparado` renders `014`'s record as a destination in
+      its own right (FR-1805). This is the assertion the whole specification exists for *(done, and asserted end to end: `e2e/nav.spec.ts` reaches the record from the menu and checks the editor's own fields are **not on the screen at all**, which is what «without opening the editor» means when it is checked rather than claimed.)*
+- [x] T013 [P] [US1] Handover and erasure at the foot of the learner's menu, set apart
+      from the four (FR-1804) *(done, below a rule. And the rule needed fixing at 560px, where it had turned into a vertical hairline that disappeared into the wrap — leaving «Borrar todo lo suyo» beside the ordinary sections as though it were one. Found in a screenshot, which is the whole reason FR-1118 exists.)*
+- [x] T014 [US1] **Strip the six cards out of `ProfileEditor`** — record, guide, ACNS,
       ACS, handover, erase. It goes back to being only the editor. The cards are the
-      defect; the destinations are the fix
-- [ ] T015 [P] [US1] Choosing the destination she is already in returns to its start
+      defect; the destinations are the fix *(done, and the diagnosis was **more precise than the specification said**: the six cards were not inside `ProfileEditor`, they wrapped it in `LearnersScreen`'s `editing` sub-view. Identical effect for her — go in to edit to reach them — but the fix was splitting the screen, not stripping the editor. Their words survive in `LearnerSections.tsx`: «no la escribo yo, la ordeno» is the sentence that tells a PT what the ACNS draft is.)*
+- [x] T015 [P] [US1] Choosing the destination she is already in returns to its start
       (FR-1809). Shipped broken once already: the rail set a `view` it already had while
-      the screen's own state survived
-- [ ] T016 [P] [US1] The active destination is distinguishable with colour removed
-      (FR-1810), and every destination announces which section it is (FR-1822)
-- [ ] T017 [US1] `app/e2e/nav.spec.ts` from quickstart §2 — including **the record
+      the screen's own state survived *(done in the reducer, so it holds for every destination rather than for the one screen somebody remembered.)*
+- [x] T016 [P] [US1] The active destination is distinguishable with colour removed
+      (FR-1810), and every destination announces which section it is (FR-1822) *(done — `.rail button[aria-current]` already carried the active state with a fill, bold weight and a shadow rather than colour alone, so option A inherited FR-1810 for free. The rail's accessible name follows its contents: «Secciones de Rampa» outside a learner, «Apartados de <nombre>» inside — a region whose label says one thing while holding another lies to a screen reader.)*
+- [x] T017 [US1] `app/e2e/nav.spec.ts` from quickstart §2 — including **the record
       reached without passing through the profile editor**, and every section reachable
-      by keyboard alone
-- [ ] T018 [P] [US1] Update the screen list in `e2e/a11y.spec.ts` and `e2e/layout.spec.ts`
+      by keyboard alone *(done, `e2e/nav.spec.ts`, 8 cases — including «US1 removes nothing: the door is still reachable», so the sequencing promise is asserted rather than trusted.)*
+- [x] T018 [P] [US1] Update the screen list in `e2e/a11y.spec.ts` and `e2e/layout.spec.ts`
       to the new shape. A stale list here is a set of screens nobody checks
 
 **Checkpoint**: US1 is usable and nothing has been taken away.
@@ -105,7 +122,7 @@ sequencing decision and not a requirement quietly unmet.
 
 **Independent Test**: from inside a learner, adapt one worksheet for her and the same
 worksheet for three, and confirm the source was read once.
-
+ *(done, plus `scripts/screenshot.mjs`, which walked the old rail and timed out on a control the rail no longer holds — the screenshots now include the learner's rail at 560, 880, 892 and 1024, which is where option A either holds or does not.)*
 - [ ] T019 [US2] `app/ui/src/prepare/` — the two branches offered as peers with neither
       pre-selected (FR-1812). This is `016` FR-1401's substance, relocated
 - [ ] T020 [US2] Step 1 asks what the material is, explicitly and with no default
@@ -123,6 +140,15 @@ worksheet for three, and confirm the source was read once.
       comes after verification and not before
 - [ ] T025 [US2] Step 5 reviews and signs **per learner**, with no action anywhere that
       signs two sheets (FR-1815)
+- [ ] T006 [US2] `packages/shell/src/jobs/ingest.ts` writes `for_learner` into `ir.md`
+      at creation, and `packages/core` gains `startedFor(frontMatter)` reading
+      **`for_learner` first and `composed_for` as the older spelling** (research R3).
+      One reader, two spellings — `002` already writes this fact under the second name,
+      and two names for one fact is this project's most-repeated defect
+- [ ] T007 [US2] `ingest:pending` returns `learner?`, from **one** walk of `material/`
+      (FR-1828). Optional and it must stay optional: every job in every vault today has
+      no such field, and treating its absence as an error would break the first vault it
+      met
 - [ ] T026 [US2] «Tenías esto a medias» inside `Preparar`, and the marker on the learner
       in the caseload (FR-1825, FR-1826). Continuing MUST NOT re-read the source through
       a provider
@@ -211,7 +237,7 @@ learner-scoped journal entry visible inside that learner.
 
 - T001 before everything.
 - **Phase 2 blocks Phases 3–7 entirely.**
-- T006 before T007, and both before T026 — the field before the marker that reads it.
+- T006 before T007, and both before T026 — the field before the marker that reads it, **all three inside US2** (see the note in Phase 2 for why they moved).
 - T008 before T017, T018 and T030.
 - T009 before T011, T012, T013.
 - T019 before T020–T025; T023 before T024.

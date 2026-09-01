@@ -4,7 +4,7 @@ import { mkdtemp, mkdir } from 'node:fs/promises';
 import { readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { RAIL_WORK, throughDoorToAdapt } from './door.js';
+import { RAIL_WORK, throughDoorToAdapt } from './nav.js';
 
 /**
  * The accessibility gate (spec 010 T018/T019, closing backlog G7 and 006 T075).

@@ -176,7 +176,12 @@ function Entry({ entry, onOpen, onReuse }: {
 export function RecordScreen({ code, name, onBack, onReuse }: {
   code: string;
   name?: string;
-  onBack: () => void;
+  /**
+   * Optional since `020`: inside a learner, the way back is their own heading, and a
+   * second «← Volver a mis alumnos» under the title would be two controls doing one
+   * job — with the screen's own one further from the eye than the shell's.
+   */
+  onBack?: () => void;
   /**
    * Reuse this job for somebody else (T018).
    *
@@ -194,9 +199,11 @@ export function RecordScreen({ code, name, onBack, onReuse }: {
   return (
     <Page title={`Lo que he preparado para ${name ?? code}`}
           lede="Todo lo que ha salido de aquí para este alumno, y de qué salió.">
-      <button className="btn btn-ghost btn-sm" style={{ alignSelf: 'flex-start' }} onClick={onBack}>
-        ← Volver a mis alumnos
-      </button>
+      {onBack ? (
+        <button className="btn btn-ghost btn-sm" style={{ alignSelf: 'flex-start' }} onClick={onBack}>
+          ← Volver a mis alumnos
+        </button>
+      ) : null}
 
       <Loaded
         from={record}

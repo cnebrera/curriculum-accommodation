@@ -2,7 +2,7 @@ import { test, expect, _electron as electron, type Page, type ElectronApplicatio
 import { mkdtemp, mkdir, readdir } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { RAIL_WORK, throughDoorToAdapt } from './door.js';
+import { RAIL_WORK, throughDoorToAdapt } from './nav.js';
 
 /**
  * One worksheet, three learners (005 T018-T020).

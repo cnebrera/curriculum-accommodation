@@ -47,19 +47,19 @@ function LearnerCard({ row, onOpen }: { row: LearnerRow; onOpen: (code: string) 
   );
 }
 
-export function LearnersScreen({ onReuse, onGuide }: {
+export function LearnersScreen({ onOpen, onNew }: {
   /**
-   * «Hazlo otra vez para otro alumno», from a row of a learner's record
-   * (`016` T018). Threaded through rather than handled here: the routing belongs
-   * to whoever owns the views, and this screen owns learners.
+   * She picked a learner (020 T010). The caseload's whole job.
+   *
+   * It used to hold four sub-views of its own — the profile editor, the record, the
+   * handover and erasure — in local state, which is how the editor became the centre
+   * of the learner and the record ended up as a card underneath a form. Routing belongs
+   * to whoever owns the route; this screen owns the list.
    */
-  onReuse?: (jobId: string, kind: string) => void;
-  /**
-   * The adaptación curricular (`017`), reached from a learner rather than from the
-   * door — it is about one child's official document, not about a piece of work.
-   */
-  onGuide?: (code: string, name: string | undefined, what: 'guide' | 'acns' | 'acs') => void;
-} = {}) {
+  onOpen: (code: string) => void;
+  /** «Añadir un alumno» — a learner who does not exist yet has no place to enter. */
+  onNew: () => void;
+}) {
   const { t: es } = useStrings();
   /*
    * One hook, and the join lives in it (013 FR-1107). This screen used to list
@@ -71,19 +71,6 @@ export function LearnersScreen({ onReuse, onGuide }: {
   const learners: LearnerRow[] = roster.state === 'ready' ? roster.value : [];
   const refresh = roster.reload;
 
-  /**
-   * A learner she is removing (003 US4).
-   *
-   * Before this, erasure had no way in at all: `planForget` and `executeForget`
-   * were written, tested and exposed over IPC, and no screen called them — so the
-   * one action a school is legally obliged to be able to perform was unreachable.
-   */
-  const [forgetting, setForgetting] = useState<string | null>(null);
-  /** A learner she is preparing a handover packet for (004 US1). */
-  const [handing, setHanding] = useState<string | null>(null);
-  /** A learner whose record she is reading (014). */
-  const [viewing, setViewing] = useState<string | null>(null);
-  const [editing, setEditing] = useState<string | null | undefined>(undefined);
 
   /*
    * Finding a learner among thirty (015).
@@ -128,149 +115,6 @@ export function LearnersScreen({ onReuse, onGuide }: {
     return id;
   };
 
-  if (viewing) {
-    const who = learners.find((l) => l.code === viewing);
-    return (
-      <RecordScreen code={viewing} name={who?.name} onBack={() => setViewing(null)}
-                    {...(onReuse ? { onReuse } : {})} />
-    );
-  }
-
-  if (handing) {
-    const who = learners.find((l) => l.code === handing);
-    return (
-      <div className="stack gap5">
-        <button className="btn btn-ghost btn-sm" style={{ alignSelf: 'flex-start' }}
-                onClick={() => setHanding(null)}>
-          ← Volver a mis alumnos
-        </button>
-        <HandoverReview code={handing} name={who?.name} onDone={() => setHanding(null)} />
-      </div>
-    );
-  }
-
-  if (forgetting) {
-    const who = learners.find((l) => l.code === forgetting);
-    return (
-      <Page title={`Borrar todo lo de ${who?.name ?? forgetting}`}>
-        <button className="btn btn-ghost btn-sm" style={{ alignSelf: 'flex-start' }}
-                onClick={() => { setForgetting(null); refresh(); }}>
-          ← Volver a mis alumnos
-        </button>
-        <ForgetLearner code={forgetting} name={who?.name}
-                       onDone={() => { setForgetting(null); refresh(); }} />
-      </Page>
-    );
-  }
-
-  if (editing !== undefined) {
-    const who = learners.find((l) => l.code === editing);
-    return (
-      <Page title={who?.name ?? 'Alumno nuevo'}>
-        <button className="btn btn-ghost btn-sm" style={{ alignSelf: 'flex-start' }}
-                onClick={() => { setEditing(undefined); refresh(); }}>
-          ← Volver a mis alumnos
-        </button>
-        <ProfileEditor code={editing} onSaved={() => refresh()} />
-
-        {/*
-          Below the editor and set apart, because it is not part of editing a
-          profile. Not hidden either: a school has to be able to do this, and
-          burying it means she asks somebody to do it in the filesystem instead —
-          which reaches neither the journal entries nor the adapted sheets.
-        */}
-        {editing ? (
-          <div className="card stack gap3">
-            <span className="small"><strong>Lo que le has preparado</strong></span>
-            <p className="small" style={{ margin: 0 }}>
-              Todo lo que ha salido de aquí para este alumno, con lo que trajiste y lo
-              que salió. También está en su carpeta, en texto plano.
-            </p>
-            <div className="row">
-              <button className="btn btn-sm" onClick={() => setViewing(editing)}>
-                Ver lo que le he preparado
-              </button>
-            </div>
-          </div>
-        ) : null}
-
-        {/*
-          The adaptación curricular (`017`). Here rather than behind the door because
-          it is about **this child's official document**, not about a piece of work —
-          and the ACS card is last and separate, because it is the only thing in this
-          application that touches what is asked of him.
-        */}
-        {editing && onGuide ? (
-          <div className="card stack gap3">
-            <span className="small"><strong>Su adaptación curricular</strong></span>
-            <p className="small" style={{ margin: 0 }}>
-              Si te han dado el documento oficial, puedo quedarme con sus medidas y
-              aplicarlas a todo lo que adapte para él. Y puedo hacerte el borrador de
-              la ACNS con lo que ya llevo hecho — no la escribo yo, la ordeno.
-            </p>
-            <div className="row gap2" style={{ flexWrap: 'wrap' }}>
-              <button className="btn btn-sm"
-                      onClick={() => onGuide(editing, nameOf(editing), 'guide')}>
-                Traer el documento que me han dado
-              </button>
-              <button className="btn btn-sm"
-                      onClick={() => onGuide(editing, nameOf(editing), 'acns')}>
-                Borrador de la ACNS
-              </button>
-            </div>
-          </div>
-        ) : null}
-
-        {editing && onGuide ? (
-          <div className="card card-plain stack gap3">
-            <span className="small"><strong>Si estás redactando una ACS</strong></span>
-            <p className="small" style={{ margin: 0 }}>
-              Una adaptación significativa modifica objetivos y criterios. Eso lo
-              decide el equipo docente con Orientación, no yo — pero cuando ya está
-              decidido, te ayudo a redactarlo.
-            </p>
-            <div className="row">
-              <button className="btn btn-sm"
-                      onClick={() => onGuide(editing, nameOf(editing), 'acs')}>
-                Ayúdame con la ACS
-              </button>
-            </div>
-          </div>
-        ) : null}
-
-        {editing ? (
-          <div className="card stack gap3">
-            <span className="small"><strong>Si cambia de tutor el año que viene</strong></span>
-            <p className="small" style={{ margin: 0 }}>
-              Puedo preparar un documento con lo que has aprendido de él, para quien
-              lo tenga después. Lo revisas tú antes: decides qué va y qué no.
-            </p>
-            <div className="row">
-              <button className="btn btn-sm" onClick={() => setHanding(editing)}>
-                Preparar el traspaso
-              </button>
-            </div>
-          </div>
-        ) : null}
-
-        {editing ? (
-          <div className="card card-plain stack gap3">
-            <span className="small"><strong>Si este alumno ya no está contigo</strong></span>
-            <p className="small" style={{ margin: 0 }}>
-              Puedo borrar todo lo suyo: su perfil, tus notas sobre él y sus fichas
-              adaptadas. Te enseño la lista antes de tocar nada.
-            </p>
-            <div className="row">
-              <button className="btn btn-danger btn-sm" onClick={() => setForgetting(editing)}>
-                Borrar todo lo de {who?.name ?? editing}
-              </button>
-            </div>
-          </div>
-        ) : null}
-      </Page>
-    );
-  }
-
   return (
     <Page title={es.nav.learners}
           lede={learners.length > 0
@@ -282,7 +126,7 @@ export function LearnersScreen({ onReuse, onGuide }: {
         empty={{
           title: 'Todavía no hay ningún alumno',
           body: 'Empieza por el que más trabajo te dé. No hace falta ningún diagnóstico: con lo que ves en clase es suficiente.',
-          action: <button className="btn btn-primary" onClick={() => setEditing(null)}>Añadir un alumno</button>,
+          action: <button className="btn btn-primary" onClick={onNew}>Añadir un alumno</button>,
         }}
       >
         {(rows) => (
@@ -322,19 +166,19 @@ export function LearnersScreen({ onReuse, onGuide }: {
               <>
                 {groupRoster(visible, yearLabel).map(([heading, members]) => (
                   <Section key={heading} title={heading}>
-                    {(members as LearnerRow[]).map((l) => <LearnerCard key={l.code} row={l} onOpen={setEditing} />)}
+                    {(members as LearnerRow[]).map((l) => <LearnerCard key={l.code} row={l} onOpen={onOpen} />)}
                   </Section>
                 ))}
               </>
             ) : (
               <div className="stack gap3">
-                {visible.map((l) => <LearnerCard key={l.code} row={l} onOpen={setEditing} />)}
+                {visible.map((l) => <LearnerCard key={l.code} row={l} onOpen={onOpen} />)}
               </div>
             )}
 
             <Actions
               primary={
-                <button className="btn btn-primary" onClick={() => setEditing(null)}>
+                <button className="btn btn-primary" onClick={onNew}>
                   Añadir un alumno
                 </button>
               }>

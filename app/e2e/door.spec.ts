@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import {
   RAIL_WORK, throughDoorToCompose, assertDoorAsksInOrder, KIND_WORKSHEET, KIND_EXAM,
-} from './door.js';
+} from './nav.js';
 
 /**
  * The door (016).

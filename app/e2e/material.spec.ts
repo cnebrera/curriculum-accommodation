@@ -2,7 +2,7 @@ import { test, expect, _electron as electron, type Page, type ElectronApplicatio
 import { mkdtemp, mkdir } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { RAIL_WORK, KIND_WORKSHEET, KIND_EXAM, throughDoorToAdapt } from './door.js';
+import { RAIL_WORK, KIND_WORKSHEET, KIND_EXAM, throughDoorToAdapt } from './nav.js';
 
 /**
  * «Qué es este material» (012 T016, quickstart §6).

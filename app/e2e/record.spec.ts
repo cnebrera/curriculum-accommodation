@@ -2,6 +2,7 @@ import { test, expect, _electron as electron, type Page, type ElectronApplicatio
 import { mkdtemp, mkdir } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { intoLearner, toTab } from './nav.js';
 
 /**
  * The learner's record, end to end (014 T014-T018).
@@ -64,10 +65,15 @@ async function seed(page: Page, vault: string): Promise<string> {
 }
 
 async function openRecord(page: Page): Promise<void> {
-  // Exact: «← Volver a mis alumnos» also matches loosely once a record is open.
-  await page.getByRole('button', { name: 'Mis alumnos', exact: true }).click();
-  await page.locator('.card-action').first().click();
-  await page.getByRole('button', { name: /Ver lo que le he preparado/ }).click();
+  /*
+   * Through the learner's own menu since `020`.
+   *
+   * It used to be: caseload → learner → **«Ver lo que le he preparado», a button on
+   * the fifth card underneath the edit-profile form**. That walk is the defect `020`
+   * was opened for, and this helper is where it stops being possible to write it.
+   */
+  await intoLearner(page);
+  await toTab(page, 'made');
   await page.getByRole('heading', { name: /Lo que he preparado para/ }).waitFor();
   // The scan reads every job directory, so wait for it rather than for a timeout.
   await page.getByText('Un momento, que miro qué hay…').waitFor({ state: 'detached' });

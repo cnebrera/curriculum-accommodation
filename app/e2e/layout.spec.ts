@@ -2,7 +2,7 @@ import { test, expect, _electron as electron, type Page, type ElectronApplicatio
 import { mkdtemp, mkdir } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { RAIL_WORK, throughDoorToAdapt } from './door.js';
+import { RAIL_WORK, throughDoorToAdapt } from './nav.js';
 
 /**
  * Layout, on the screen she actually has (spec 010 T017/T030, SC-802/SC-804).

@@ -1,6 +1,10 @@
 import { useEffect, useReducer, useState } from 'react';
 import { useStrings } from './i18n/context.js';
 import { LearnersScreen } from './learners/LearnersScreen.js';
+import { LearnerSection } from './learners/LearnerSections.js';
+import { Rail } from './nav/Rail.js';
+import { startRoute, reduceRoute, type LearnerTab } from './nav/route.js';
+import { useLearners } from './data/learners.js';
 import { DoorScreen } from './door/DoorScreen.js';
 import { ComposeScreen, ComposeSummary } from './compose/ComposeScreen.js';
 import {
@@ -18,6 +22,7 @@ import { ConnectionScreen } from './settings/ConnectionScreen.js';
 import { VaultStep } from './onboarding/VaultStep.js';
 import { ConnectStep } from './onboarding/ConnectStep.js';
 import { ProfileEditor } from './learners/ProfileEditor.js';
+import { Page } from './shell/Page.js';
 import { CostBadge } from './components/CostBadge.js';
 import { Logo, Wordmark } from './components/Logo.js';
 import { DisplayPreferences } from './settings/DisplayPreferences.js';
@@ -25,21 +30,25 @@ import { applyStoredPreferences } from './data/preferences.js';
 import { detectStep, loadState, saveState, type Step } from './data/onboarding.js';
 
 /**
- * `door` is the front screen since `016`.
+ * Where she is lives in `nav/route.ts` since `020`, not in a `useState<View>` here.
  *
- * `adapt` is no longer an entry point — it is where the adapt door leads, with the
- * learners and the kind already answered. That is the whole of what `016` changed
- * structurally: the application's first question stopped being «which file?».
+ * This file held sixteen views in one flat switch and `LearnersScreen` hid five more in
+ * its own state — twenty destinations with no hierarchy and no way to say «I am inside a
+ * learner». `020` T002 moved that decision into a tested reducer, and both navigation
+ * defects this project has found were this state held in the wrong place.
+ *
+ * The destinations that have not moved yet are `{ at: 'legacy' }` rather than a second
+ * source of truth beside the route. That type shrinks to nothing across US2 and US4.
  */
-type View = 'door' | 'learners' | 'adapt' | 'compose' | 'composed'
-  | 'ingest' | 'verify' | 'review' | 'notes' | 'connection' | 'about'
-  /** The adaptación curricular (`017`). Four screens, one learner at a time. */
-  | 'guide' | 'guide-ask' | 'acns' | 'acs';
 
 export function App() {
   const { t: es, locale, setLocale, locales } = useStrings();
   const [step, setStep] = useState<Step | null>(null);
-  const [view, setView] = useState<View>('door');
+  const [route, go] = useReducer(reduceRoute, undefined, startRoute);
+  /** Her caseload, for the learner's heading — the join already lives here (`013` FR-1107). */
+  const roster = useLearners();
+  const learners = roster.state === 'ready' ? roster.value : [];
+  const whoIs = (code: string) => learners.find((l) => l.code === code);
   /**
    * What the door answered (`016`, contracts/door.md).
    *
@@ -64,7 +73,6 @@ export function App() {
    */
   const [guideFor, setGuideFor] = useState<{ code: string; name?: string } | null>(null);
   const [review, setReview] = useState<{ jobId: string; learner: string; recipes: string[] } | null>(null);
-  const [learnersNonce, setLearnersNonce] = useState(0);
   /** A service she is reconnecting from the connection screen (009 US5). */
   const [reconnect, setReconnect] = useState<string | null>(null);
   /** An ingested job waiting to be verified (008). */
@@ -114,7 +122,7 @@ export function App() {
           <div className="stack">
             <h2>{es.onboarding.learnerTitle}</h2>
             <p>{es.onboarding.learnerWhy}</p>
-            <ProfileEditor code={null} onSaved={() => { saveState({ step: 'done' }); setStep('done'); setView('door'); }} />
+            <ProfileEditor code={null} onSaved={() => { saveState({ step: 'done' }); setStep('done'); go({ type: 'legacy', view: 'door' }); }} />
           </div>
         )}
       </main>
@@ -123,48 +131,21 @@ export function App() {
 
   return (
     <div className="app">
-      <nav className="rail" aria-label="Secciones de Rampa">
-        <div className="rail-brand"><Wordmark size={19} /></div>
-        {/*
-          FR-1402: the rail said «Adaptar material», which is what `012` FR-1011
-          forbids in so many words — the interface must stop using one word for
-          several things. It is now the door, and the door asks.
-        */}
-        <button aria-current={view === 'door' ? 'page' : undefined}
-                onClick={() => { setView('door'); setReview(null); setComposed(null); }}>
-          {es.nav.work}</button>
-        {/*
-          Bumping the nonce remounts `LearnersScreen`, which is what makes
-          pressing «Mis alumnos» while already inside a learner's profile take
-          her back to the list. Before this it did nothing visible: the rail
-          changed `view` to a value it already had, and the screen's own
-          `editing` state survived — so the one control that should always mean
-          "start again here" was the one that appeared broken.
-        */}
-        <button aria-current={view === 'learners' ? 'page' : undefined}
-                onClick={() => { setView('learners'); setLearnersNonce((n) => n + 1); }}>
-          {es.nav.learners}</button>
-        <button aria-current={view === 'notes' ? 'page' : undefined} onClick={() => setView('notes')}>
-          {es.nav.notes}</button>
-        <button aria-current={view === 'connection' ? 'page' : undefined} onClick={() => setView('connection')}>
-          {es.nav.connection}</button>
-        <button aria-current={view === 'about' ? 'page' : undefined} onClick={() => setView('about')}>
-          {es.nav.about}</button>
-        <div className="grow" />
-        {/*
-          T006 · a composed block, not two controls pinned to the floor.
-          Separated by a rule rather than by a void, so it reads as the rail's
-          foot rather than as things that fell down there.
-        */}
-        <div className="rail-foot">
+      <Rail
+        route={route}
+        go={go}
+        {...(route.at === 'learner' && whoIs(route.code)?.name
+          ? { learnerName: whoIs(route.code)!.name } : {})}
+        labels={es.nav}
+        foot={<>
           <CostBadge />
           <DisplayPreferences />
           {/*
-            Real since T095: every screen reads its strings through this context,
-            so a locale change moves the whole interface. A key missing from a
-            partial locale falls back to Spanish rather than showing blank —
-            which is why offering an incomplete translation is honest, and why
-            offering it *before* the sweep was not.
+            Real since T095: every screen reads its strings through this context, so a
+            locale change moves the whole interface. A key missing from a partial locale
+            falls back to Spanish rather than showing blank — which is why offering an
+            incomplete translation is honest, and why offering it *before* the sweep was
+            not.
           */}
           {locales.length > 1 ? (
             <select className="select" aria-label="Idioma" value={locale}
@@ -172,24 +153,23 @@ export function App() {
               {locales.map((l) => <option key={l.code} value={l.code}>{l.label}</option>)}
             </select>
           ) : null}
-        </div>
-      </nav>
+        </>} />
       <main className="main">
-        {view === 'door' ? (
+        {route.at === 'legacy' && route.view === 'door' ? (
           <DoorScreen
             intent={intent}
             dispatch={dispatch}
-            onAdapt={() => setView('adapt')}
-            onCompose={() => setView('compose')}
-            onNewLearner={() => { setView('learners'); setLearnersNonce((n) => n + 1); }} />
+            onAdapt={() => go({ type: 'legacy', view: 'adapt' })}
+            onCompose={() => go({ type: 'legacy', view: 'compose' })}
+            onNewLearner={() => go({ type: 'caseload' })} />
         ) : null}
-        {view === 'compose' ? (
+        {route.at === 'legacy' && route.view === 'compose' ? (
           <ComposeScreen
             learners={intent.learners}
-            onComposed={(jobId, result) => { setComposed({ jobId, result }); setView('composed'); }}
-            onBack={() => setView('door')} />
+            onComposed={(jobId, result) => { setComposed({ jobId, result }); go({ type: 'legacy', view: 'composed' }); }}
+            onBack={() => go({ type: 'legacy', view: 'door' })} />
         ) : null}
-        {view === 'composed' && composed ? (
+        {route.at === 'legacy' && route.view === 'composed' && composed ? (
           /*
            * The decision point research R2 argued for: she reads what nothing could
            * check **before** paying to adapt it, and can abandon without spending
@@ -199,10 +179,10 @@ export function App() {
           <ComposeSummary
             result={composed.result}
             learners={intent.learners}
-            onAdapt={() => { setIngested(composed.jobId); setView('adapt'); }}
-            onDiscard={() => { setComposed(null); setView('door'); }} />
+            onAdapt={() => { setIngested(composed.jobId); go({ type: 'legacy', view: 'adapt' }); }}
+            onDiscard={() => { setComposed(null); go({ type: 'legacy', view: 'door' }); }} />
         ) : null}
-        {view === 'guide' && guideFor ? (
+        {route.at === 'legacy' && route.view === 'guide' && guideFor ? (
           <GuideScreen
             /*
              * The job comes from `008`'s ingest and its verification gate —
@@ -212,76 +192,144 @@ export function App() {
             jobId={ingested}
             learnerCode={guideFor.code}
             {...(guideFor.name ? { learnerName: guideFor.name } : {})}
-            onDone={() => { setGuideFor(null); setView('learners'); setLearnersNonce((n) => n + 1); }}
-            onBack={() => { setGuideFor(null); setView('learners'); }} />
+            onDone={() => { setGuideFor(null); go({ type: 'caseload' }); }}
+            onBack={() => { setGuideFor(null); go({ type: 'caseload' }); }} />
         ) : null}
-        {view === 'guide-ask' && ingested ? (
-          <GuideConversation jobId={ingested} onBack={() => setView('learners')} />
+        {route.at === 'legacy' && route.view === 'guide-ask' && ingested ? (
+          <GuideConversation jobId={ingested} onBack={() => go({ type: 'caseload' })} />
         ) : null}
-        {view === 'acns' && guideFor ? (
+        {route.at === 'legacy' && route.view === 'acns' && guideFor ? (
           <AcnsDraftScreen
             learnerCode={guideFor.code}
             {...(guideFor.name ? { learnerName: guideFor.name } : {})}
-            onBack={() => { setGuideFor(null); setView('learners'); }} />
+            onBack={() => { setGuideFor(null); go({ type: 'caseload' }); }} />
         ) : null}
-        {view === 'acs' && guideFor ? (
+        {route.at === 'legacy' && route.view === 'acs' && guideFor ? (
           <AcsHelpScreen
             learnerCode={guideFor.code}
             {...(guideFor.name ? { learnerName: guideFor.name } : {})}
-            onBack={() => { setGuideFor(null); setView('learners'); }} />
+            onBack={() => { setGuideFor(null); go({ type: 'caseload' }); }} />
         ) : null}
-        {view === 'adapt' && !review
+        {route.at === 'legacy' && route.view === 'adapt' && !review
           ? <AdaptScreen
-              onReview={(jobId, learner, recipes) => { setReview({ jobId, learner, recipes }); setView('review'); }}
-              onChooseFile={() => setView('ingest')}
+              onReview={(jobId, learner, recipes) => { setReview({ jobId, learner, recipes }); go({ type: 'legacy', view: 'review' }); }}
+              onChooseFile={() => go({ type: 'legacy', view: 'ingest' })}
               presetJobId={ingested ?? undefined}
               presetLearners={intent.learners}
               {...(intent.kind ? { presetKind: intent.kind } : {})} />
           : null}
-        {view === 'ingest'
+        {route.at === 'legacy' && route.view === 'ingest'
           ? <IngestScreen
-              onIngested={(r) => { setIngested(r.jobId); setView('verify'); }}
-              onResume={(jobId) => { setIngested(jobId); setView('verify'); }} />
+              onIngested={(r) => { setIngested(r.jobId); go({ type: 'legacy', view: 'verify' }); }}
+              onResume={(jobId) => { setIngested(jobId); go({ type: 'legacy', view: 'verify' }); }} />
           : null}
-        {view === 'verify' && ingested
-          ? <VerifyScreen jobId={ingested} onVerified={() => setView('adapt')} />
+        {route.at === 'legacy' && route.view === 'verify' && ingested
+          ? <VerifyScreen jobId={ingested} onVerified={() => go({ type: 'legacy', view: 'adapt' })} />
           : null}
-        {view === 'review' && review
+        {route.at === 'legacy' && route.view === 'review' && review
           ? <ReviewScreen jobId={review.jobId} learner={review.learner} recipes={review.recipes} />
           : null}
-        {view === 'learners' ? (
+        {/*
+          Her caseload: the opening screen, and the only thing it does is list and say
+          which learner she picked (`020` T010). It used to hold four sub-views of its
+          own in local state — the profile editor, the record, the handover and erasure
+          — which is how the editor became the centre of the learner.
+        */}
+        {route.at === 'caseload' ? (
           <LearnersScreen
-            key={learnersNonce}
-            /*
-             * T018 · the shortcut into the same door. The extraction is reused —
-             * `presetJobId` skips the paste and the verification gate, so no
-             * provider call is made for the reading (FR-1409, SC-1405). She still
-             * picks the learners, because that is the whole point of the reuse.
-             */
-            /*
-             * The adaptación curricular (`017`), reached from a learner rather than
-             * from the door: it is about one child's official document, not about a
-             * piece of work.
-             */
-            onGuide={(code, name, what) => {
-              setGuideFor({ code, ...(name ? { name } : {}) });
-              setView(what);
-            }}
-            onReuse={(jobId, kind) => {
-              setIngested(jobId);
-              /*
-               * The learners are cleared and the kind is kept: it is the same
-               * material, and the whole point of the reuse is that it goes to
-               * somebody else.
-               */
-              dispatch({ type: 'reset' });
-              dispatch({ type: 'work/set', work: 'adapt' });
-              dispatch({ type: 'kind/set', kind });
-              setView('adapt');
-            }} />
+            onOpen={(code) => go({ type: 'learner/open', code })}
+            onNew={() => go({ type: 'learner/new' })} />
         ) : null}
-        {view === 'notes' ? <NotesScreen /> : null}
-        {view === 'connection' ? (
+
+        {/*
+          A learner who does not exist yet. The editor, and nothing around it — she is
+          answering «who is this child», not choosing what to do with him.
+        */}
+        {route.at === 'newLearner' ? (
+          <Page title="Un alumno nuevo"
+                lede="Con lo que ves en clase es suficiente. No hace falta ningún diagnóstico, y su nombre no llega a ningún fichero.">
+            <button className="btn btn-ghost btn-sm" style={{ alignSelf: 'flex-start' }}
+                    onClick={() => go({ type: 'caseload' })}>
+              ← Mis alumnos
+            </button>
+            {/*
+              Saved, and she is now inside the learner she just created — «Quién es»,
+              where she can keep going with his axes.
+
+              The first version went back to the caseload, and `e2e/learner.spec.ts`
+              caught what that costs: the editor's own «Guardado» never appeared, because
+              the screen had already changed. Being thrown out of a form the instant it
+              succeeds is disorienting even when nothing is lost, and here she is usually
+              only half done.
+            */}
+            {/*
+              Saving does **not** navigate.
+
+              Two versions of this were wrong and `e2e/learner.spec.ts` caught both:
+              going back to the caseload, and opening the learner just created. Both
+              unmount the editor, and the editor's own «Guardado» is the only thing that
+              tells her it worked — so she pressed save and the screen changed under her
+              with no confirmation. She leaves when she decides to, by «← Mis alumnos».
+            */}
+            <ProfileEditor code={null} onSaved={() => { /* she stays, and sees «Guardado» */ }} />
+          </Page>
+        ) : null}
+
+        {/*
+          Inside a learner (`020` US1) — the point of the whole specification.
+
+          Her name comes from the roster join in the data layer (`013` FR-1107) and is
+          display only; the route carries the code, because a name in navigation state is
+          a name something could later try to persist (`003`).
+        */}
+        {/*
+          Inside a learner (`020` US1, option A) — the point of the whole specification.
+          The rail carries who this is and which section she is in, so the content area
+          is the section itself and nothing wraps it.
+        */}
+        {route.at === 'learner' ? (
+          <LearnerSection
+              code={route.code}
+              {...(whoIs(route.code)?.name ? { name: whoIs(route.code)!.name } : {})}
+              tab={route.tab}
+              /*
+               * `017`, reached from the learner it is about — which is where it always
+               * belonged: it is one child's official document, not a piece of work.
+               */
+              onGuide={(what) => {
+                const who = whoIs(route.code);
+                setGuideFor({ code: route.code, ...(who?.name ? { name: who.name } : {}) });
+                go({ type: 'legacy', view: what });
+              }}
+              /*
+               * T018 · «hazlo otra vez para otro alumno». The extraction is reused —
+               * `presetJobId` skips the paste and the verification gate, so no provider
+               * call is made for the reading (`016` FR-1409, SC-1405). The learners are
+               * cleared and the kind is kept: same material, different child.
+               */
+              onReuse={(jobId, kind) => {
+                setIngested(jobId);
+                dispatch({ type: 'reset' });
+                dispatch({ type: 'work/set', work: 'adapt' });
+                dispatch({ type: 'kind/set', kind });
+                go({ type: 'legacy', view: 'adapt' });
+              }}
+              /*
+               * Until US2 builds the steps here, `Preparar` hands her to the existing
+               * door **with this learner already chosen**. That is what makes US1
+               * shippable without taking anything away: the section is real and works,
+               * and US2 replaces what is inside it rather than where it is.
+               */
+              onPrepare={() => {
+                dispatch({ type: 'reset' });
+                dispatch({ type: 'learner/add', code: route.code });
+                go({ type: 'legacy', view: 'door' });
+              }}
+              onErased={() => go({ type: 'caseload' })} />
+        ) : null}
+
+        {route.at === 'legacy' && route.view === 'notes' ? <NotesScreen /> : null}
+        {route.at === 'legacy' && route.view === 'connection' ? (
           /*
            * Reconnecting reuses the onboarding step rather than a second paste
            * box: the walkthrough, the five failure sentences and the
@@ -289,10 +337,10 @@ export function App() {
            * would be a second place for them to drift.
            */
           reconnect
-            ? <ConnectStep onDone={() => { setReconnect(null); setView('connection'); }} />
+            ? <ConnectStep onDone={() => { setReconnect(null); go({ type: 'legacy', view: 'connection' }); }} />
             : <ConnectionScreen onReconnect={(id) => setReconnect(id)} />
         ) : null}
-        {view === 'about' ? <AboutScreen /> : null}
+        {route.at === 'legacy' && route.view === 'about' ? <AboutScreen /> : null}
       </main>
     </div>
   );
