@@ -113,6 +113,64 @@ cheapest to get right where there is no window in the way.
 
 ---
 
+## Phase 7 · FR-520 · the sheet made from a reading she has since corrected
+
+Added 2026-09-01, from backlog **G23**. The requirement has been in this spec since
+30 August with two of its three clauses met: correcting is allowed, nothing re-runs.
+**Nothing marked the sheets, and nothing named the learners** — so a teacher could
+fix «4/ × 8» back to «47 × 8» and the three sheets already on her desk said nothing.
+
+**The mechanism, decided here rather than in the code.** G23 recorded two honest
+options and leaned toward the second: stamp the extraction's verification date on the
+sheet. Building it found a third that is strictly better, and the difference is a real
+failure the second one has — **`setPageVerified` rewrites `ir.md` on every single
+confirmation**, so anything keyed on *when* the extraction was confirmed, or on the
+file's modification time, marks every existing sheet stale for a click that changed
+nothing about the reading. What the sheet records instead is a fingerprint of **the
+reading itself**: each block's id and text, in order. Front matter, the `verified`
+flag, and her own hand edit of the sheet all move around it without moving it.
+
+Derived on read, never stored as a flag. That is the other half of G23's warning: a
+`stale: true` in the front matter is a fourth fact that has to stay true through a
+re-run, a revision, a sign-off and a hand edit, and `014` already found that a stored
+fact about the vault is a second copy of a truth the filesystem holds. A re-run
+rewrites the stamp and the sheet is fresh again, with nothing to reset.
+
+- [ ] T021 Write `packages/core/test/reading.test.ts` **first**, red. The two cases
+      that decide whether this works at all: the fingerprint moves when a block's
+      text changes, and does **not** move when the front matter does — which is the
+      exact difference between this and the mtime version
+- [ ] T022 `packages/core/src/ir/reading.ts` · `readingFingerprint(doc)` over block
+      id + text, in document order, whitespace collapsed. Over the **blocks**, never
+      the file
+- [ ] T023 [P] `freshnessOf(sheet, current)` → `fresh` | `stale` | `unknown`, and
+      `readingOf(sheet)`. **Three states, because a sheet made before this existed
+      carries no stamp**: calling it fresh is a claim we cannot make, and calling it
+      stale marks every sheet in every vault that exists today
+- [ ] T024 Stamp `from_extraction` beside `adapted_on` in
+      `packages/shell/src/jobs/adapt.ts`. A fact about the process at the moment the
+      sheet is written, like the date beside it — never from the model
+- [ ] T025 `packages/shell/src/jobs/stale.ts` · `staleSheets(vault, jobId)`: one row
+      per learner the job has been adapted for, each with its freshness. `learnersOf`
+      already answers «which learners», so this is a read and writes nothing
+- [ ] T026 [P] Derive the same answer in `entryFor` (`014`), which already parses both
+      documents. One derivation, two surfaces — the alternative is a second
+      implementation that can disagree with the first about whether a sheet is stale
+- [ ] T027 IPC `job:staleSheets`, preload, and `useStaleSheets(jobId)` joining the
+      names **in the renderer** (`013` FR-1107). Codes cross the wire; the name is
+      joined where names already live, and no name reaches a file
+- [ ] T028 `VerifyScreen`: after a correction, name the learners whose sheets were
+      made from the previous reading. It offers no «actualizar las tres» — re-running
+      is the per-learner adaptation that already exists, chosen by her, one at a time
+- [ ] T029 [P] `RecordScreen`: the row says so too. **This is the durable half** — the
+      callout is seen once, and «which of the material in my folder predates the
+      correction?» is a question she asks a week later with the folder in her hand
+- [ ] T030 Assert the negative in `packages/shell/test/`: correcting after a sheet
+      exists reports it stale **and re-runs nothing** — no revision appears, no
+      provider is called. FR-520's third clause is the one a helpful fix breaks
+
+---
+
 ## Not in scope, recorded so it stays a decision
 
 - **One sheet for a mixed group** — backlog G17, a deliberate non-goal.
