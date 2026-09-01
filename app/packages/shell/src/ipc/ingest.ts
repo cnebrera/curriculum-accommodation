@@ -6,6 +6,7 @@ import {
 import { currentVault } from './vault.js';
 import { estimateCents, currentLedger } from './cost.js';
 import { handle } from './wrap.js';
+import { activeProvider } from './keys.js';
 import { photoWarningSeen, acknowledgePhotoWarning } from './vault-settings.js';
 import { runIngest, budget, readExtraction, setPageVerified } from '../jobs/ingest.js';
 
@@ -109,13 +110,19 @@ export function registerIngestIpc(getWindow: () => BrowserWindow | null): void {
     const pages = Math.min(Math.max(0, Math.round(pageCount)), limits.pagesPerJob);
     // ~1.1k tokens for a downscaled A4 page at the corpus bound, plus the corpus
     // prompt, plus a page of structured output.
-    const perPage = estimateCents(4400) + 1;
-    const cents = pages * perPage;
+    //
+    // `null` when her service's model has no published price (2026-09-01): the screen
+    // then warns about the *pages*, which it knows, and says nothing about the money,
+    // which it does not. Better than the euros it used to quote from Anthropic's list
+    // whichever service she had connected.
+    const active = await activeProvider();
+    const perPage = active ? estimateCents(4400, active.provider.defaultModel) : null;
+    const cents = perPage === null ? null : pages * (perPage + 1);
     return {
       pages,
       cents,
-      formatted: formatCost(cents),
-      unusual: isUnusuallyExpensive(cents, await currentLedger()),
+      formatted: cents === null ? null : formatCost(cents),
+      unusual: cents === null ? false : isUnusuallyExpensive(cents, await currentLedger()),
     };
   });
 

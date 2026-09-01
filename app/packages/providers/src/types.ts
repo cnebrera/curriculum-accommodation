@@ -34,7 +34,14 @@ export interface Provider {
   validateKey(key: string): Promise<KeyStatus>;
   capabilities(): Promise<Capabilities>;
   send(req: Request, key: string): AsyncIterable<Chunk>;
-  price(usage: Usage): Cents;
+  /**
+   * What that call cost, or **null when nobody knows** (`costCents`, 2026-09-01).
+   *
+   * The price table covers four models and the catalogue offers six services, so most
+   * adapters legitimately cannot answer — and the old fallback quoted Claude's prices for
+   * whatever she had connected, including free ones.
+   */
+  price(usage: Usage): Cents | null;
 }
 
 /** What an adapter can fail with. Every one of these is a member of core's `ErrorKind`. */

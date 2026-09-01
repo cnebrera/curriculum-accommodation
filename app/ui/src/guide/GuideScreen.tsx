@@ -294,7 +294,14 @@ export function GuideConversation({ jobId, onBack }: { jobId: string; onBack: ()
   const ask = useAskGuide();
   const [question, setQuestion] = useState('');
   const [turns, setTurns] = useState<Turn[]>([]);
-  const [cost, setCost] = useState(0);
+  /*
+   * `null` means «no lo sé», not «cero» (2026-09-01).
+   *
+   * A service whose model has no published price reports no cost, and one unpriced answer
+   * makes the conversation's total unknown — a running total that silently skips the turns
+   * it could not price is not a running total.
+   */
+  const [cost, setCost] = useState<number | null>(0);
 
   const send = async (): Promise<void> => {
     const q = question.trim();
@@ -302,7 +309,7 @@ export function GuideConversation({ jobId, onBack }: { jobId: string; onBack: ()
     const r = await ask.run(jobId, q, turns);
     if (!r) return;
     setTurns((prev) => [...prev, { question: q, answer: r.answer }]);
-    setCost((c) => c + r.costCents);
+    setCost((c) => (c === null || r.costCents === null ? null : c + r.costCents));
     setQuestion('');
   };
 
@@ -318,7 +325,9 @@ export function GuideConversation({ jobId, onBack }: { jobId: string; onBack: ()
               Preguntar
             </button>
           }
-          note={cost > 0 ? `Llevas ${(cost / 100).toFixed(2)} € en esta conversación.` : undefined}>
+          note={cost === null
+            ? 'No sé lo que llevas gastado: tu servicio de IA no publica su precio aquí.'
+            : cost > 0 ? `Llevas ${(cost / 100).toFixed(2)} € en esta conversación.` : undefined}>
           <button className="btn btn-ghost" onClick={onBack}>Volver</button>
         </Actions>
       }>

@@ -34,7 +34,7 @@ interface Extraction {
   pages: PageRecord[];
   boundReached: boolean;
   cutPages: number[];
-  costCents: number;
+  costCents: number | null;
   verified: boolean;
 }
 

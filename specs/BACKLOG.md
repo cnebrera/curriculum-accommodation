@@ -413,6 +413,60 @@ every moment should have a spec. What it added beyond the seams pass:
    journey sentence → T094). Handover *import* (004 US2) recorded as deliberately
    deferred rather than silently missing.
 
+## G29 · Rampa invented a price, and quoted it in euros — *FIXED, TWO ITEMS OPEN*
+
+Carlos, reading the badge in the foot of the rail: «¿qué coño es eso de este mes gratis?
+que esto es open source y libre!» — and then, on being told what the figure was: «¿eso está
+midiendo cuánto has gastado del token al que te conectas?»
+
+Answering that second question honestly took four findings.
+
+**1 · «gratis» was the wrong word.** `formatCost(0)` returned «gratis», so the badge read
+«Este mes: gratis» — the vocabulary of a plan somebody is selling, in an application whose
+argument is that there is nothing to sell. Now «nada». The service catalogue keeps its own
+«gratis», and there it is correct: it describes a provider's free tier.
+
+**2 · The figure was fabricated.** This is the serious one. `costCents` fell back to
+`{ input: 3, output: 15 }` — roughly Claude Sonnet's price list — for any model not in
+`PRICES`. `PRICES` knows **four** models; the catalogue offers **six services**, and the
+`compatible` adapter reports the model the corpus names. So `llama-3.3-70b-versatile`,
+`mistral-large-latest`, `deepseek-chat` and `gpt-4.1` all landed on the fallback.
+
+Including **Groq, which is free**. A teacher on the free tier was shown a euro figure for
+money she had not spent, on a screen she has no way to check — while the stated reason for
+showing cost at all is that an unknown bill stops her using the tool.
+
+Fixed by refusing: `costCents` returns `null` for a model it cannot price, `addCost` makes
+one unpriced chunk make the whole job unpriced, `monthTotal` reports `{ cents, unknown }`,
+and `isUnusuallyExpensive` computes «usual» from the priced jobs only — counted as zero,
+a free-tier month would have taught the gate that everything is expensive.
+
+**3 · The estimate quoted the wrong provider.** `estimateCents` defaulted to
+`claude-sonnet-5` whatever she had connected — two call sites, one of them the gate that
+decides whether to warn her before an expensive batch. The model argument now has no
+default and comes from the active service.
+
+**4 · The badge did not say what the figure was of.** «Lo que llevas gastado este mes en tu
+propia cuenta de IA» existed only in a `title` attribute — a tooltip, invisible on a
+touchpad and to a screen reader in browse mode. Carlos read a bare figure in the foot of a
+rail as a commercial plan, which is what it looked like. The label is now on screen.
+
+### Open
+
+- **`PRICES` is compiled in**, and its comment claimed for months that it was «shipped as
+  data and updated with the corpus». It is not. It belongs in the corpus by Principle I —
+  a moving rate should be an update, not a release — and the same is true of `USD_TO_EUR`.
+  Until then, unpriced services report nothing, which is at least honest.
+- **`cost_measured: false` on every catalogue entry.** Nobody has ever measured what a
+  worksheet actually costs on any service. The figures the catalogue shows during
+  onboarding are estimates that say so, but the honest fix is a measurement.
+
+**Lesson.** The fallback was written to keep a function total — every `Usage` gets a number
+— and a total function was the wrong goal for a value that is a claim about her money. This
+project refuses to invent an unobserved axis, an unverifiable exercise and a criterio it
+cannot source; the cost of a call is the same kind of fact, and it took a user asking
+«¿gastado de qué?» to notice that one number had been exempted.
+
 ## G28 · Rampa told a teacher more than the licence says — *TEXT CORRECTED, TWO ITEMS OPEN*
 
 Carlos, reading the pictogram screen: «esto qué mierda es? no puedo decirle al usuario

@@ -3,7 +3,7 @@ import {
   readGuide, guideSection, appendGuideSection, draftAcns, requireRecordedWork,
   requireEvaluation, checkDeclines, parseGuideCorpus, parseAcsCorpus,
   recordFor, loadLearner, findYear, logger, RampaError,
-  type Candidate, type GuideReading, type Measure,
+  type Candidate, type GuideReading, type Measure, addCost,
 } from '@rampa/core';
 import { sendRedacted } from '@rampa/providers';
 import { currentVault } from '../ipc/vault.js';
@@ -54,7 +54,7 @@ export interface GuideProgress { stage: string; detail?: string }
 
 export interface GuideRead extends GuideReading {
   jobId: string;
-  costCents: number;
+  costCents: number | null;
   /** Everything she must see about the document itself (Principle IX). */
   notices: Array<{ block: string | null; notice: { kind: string; quote: string; message: string } }>;
 }
@@ -104,10 +104,10 @@ export async function readGuideJob(
   );
 
   let answer = '';
-  let costCents = 0;
+  let costCents: number | null = 0;
   for await (const chunk of stream) {
     if (chunk.text) { answer += chunk.text; onProgress({ stage: 'Buscando las medidas', detail: `${answer.length} caracteres` }); }
-    if (chunk.usage) costCents += active.provider.price(chunk.usage);
+    if (chunk.usage) costCents = addCost(costCents, active.provider.price(chunk.usage));
   }
   await recordCost(jobId, costCents);
 
@@ -254,7 +254,7 @@ export async function askAboutGuide(args: {
   question: string;
   /** Previous turns, so «y eso?» means something. Bounded by the caller. */
   history?: ReadonlyArray<{ question: string; answer: string }>;
-}): Promise<{ answer: string; declined: boolean; costCents: number }> {
+}): Promise<{ answer: string; declined: boolean; costCents: number | null }> {
   await assertCorpus();
   const vault = currentVault();
 
@@ -300,10 +300,10 @@ export async function askAboutGuide(args: {
   );
 
   let answer = '';
-  let costCents = 0;
+  let costCents: number | null = 0;
   for await (const chunk of stream) {
     if (chunk.text) answer += chunk.text;
-    if (chunk.usage) costCents += active.provider.price(chunk.usage);
+    if (chunk.usage) costCents = addCost(costCents, active.provider.price(chunk.usage));
   }
   await recordCost(args.jobId, costCents);
 
@@ -329,7 +329,7 @@ export async function helpWithAcs(args: {
   evaluationRecorded: boolean;
   /** Her list, hers alone. */
   decided: string;
-}): Promise<{ answer: string; declined: boolean; costCents: number }> {
+}): Promise<{ answer: string; declined: boolean; costCents: number | null }> {
   const blocked = requireEvaluation(args.evaluationRecorded);
   if (blocked) throw new RampaError('guide-no-evaluation', blocked);
 
@@ -365,10 +365,10 @@ export async function helpWithAcs(args: {
   );
 
   let answer = '';
-  let costCents = 0;
+  let costCents: number | null = 0;
   for await (const chunk of stream) {
     if (chunk.text) answer += chunk.text;
-    if (chunk.usage) costCents += active.provider.price(chunk.usage);
+    if (chunk.usage) costCents = addCost(costCents, active.provider.price(chunk.usage));
   }
   await recordCost(`acs-${args.learnerCode}`, costCents);
 

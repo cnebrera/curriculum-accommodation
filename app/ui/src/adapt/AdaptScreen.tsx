@@ -206,7 +206,19 @@ export function AdaptScreen({
        * through the gate that exists to stop it.
        */
       const est = await estimate.run((text.length + 20_000) * who.length);
-      if (est?.unusual) { setCostGate({ formatted: est.formatted, who }); return; }
+      /*
+       * `formatted !== null` written out rather than relied on (2026-09-01).
+       *
+       * `unusual` is already false when the cost is unknown — a gate that cannot see a
+       * figure must not claim the figure is large — so this could lean on that and stay
+       * silent. It does not, because then the guarantee would live in `ipc/cost.ts` and
+       * be *assumed* here, which is how this project's field-nobody-reads defect works
+       * in the other direction.
+       */
+      if (est?.unusual && est.formatted !== null) {
+        setCostGate({ formatted: est.formatted, who });
+        return;
+      }
     }
     setCostGate(null);
     setStage('working');

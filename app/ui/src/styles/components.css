@@ -335,14 +335,31 @@ code, kbd, samp, .meta, .tag {
 
 .axis-cell { display: flex; flex-direction: column; gap: var(--s2);
   padding: var(--s4); background: var(--surface);
-  border: 1px solid var(--line); border-radius: var(--radius-box); }
+  border: 1px solid var(--line); border-radius: var(--radius-box);
+  /* Or the four buttons below dictate the column's width instead of fitting in it. */
+  min-width: 0; }
 
+/* ── The 0-3 buttons, and why they used to overflow ───────────────────────
+   Arithmetic, and it had never been done: the grid gives a column
+   `minmax(190px, …)`, the cell takes `--s4` of padding on each side, so there
+   are 158px inside — and four buttons at `min-width: 44px` plus three `--s2`
+   gaps ask for 200px. Every axis card overflowed by 42px, and the selected
+   button, being the widest thing in the row, was the one hanging out of it.
+
+   Carlos: «los cuadros de los números se ven enormes y se salen de las cajas.»
+
+   So they **share** the row rather than each claiming a width: `flex: 1` with a
+   34px floor, which still clears WCAG 2.2 SC 2.5.8's 24px and keeps the 44px
+   height that made them comfortable on a trackpad. The row now fits any column
+   the grid gives it, which is the property that was missing — the old value was
+   correct for one width and nobody had checked which. */
 .levels { display: flex; gap: var(--s2); }
 .levels button {
-  font: inherit; font-variant-numeric: tabular-nums; cursor: pointer;
-  /* 44px, not the 24px minimum: this is the control she uses most, often on a
-     trackpad, and it carries no label but a digit. */
-  min-width: 44px; min-height: 44px; border-radius: var(--radius-control);
+  font-variant-numeric: tabular-nums; cursor: pointer;
+  /* Smaller than the body text: it is a digit, not a word. */
+  font-family: inherit; font-size: var(--text-sm);
+  flex: 1 1 0; min-width: 34px; min-height: 44px;
+  padding: 0; border-radius: var(--radius-control);
   border: 1px solid var(--line-strong); background: var(--paper);
   color: var(--ink); box-shadow: var(--shadow-sm);
 }

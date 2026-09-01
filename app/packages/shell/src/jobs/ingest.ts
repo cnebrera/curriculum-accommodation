@@ -4,7 +4,7 @@ import {
   validatePage, pagesToIR, irToMarkdown, EXTRACTION_JSON_SCHEMA,
   annotateInjection, redact, logger, RampaError, parseIR, formatCost, isUnusuallyExpensive,
   VAULT,
-  type ExtractedPage, type Flag, type IngestBudget,
+  type ExtractedPage, type Flag, type IngestBudget, addCost,
 } from '@rampa/core';
 import { sendRedacted } from '@rampa/providers';
 import { currentVault } from '../ipc/vault.js';
@@ -52,7 +52,7 @@ export interface IngestResult {
   /** True when FR-612's bound cut the job. Never silent. */
   boundReached: boolean;
   cutPages: number[];
-  costCents: number;
+  costCents: number | null;
   /** Probable names we do not know, found in extracted text (FR-610). */
   flaggedNames: string[];
 }
@@ -130,7 +130,7 @@ export async function runIngest(
   const known = await knownNames();
   const records: PageRecord[] = [];
   const extracted: ExtractedPage[] = [];
-  let costCents = 0;
+  let costCents: number | null = 0;
 
   for (const [i, page] of pages.entries()) {
     onProgress({ stage: 'Leyendo la página', page: page.page, of: pages.length, detail: `${i + 1} de ${pages.length}` });
@@ -152,7 +152,7 @@ export async function runIngest(
       page, system, limits, provider: active, known, jobId,
       onProgress: (d) => onProgress({ stage: 'Leyendo la página', page: page.page, of: pages.length, detail: d }),
     });
-    costCents += outcome.costCents;
+    costCents = addCost(costCents, outcome.costCents);
 
     if (outcome.kind === 'accept') {
       extracted.push(outcome.page);
@@ -239,8 +239,8 @@ export async function runIngest(
 /* ── One page, with the loop code owns ───────────────────────────────────── */
 
 type PageOutcome =
-  | { kind: 'accept'; page: ExtractedPage; flags: Flag[]; attempts: number; costCents: number }
-  | { kind: 'fail'; problems: string[]; advice?: string; attempts: number; costCents: number };
+  | { kind: 'accept'; page: ExtractedPage; flags: Flag[]; attempts: number; costCents: number | null }
+  | { kind: 'fail'; problems: string[]; advice?: string; attempts: number; costCents: number | null };
 
 async function extractPage(args: {
   page: SourcePage;
@@ -253,7 +253,7 @@ async function extractPage(args: {
 }): Promise<PageOutcome> {
   const { page, system, limits, provider, known } = args;
   let problems: string[] = ['No he podido leer la página.'];
-  let costCents = 0;
+  let costCents: number | null = 0;
 
   for (let attempt = 1; attempt <= limits.attemptsPerPage; attempt++) {
     if (attempt > 1) args.onProgress(`segundo intento`);
@@ -280,7 +280,7 @@ async function extractPage(args: {
       );
       for await (const chunk of stream) {
         if (chunk.text) raw += chunk.text;
-        if (chunk.usage) costCents += provider.provider.price(chunk.usage);
+        if (chunk.usage) costCents = addCost(costCents, provider.provider.price(chunk.usage));
       }
     } catch (e) {
       // A provider failure is not a validation failure, and retrying it here
@@ -334,7 +334,7 @@ async function storeSource(jobId: string, page: SourcePage, path?: string): Prom
 }
 
 async function writeExtraction(jobId: string, data: {
-  source: string; pages: PageRecord[]; boundReached: boolean; cutPages: number[]; costCents: number;
+  source: string; pages: PageRecord[]; boundReached: boolean; cutPages: number[]; costCents: number | null;
 }): Promise<void> {
   await currentVault().writeRaw(
     join(jobDir(jobId), 'extraction.json'),
@@ -353,7 +353,7 @@ export interface ExtractionRecord {
   pages: PageRecord[];
   boundReached: boolean;
   cutPages: number[];
-  costCents: number;
+  costCents: number | null;
   verified: boolean;
 }
 

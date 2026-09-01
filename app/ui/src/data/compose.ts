@@ -59,7 +59,7 @@ export interface ComposeResult {
   cutObjectives: string[];
   anchorNotices: Array<{ passage: string; notice: { kind: string; quote: string; message: string } }>;
   anchorCut: { chars: number; passages: number };
-  costCents: number;
+  costCents: number | null;
 }
 
 export function useCompose() {

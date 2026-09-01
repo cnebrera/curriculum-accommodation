@@ -100,7 +100,7 @@ describe('cached prefixes are what make it cents (T092)', () => {
       model: 'claude-sonnet-5', inputTokens: 15_000, outputTokens: 4_000,
       cachedInputTokens: 13_000,
     });
-    expect(cached).toBeLessThan(fresh);
+    expect(cached!).toBeLessThan(fresh!);
   });
 
   it('counts a cache write at its premium rather than pretending it is free', () => {
@@ -109,7 +109,7 @@ describe('cached prefixes are what make it cents (T092)', () => {
       cacheWriteTokens: 13_000,
     });
     const fresh = costCents({ model: 'claude-sonnet-5', inputTokens: 15_000, outputTokens: 4_000 });
-    expect(written).toBeGreaterThanOrEqual(fresh);
+    expect(written!).toBeGreaterThanOrEqual(fresh!);
   });
 
   it('every priced model declares both cache rates, or the estimate lies', () => {

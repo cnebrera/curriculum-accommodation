@@ -7,7 +7,7 @@ import {
   checkStructurallyComplete, checkCompleteness, completenessNotice,
   assertProvenance, findUnaccountedBlocks, divergence, studiesFor, applyPictograms,
   readingFingerprint, stampReading,
-  type Notice, type CompletenessIssue,
+  type Notice, type CompletenessIssue, addCost,
 } from '@rampa/core';
 import { sendRedacted } from '@rampa/providers';
 import { currentVault } from '../ipc/vault.js';
@@ -66,7 +66,7 @@ export interface AdaptResult {
   };
   /** Everything the teacher must be shown, quoted and located (007 FR-503). */
   notices: Array<{ block: string | null; notice: Notice }>;
-  costCents: number;
+  costCents: number | null;
   revision: number;
   /** Recipe ids used, so a corpus-scope correction can be tagged (T086). */
   recipes: string[];
@@ -226,7 +226,7 @@ export async function runAdaptation(
       unknown);
   }
 
-  const attempt = async (extra: Correction[]): Promise<{ out: string; cents: number; flagged: string[] }> => {
+  const attempt = async (extra: Correction[]): Promise<{ out: string; cents: number | null; flagged: string[] }> => {
     const { prompt, notesOmitted } = buildAdaptPrompt({
       profile: learner.profile,
       // Who he is (011). Resolved here against the education corpus so the prompt
@@ -256,17 +256,17 @@ export async function runAdaptation(
       { system, messages: [{ role: 'user', content: prompt }] }, key, known);
 
     let out = '';
-    let cents = 0;
+    let cents: number | null = 0;
     for await (const chunk of stream) {
       if (chunk.text) { out += chunk.text; onProgress({ stage: 'Adaptando', detail: `${out.length} caracteres` }); }
-      if (chunk.usage) cents = provider.price(chunk.usage);
+      if (chunk.usage) cents = addCost(cents, provider.price(chunk.usage));
     }
     return { out, cents, flagged };
   };
 
   // ── The deterministic gate (007 FR-512, FR-516, FR-517; ADR 0007) ─────────
   let result = await attempt([]);
-  let totalCents = result.cents;
+  let totalCents: number | null = result.cents;
   let issues = [...checkStructurallyComplete(result.out), ...checkCompleteness(doc, parseIR(result.out))];
   let retried = false;
 
@@ -275,7 +275,7 @@ export async function runAdaptation(
     onProgress({ stage: 'Revisando el resultado', detail: 'faltaba algo, lo vuelvo a pedir' });
     retried = true;
     const second = await attempt(retryCorrections(issues));
-    totalCents += second.cents;
+    totalCents = addCost(totalCents, second.cents);
     const secondIssues = [
       ...checkStructurallyComplete(second.out),
       ...checkCompleteness(doc, parseIR(second.out)),

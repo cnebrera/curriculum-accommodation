@@ -6,7 +6,7 @@ import { checkProvenance, findUnaccountedBlocks, parseRecipeRef } from '../src/i
 import { renderHTML, presentationFor } from '../src/render/html.js';
 import { checkOutput, checkEssentialFigures } from '../src/render/check.js';
 import { checkPhotocopy, contrastRatio } from '../src/render/photocopy.js';
-import { costCents, formatCost, isUnusuallyExpensive } from '../src/cost/index.js';
+import { costCents, formatCost, isUnusuallyExpensive, addCost, monthTotal } from '../src/cost/index.js';
 import { buildReport } from '../src/report/index.js';
 import { buildIndex } from '../src/memory/index.js';
 import { buildPacket, packetToMarkdown, toShareable, isStale } from '../src/memory/handover.js';
@@ -163,14 +163,60 @@ describe('the photocopier', () => {
 describe('cost is shown in the units of the worry', () => {
   it('prices a worksheet in cents', () => {
     const c = costCents({ model: 'claude-sonnet-5', inputTokens: 15_000, outputTokens: 4_000 });
-    expect(c).toBeGreaterThan(0);
-    expect(c).toBeLessThan(20);
-    expect(formatCost(c)).toMatch(/céntimo/);
+    expect(c).not.toBeNull();
+    expect(c!).toBeGreaterThan(0);
+    expect(c!).toBeLessThan(20);
+    expect(formatCost(c!)).toMatch(/céntimo/);
   });
   it('never reports tokens', () => {
     expect(formatCost(129)).toBe('1,29 €');
-    expect(formatCost(0)).toBe('gratis');
+    /*
+     * «nada», not «gratis». This function formats what **she has spent**, and «gratis» is
+     * the vocabulary of a plan somebody is selling — «Este mes: gratis» reads as a
+     * promotion that expires, in an application whose whole pitch is that there is
+     * nothing to sell. Carlos read it exactly that way.
+     */
+    expect(formatCost(0)).toBe('nada');
   });
+  /*
+   * The defect this closes, in three assertions (2026-09-01).
+   *
+   * `costCents` fell back to `{ input: 3, output: 15 }` — roughly Claude's prices — for
+   * **any** model it did not know, and it knows four while the catalogue offers six
+   * services. The `compatible` adapter reports the model the corpus names, so a teacher
+   * on Groq (free) was shown euros she had not spent.
+   */
+  it('refuses to price a model it does not know, rather than inventing one', () => {
+    expect(costCents({ model: 'llama-3.3-70b-versatile', inputTokens: 15_000, outputTokens: 4_000 })).toBeNull();
+    expect(costCents({ model: 'mistral-large-latest', inputTokens: 15_000, outputTokens: 4_000 })).toBeNull();
+    expect(costCents({ model: 'deepseek-chat', inputTokens: 15_000, outputTokens: 4_000 })).toBeNull();
+  });
+
+  it('makes one unpriced chunk make the whole job unpriced', () => {
+    // `+` would read null as zero, turning «no sé» into «nada» — the same lie, quieter.
+    expect(addCost(4, 3)).toBe(7);
+    expect(addCost(4, null)).toBeNull();
+    expect(addCost(null, 4)).toBeNull();
+  });
+
+  it('leaves the unpriced jobs out of what counts as usual', () => {
+    /*
+     * Counted as zero they would drag the average down and stop the gate firing when it
+     * should — a free-tier month teaching the gate that everything is expensive.
+     */
+    const l = {
+      month: '2026-09',
+      jobs: [
+        { job: 'a', cents: 40, at: '' }, { job: 'b', cents: 40, at: '' },
+        { job: 'c', cents: 40, at: '' }, { job: 'd', cents: null, at: '' },
+        { job: 'e', cents: null, at: '' },
+      ],
+    };
+    expect(monthTotal(l)).toEqual({ cents: 120, unknown: 2 });
+    expect(isUnusuallyExpensive(100, l)).toBe(false);
+    expect(isUnusuallyExpensive(200, l)).toBe(true);
+  });
+
   it('warns before a job far above the usual', () => {
     const ledger = { month: '2026-09', jobs: [1, 2, 3].map((n) => ({ job: `j${n}`, cents: 5, at: '' })) };
     expect(isUnusuallyExpensive(200, ledger)).toBe(true);

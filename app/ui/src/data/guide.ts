@@ -22,7 +22,7 @@ export interface GuideRead {
   omitted: string[];
   missingSections: string[];
   kind: 'acns' | 'acs' | 'unknown';
-  costCents: number;
+  costCents: number | null;
   notices: Array<{ block: string | null; notice: { kind: string; quote: string; message: string } }>;
 }
 
@@ -52,11 +52,11 @@ export interface Turn { question: string; answer: string }
 export function useAskGuide() {
   return useCommand((jobId: string, question: string, history?: Turn[]) =>
     window.rampa.guide.ask(jobId, question, history) as Promise<
-      { answer: string; declined: boolean; costCents: number }>);
+      { answer: string; declined: boolean; costCents: number | null }>);
 }
 
 export function useHelpWithAcs() {
   return useCommand((learner: string, evaluationRecorded: boolean, decided: string) =>
     window.rampa.guide.acs(learner, evaluationRecorded, decided) as Promise<
-      { answer: string; declined: boolean; costCents: number }>);
+      { answer: string; declined: boolean; costCents: number | null }>);
 }

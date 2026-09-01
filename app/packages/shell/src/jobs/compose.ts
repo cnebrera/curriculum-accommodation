@@ -10,7 +10,7 @@ import {
   composeUnverified, verifierFor, UNVERIFIABLE_ES,
   type Leveled, type ProposedExercise, type Skill, type ComposeOutcome,
   type AnswerLine, type SheetGroup, type Verifier, type AnchorPassage, type Block,
-  type Notice,
+  type Notice, addCost,
 } from '@rampa/core';
 import { sendRedacted } from '@rampa/providers';
 import { currentVault } from '../ipc/vault.js';
@@ -147,7 +147,7 @@ export interface ComposeResult {
   anchorNotices: Array<{ passage: string; notice: Notice }>;
   /** Reaching the anchor bound is reported, never silent. */
   anchorCut: { chars: number; passages: number };
-  costCents: number;
+  costCents: number | null;
 }
 
 export async function runCompose(
@@ -253,7 +253,7 @@ export async function runCompose(
   const known = await knownNames();
 
   const wanted = clampWanted(request.perObjective ?? limits.exercisesPerObjective);
-  let costCents = 0;
+  let costCents: number | null = 0;
 
   const groups: SheetGroup[] = [];
   const unverifiedObjectives: string[] = [];
@@ -290,7 +290,7 @@ export async function runCompose(
           yearLabel: yearId ? yearLabel(yearId) : undefined,
           onProgress: (detail) => onProgress({ stage: 'Preparando los ejercicios', detail }),
         });
-        costCents += cents;
+        costCents = addCost(costCents, cents);
         return proposed;
       }, wanted);
 
@@ -317,7 +317,7 @@ export async function runCompose(
         yearLabel: yearId ? yearLabel(yearId) : undefined,
         onProgress: (detail) => onProgress({ stage: 'Preparando los ejercicios', detail }),
       });
-      costCents += cents;
+      costCents = addCost(costCents, cents);
       return proposed;
     }, { wanted, maxProposals: limits.proposalsPerObjective });
 
@@ -359,7 +359,7 @@ export async function runCompose(
       canDo: found?.year.can,
       onProgress: (detail) => onProgress({ stage: 'Escribiendo el texto', detail }),
     });
-    costCents += written.cents;
+    costCents = addCost(costCents, written.cents);
     content = written.blocks;
   }
 
@@ -564,7 +564,7 @@ async function propose(args: {
   interests: readonly string[];
   yearLabel?: string;
   onProgress: (detail: string) => void;
-}): Promise<{ proposed: ProposedExercise[]; cents: number }> {
+}): Promise<{ proposed: ProposedExercise[]; cents: number | null }> {
   const lines: string[] = [
     `Objetivo, con las palabras de la maestra: «${args.objective}».`,
     `Necesito ${args.need} ejercicio(s).`,
@@ -601,10 +601,10 @@ async function propose(args: {
   );
 
   let raw = '';
-  let cents = 0;
+  let cents: number | null = 0;
   for await (const chunk of stream) {
     if (chunk.text) { raw += chunk.text; args.onProgress(`${raw.length} caracteres`); }
-    if (chunk.usage) cents += args.provider.price(chunk.usage);
+    if (chunk.usage) cents = addCost(cents, args.provider.price(chunk.usage));
   }
 
   return { proposed: parseProposals(raw), cents };
@@ -647,8 +647,8 @@ async function composeContent(args: {
    */
   plan?: { sessions?: number; minutesPerSession?: number };
   onProgress: (detail: string) => void;
-}): Promise<{ blocks: Block[]; cents: number }> {
-  let cents = 0;
+}): Promise<{ blocks: Block[]; cents: number | null }> {
+  let cents: number | null = 0;
 
   const ask = async (extra: string[]): Promise<{ raw: string }> => {
     const lines: string[] = [
@@ -692,7 +692,7 @@ async function composeContent(args: {
     let raw = '';
     for await (const chunk of stream) {
       if (chunk.text) { raw += chunk.text; args.onProgress(`${raw.length} caracteres`); }
-      if (chunk.usage) cents += args.provider.price(chunk.usage);
+      if (chunk.usage) cents = addCost(cents, args.provider.price(chunk.usage));
     }
     return { raw };
   };
