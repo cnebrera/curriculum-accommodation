@@ -132,6 +132,12 @@ const api = {
      * where she reads what nothing could check.
      */
     compose: (id: string, request: unknown) => invoke('job:compose', id, request),
+    /**
+     * Correcting composed material (`021` FR-1916). Its own channel, because it composes
+     * again rather than adapting — see the note in `ipc/compose.ts`.
+     */
+    correctComposition: (id: string, corrections: string[]) =>
+      invoke('job:correctComposition', id, corrections),
     composeDocs: (id: string) => invoke('job:composeDocs', id),
     /** One learner or several — 005 FR-501. */
     adapt: (id: string, learners: string | string[]) => invoke('job:adapt', id, learners),

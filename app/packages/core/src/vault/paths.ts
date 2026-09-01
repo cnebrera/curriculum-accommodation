@@ -65,6 +65,18 @@ export const jobSourceDir = (job: string) => join(jobDir(job), 'source');
 export const jobAnswers = (job: string) => join(jobDir(job), 'answers.md');
 export const jobComposeReport = (job: string) => join(jobDir(job), 'compose-report.md');
 
+/**
+ * What she asked for, kept so a correction can re-run the same composition (`021` T026).
+ *
+ * In `.rampa/` rather than beside the material, because it is machinery and not her
+ * work: a folder she is encouraged to open in Obsidian should not fill with request
+ * files. And correcting composed material is **re-composing** rather than adapting — the
+ * objectives, the anchor and the level have to still be there, or she would be asked to
+ * type again what she already told us.
+ */
+export const jobComposeRequest = (job: string) =>
+  join(VAULT.machine, 'requests', `${job}.json`);
+
 export const jobLearnerDir = (job: string, code: string) => join(jobDir(job), code);
 export const jobAdapted = (job: string, code: string) => join(jobLearnerDir(job, code), 'adapted.md');
 export const jobAdaptedRevision = (job: string, code: string, n: number) =>

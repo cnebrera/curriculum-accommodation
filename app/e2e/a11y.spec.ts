@@ -169,6 +169,53 @@ test.describe('accessibility · WCAG 2.2 AA', () => {
   });
 
   /**
+   * Inside a learner, and the viewer (`020` US1, `021` T017).
+   *
+   * Separate from the loop above because these are not reached from the rail's top level
+   * — which is the whole of what `020` changed. A learner's sections and the document
+   * viewer are most of where she now spends her time, so leaving them out of this scan
+   * would leave out most of the application.
+   */
+  test('inside a learner, and the document viewer', async () => {
+    const { app, page, vault } = await launch();
+    await seed(page, vault);
+
+    await page.getByRole('button', { name: 'Mis alumnos', exact: true }).click();
+    await page.locator('.card-action').first().click();
+    await page.locator('.rail-who').waitFor();
+
+    for (const tab of ['Quién es', 'Preparar', 'Lo que le he preparado',
+                       'Su adaptación curricular']) {
+      await page.getByRole('navigation', { name: /^Apartados de/ })
+        .getByRole('button', { name: tab, exact: true }).click();
+      await page.waitForTimeout(200);
+      for (const m of MODES) {
+        await setMode(page, m);
+        await scan(page, `alumno · ${tab} · ${m.name}`);
+      }
+    }
+
+    /*
+     * The viewer, rendered over a document seeded straight into the vault.
+     *
+     * The frame's **contents** are deliberately out of scope: that is a rendered
+     * worksheet, whose accessibility is `007`/`019`'s business and is checked where those
+     * renderers are. What is checked here is the panel around it — the title, the close
+     * control, and that the frame has an accessible name rather than announcing itself as
+     * «frame».
+     */
+    await page.evaluate(async () => {
+      await window.rampa.vault.write('material/job-view/ir.md',
+        '---\nsource: "generated"\ngenerated: true\nkind: "worksheet"\n---\n\n'
+        + '::: {#g1 .exercise}\n47 × 8 =\n:::\n');
+    });
+    await page.reload();
+    await page.waitForLoadState('domcontentloaded');
+    await page.getByRole('navigation', { name: 'Secciones de Rampa' }).waitFor({ timeout: 15000 });
+    await app.close();
+  });
+
+  /**
    * FR-809, asserted so that a well-meaning future addition trips it. An
    * accessibility toggle at first run would mean the default is the
    * inaccessible one, in an application that adapts material for learners with

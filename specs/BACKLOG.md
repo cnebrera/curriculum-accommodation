@@ -413,6 +413,38 @@ every moment should have a spec. What it added beyond the seams pass:
    journey sentence → T094). Handover *import* (004 US2) recorded as deliberately
    deferred rather than silently missing.
 
+## G25 · The eleventh field nobody read, and what finally caught it — *CLOSED 2026-09-01*
+
+Found while implementing `021` US2, by an end-to-end test rather than by a review.
+
+`material-kinds.md` gained `composing.before` — «te voy a proponer las preguntas de una
+prueba con nota… tú validas cada pregunta» — the parser read it, the type carried it, and
+`corpus:materialKinds` did not send it to the renderer. The screen showed the label alone.
+
+**Eleventh instance** in this project of a field written, parsed, typed and read by
+nobody. And the worst one to lose: that sentence is what tells a PT what it means to ask
+a language model to write an exam.
+
+### Why the existing detectors did not catch it
+
+| Detector | Why it was blind here |
+|---|---|
+| `props-are-read.test.ts` | Checks that a **prop** a component declares is read. This field never became a prop — it was dropped one layer earlier, at the IPC boundary |
+| `check-fr-coverage.sh` | Checks requirements against tasks. FR-1911 *was* cited by a task, and the task was being done |
+| Typecheck | The mapping is an object literal. Omitting a field from one is legal |
+
+The gap is specific: **a corpus field crossing from the main process to the renderer.**
+Closed by a guard in `corpus-guarantees.test.ts` that asserts every field written *for
+her* is in the mapping, and that the fields written for the model (`rule`) and for the
+main process (`forbids`, `composing.on_document`) are **not** — so their absence reads as
+a decision rather than an omission.
+
+### The count, and what it says
+
+Ten of the eleven were found by writing something down: archiving requirements, writing a
+test first, or explaining a design in prose and noticing the sentence had no referent.
+None was found by reading the code looking for it.
+
 ## G24 · The four defects behind one «Algo ha ido mal» — *CLOSED 2026-09-01*
 
 Found by **Carlos running the application** and pressing «Preparar el material». Not

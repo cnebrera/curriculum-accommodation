@@ -62,3 +62,14 @@ export function useComposeDocs() {
   return useCommand((jobId: string) =>
     window.rampa.job.composeDocs(jobId) as Promise<{ answers: string | null; report: string | null }>);
 }
+
+/**
+ * Correcting composed material (`021` T026).
+ *
+ * Separate from `useRevise` on purpose: that one adapts, this one composes again and
+ * regenerates the verified answer key with it.
+ */
+export function useCorrectComposition() {
+  return useCommand((id: string, corrections: string[]) =>
+    window.rampa.job.correctComposition(id, corrections) as Promise<ComposeResult>);
+}

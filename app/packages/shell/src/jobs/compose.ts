@@ -1,5 +1,6 @@
 import {
-  jobDir, jobIR, jobAnswers, jobComposeReport, parseComposeBudget, readObjectives,
+  jobDir, jobIR, jobAnswers, jobComposeReport, jobComposeRequest, parseComposeBudget,
+  readObjectives, type Vault,
   levelFrom, explainLevel, targetYear, explainTarget, composeExercises, explainOutcome,
   arithmetic, buildSheet,
   renderAnswerKey, buildComposeReport, assertObjectives, parseIR, logger, RampaError,
@@ -469,6 +470,18 @@ export async function runCompose(
     ...(unverifiedObjectives.length ? { unverifiedObjectives } : {}),
   });
   await vault.writeRaw(jobComposeReport(jobId), report.markdown);
+
+  /*
+   * What was asked for, kept so a correction can re-run it (`021` T026).
+   *
+   * In `.rampa/` rather than the vault proper: it is machinery, not her material, and a
+   * folder she is encouraged to open should not fill with request files. Correcting
+   * composed material is **re-composing**, not adapting (research R3) — so the objectives,
+   * the anchor and the level have to still be there, and asking her to type them again
+   * would be asking her to reconstruct what she already told us.
+   */
+  await vault.writeRaw(jobComposeRequest(jobId),
+    JSON.stringify(request, null, 2) + '\n');
   await recordCost(jobId, costCents);
 
   logger.info('compose.finished', {
@@ -717,3 +730,78 @@ function instructionFor(skill: Skill): string {
 /** A sheet, not a term's worksheets. Bounded in code because it bounds her money. */
 const clampWanted = (n: number): number =>
   Math.min(40, Math.max(1, Math.round(Number.isFinite(n) ? n : 10)));
+
+/**
+ * Correcting composed material (021 T026-T029, FR-1916…FR-1920).
+ *
+ * ## Why this is not `job:revise`
+ *
+ * `job:revise` runs `runAdaptation` with her corrections. Pointing it at a composed job
+ * would ask a model to **adapt** the sheet — producing an adaptation, which is not what
+ * she asked for, and leaving `answers.md` describing exercises that no longer exist. One
+ * word, «revise», was hiding two different operations (research R3).
+ *
+ * Correcting a composition means **composing again**, with what she said added to the
+ * request. So the answer key is regenerated and **re-verified in the same step** by the
+ * deterministic verifiers, before she is shown anything (FR-1919): a stale key is worse
+ * than no key, because she marks against it in class.
+ *
+ * ## What is kept
+ *
+ * The previous version, like an adaptation's revisions (FR-1918). And **not** the
+ * signature: a signature is about a document, and this is a different document (FR-1920).
+ */
+export async function correctComposition(
+  jobId: string,
+  corrections: readonly string[],
+  onProgress: (p: ComposeProgress) => void,
+): Promise<ComposeResult> {
+  const vault = currentVault();
+
+  const stored = await vault.readRaw(jobComposeRequest(jobId));
+  if (stored === null) {
+    /*
+     * Composed before `021`, so nothing recorded what was asked for. Refused rather than
+     * guessed: reconstructing objectives from the sheet would be inventing what she
+     * wanted, and re-composing from an invented request is how a correction produces
+     * material about something else.
+     */
+    throw new RampaError('compose-no-objective',
+      'Este material lo hice antes de que guardara lo que me pediste, así que no puedo '
+      + 'rehacerlo con un cambio. Dime otra vez qué quieres que aprenda y lo preparo.');
+  }
+
+  let request: ComposeRequest;
+  try { request = JSON.parse(stored) as ComposeRequest; }
+  catch {
+    throw new RampaError('compose-no-objective',
+      'No he podido leer lo que me pediste la primera vez. Dime otra vez qué quieres '
+      + 'que aprenda y lo preparo.');
+  }
+
+  // Keep what was there, like an adaptation's revisions (FR-1918).
+  const previous = await vault.readRaw(jobIR(jobId));
+  if (previous !== null) {
+    const n = await nextComposedRevision(vault, jobId);
+    await vault.writeRaw(`${jobDir(jobId)}/ir.r${n}.md`, previous);
+  }
+
+  /*
+   * Her correction reaches the model as part of what she is asking for, and it is
+   * **her text**: `007`'s rule holds, so it goes through the same name check as her
+   * notes before anything is sent (`runCompose` does that).
+   */
+  const asked = [...request.objectives, ...corrections.filter((c) => c.trim())];
+
+  return runCompose(jobId, { ...request, objectives: asked }, onProgress);
+}
+
+/** The next `ir.rN.md`, so a correction never overwrites what she had. */
+async function nextComposedRevision(vault: Vault, jobId: string): Promise<number> {
+  const files: string[] = await vault.list(jobDir(jobId));
+  const used = files
+    .map((f) => /^ir\.r(\d+)\.md$/.exec(f)?.[1])
+    .filter((n): n is string => n !== undefined)
+    .map(Number);
+  return used.length === 0 ? 1 : Math.max(...used) + 1;
+}

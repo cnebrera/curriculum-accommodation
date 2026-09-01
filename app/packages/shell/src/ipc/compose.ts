@@ -2,7 +2,7 @@ import { type BrowserWindow } from 'electron';
 import { jobAnswers, jobComposeReport, RampaError } from '@rampa/core';
 import { currentVault } from './vault.js';
 import { handle } from './wrap.js';
-import { runCompose, type ComposeRequest } from '../jobs/compose.js';
+import { runCompose, correctComposition, type ComposeRequest } from '../jobs/compose.js';
 import { refreshRecord } from './record.js';
 import { materialKind } from '../corpus/index.js';
 
@@ -26,6 +26,20 @@ import { materialKind } from '../corpus/index.js';
  * is the moment she decides whether to keep spending.
  */
 export function registerComposeIpc(getWindow: () => BrowserWindow | null): void {
+  /**
+   * Correcting composed material (`021` T026).
+   *
+   * A channel of its own, not a flag on `job:revise` — because it is a different
+   * operation on a different document: `job:revise` adapts, this composes again. One
+   * channel doing two things to two kinds of document is how a caller ends up guessing,
+   * and the branch would have sat in the file that already had the worst version of this
+   * problem.
+   */
+  handle('job:correctComposition', async (jobId: string, corrections: string[]) => {
+    return correctComposition(jobId, corrections,
+      (p) => getWindow()?.webContents.send('job:progress', p));
+  });
+
   handle('job:compose', async (jobId: string, request: ComposeRequest) => {
     /*
      * The kind is **required and never defaulted** (`021` FR-1907, `012` FR-1001).

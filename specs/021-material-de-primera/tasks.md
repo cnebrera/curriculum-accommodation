@@ -95,8 +95,8 @@ answer key, without running an adaptation.
 - [x] T016 [US1] `app/e2e/composed.spec.ts` from quickstart §4 — including the viewer over
       a document containing a `<script>`, an `onclick`, an external image and a link:
       nothing runs, nothing loads, nothing navigates *(done, `e2e/composed.spec.ts`, 7 cases. The last one plants a script, an inline handler, a remote image and a link in a composed document and confirms none of it runs.)*
-- [ ] T017 [P] [US1] Assert `axe` finds nothing on the viewer, at the narrowest width and
-      at the largest text scale
+- [x] T017 [P] [US1] Assert `axe` finds nothing on the viewer, at the narrowest width and
+      at the largest text scale *(done, and extended to the learner's four sections — `020` moved most of the application off the rail's top level, so the old scan was missing most of it. It found a real contrast failure I had introduced: the learner's code in `--ink-faint` on the rail's ground, at 13px. `--ink-faint` is rated on paper and on `--surface-2`, and the rail is darker than both.)*
 
 **Checkpoint**: the complaint is answered — a composed sheet can be read and printed.
 
@@ -145,37 +145,37 @@ the exam's four limits on the document itself.
 **Independent Test**: compose, correct, get a second version with the first kept and the
 answer key re-verified.
  *(done, `e2e/compose-kind.spec.ts`, 4 cases. It found that `composing.before` never crossed to the renderer — **eleventh** field written, parsed, typed and read by nobody in this project, and this one was the sentence telling a PT what asking a model for an exam means. Closed by a guard in `corpus-guarantees.test.ts`.)*
-- [ ] T026 [US3] A **separate operation** from `job:revise` that re-runs the composition
+- [x] T026 [US3] A **separate operation** from `job:revise` that re-runs the composition
       with her correction (research R3). `job:revise` runs `runAdaptation`; pointing it at
       a composed job would ask a model to *adapt* the sheet — the wrong kind of document,
-      and `answers.md` left describing exercises that no longer exist
-- [ ] T027 [US3] The answer key is regenerated **and re-verified** in the same step
+      and `answers.md` left describing exercises that no longer exist *(done, `correctComposition` with its own channel. `jobs/compose.ts` reaches for `runAdaptation` nowhere, asserted — that absence **is** research R3's finding.)*
+- [x] T027 [US3] The answer key is regenerated **and re-verified** in the same step
       whenever a quantity or an operation changed, before she is shown anything (FR-1919).
-      A stale key is worse than none: she marks against it
-- [ ] T028 [US3] The scope question is asked exactly as it is after an adaptation, and
-      nothing infers it (FR-1917, Principle VIII)
-- [ ] T029 [P] [US3] Previous versions are kept (FR-1918), and a signature does not survive
+      A stale key is worse than none: she marks against it *(done, and structurally rather than by remembering: it re-runs `runCompose`, which is the one path that writes the key. There is no second place where a correction could update the sheet and forget the answers.)*
+- [x] T028 [US3] The scope question is asked exactly as it is after an adaptation, and
+      nothing infers it (FR-1917, Principle VIII) *(done — the same box and the same scope question she gets after an adaptation, because she is answering the same question about her own practice either way.)*
+- [x] T029 [P] [US3] Previous versions are kept (FR-1918), and a signature does not survive
       a correction (FR-1920)
 
 ---
 
 ## Phase 6 · Polish · and the parts that need a person
-
+ *(done. Previous versions kept as `ir.rN.md`. And the signature dies **structurally**: it lives in the document's own front matter and a correction writes a new document from `buildSheet`, which has none — so there is nothing to clear and nothing to forget. Asserted, so a future «carry the review block across» has to argue with a test.)*
 - [ ] T030 **Look at it** (`013` FR-1113/FR-1118): the viewer narrow and at `xlarge`; a
       composed exam's first page, to judge whether «borrador» reads clearly enough when the
       page is a test; and the answer key's heading — whether it is unmissable at a glance
       in a pile of paper, which no assertion can answer
 - [ ] T031 [P] Run quickstart §7 with a real key: compose, correct, and confirm the key was
       regenerated and re-verified and the signature is gone
-- [ ] T032 [P] Assert nothing in this feature starts an adaptation or calls a model
+- [x] T032 [P] Assert nothing in this feature starts an adaptation or calls a model
       (FR-1906) — viewing, printing, exporting and signing are deterministic, and only a
-      correction spends money
+      correction spends money *(done — asserted as an absence in `correct-composition.test.ts` and `document.test.ts`: viewing, printing, exporting and signing reach no provider, and only a correction spends money.)*
 - [ ] T033 **SC-1906 needs a teacher**: give her a composed exam with no preamble and ask
       whether she would use it. The most consequential thing this feature produces, and the
       only criterion that can come back «no» with everything else green. «Why not» is worth
       more than the answer
-- [ ] T034 Archive it: this coverage table kept current, `020` T006 updated to cite T004
-      rather than create it, and a `specs/BACKLOG.md` entry for anything found on the way
+- [x] T034 Archive it: this coverage table kept current, `020` T006 updated to cite T004
+      rather than create it, and a `specs/BACKLOG.md` entry for anything found on the way *(done. `020` T006 now cites T004 rather than creating it — and shrank to «write the field», because the reader already exists. Backlog **G25** records the eleventh unread field and, more usefully, **why the three existing detectors were all blind to it**: it was dropped at the IPC boundary, one layer before it could become a prop.)*
 
 ---
 

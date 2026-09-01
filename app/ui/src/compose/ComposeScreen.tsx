@@ -4,6 +4,8 @@ import { useMaterialKinds } from '../data/corpus.js';
 import { Loaded } from '../data/Loaded.js';
 import { DocumentViewer } from '../viewer/DocumentViewer.js';
 import { useDocumentHtml, useAnswerKeyHtml } from '../data/jobs.js';
+import { useCorrectComposition } from '../data/compose.js';
+import { ScopeQuestion } from '../review/ScopeQuestion.js';
 import { Callout } from '../components/Callout.js';
 import { Stages, Stream } from '../components/Progress.js';
 import { InjectionNotice } from '../components/InjectionNotice.js';
@@ -248,7 +250,9 @@ export function ComposeSummary({ result, learners, jobId, onAdapt, onDiscard }: 
   const total = result.answers.length;
   const documentHtml = useDocumentHtml();
   const answerKeyHtml = useAnswerKeyHtml();
+  const correct = useCorrectComposition();
   const [showing, setShowing] = useState<{ html: string; title: string } | null>(null);
+  const [corrections, setCorrections] = useState<string[]>([]);
 
   /*
    * The three buttons that were missing (FR-1903).
@@ -318,6 +322,34 @@ export function ComposeSummary({ result, learners, jobId, onAdapt, onDiscard }: 
         {documentHtml.error ?? answerKeyHtml.error ? (
           <p className="small">{(documentHtml.error ?? answerKeyHtml.error)!.message}</p>
         ) : null}
+      </Section>
+
+      {/*
+        Correcting it, without adapting anything (`021` T028, FR-1916).
+        
+        The same box and the same scope question she gets after an adaptation — she is
+        answering «a quién se aplica esto» about her own practice either way, and nothing
+        infers it (Principle VIII). What is different underneath: this **composes again**
+        and regenerates the verified answer key with it, because a key describing
+        exercises that no longer exist is worse than no key.
+      */}
+      <Section title="¿Hay algo que cambiar?"
+               lede="Te lo vuelvo a preparar con lo que me digas. Las soluciones se rehacen y las vuelvo a comprobar.">
+        <ScopeQuestion
+          learner={learners[0] ?? ''}
+          onCaptured={(c) => setCorrections((prev) => [...prev, c.text])} />
+        {corrections.length ? (
+          <div className="row gap2" style={{ flexWrap: 'wrap' }}>
+            <button className="btn btn-primary" disabled={correct.busy}
+                    onClick={() => void correct.run(jobId, corrections)}>
+              {correct.busy ? 'Rehaciéndolo…' : 'Prepararlo otra vez con esto'}
+            </button>
+            <span className="small">
+              {corrections.length === 1 ? 'Un cambio' : `${corrections.length} cambios`} anotados.
+            </span>
+          </div>
+        ) : null}
+        {correct.error ? <p className="small">{correct.error.message}</p> : null}
       </Section>
 
       {/* First, and unsoftened (`002` FR-125 / T021). */}

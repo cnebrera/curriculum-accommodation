@@ -268,8 +268,12 @@
   margin: var(--s2) 0 var(--s3); padding: 0 var(--s2); }
 /* The code under the name, in mono, because it is an identifier and not a word —
    and because it is what she will find in her folder. */
+/* `--ink-soft` (8.0:1), not `--ink-faint`: the faint token is rated on paper and on
+   `--surface-2`, and the rail's own ground is darker than both — axe caught it at
+   13px, where 4.5:1 is the floor. A code she cannot read is a code she cannot match
+   to the folder on her disk. */
 .rail-who span { display: block; font-family: var(--font-mono);
-  font-size: var(--text-xs); font-weight: 400; color: var(--ink-faint); }
+  font-size: var(--text-xs); font-weight: 400; color: var(--ink-soft); }
 
 .rail hr { border: 0; border-top: 1px solid var(--line);
   margin: var(--s3) var(--s2) var(--s2); width: auto; }

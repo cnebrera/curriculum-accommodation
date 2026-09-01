@@ -141,10 +141,11 @@ worksheet for three, and confirm the source was read once.
 - [ ] T025 [US2] Step 5 reviews and signs **per learner**, with no action anywhere that
       signs two sheets (FR-1815)
 - [ ] T006 [US2] `packages/shell/src/jobs/ingest.ts` writes `for_learner` into `ir.md`
-      at creation, and `packages/core` gains `startedFor(frontMatter)` reading
-      **`for_learner` first and `composed_for` as the older spelling** (research R3).
-      One reader, two spellings — `002` already writes this fact under the second name,
-      and two names for one fact is this project's most-repeated defect
+      at creation. **`startedFor()` already exists**: `021` T004 built it in
+      `packages/core/src/vault/document.ts`, because that feature arrived first and needed
+      it — so this task shrank to the writer. And building it there immediately found a
+      reader nobody had thought about: `record/scan.ts` read `composed_for` directly, so a
+      job stamped with the current spelling vanished from her record
 - [ ] T007 [US2] `ingest:pending` returns `learner?`, from **one** walk of `material/`
       (FR-1828). Optional and it must stay optional: every job in every vault today has
       no such field, and treating its absence as an error would break the first vault it
