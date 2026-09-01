@@ -48,16 +48,35 @@ export function isEmpty(value: unknown): boolean {
 /**
  * Translate a failure into the sentence she reads.
  *
- * `kind` first, the provider's own message second, the catch-all last. The
- * middle rung matters: a kind we have no Spanish sentence for is still better
- * served by whatever the layer below said than by "algo ha ido mal", which tells
- * her nothing and tells us nothing either.
+ * `kind` first, the layer below's own message second, the catch-all last. The middle
+ * rung matters: a kind we have no Spanish sentence for is still better served by
+ * whatever the layer below said than by "algo ha ido mal", which tells her nothing
+ * and tells us nothing either.
+ *
+ * ## Why `unknown` is skipped explicitly
+ *
+ * The middle rung was unreachable in the only case it was written for. `unknown` is
+ * a key in `t.errors`, so `t.errors[kind]` **found** something for kind `unknown`
+ * and the `?? message` never ran — the catch-all won precisely when we had no idea
+ * what happened and the message was the last thing left.
+ *
+ * Found on 2026-09-01: a 404 from Google reached this function carrying «El servicio
+ * devolvió un error (404).» and Carlos read «Algo ha ido mal. No he perdido nada de
+ * lo tuyo.» The information existed and this line discarded it.
+ *
+ * So `unknown` means "no translation", not "translated as the catch-all", and the
+ * catch-all is applied once, at the end, where it belongs.
  */
 export function useErrorText(): (e: unknown) => { kind: string; message: string } {
   const { t } = useStrings();
   return useCallback((e: unknown) => {
     const { kind, message } = fromWire(e);
-    return { kind, message: t.errors[kind] ?? message ?? t.errors['unknown'] ?? 'Algo ha ido mal.' };
+    const translated = kind === 'unknown' ? undefined : t.errors[kind];
+    return {
+      kind,
+      message: translated ?? (message?.trim() || undefined)
+        ?? t.errors['unknown'] ?? 'Algo ha ido mal.',
+    };
   }, [t]);
 }
 

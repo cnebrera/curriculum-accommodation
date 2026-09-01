@@ -182,6 +182,17 @@ export function compatibleProvider(spec: CompatibleSpec): Provider {
         throw new ProviderError('key-invalid', 'La clave ya no es válida.');
       }
       if (res.status === 402) throw new ProviderError('key-no-credit', 'La cuenta no tiene saldo.');
+      /*
+       * A 404 is not «the service failed». It is «the model I asked for is not
+       * there», almost always because the vendor retired it — which is what
+       * happened to `gemini-2.0-flash` on the path a teacher takes on her first
+       * run. Retrying cannot fix it and telling her to wait a moment is false, so
+       * it gets its own kind and stays out of the retryable set.
+       */
+      if (res.status === 404) {
+        throw new ProviderError('provider-model-gone',
+          `${spec.label} ya no ofrece el modelo con el que hablo con él (${model}).`);
+      }
       if (!res.ok || !res.body) {
         throw new ProviderError('provider-failed', `El servicio devolvió un error (${res.status}).`);
       }

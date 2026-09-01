@@ -16,7 +16,13 @@ export const DEFAULT_TIMEOUT_MS = 180_000;
 
 export interface Attempt { attempt: number; of: number; waitingSeconds?: number; }
 
-/** Retry only what retrying can fix. A bad key is not going to become good. */
+/**
+ * Retry only what retrying can fix. A bad key is not going to become good.
+ *
+ * `provider-model-gone` is deliberately absent: a retired model is not there on the
+ * second attempt either, and three attempts with backoff would turn an instant,
+ * explainable failure into a thirty-second wait ending in the same wrong answer.
+ */
 const RETRYABLE = new Set(['rate-limited', 'offline', 'provider-failed']);
 
 export interface RunOptions {

@@ -25,7 +25,19 @@ export type ErrorKind =
   | 'guide-no-work'          // an ACNS drafted from nothing is a form filled in by a model
   | 'guide-no-evaluation'    // an ACS with no evaluación psicopedagógica is procedurally void
   | 'key-missing' | 'key-invalid' | 'key-wrong-provider' | 'key-no-credit'
-  | 'offline' | 'rate-limited' | 'provider-failed';
+  | 'offline' | 'rate-limited' | 'provider-failed'
+  /**
+   * The service no longer serves the model Rampa speaks to it with.
+   *
+   * A 404 from a provider, and separate from `provider-failed` for two reasons that
+   * are both about not lying: its sentence says «vuelve a intentarlo en un momento»,
+   * and it is in the resilience layer's retryable set — so a retired model would be
+   * retried three times with backoff and then blamed on the weather.
+   *
+   * Added 2026-09-01, when Google's `gemini-2.0-flash` was shut down and the
+   * application had no way to say so.
+   */
+  | 'provider-model-gone';
 
 export class RampaError extends Error {
   constructor(readonly kind: ErrorKind, message: string, readonly detail?: unknown) {

@@ -413,6 +413,105 @@ every moment should have a spec. What it added beyond the seams pass:
    journey sentence → T094). Handover *import* (004 US2) recorded as deliberately
    deferred rather than silently missing.
 
+## G24 · The four defects behind one «Algo ha ido mal» — *CLOSED 2026-09-01*
+
+Found by **Carlos running the application** and pressing «Preparar el material». Not
+by a test, not by a review, and not by me: by the first person to use the thing.
+
+What he read:
+
+> **Atención**
+> Algo ha ido mal. No he perdido nada de lo tuyo.
+
+What the log knew:
+
+```
+ERROR ipc.failed {"channel":"job:compose","kind":"unknown",
+                  "message":"El servicio devolvió un error (404)."}
+```
+
+**The message existed and the kind existed. Neither reached the screen.** Four
+defects stacked, each hiding the next, and they are worth keeping separate because
+they fail in four different ways.
+
+### A · The corpus field nobody read — *the tenth time*
+
+| Source | Model |
+|---|---|
+| `instructions/providers/google.md` | `gemini-2.5-flash`, dated `last_checked: 2026-08-28` |
+| `packages/providers/src/google.ts` | `defaultModel: 'gemini-2.0-flash'` — **what ran** |
+
+`providerFor()` passed `entry.model` to the `compatible`/`openai` adapters and dropped
+it for `google` and `anthropic`, which returned their own constants. Nothing in the
+shell sets `req.model`, so the constant always won. Google **shut `gemini-2.0-flash`
+down** — confirmed against `ai.google.dev/gemini-api/docs/models` on the day — so the
+free-tier path the README recommends for a teacher's first run could not adapt
+anything at all.
+
+This is **Principle I inverted**: the judgement lived in Markdown, the Markdown was
+maintained, and the code overrode it. The fix is one helper, `withModel`. The durable
+part is `corpus-model-reaches-provider.test.ts`, which asserts it for **every entry
+that declares a model** and checks the request on the wire rather than the field — the
+field was never wrong, it was correct about a model that no longer existed.
+
+### B · The most expensive of the four · a whole layer of Spanish that could not be reached
+
+`ProviderError extends Error`, not `RampaError`. So `isRampaError` said no,
+`toWire` shipped it without the `[rampa:kind]` prefix, `fromWire` found no kind, and
+the interface fell through to the catch-all — **for every provider failure there is**.
+
+Which means these five sentences in `es.ts` were written, reviewed, and unreachable:
+
+| kind | What she could never read |
+|---|---|
+| `offline` | «No hay conexión. Todo lo demás sigue funcionando: puedes leer tus notas y volver a imprimir.» |
+| `rate-limited` | «El servicio está ocupado. No es culpa tuya: espera un poco.» |
+| `key-invalid` | «La clave ya no vale. Habrá que ponerla otra vez.» |
+| `key-no-credit` | «La clave es correcta pero la cuenta no tiene saldo.» |
+| `provider-failed` | «El servicio ha fallado. Vuelve a intentarlo en un momento.» |
+
+The comment in `core/src/errors.ts` describes this exact failure — «the mapping
+silently never matched and every failure fell through to *algo ha ido mal*» — and
+says it was fixed. It was fixed for one of the two error hierarchies, because
+somebody had built two.
+
+**The lesson, and it is the same one as A**: a second class that means the same thing
+is a second path to maintain, and it is the one nobody tests. Closed by inheritance,
+plus `error-kind-survives.test.ts` over the full round trip including the prefix
+Electron adds.
+
+### C · `unknown` counted as a translation
+
+`t.errors[kind] ?? message ?? t.errors['unknown']`. `unknown` **is** a key, so the
+lookup succeeded and the `?? message` was unreachable — in precisely the case it was
+written for. The comment above the line describes the intended behaviour and the line
+does the opposite.
+
+### D · The `Callout` announced its kind backwards
+
+`{!title && <span className="sr-only">…}`. With no title the `<strong>` already said
+«Atención», so it was said twice; **with** a title — nearly every callout in the
+application — the kind was announced nowhere and the border colour was its only
+carrier. That is the violation FR-812 exists to forbid, in the shared component every
+screen uses.
+
+Found from a duplicated «Atención» in text Carlos pasted: `.sr-only` is hidden from
+the eye but travels with the clipboard, so the copy showed what the screen could not.
+
+### What this says about the test suite
+
+1.245 tests, 76 end-to-end, and none of them could see any of these. The reason is
+uncomfortable and worth writing down: **every test in this project stubs the
+provider.** That is correct — a suite that calls a paid API is a suite nobody runs —
+but it means the seam between the catalogue and the adapters, and the seam between a
+provider error and a Spanish sentence, were both exercised only by fixtures that
+agreed with the code.
+
+`009` T041 has said «connect all six for real, once» since it was written, and is
+still open. **It would have caught A on the first run.** It is not a formality, it is
+the only test that was ever going to find this, and it needs six accounts and a
+little money.
+
 ## G23 · A corrected extraction does not mark the sheets made from it — *CLOSED 2026-09-01*
 
 Found 2026-08-31, by archiving `005`'s requirements against its tasks. Built the next

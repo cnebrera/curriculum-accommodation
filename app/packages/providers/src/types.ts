@@ -1,4 +1,4 @@
-import type { Usage } from '@rampa/core';
+import { RampaError, type Usage } from '@rampa/core';
 
 /** Per contracts/provider-adapter.md. Adding a provider must be one file. */
 export type Cents = number;
@@ -37,10 +37,38 @@ export interface Provider {
   price(usage: Usage): Cents;
 }
 
-export class ProviderError extends Error {
+/** What an adapter can fail with. Every one of these is a member of core's `ErrorKind`. */
+export type ProviderErrorKind =
+  | 'offline' | 'rate-limited' | 'key-invalid' | 'key-no-credit'
+  | 'provider-failed' | 'provider-model-gone';
+
+/**
+ * A provider failure, and **a `RampaError`** — which it was not until 2026-09-01.
+ *
+ * ## Why the inheritance is the whole point
+ *
+ * This was its own class, unrelated to `RampaError`, and the consequence reached a
+ * teacher: `ipc/wrap.ts` asks `isRampaError(e)` to decide what to log and `toWire`
+ * asks the same question to decide whether to encode the kind into the message. Both
+ * answered no, so every provider failure crossed the IPC boundary anonymous and the
+ * interface fell through to «Algo ha ido mal. No he perdido nada de lo tuyo.»
+ *
+ * Which means the five Spanish sentences `es.ts` carries for exactly these
+ * situations — «El servicio está ocupado. No es culpa tuya», «La clave ya no vale»,
+ * «La clave es correcta pero la cuenta no tiene saldo» — could never be seen. They
+ * were written, reviewed, and unreachable.
+ *
+ * Found by Carlos running the application: Google answered 404 and he read the
+ * catch-all. The log knew the truth and the screen did not, which is the wrong way
+ * round — he is the one who can act on it.
+ *
+ * The comment in `core/src/errors.ts` describes this failure and says it was fixed.
+ * It was fixed for one of the two error hierarchies, because there were two.
+ */
+export class ProviderError extends RampaError {
   constructor(
-    readonly kind: 'offline' | 'rate-limited' | 'key-invalid' | 'key-no-credit' | 'provider-failed',
+    override readonly kind: ProviderErrorKind,
     message: string,
     readonly retryAfterSeconds?: number,
-  ) { super(message); this.name = 'ProviderError'; }
+  ) { super(kind, message); this.name = 'ProviderError'; }
 }

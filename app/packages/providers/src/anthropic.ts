@@ -88,6 +88,17 @@ export const anthropic: Provider = {
       throw new ProviderError('rate-limited', 'El servicio está ocupado.', wait);
     }
     if (res.status === 401) throw new ProviderError('key-invalid', 'La clave ya no es válida.');
+    /*
+     * A 404 is not «the service failed». It is «the model I asked for is not
+     * there», almost always because the vendor retired it — which is what
+     * happened to `gemini-2.0-flash` on the path a teacher takes on her first
+     * run. Retrying cannot fix it and telling her to wait a moment is false, so
+     * it gets its own kind and stays out of the retryable set.
+     */
+    if (res.status === 404) {
+      throw new ProviderError('provider-model-gone',
+        `Claude (Anthropic) ya no ofrece el modelo con el que hablo con él (${model}).`);
+    }
     if (!res.ok || !res.body) throw new ProviderError('provider-failed', `El servicio devolvió un error (${res.status}).`);
 
     const reader = res.body.getReader();

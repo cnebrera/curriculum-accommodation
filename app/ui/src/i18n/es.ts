@@ -211,6 +211,14 @@ export const es = {
     offline: 'No hay conexión. Todo lo demás sigue funcionando: puedes leer tus notas y volver a imprimir.',
     'rate-limited': 'El servicio está ocupado. No es culpa tuya: espera un poco y vuelve a intentarlo.',
     'provider-failed': 'El servicio ha fallado. Vuelve a intentarlo en un momento.',
+    /*
+     * A retired model, and the two things she needs to know: it is not her fault,
+     * and there is something she can do right now. No version number and no status
+     * code — «404» in front of a teacher is our problem wearing her clothes.
+     */
+    'provider-model-gone': 'Ese servicio ya no ofrece el modelo con el que Rampa habla '
+      + 'con él. No es tu clave ni tu material, es cosa mía. Mientras lo arreglo, '
+      + 'puedes cambiar de servicio en «Mi servicio de IA».',
     unknown: 'Algo ha ido mal. No he perdido nada de lo tuyo.',
   } as Record<string, string>,
 };

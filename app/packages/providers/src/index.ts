@@ -39,12 +39,32 @@ export type AdapterId = typeof ADAPTER_IDS[number];
  * would mean every new service needs a case added here, which is the code change
  * the catalogue format exists to remove.
  */
+/**
+ * The same provider, speaking to the model the corpus names.
+ *
+ * A copy rather than a mutation: the adapters are module-level singletons, and
+ * writing `entry.model` into one would make the model a property of whoever built a
+ * provider last. `send()` reads `this.defaultModel`, and `this` is the copy.
+ *
+ * The adapter keeps its own constant as the fallback for a catalogue entry that
+ * declares no model — one exists so a service can be added before anyone has decided
+ * which of its models to use.
+ */
+const withModel = (p: Provider, model?: string): Provider =>
+  model ? { ...p, defaultModel: model } : p;
+
 export function providerFor(
   entry: ServiceEntry,
   catalogue: readonly ServiceEntry[] = [],
 ): Provider | undefined {
-  if (entry.adapter === 'anthropic') return anthropic;
-  if (entry.adapter === 'google') return google;
+  // The corpus decides the model, for the hand-written adapters too (Principle I).
+  //
+  // These two returned their own constants and dropped `entry.model` on the floor,
+  // which is how `gemini-2.0-flash` was still being called months after Google shut
+  // it down: the corpus said `gemini-2.5-flash`, was dated, and was read by nobody.
+  // The teacher saw a 404 on the free-tier path the README recommends for a first run.
+  if (entry.adapter === 'anthropic') return withModel(anthropic, entry.model);
+  if (entry.adapter === 'google') return withModel(google, entry.model);
 
   // `openai` and `compatible` are the same dialect. The endpoint is the only
   // difference, and for `openai` it is fixed rather than declared, because an

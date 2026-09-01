@@ -29,10 +29,21 @@ export function Callout({ intent = 'info', title, children }: {
       className={`callout callout-${intent}`}
       role={intent === 'danger' ? 'alert' : 'status'}
     >
-      {/* The kind is announced even when the caller gives no title, so the
-          intent is never carried by the border colour alone. */}
+      {/*
+        The kind is announced whatever the caller passes, so the intent is never
+        carried by the border colour alone (FR-812).
+
+        The condition used to be `!title`, which had it exactly backwards in both
+        directions. With **no** title the `<strong>` already says «Atención», so the
+        extra node made a screen reader say it twice. With a title — which is nearly
+        every callout in the application — nothing announced the kind at all and the
+        colour was its only carrier, which is the thing FR-812 exists to forbid.
+
+        Found on 2026-09-01, from a duplicated «Atención» in text Carlos pasted: the
+        `sr-only` node is hidden from the eye but travels with the clipboard.
+      */}
       <strong>{title ?? KIND[intent]}</strong>
-      {!title && <span className="sr-only">{KIND[intent]}</span>}
+      {title ? <span className="sr-only">{KIND[intent]}</span> : null}
       <div>{children}</div>
     </div>
   );
