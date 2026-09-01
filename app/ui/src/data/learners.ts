@@ -41,7 +41,11 @@ export function useLearners(): Loadable<LearnerRow[]> {
       };
       return {
         code,
-        name: names[code] ?? code,
+        // Empty rather than the code, and the screen decides how to say «sin nombre».
+        // Falling back to the code put an identifier where a child's name goes — so a
+        // seeded caseload read as «S1, S2, S3» and Carlos took those for names. They are
+        // what goes to disk *instead* of a name, which is the whole of `003`.
+        name: names[code] ?? '',
         axes: l.profile.axes ?? {},
         works: (l.profile.works ?? []).length,
         avoid: (l.profile.avoid ?? []).length,
@@ -63,6 +67,9 @@ export function useLearnerChoices(): Loadable<Array<{ code: string; name: string
   return useAsync(async () => {
     const codes = (await window.rampa.learners.list()) as string[];
     const names = (await window.rampa.names.all()) as Record<string, string>;
+    // The picker needs something to show, and there the code IS the label of last
+    // resort — a select with an empty option is unusable. The list is different: it has
+    // room to say what is missing.
     return codes.map((code) => ({ code, name: names[code] ?? code }));
   }, []);
 }

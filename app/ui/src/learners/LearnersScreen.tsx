@@ -42,7 +42,15 @@ function LearnerCard({ row, made, year, onOpen }: {
     <button className="card card-action stack gap2" onClick={() => onOpen(row.code)}>
       <div className="row" style={{ justifyContent: 'space-between', alignItems: 'baseline' }}>
         <span className="row gap2" style={{ alignItems: 'baseline' }}>
-          <strong>{row.name}</strong>
+          {/*
+            «Sin nombre todavía» rather than the code repeated.
+
+            The row used to fall back to the code for the name, so a learner with no name
+            set read as «S1  S1» — an identifier sitting where a child's name goes. Carlos
+            read the seeded caseload as being *called* S1 to S7, which is a reasonable
+            reading of what the screen said.
+          */}
+          <strong>{row.name || <span className="muted">Sin nombre todavía</span>}</strong>
           <Badge>{row.code}</Badge>
         </span>
         <span className="small">

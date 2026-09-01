@@ -29,7 +29,7 @@
  *   node scripts/seed-learners.mjs           # into the vault the app has open
  *   node scripts/seed-learners.mjs --dry     # print what it would write
  */
-import { readFile, writeFile, mkdir } from 'node:fs/promises';
+import { readFile, writeFile, mkdir, rm, rmdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { homedir } from 'node:os';
 
@@ -42,7 +42,7 @@ import { homedir } from 'node:os';
  */
 const LEARNERS = [
   {
-    name: 'Lucía',
+    name: 'Lucía', code: 'K42',
     // Reads fluently, loses the thread past two instructions. The commonest case in an
     // aula de apoyo and the one the recipes were first written for.
     year: 'es:primaria-4', age: 9, school: 'CEIP Los Almendros',
@@ -54,7 +54,7 @@ const LEARNERS = [
     notes: 'Se bloquea si la hoja está muy llena. Con la mitad de ejercicios por página termina.',
   },
   {
-    name: 'Marco',
+    name: 'Marco', code: 'T18',
     // Low vision. The presentation axes are what matter and the cognitive ones are
     // untouched — the case that catches an application which confuses «needs adaptation»
     // with «needs less content».
@@ -67,7 +67,7 @@ const LEARNERS = [
     notes: 'Ve mejor por la mañana. No usa braille: lo suyo es tamaño y contraste.',
   },
   {
-    name: 'Aitana',
+    name: 'Aitana', code: 'R63',
     // Dyslexia-shaped: decoding is the barrier and content is not. Exists here so
     // «adapt the how, never the what» (Principle III) has something to be tested against.
     year: 'es:primaria-6', age: 11, school: 'CEIP Los Almendros',
@@ -79,7 +79,7 @@ const LEARNERS = [
     notes: 'Con el enunciado leído hace lo mismo que el resto. El problema es la lectura, no el contenido.',
   },
   {
-    name: 'Iker',
+    name: 'Iker', code: 'M07',
     // Communicates with pictograms as his main route. The least frequent case and the
     // one 018 is about — kept in the set so the pictogram path has somebody real-shaped.
     year: 'es:especial', age: 12, school: 'CEE Vega Baja',
@@ -91,7 +91,7 @@ const LEARNERS = [
     notes: 'Usa ARASAAC en clase desde infantil: el vocabulario ya lo tiene aprendido.',
   },
   {
-    name: 'Noa',
+    name: 'Noa', code: 'P51',
     // Attention and self-regulation, nothing else. The case where the right adaptation is
     // about the shape of the session rather than about the text.
     year: 'es:primaria-2', age: 7, school: 'CEIP Miguel Hernández',
@@ -103,7 +103,7 @@ const LEARNERS = [
     notes: 'Tres ejercicios y descanso funciona mejor que diez seguidos.',
   },
   {
-    name: 'Hugo',
+    name: 'Hugo', code: 'V29',
     // Two years behind in mathematics and at course level in language. Here because it is
     // the case FR-129 was written for: his enrolled course is not the level of his
     // material, and only she knows which.
@@ -116,7 +116,7 @@ const LEARNERS = [
     notes: 'En lengua va con su curso. En mates necesita material de dos cursos antes, y le importa mucho que no lo parezca.',
   },
   {
-    name: 'Sara',
+    name: 'Sara', code: 'J84',
     // Motor: she knows it and cannot write it. The case that makes the response route
     // (`019`'s MOT axis) matter, and the one where a worksheet with small boxes is the
     // whole barrier.
@@ -175,13 +175,48 @@ const root = await currentVault();
 console.log(`Carpeta: ${root}\n`);
 
 /*
- * Codes are sequential and boring on purpose. `newCode()` in the application derives one
- * from a counter; here the point is that a seeded caseload is recognisable as seeded — if
- * these ever sat beside real learners, «S1» is a clue and a plausible code is not.
+ * The first run's `S1`…`S7`, removed if they are there.
+ *
+ * Only those exact seven, and only their two files: a seed script that deletes by pattern
+ * inside her vault is a seed script one typo away from taking a real caseload with it.
+ */
+if (!dry) {
+  for (let i = 1; i <= 7; i++) {
+    const old = join(root, 'profiles', `S${i}`);
+    try {
+      await rm(join(old, 'profile.yaml'), { force: true });
+      await rm(join(old, 'notes.md'), { force: true });
+      /*
+       * `rmdir`, which **fails on a non-empty directory** — and that is the guarantee,
+       * not a limitation: if anything else is in there it is not mine to delete. The
+       * first version used `rm(dir, { recursive: false })`, which does not remove
+       * directories at all, so the files went and seven empty folders stayed.
+       */
+      await rmdir(old);
+      console.log(`  quitado S${i} (de la primera pasada)`);
+    } catch (e) {
+      // Reported, not swallowed. A silent catch is what hid the failure above: the
+      // script said «hecho» while seven directories sat there.
+      if (e?.code !== 'ENOENT') console.log(`  no he podido quitar S${i}: ${e?.code ?? e}`);
+    }
+  }
+}
+
+/*
+ * Codes in the shape the application actually generates: one letter and two digits, no I
+ * and no O because they read as 1 and 0 (`codes.ts`).
+ *
+ * The first version used `S1`…`S7`, reasoning that a seeded caseload should be
+ * recognisable as seeded. Carlos read them as the children's **names** — «no le llames
+ * S1, S2, S3, invéntate nombres» — which is a fair reading of a list that showed exactly
+ * that, and it made the argument for the marker worth less than the confusion it caused.
+ *
+ * Fixed rather than random, so running this twice does not litter the vault with a second
+ * set of seven strangers.
  */
 const lines = [];
-for (const [i, learner] of LEARNERS.entries()) {
-  const code = `S${i + 1}`;
+for (const learner of LEARNERS) {
+  const code = learner.code;
   const dir = join(root, 'profiles', code);
   lines.push(`${code}  ${learner.name.padEnd(7)} ${learner.year.padEnd(18)} ${learner.age} años`);
   if (dry) continue;
@@ -216,6 +251,6 @@ if (dry) {
    * path with no new surface — and there is no mechanism left behind that somebody could
    * later point at real children.
    */
-  const pairs = LEARNERS.map((l, i) => `['S${i + 1}','${l.name}']`).join(',');
+  const pairs = LEARNERS.map((l) => `['${l.code}','${l.name}']`).join(',');
   console.log(`  for (const [c,n] of [${pairs}]) await window.rampa.names.set(c,n)\n`);
 }
