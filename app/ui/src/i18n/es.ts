@@ -175,8 +175,28 @@ export const es = {
     'vault-unreadable': 'No he podido leer ese fichero.',
     'ir-unverified': 'Antes de adaptar, comprueba que he leído bien el material.',
     'ir-no-provenance': 'Algo ha cambiado sin que yo pueda decirte por qué. No te lo enseño así.',
-    'output-incomplete': 'La adaptación ha vuelto incompleta dos veces, así que no te la enseño. Tu última versión buena sigue intacta.',
-    'name-unconfirmed': 'Puede que haya un nombre en tus notas. No he enviado nada: dime si es de un alumno y lo sustituyo por su código.',
+    /*
+     * Absent: the thrown message distinguishes «llegó a medias» from «faltaban 3 trozos
+     * sin decir por qué», which are different situations with different next steps. A
+     * single template collapses them.
+     */
+    /*
+     * **Deliberately absent**, and this is the entry that used to be here.
+     *
+     * The error this kind carries names the word it found — «Hay un posible nombre en tus
+     * notas: Marta» — and a generic translation **replaced** that with «puede que haya un
+     * nombre», deleting the one thing she needs to act on. Carlos hit it: «no entiendo
+     * este mensaje».
+     *
+     * Same mechanism as the `unknown` defect fixed on 2026-09-01, in the other direction:
+     * there a translation existed for «we have no idea» and beat a message that did; here
+     * a translation exists for a message that carries data the template cannot have.
+     *
+     * The rule, asserted in `ui/test/error-text.test.ts`: **a kind whose message carries
+     * a specific value gets no translation.** The message from the main process is
+     * already her language — `013` FR-1109 requires that — so passing it through is not
+     * a fallback, it is the correct answer.
+     */
     'corpus-missing': 'No encuentro las reglas de adaptación. Es un problema de la instalación, no tuyo: vuelve a instalar Rampa.',
     'render-learner-data': 'Iba a aparecer información de tu alumno en su propia ficha. Lo he parado.',
     'render-undescribed': 'Hay una imagen imprescindible sin describir. Sin ella, el ejercicio no se puede resolver.',
@@ -199,7 +219,12 @@ export const es = {
     'guide-no-evaluation': 'Sin evaluación psicopedagógica una adaptación significativa no puede seguir adelante: es nula de procedimiento. Si existe y no lo he visto, dímelo.',
     /* Reading the material (008). Each one says what she does next. */
     'ingest-empty': 'No has añadido ningún fichero.',
-    'ingest-format': 'No sé leer ese tipo de fichero. Fotos (JPG, PNG, HEIC), PDF, Word (.docx) o texto.',
+    /*
+     * Absent for the same reason as `name-unconfirmed`: the thrown message names **which**
+     * file type it could not read, or says the drop was mixed and why the order is
+     * unknowable. This template said «ese tipo de fichero» and deleted the answer to the
+     * only question she has.
+     */
     'ingest-unusable': 'La foto no se puede leer. Vuelve a hacerla con más luz, y con la hoja lo más plana y recta que puedas.',
     'ingest-many-sheets': 'Parece que hay más de una hoja en la misma foto. Haz una foto de cada hoja por separado.',
     'ingest-no-vision': 'El servicio que tienes conectado no lee fotos. Cámbialo en «Mi servicio de IA», o pega el texto a mano.',

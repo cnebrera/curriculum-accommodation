@@ -74,12 +74,29 @@ export function ComposeScreen({ learners, onComposed, onBack }: {
   const [kind, setKind] = useState<string | null>(null);
   const [objectives, setObjectives] = useState('');
   const [anchor, setAnchor] = useState('');
-  const [howMany, setHowMany] = useState(10);
+  const [howMany, setHowMany] = useState<number | null>(null);
+  const [sessions, setSessions] = useState(1);
+  const [minutes, setMinutes] = useState(45);
   const [progress, setProgress] = useState<{ stage: string; detail?: string } | null>(null);
   const compose = useCompose();
   const online = useOnline();
 
   useJobProgress(setProgress);
+
+  /*
+   * What this kind asks about quantity, from the corpus (`021` FR-1925).
+   *
+   * Carlos, an hour after US2 shipped: «si voy a preparar material de estudio, no tiene
+   * sentido que me pregunte número de ejercicios». It does not any more — a study text
+   * declares `of: none` and this screen asks nothing about counting for it.
+   */
+  const chosen = kinds.state === 'ready'
+    ? (kinds.value as Array<{ id: string; quantity?: { of: string; label?: string;
+                                                       help?: string; default?: number } }>)
+        .find((k) => k.id === kind)
+    : undefined;
+  const quantity = chosen?.quantity;
+  const countsSomething = quantity !== undefined && quantity.of !== 'none';
 
   const lines = objectives.split('\n').map((l) => l.trim()).filter(Boolean);
   const contentLines = lines.filter(looksLikeContent);
@@ -106,7 +123,11 @@ export function ComposeScreen({ learners, onComposed, onBack }: {
       // Hers, never defaulted (`021` FR-1907). The handler refuses a request without it.
       kind: kind ?? '',
       objectives: lines,
-      perObjective: howMany,
+      // Only for a kind that counts something. A study text says how much it is through
+      // her plan instead (FR-1927).
+      ...(countsSomething ? { perObjective: howMany ?? quantity?.default ?? 10 } : {}),
+      sessions,
+      minutesPerSession: minutes,
       ...(anchor.trim() ? { anchor: anchor.trim() } : {}),
     });
     if (result) onComposed(jobId, result);
@@ -213,11 +234,49 @@ export function ComposeScreen({ learners, onComposed, onBack }: {
                     placeholder={'multiplicar con llevadas\nrestar prestando'} />
         </Field>
 
-        <Field label="Cuántos ejercicios de cada cosa" htmlFor="cuantos">
-          <input className="input" id="cuantos" type="number" min={1} max={40}
-                 style={{ maxWidth: '8rem' }}
-                 value={howMany}
-                 onChange={(e) => setHowMany(Number(e.target.value) || 1)} />
+        {/*
+          The quantity question, in the kind's own words — or absent entirely.
+
+          The label and the default come from `material-kinds.md`, so «cuántas preguntas»
+          for an exam and nothing at all for a study text are Markdown edits rather than
+          branches in here.
+        */}
+        {countsSomething ? (
+          <Field label={quantity?.label ?? 'Cuántos de cada cosa'} htmlFor="cuantos"
+                 {...(quantity?.help ? { help: quantity.help } : {})}>
+            <input className="input" id="cuantos" type="number" min={1} max={40}
+                   style={{ maxWidth: '8rem' }}
+                   value={howMany ?? quantity?.default ?? 10}
+                   onChange={(e) => setHowMany(Number(e.target.value) || 1)} />
+          </Field>
+        ) : null}
+
+        {/*
+          Her plan, for every kind (FR-1926).
+
+          Two numbers rather than one, which was Carlos's correction: «ambas cosas,
+          sesiones y minutos por sesión». Both are facts she holds with certainty — they
+          are her timetable — and for a study text they are how she says how much she
+          wants. For an exam they are its duration, set by her rather than by Rampa.
+
+          What Rampa does with them is an estimate and the report says so: how long this
+          particular child takes over a page is the one number nobody here knows.
+        */}
+        <Field label="¿Para cuántas sesiones es?" htmlFor="sesiones"
+               help={countsSomething
+                 ? 'Se apunta en el material, y la ACNS lo usa para la temporalización.'
+                 : 'Con esto ajusto la extensión del texto. Es una estimación mía: cuánto tarda él en una página lo sabes tú.'}>
+          <div className="row gap2" style={{ alignItems: 'center' }}>
+            <input className="input" id="sesiones" type="number" min={1} max={20}
+                   style={{ maxWidth: '6rem' }} value={sessions}
+                   onChange={(e) => setSessions(Number(e.target.value) || 1)} />
+            <span className="small">de</span>
+            <input className="input" id="minutos" type="number" min={5} max={240} step={5}
+                   style={{ maxWidth: '6rem' }} value={minutes}
+                   aria-label="Minutos por sesión"
+                   onChange={(e) => setMinutes(Number(e.target.value) || 5)} />
+            <span className="small">minutos cada una</span>
+          </div>
         </Field>
         {/*
           No level field, and that is the requirement rather than an omission

@@ -24,6 +24,16 @@ export interface ComposeRequest {
    * worksheet before the model ever sees it.
    */
   kind: string;
+  /**
+   * Her plan (`021` FR-1926). Two numbers, because «tres sesiones de veinte minutos» is
+   * how a PT plans and both are facts she holds with certainty.
+   *
+   * `sessions` has been in the main process's request since `002` FR-130 and **no screen
+   * ever sent it** — so the field existed, the document had a place for it, and it was
+   * always `undefined`.
+   */
+  sessions?: number;
+  minutesPerSession?: number;
 }
 
 export interface AnswerLine {

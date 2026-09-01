@@ -116,6 +116,15 @@ export interface SheetInput {
    */
   sessions?: number;
   /**
+   * How long one session is (`021` FR-1929).
+   *
+   * Recorded beside `sessions` for the same reason and used the same way: it is her
+   * plan, written on the material, and `017`'s ACNS reads it for the temporalización.
+   * Rampa organises nothing around it — «tres sesiones de veinte minutos» is her unit
+   * written down where it belongs.
+   */
+  minutesPerSession?: number;
+  /**
    * The date, passed in. Never computed here: when something happened is a fact
    * about the process (Principle II), and a pure function that reads the clock is
    * a function whose output cannot be asserted.
@@ -294,6 +303,7 @@ export function buildSheet(input: SheetInput): ComposedSheet {
       objectives: [...input.objectives],
       composed_on: input.composedOn,
       ...(input.sessions ? { sessions: input.sessions } : {}),
+      ...(input.minutesPerSession ? { minutes_per_session: input.minutesPerSession } : {}),
       ...(input.anchor ? { anchor: input.anchor } : {}),
       ...(input.composedFor ? { composed_for: input.composedFor.code } : {}),
       ...(input.composedFor?.yearId ? { level_from: input.composedFor.yearId } : {}),

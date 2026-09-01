@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useStrings } from '../i18n/context.js';
+import { useErrorText } from '../data/async.js';
+import { FlaggedNames } from './FlaggedNames.js';
 import { useLearnerChoices } from '../data/learners.js';
 import { useMaterialKinds } from '../data/corpus.js';
 import { useNameCheck, useSetName } from '../data/names.js';
@@ -122,6 +124,16 @@ export function AdaptScreen({
   const [cost, setCost] = useState<number | null>(null);
   /** Per learner, because a failure belongs to a learner (005 FR-507). */
   const [outcome, setOutcome] = useState<BatchOutcome | null>(null);
+  /**
+   * One decoder, shared with every other screen (`013` FR-1109).
+   *
+   * This screen had its own `es.errors[kind] ?? message`, which was a fourth copy of the
+   * same lookup **with the same inversion** — a template beating a message that carried a
+   * value. One function, so there is one behaviour to fix.
+   */
+  const describe = useErrorText();
+  /** How many of the batch actually produced a sheet. */
+  const done = outcome?.results.filter((r) => r.ok).length ?? 0;
   // 006 US4-3: told first, not billed first (T091).
   const [costGate, setCostGate] = useState<{ formatted: string; who: string[] } | null>(null);
   const online = useOnline();
@@ -459,11 +471,21 @@ export function AdaptScreen({
              FR-512).
           */
           <div className="stack">
-            <Callout intent={outcome.results.every((r) => r.ok) ? 'ok' : 'decide'}
-                     title={outcome.results.every((r) => r.ok) ? 'Listas' : 'Casi'}>
-              {outcome.results.filter((r) => r.ok).length} de {outcome.results.length}{' '}
-              {outcome.results.length === 1 ? 'ficha adaptada' : 'fichas adaptadas'}, sin firmar.
-              Hay que mirar cada una por separado.
+            {/*
+              One sentence per situation, because the batch's own sentence was being told
+              to somebody whose run produced nothing: «0 de 1 ficha adaptada, sin firmar.
+              Hay que mirar cada una por separado» — mirar *qué*. Carlos hit exactly that.
+            */}
+            <Callout intent={done === 0 ? 'danger' : done === outcome.results.length ? 'ok' : 'decide'}
+                     title={done === 0 ? 'No ha salido'
+                       : done === outcome.results.length ? 'Listas' : 'Casi'}>
+              {done === 0
+                ? (outcome.results.length === 1
+                    ? 'No he podido preparar la ficha. Abajo está por qué.'
+                    : 'No he podido preparar ninguna. Abajo está por qué, alumno por alumno.')
+                : `${done} de ${outcome.results.length} ${
+                    outcome.results.length === 1 ? 'ficha adaptada' : 'fichas adaptadas'
+                  }, sin firmar. Hay que mirar cada una por separado.`}
               {cost !== null ? ` En total han costado unos ${cost} céntimo${cost === 1 ? '' : 's'}.` : ''}
             </Callout>
 
@@ -483,17 +505,42 @@ export function AdaptScreen({
                     </div>
                   ) : (
                     <>
-                      {/* Named, and hers alone: this is not a verdict on the
-                          others (FR-507). */}
+                      {/*
+                        Named, and hers alone: this is not a verdict on the others
+                        (FR-507).
+
+                        `describe` rather than `es.errors[r.kind] ?? r.message`, which was
+                        a **fourth** copy of that lookup and had the same inversion the
+                        other three had: a template winning over a message that carried
+                        the word she needed. `name-unconfirmed` says «hay un posible
+                        nombre en tus notas: Marta» and this line turned it into «puede
+                        que haya un nombre».
+                      */}
                       <p className="small" style={{ margin: 0 }}>
-                        {es.errors[r.kind] ?? r.message}
+                        {describe({ message: r.message, kind: r.kind }).message}
                       </p>
-                      <div className="row">
-                        <button className="btn btn-sm"
-                                onClick={() => void runAdapt(true, [r.learner])}>
-                          Intentarlo otra vez solo con {nameOf(r.learner)}
-                        </button>
-                      </div>
+
+                      {/*
+                        And the way out.
+
+                        `name-unconfirmed` asks her to «dime si es un alumno… o márcalo
+                        como que no es un nombre» — and until now there was **nowhere to
+                        say either**: `names:ignore` was exposed over IPC, had a hook in
+                        the data layer, and no screen called it. An error that asks a
+                        question and offers no way to answer it is a dead end, and this is
+                        the one Carlos walked into.
+                      */}
+                      {r.kind === 'name-unconfirmed' ? (
+                        <FlaggedNames learner={r.learner}
+                                      onResolved={() => void runAdapt(true, [r.learner])} />
+                      ) : (
+                        <div className="row">
+                          <button className="btn btn-sm"
+                                  onClick={() => void runAdapt(true, [r.learner])}>
+                            Intentarlo otra vez solo con {nameOf(r.learner)}
+                          </button>
+                        </div>
+                      )}
                     </>
                   )}
                 </div>

@@ -44,6 +44,23 @@ export interface MaterialKind {
    * code because which sentence a PT needs printed on a generated exam is a judgement she
    * can correct without a release (Principle I).
    */
+  /**
+   * What to ask about **how much** material to make (`021` FR-1925).
+   *
+   * Corpus, so changing a kind's question is a Markdown edit — the same reason
+   * `composing` lives there. `of: 'none'` is explicit rather than the block being
+   * absent: absence would mean nobody decided, and a study text having nothing to count
+   * is a decision.
+   *
+   * What replaces it for such a kind is not here, because it is asked for **every** kind:
+   * how many sessions, and how long they are.
+   */
+  quantity?: {
+    of: 'exercises' | 'questions' | 'problems' | 'none';
+    label?: string;
+    help?: string;
+    default?: number;
+  };
   composing?: {
     /** Said to her before it runs. */
     before?: string;
@@ -52,6 +69,29 @@ export interface MaterialKind {
   };
   /** Sent to the model verbatim, alongside the hard rules, which outrank it. */
   rule: string;
+}
+
+/**
+ * `quantity:` from a kind entry, or nothing.
+ *
+ * An unrecognised unit yields nothing rather than being coerced to `exercises` — the
+ * same rule the rest of this file follows for a kind id. Coercing would ask «cuántos
+ * ejercicios» about a study text, which is the defect this field exists to fix.
+ */
+function parseQuantity(v: unknown): MaterialKind['quantity'] {
+  if (!v || typeof v !== 'object') return undefined;
+  const e = v as Record<string, unknown>;
+  const of = str(e['of']);
+  if (of !== 'exercises' && of !== 'questions' && of !== 'problems' && of !== 'none') {
+    return undefined;
+  }
+  const n = typeof e['default'] === 'number' ? e['default'] : undefined;
+  return {
+    of,
+    ...(str(e['label']) ? { label: str(e['label'])! } : {}),
+    ...(str(e['help']) ? { help: str(e['help'])! } : {}),
+    ...(n && n > 0 ? { default: Math.round(n) } : {}),
+  };
 }
 
 /**
@@ -121,12 +161,14 @@ export function parseMaterialKinds(raw: string, path = 'material-kinds.md'): Mat
     seen.add(id);
     const before = str(e['before']);
     const composing = parseComposing(e['composing']);
+    const quantity = parseQuantity(e['quantity']);
     out.push({
       id, label, forbids: list(e['forbids']), rule,
       // Absent is silence, not a default sentence: an invented promise about what
       // will not be touched is worse than none.
       ...(before ? { before } : {}),
       ...(composing ? { composing } : {}),
+      ...(quantity ? { quantity } : {}),
     });
   }
 

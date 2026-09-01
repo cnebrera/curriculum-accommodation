@@ -1,5 +1,5 @@
 import { safeStorage } from 'electron';
-import { redact, findProbableNames, VAULT } from '@rampa/core';
+import { redact, findProbableNames, loadLearner, loadJournal, VAULT } from '@rampa/core';
 import { currentVault } from './vault.js';
 import { handle } from './wrap.js';
 
@@ -126,6 +126,34 @@ export function registerNamesIpc(): void {
 
   /** "No es un nombre" — remembered, so she is not asked again (T090). */
   handle('names:ignore', async (word: string) => { await addIgnored(word); return true; });
+
+  /**
+   * The words in her own text that look like names and are not known (`021`, from use).
+   *
+   * Exists so the screen can **offer the choice the error asks for**. `name-unconfirmed`
+   * says «dime si es un alumno y lo sustituyo por su código, o márcalo como que no es un
+   * nombre» — and until now there was nowhere to say either: `names:ignore` was exposed,
+   * had a hook in the data layer, and no screen called it. A dead end that asked her a
+   * question.
+   *
+   * Her notes, the overlay, the house style and **the whole journal** — deliberately a
+   * superset of what a given run scans, since that one only loads the journal entries
+   * matching the recipes it selected. Offering her a word that did not block this
+   * particular run is a small cost; leaving her with no way to answer is the defect being
+   * fixed.
+   */
+  handle('names:unknownFor', async (learnerCode: string) => {
+    const vault = currentVault();
+    const learner = await loadLearner(vault, learnerCode);
+    const house = (await vault.readRaw(VAULT.house)) ?? '';
+    const journal = await loadJournal(vault);
+    return unknownNamesIn([
+      learner.notes,
+      learner.overlay ?? '',
+      house,
+      ...journal.map((j) => j.body),
+    ]);
+  });
 
   /** Used by the UI to warn before sending, never to rewrite (006 FR-419). */
   handle('names:check', async (text: string) => {

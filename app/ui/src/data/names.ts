@@ -59,3 +59,16 @@ export function useSetName() {
 export function useIgnoreWord() {
   return useCommand((word: string) => window.rampa.names.ignore(word));
 }
+
+/**
+ * The words in her own text that look like names and are not known (`021`, from use).
+ *
+ * `useIgnoreWord` above has existed, exposed over IPC, with no screen calling it — so
+ * `name-unconfirmed` told her «márcalo como que no es un nombre» and there was nowhere to
+ * do it. This is what a screen needs to offer that choice: which words, so she can answer
+ * about each one.
+ */
+export function useUnknownNames() {
+  return useCommand((code: string) =>
+    window.rampa.names.unknownFor(code) as Promise<string[]>);
+}

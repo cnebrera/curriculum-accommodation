@@ -33,6 +33,8 @@ const api = {
     check: (text: string) => invoke('names:check', text),
     /** "No es un nombre": remembered, so she is not asked twice. */
     ignore: (word: string) => invoke('names:ignore', word),
+    /** The words in her own text that look like names and are not known (`021`). */
+    unknownFor: (code: string) => invoke('names:unknownFor', code),
   },
   providers: {
     list: () => invoke('providers:list'),

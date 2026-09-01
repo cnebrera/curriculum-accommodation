@@ -79,6 +79,16 @@ export interface ComposeRequest {
    * of the application inventing a unit she does not use.
    */
   sessions?: number;
+  /**
+   * How long one of those sessions is (`021` FR-1926).
+   *
+   * Carlos's correction to my proposal of asking one number: «ambas cosas, sesiones y
+   * minutos por sesión». Both are facts she holds with **certainty** — they are her
+   * timetable — which is what makes them worth asking. What Rampa estimates from them is
+   * how much material fits, and FR-1928 makes that an estimate rather than a promise:
+   * how long a particular child takes over a page is the one thing here nobody knows.
+   */
+  minutesPerSession?: number;
   title?: string;
   /**
    * The year the material targets (FR-129).
@@ -335,6 +345,12 @@ export async function runCompose(
   if (contentObjectives.length > 0 && anchor.passages.length > 0) {
     onProgress({ stage: 'Escribiendo el texto', detail: contentObjectives.join(' · ') });
     const written = await composeContent({
+      ...(request.sessions || request.minutesPerSession
+        ? { plan: {
+            ...(request.sessions ? { sessions: request.sessions } : {}),
+            ...(request.minutesPerSession ? { minutesPerSession: request.minutesPerSession } : {}),
+          } }
+        : {}),
       provider, key, known, system,
       objectives: contentObjectives, allObjectives: kept,
       passages: anchor.passages,
@@ -404,6 +420,24 @@ export async function runCompose(
      * relabelling to match the request would falsify the *what*. So it is a sentence in
      * the report, which is where a disagreement between her and the material belongs.
      */
+    /*
+     * What was assumed from her plan, said as an assumption (`021` FR-1928).
+     *
+     * She knows how many sessions she has and how long they are — that is her timetable.
+     * **Nobody knows how long this particular child takes over a page**, and that is the
+     * number Rampa would have to know to promise the material fits. So it says what it
+     * aimed at and whose judgement the rest is.
+     *
+     * First among the notes for the same reason the level is: it governs how much of
+     * everything else there is.
+     */
+    ...(request.sessions && request.minutesPerSession
+      ? [`Lo he preparado apuntando a ${request.sessions} `
+         + `${request.sessions === 1 ? 'sesión' : 'sesiones'} de `
+         + `${request.minutesPerSession} minutos. **Es una estimación mía, no una promesa**: `
+         + 'cuánto tarda este alumno en una página lo sabes tú y no yo. Si te sobra o te '
+         + 'falta, dímelo y lo ajusto.']
+      : []),
     ...(kindMismatch
       ? [`Me pediste «${askedKind}» y lo que ha salido se parece más a «${cameOutKind}». Lo he `
          + 'dejado como lo pediste: el tipo lo decides tú, y de él dependen las reglas '
@@ -440,6 +474,8 @@ export async function runCompose(
       ? { kindNotes: kindEntry.composing.onDocument } : {}),
     ...(request.sessions && request.sessions > 0
       ? { sessions: Math.min(20, Math.round(request.sessions)) } : {}),
+    ...(request.minutesPerSession && request.minutesPerSession > 0
+      ? { minutesPerSession: Math.min(240, Math.round(request.minutesPerSession)) } : {}),
     ...(anchorRaw ? { anchor: anchorSummary(anchorRaw) } : {}),
     composedFor: { code: request.learnerCode, ...(yearId ? { yearId } : {}) },
   });
@@ -601,6 +637,15 @@ async function composeContent(args: {
   interests: readonly string[];
   yearLabel?: string;
   canDo?: string;
+  /**
+   * Her plan, so the length of the text answers to it (`021` FR-1927/FR-1928).
+   *
+   * For a study text there is nothing to count, so this **is** how she says how much she
+   * wants — «tres sesiones de veinte minutos». The model is told to aim at it and told
+   * that overshooting is worse than undershooting, because a text she has to cut in half
+   * in front of the child is worse than one she can extend by talking.
+   */
+  plan?: { sessions?: number; minutesPerSession?: number };
   onProgress: (detail: string) => void;
 }): Promise<{ blocks: Block[]; cents: number }> {
   let cents = 0;
@@ -616,6 +661,20 @@ async function composeContent(args: {
       '',
       renderAnchorForPrompt(args.passages),
     ];
+    /*
+     * How much text, in her units. For this kind it replaces «cuántos ejercicios»
+     * entirely — a text has nothing to count (FR-1927).
+     */
+    const { sessions, minutesPerSession } = args.plan ?? {};
+    if (sessions && minutesPerSession) {
+      lines.push('', `Es para ${sessions} ${sessions === 1 ? 'sesión' : 'sesiones'} de `
+        + `${minutesPerSession} minutos de estudio. Ajusta la extensión a eso. Si dudas, `
+        + 'quédate corto: un texto que hay que cortar por la mitad delante del alumno es '
+        + 'peor que uno que la maestra alarga hablando.');
+    } else if (minutesPerSession) {
+      lines.push('', `Es para unos ${minutesPerSession} minutos de estudio. Ajusta la `
+        + 'extensión a eso, y si dudas quédate corto.');
+    }
     if (args.yearLabel) lines.push('', `Es para ${args.yearLabel}.`);
     if (args.canDo) lines.push(`A esa edad: ${args.canDo}`);
     if (args.interests.length) {

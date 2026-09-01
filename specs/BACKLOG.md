@@ -413,6 +413,44 @@ every moment should have a spec. What it added beyond the seams pass:
    journey sentence → T094). Handover *import* (004 US2) recorded as deliberately
    deferred rather than silently missing.
 
+## G27 · An error that asked a question with nowhere to answer it — *CLOSED 2026-09-01*
+
+Reported by Carlos, adapting a worksheet: «no entiendo este mensaje que me ha salido».
+
+What he saw, and all three parts of it were wrong:
+
+> **Casi** · 0 de 1 ficha adaptada, sin firmar. Hay que mirar cada una por separado.
+> **No ha salido** · Puede que haya un nombre en tus notas. No he enviado nada: dime si es
+> de un alumno y lo sustituyo por su código.
+> [ Intentarlo otra vez solo con … ]
+
+**1 · The dead end.** The error asks her to say whether the word is a learner's name «o
+márcalo como que no es un nombre» — and there was nowhere to say either. `names:ignore`
+was implemented, exposed over IPC, and had `useIgnoreWord` in the data layer, **called by
+no screen**. Twelfth thing in this project written and read by nobody, and the first one
+whose absence left a user stuck.
+
+**2 · The message lost the word.** The thrown error says «hay un posible nombre en tus
+notas: **Marta**». Three separate places replaced it with a template: `es.ts`, and a
+fourth hand-rolled copy of `es.errors[kind] ?? message` inside `AdaptScreen`. She was
+told a name existed and not which.
+
+That is the **same inversion** fixed this morning, in the other direction: there a
+template for «we have no idea» beat a message that knew something; here a template beat a
+message carrying the one value she needed. Writing the rule down finally: **a kind whose
+message interpolates a value gets no translation.** Asserting it found two more —
+`ingest-format` (which file type) and `output-incomplete` (truncated versus three missing
+blocks, different situations with different next steps).
+
+**3 · «0 de 1 adaptada… hay que mirar cada una por separado.»** The batch's sentence,
+told to somebody whose run produced nothing. Mirar *qué*. One sentence per situation now.
+
+### What it says about the other three
+
+`useErrorText` existed precisely so this logic lived once. Three screens used it and one
+did not, and the one that did not was the screen where errors are most likely — which is
+the ordinary way a shared helper stops helping: not by being wrong, but by being optional.
+
 ## G26 · A selected state marked only in the accessibility tree — *CLOSED 2026-09-01*
 
 Reported by Carlos, using it: «no me deja seleccionar el que quiero que prepare». It did

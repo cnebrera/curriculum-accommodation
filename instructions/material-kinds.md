@@ -13,6 +13,13 @@ reviewed_by_teacher: false
 
 kinds:
   - id: worksheet
+    # Qué le pregunto para saber cuánto material hacer (021 FR-1925).
+    quantity:
+      of: exercises
+      label: Cuántos ejercicios de cada cosa
+      default: 10
+      help: >
+        Por objetivo. Si pides tres cosas y pones diez, salen treinta.
     label: Una ficha o unos ejercicios
     before: >
       Voy a cambiar cómo se ve y cuánto hay por página. Lo que se pide y la
@@ -25,6 +32,13 @@ kinds:
       alta sobre «el ejercicio cinco».
 
   - id: exam
+    # Qué le pregunto para saber cuánto material hacer (021 FR-1925).
+    quantity:
+      of: questions
+      label: Cuántas preguntas de cada cosa
+      default: 6
+      help: >
+        Por objetivo. Tú validas cada una: yo no sé qué se ha dado en clase.
     label: Un examen o una prueba
     before: >
       Es un examen: voy a cambiar cómo se lee y cómo contesta, y nada de lo que
@@ -57,6 +71,12 @@ kinds:
       otro examen, y quien lo firma se está jugando la nota de un alumno.
 
   - id: study
+    # Un texto no tiene nada que contar (021 FR-1927). `of: none` es explícito a
+    # propósito: la ausencia del bloque significaría «nadie lo ha decidido», y esto
+    # es una decisión. Lo que se pregunta en su lugar son las sesiones y su duración,
+    # que se preguntan para todos los tipos.
+    quantity:
+      of: none
     label: Apuntes o un texto para estudiar
     before: >
       Son apuntes para estudiar solo: puedo cambiarlo todo salvo lo que dice. No
@@ -70,6 +90,13 @@ kinds:
       cubre lo que había que cubrir.
 
   - id: problems
+    # Qué le pregunto para saber cuánto material hacer (021 FR-1925).
+    quantity:
+      of: problems
+      label: Cuántos problemas de cada cosa
+      default: 6
+      help: >
+        Por objetivo. Un problema es más largo de resolver que una cuenta suelta.
     label: Una hoja de problemas
     before: >
       Son problemas: voy a cambiar el enunciado y el formato. Las cantidades y
