@@ -13,7 +13,7 @@ import { RosterFilters, whyNothingMatched } from './RosterFilters.js';
 import { filterRoster, searchRoster, facetsOf, groupRoster, type RosterFilter }
   from '../../../packages/core/src/roster/filter.js';
 import { useEducationSystems } from '../data/corpus.js';
-import { useWorkedYears } from '../data/record.js';
+import { useCaseloadFacts } from '../data/record.js';
 import { Loaded } from '../data/Loaded.js';
 
 /**
@@ -30,19 +30,47 @@ import { Loaded } from '../data/Loaded.js';
  * copies would drift, and the way they would drift on this screen is one of them
  * growing a column — which is how a caseload becomes a table (Principle V).
  */
-function LearnerCard({ row, onOpen }: { row: LearnerRow; onOpen: (code: string) => void }) {
+function LearnerCard({ row, made, year, onOpen }: {
+  row: LearnerRow;
+  /** How much she has prepared for him. Her work, never a measure of him. */
+  made?: number;
+  /** His course, in her words. */
+  year?: string;
+  onOpen: (code: string) => void;
+}) {
   return (
-    <button className="card card-action stack gap3" onClick={() => onOpen(row.code)}>
-      <div className="row" style={{ justifyContent: 'space-between' }}>
-        <span className="row gap2">
+    <button className="card card-action stack gap2" onClick={() => onOpen(row.code)}>
+      <div className="row" style={{ justifyContent: 'space-between', alignItems: 'baseline' }}>
+        <span className="row gap2" style={{ alignItems: 'baseline' }}>
           <strong>{row.name}</strong>
           <Badge>{row.code}</Badge>
         </span>
         <span className="small">
-          {row.works} {row.works === 1 ? 'apoyo' : 'apoyos'} · {row.avoid} a evitar
+          {made === undefined ? '' : made === 0 ? 'Nada preparado todavía'
+            : `${made} ${made === 1 ? 'cosa preparada' : 'cosas preparadas'}`}
         </span>
       </div>
-      <AxisStrip axes={row.axes} compact />
+      {/*
+        What she needs to **choose**, not what describes him.
+
+        This card carried the axis strip — `015`'s decision, with a real argument: «a
+        learner is a row with their barriers visible, not a name and a chevron». Carlos,
+        using it with a real caseload, disagreed: «me sigues metiendo las cajas de ver la
+        hoja, seguir instrucciones… no me aporta nada… prefiero cosas que me ayuden a
+        filtrar. Ya veré ese detalle cuando entre en el alumno».
+
+        He is right about what this screen is *for*. It is where she picks a child, and
+        picking needs course, age and how much she has done — the same facts the filters
+        work on. The barriers are what she reads once she is inside him, which is one
+        click away and is where FR-1312 requires them to read as «what helps this child».
+
+        Retired knowingly rather than quietly: `015` FR-1312 asks that the strip read
+        correctly «in every view it appears in», and does not require this to be one.
+      */}
+      <span className="small muted">
+        {[year, row.age ? `${row.age} años` : null, row.school]
+          .filter(Boolean).join(' · ') || 'Sin curso todavía'}
+      </span>
     </button>
   );
 }
@@ -98,7 +126,10 @@ export function LearnersScreen({ onOpen, onNew }: {
 
   /* Which school years she has worked in, and with whom (014, via the data
      layer — a screen never calls `window.rampa`, 013 FR-1107). */
-  const workedIn = useWorkedYears(learners.map((l) => l.code));
+  const facts = useCaseloadFacts(learners.map((l) => l.code));
+  /** Years only, for the filter, which is what it has always taken. */
+  const workedIn: Record<string, string[]> =
+    Object.fromEntries(Object.entries(facts).map(([code, f]) => [code, f.years]));
 
   const schoolYears = [...new Set(Object.values(workedIn).flat())].sort().reverse();
 
@@ -131,9 +162,16 @@ export function LearnersScreen({ onOpen, onNew }: {
       >
         {(rows) => (
           <>
-            {/* The bar only earns its space once there are enough learners to
-                need it. At five, a filter is one more thing to read. */}
-            {rows.length >= 6 ? (
+            {/*
+              From four, not from six.
+
+              Carlos: «la lista de alumnos sigue sin tener filtros». They were there —
+              behind a threshold of six, and he was testing with two. A control that
+              exists and cannot be seen is a control that does not exist, and the number
+              was chosen by me guessing where scanning gets hard rather than by watching
+              anybody.
+            */}
+            {rows.length >= 4 ? (
               <RosterFilters
                 query={query} onQuery={setQuery}
                 filter={filter} onFilter={setFilter}
@@ -166,13 +204,21 @@ export function LearnersScreen({ onOpen, onNew }: {
               <>
                 {groupRoster(visible, yearLabel).map(([heading, members]) => (
                   <Section key={heading} title={heading}>
-                    {(members as LearnerRow[]).map((l) => <LearnerCard key={l.code} row={l} onOpen={onOpen} />)}
+                    {(members as LearnerRow[]).map((l) => (
+                      <LearnerCard key={l.code} row={l} onOpen={onOpen}
+                                   {...(facts[l.code] ? { made: facts[l.code]!.made } : {})}
+                                   {...(l.year ? { year: yearLabel(l.year) } : {})} />
+                    ))}
                   </Section>
                 ))}
               </>
             ) : (
               <div className="stack gap3">
-                {visible.map((l) => <LearnerCard key={l.code} row={l} onOpen={onOpen} />)}
+                {visible.map((l) => (
+                  <LearnerCard key={l.code} row={l} onOpen={onOpen}
+                               {...(facts[l.code] ? { made: facts[l.code]!.made } : {})}
+                               {...(l.year ? { year: yearLabel(l.year) } : {})} />
+                ))}
               </div>
             )}
 
@@ -184,7 +230,7 @@ export function LearnersScreen({ onOpen, onNew }: {
               }>
               {/* Two ways of looking, and no third. There is deliberately no
                   table: see the note in `RosterFilters.tsx`. */}
-              {rows.length >= 6 ? (
+              {rows.length >= 4 ? (
                 <button className="btn btn-sm" aria-pressed={grouped}
                         onClick={() => setGrouped((g) => !g)}>
                   {grouped ? 'Ver la lista' : 'Agrupar por curso'}

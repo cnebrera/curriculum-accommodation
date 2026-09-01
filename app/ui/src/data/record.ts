@@ -76,21 +76,43 @@ export function useRebuildRecord() {
  * Offering «2024-2025» before we know who it applies to produces a filter that
  * matches nobody and looks broken.
  */
-export function useWorkedYears(codes: readonly string[]): Record<string, string[]> {
-  const [years, setYears] = useState<Record<string, string[]>>({});
+export interface CaseloadFacts {
+  /** School years she has worked in with this learner, for the filter. */
+  years: string[];
+  /**
+   * How many pieces of work she has made for him (`022`… no: from use, 2026-09-01).
+   *
+   * A count of **her work**, never of him. `015` FR-1311 forbids a total that summarises
+   * a learner, and `014` draws the same line: the record lists work and never the child.
+   * «Le he preparado tres cosas» is a fact about her month; «necesita tres veces más que
+   * los demás» is a claim about a nine-year-old, and this must never read as the second.
+   *
+   * Which is also why it is here rather than in the profile: it is derived from what is
+   * in her folder, and it changes when she works, not when he does.
+   */
+  made: number;
+}
+
+export function useCaseloadFacts(codes: readonly string[]): Record<string, CaseloadFacts> {
+  const [facts, setFacts] = useState<Record<string, CaseloadFacts>>({});
   // The identity of the request, not the array: a new array with the same codes
   // must not re-scan the vault.
   const key = [...codes].sort().join(',');
 
   useEffect(() => {
-    if (codes.length === 0) { setYears({}); return; }
+    if (codes.length === 0) { setFacts({}); return; }
     let live = true;
     void Promise.all(codes.map(async (code) => {
       const entries = await window.rampa.record.forLearner(code) as Array<{ schoolYear: string }>;
-      return [code, [...new Set(entries.map((e) => e.schoolYear).filter(Boolean))]] as [string, string[]];
-    })).then((pairs) => { if (live) setYears(Object.fromEntries(pairs)); });
+      // One scan, both answers: the years were already being read here and the count
+      // was in the same array all along.
+      return [code, {
+        years: [...new Set(entries.map((e) => e.schoolYear).filter(Boolean))],
+        made: entries.length,
+      }] as [string, CaseloadFacts];
+    })).then((pairs) => { if (live) setFacts(Object.fromEntries(pairs)); });
     return () => { live = false; };
   }, [key]);
 
-  return years;
+  return facts;
 }

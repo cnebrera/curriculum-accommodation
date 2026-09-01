@@ -10,6 +10,8 @@ export interface LearnerRow {
   avoid: number;
   /** For filtering (015). An `011` year id, e.g. `es:primaria-5`. */
   year?: string;
+  /** His age, from `011`. On the card because it is what she scans by. */
+  age?: number;
   stage?: string;
   /** Never sent — see `roster-privacy.test.ts` (015 FR-1306). */
   school?: string;
@@ -34,7 +36,7 @@ export function useLearners(): Loadable<LearnerRow[]> {
       const l = (await window.rampa.learners.load(code)) as {
         profile: {
           axes?: Record<string, number>; works?: unknown[]; avoid?: unknown[];
-          year?: string; stage?: string; school?: string;
+          year?: string; stage?: string; school?: string; age?: number;
         };
       };
       return {
@@ -44,6 +46,7 @@ export function useLearners(): Loadable<LearnerRow[]> {
         works: (l.profile.works ?? []).length,
         avoid: (l.profile.avoid ?? []).length,
         ...(l.profile.year ? { year: l.profile.year } : {}),
+        ...(l.profile.age ? { age: l.profile.age } : {}),
         ...(l.profile.stage ? { stage: l.profile.stage } : {}),
         ...(l.profile.school ? { school: l.profile.school } : {}),
       };
