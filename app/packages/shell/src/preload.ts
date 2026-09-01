@@ -147,6 +147,15 @@ const api = {
      * document instead — a signature is not something a caller gets to assert.
      */
     render: (id: string, learner: string) => invoke('job:render', id, learner),
+    /**
+     * The document, for the viewer (`021` FR-1905). Read-only and writes nothing.
+     *
+     * `learner` is still required: the resolver needs it to prefer an adaptation over
+     * the composition when one exists.
+     */
+    documentHtml: (id: string, learner: string) => invoke('job:documentHtml', id, learner),
+    /** The teacher's copy, as a page. Its own document, never the learner's. */
+    answerKeyHtml: (id: string) => invoke('job:answerKeyHtml', id),
     pdf: (id: string, learner: string) => invoke('job:pdf', id, learner),
     /** The editable export she can fix by hand (019). */
     odt: (id: string, learner: string) => invoke('job:odt', id, learner),

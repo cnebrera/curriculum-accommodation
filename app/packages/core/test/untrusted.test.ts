@@ -498,13 +498,27 @@ describe('FR-507 · the output check fails the render', () => {
      * The assertion is on the shape of the call rather than its exact text, because
      * pinning the whole expression made this test fail when a fourth argument was
      * added *correctly*.
+     *
+     * **And it happened again on 2026-09-01**, for the same reason one level down: this
+     * pinned the literal `[learnerCode]`, and `021` replaced it with a list built from
+     * the document's own learner — which is *more* correct, because a composition may
+     * name nobody and an empty code is a substring of everything. Ninth over-specified
+     * assertion in this project; the fix is to check that the three channels arrive, not
+     * how their arguments are spelled.
      */
     const print = stripComments(readFileSync(join(shellSrc, 'jobs', 'print.ts'), 'utf8'));
-    expect(print).toMatch(/checkOutput\(html,\s*\[learnerCode\]/);
-    expect(print).toMatch(/knownNames\(\)\)\.values\(\)\]/);
-    expect(print, 'his own facts must reach the check too').toMatch(/,\s*facts\)/);
+    const call = /checkOutput\(([^;]*?)\);/s.exec(print)?.[1] ?? '';
+    expect(call, 'checkOutput is not called in print.ts').not.toBe('');
+    // Three channels: the code(s), every known name, and his own facts.
+    expect(call).toMatch(/^html,/);
+    expect(call, 'the codes must reach the check').toMatch(/codes|learnerCode/);
+    expect(call).toMatch(/knownNames\(\)\)\.values\(\)\]/);
+    expect(call, 'his own facts must reach the check too').toMatch(/facts/);
     // And the facts are the identifying ones, assembled from the profile here.
-    expect(print).toMatch(/profile\.school/);
+    expect(print).toMatch(/profile\?\.school|profile\.school/);
+    // An empty code is a substring of everything, so it must never be one of them.
+    expect(print, 'an empty code would match every document')
+      .toMatch(/trim\(\)\s*!==\s*''/);
   });
 });
 

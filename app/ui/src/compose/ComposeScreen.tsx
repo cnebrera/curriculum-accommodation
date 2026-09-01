@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { Page, Section, Field, Actions } from '../shell/Page.js';
+import { DocumentViewer } from '../viewer/DocumentViewer.js';
+import { useDocumentHtml, useAnswerKeyHtml } from '../data/jobs.js';
 import { Callout } from '../components/Callout.js';
 import { Stages, Stream } from '../components/Progress.js';
 import { InjectionNotice } from '../components/InjectionNotice.js';
@@ -192,13 +194,47 @@ export function ComposeScreen({ learners, onComposed, onBack }: {
  * It is not a review screen and has no sign-off. One thing in this application can
  * remove the draft mark and it stays `job:signOff`.
  */
-export function ComposeSummary({ result, learners, onAdapt, onDiscard }: {
+export function ComposeSummary({ result, learners, jobId, onAdapt, onDiscard }: {
   result: ComposeResult;
   learners: readonly string[];
+  /** Which job this is, so the document it produced can be opened (`021` T015). */
+  jobId: string;
   onAdapt: () => void;
   onDiscard: () => void;
 }) {
   const total = result.answers.length;
+  const documentHtml = useDocumentHtml();
+  const answerKeyHtml = useAnswerKeyHtml();
+  const [showing, setShowing] = useState<{ html: string; title: string } | null>(null);
+
+  /*
+   * The three buttons that were missing (FR-1903).
+   *
+   * The material, the teacher's copy and the report were all written to her folder by
+   * the time this screen appeared, and the only way to reach any of them was the record
+   * screen — which she has no reason to be looking at, having just made the thing. «No
+   * hay visualizador o botón de descarga ni del que he preparado ni del del profesor.»
+   */
+  const openDocument = async (): Promise<void> => {
+    const html = await documentHtml.run(jobId, learners[0] ?? '');
+    if (html) setShowing({ html, title: 'Lo que he preparado' });
+  };
+  const openKey = async (): Promise<void> => {
+    const html = await answerKeyHtml.run(jobId);
+    if (html) setShowing({ html, title: 'Las soluciones · no repartir' });
+  };
+
+  /*
+   * The viewer takes the whole screen while it is open, because she is reading a
+   * document. The section behind it is not something she needs at the same time, and a
+   * document in a corner is a document she cannot check.
+   */
+  if (showing) {
+    return (
+      <DocumentViewer html={showing.html} title={showing.title}
+                      onClose={() => setShowing(null)} />
+    );
+  }
 
   return (
     <Page
@@ -217,6 +253,29 @@ export function ComposeSummary({ result, learners, onAdapt, onDiscard }: {
           <button className="btn btn-ghost" onClick={onDiscard}>Descartar y volver</button>
         </Actions>
       }>
+
+      {/*
+        What she just made, reachable from where she is standing (`021` T015, FR-1903).
+        Before this the three documents existed in her folder and the only route to any
+        of them was the record screen — which she has no reason to open, having just made
+        the thing.
+      */}
+      <Section title="Míralo" lede="Está en tu carpeta, y lo puedes ver aquí mismo.">
+        <div className="row gap2" style={{ flexWrap: 'wrap' }}>
+          <button className="btn" onClick={() => void openDocument()}>
+            Ver lo que he preparado
+          </button>
+          {/* Only when there is one: no exercise anything could check, no key. */}
+          {total > 0 ? (
+            <button className="btn" onClick={() => void openKey()}>
+              Ver las soluciones
+            </button>
+          ) : null}
+        </div>
+        {documentHtml.error ?? answerKeyHtml.error ? (
+          <p className="small">{(documentHtml.error ?? answerKeyHtml.error)!.message}</p>
+        ) : null}
+      </Section>
 
       {/* First, and unsoftened (`002` FR-125 / T021). */}
       <Section title="Esto es un borrador para que lo revises tú">

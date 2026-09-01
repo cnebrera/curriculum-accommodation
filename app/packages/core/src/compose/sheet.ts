@@ -306,6 +306,22 @@ export function buildSheet(input: SheetInput): ComposedSheet {
  * own correctness, so it is stated plainly and it is true: the arithmetic is
  * computed offline by code that never sees a model.
  */
+/**
+ * The one sentence standing between a page of answers and the photocopy pile
+ * (021 FR-1922).
+ *
+ * A shared constant rather than a literal in each renderer, and the reason is the
+ * ordinary one: two copies of a string is one copy that gets edited. Since `021` the key
+ * is printable and exportable — she takes it to class, which is useful and is exactly
+ * what makes the marking load-bearing. It has to survive every format the document can
+ * be turned into, so every renderer reads this.
+ *
+ * Shouted, and that is deliberate. A sheet of sums with the answers filled in looks
+ * exactly like a worksheet at arm's length, in a stack, in a hurry.
+ */
+export const ANSWER_KEY_HEADING =
+  'SOLUCIONES · NO REPARTIR — esta hoja es para ti, no para el alumno.';
+
 export function renderAnswerKey(input: {
   title: string;
   composedOn: string;
@@ -316,7 +332,10 @@ export function renderAnswerKey(input: {
   const lines: string[] = [
     `# Soluciones — ${input.title}`,
     '',
-    '**Esta hoja es para ti, no para el alumno.** No la imprimas junto con la suya.',
+    // Before the first answer, never after the last: she stops reading when she has
+    // found what she came for, and a warning below the answers is one she reads after
+    // printing them.
+    `**${ANSWER_KEY_HEADING}** No la imprimas junto con la suya.`,
     '',
     'Las cuentas las he calculado yo, no el modelo de IA: son exactas. Lo que sí '
     + 'tienes que revisar es si los ejercicios le sirven.',

@@ -298,3 +298,20 @@
   .rail hr { flex-basis: 100%; border-top: 1px solid var(--line); border-left: 0;
     margin: var(--s2) 0 var(--s1); }
 }
+
+/* ── The document viewer (021 T014) ────────────────────────────────────────
+   A panel over the section, not a modal over the application: she is looking at
+   a document that belongs to where she already is, and the learner's rail stays
+   visible behind it. */
+.viewer { display: flex; flex-direction: column; gap: var(--s3);
+  height: calc(100vh - var(--s8)); }
+
+.viewer-bar { display: flex; justify-content: space-between; align-items: center;
+  gap: var(--s3); }
+
+/* The frame's own ground shows only while the document is arriving — the sheet
+   carries its own background, which is the point of previewing the printer's
+   HTML rather than re-rendering it. `--paper` so the flash is the page's colour
+   and not a hole in the interface. */
+.viewer-frame { flex: 1; width: 100%; border: 1px solid var(--line);
+  border-radius: var(--radius-box); background: var(--paper); min-height: 0; }

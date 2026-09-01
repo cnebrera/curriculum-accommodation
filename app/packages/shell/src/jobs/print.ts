@@ -1,6 +1,7 @@
 import { BrowserWindow, shell } from 'electron';
 import { renderHTML, renderODT, parseIR, checkOutput, checkPhotocopy, checkEssentialFigures,
-         presentationFor, jobAdapted, outputDir, loadLearner, RampaError, AXES, axisLevelOf, isSignedOff,
+         presentationFor, outputDir, loadLearner, RampaError, AXES, axisLevelOf, isSignedOff,
+         resolveDocument, whyNoDocument,
          parsePicto } from '@rampa/core';
 import { currentVault } from '../ipc/vault.js';
 import { knownNames } from '../ipc/names.js';
@@ -16,8 +17,20 @@ import { pictogramImagesFor } from '../pictograms/access.js';
  */
 export async function renderJob(jobId: string, learnerCode: string) {
   const vault = currentVault();
-  const raw = await vault.readRaw(jobAdapted(jobId, learnerCode));
-  if (!raw) throw new RampaError('vault-unreadable', 'Este trabajo todavía no está adaptado.');
+  /*
+   * Whichever document this job has (`021` T007).
+   *
+   * This read `jobAdapted` and refused otherwise, so composed material could not be
+   * printed at all — she had to adapt a sheet that was already written for that child, at
+   * his level, from his objectives. Principle IV says a modality is a rendering of a
+   * document; there was one document with zero renderings.
+   *
+   * And the refusal said «todavía no está adaptado» for material that needed no
+   * adaptation, which is the sentence that gave the defect away.
+   */
+  const found = await resolveDocument(vault, jobId, learnerCode);
+  if (found.of === 'none') throw new RampaError('vault-unreadable', whyNoDocument(found));
+  const raw = (await vault.readRaw(found.path))!;
 
   const doc = parseIR(raw);
 
@@ -47,9 +60,22 @@ export async function renderJob(jobId: string, learnerCode: string) {
     throw new RampaError('render-undescribed', undescribed.join(' '), undescribed);
   }
 
+  /*
+   * Whose presentation, and whose facts to keep off the page (`021` T005).
+   *
+   * The resolver knows: an adaptation belongs to the learner whose directory it is in, a
+   * composition to whoever it was composed for — and **a composition may name nobody**,
+   * which is every job composed before `020`/`021`. Those render with the default
+   * presentation rather than being refused, because refusing them would be this feature's
+   * own limbo with a newer date on it.
+   */
+  // No narrowing needed: `of: 'none'` threw above, and an adaptation always has one.
+  const who = found.learner;
   // Only axis LEVELS reach the renderer, never the profile object.
-  const learner = await loadLearner(vault, learnerCode);
-  const levels = Object.fromEntries(AXES.map((a) => [a, axisLevelOf(learner.profile, a)]));
+  const learner = who ? await loadLearner(vault, who) : null;
+  const levels = learner
+    ? Object.fromEntries(AXES.map((a) => [a, axisLevelOf(learner.profile, a)]))
+    : {};
 
   /*
    * The pictograms this document actually asked for (018 T020).
@@ -78,10 +104,21 @@ export async function renderJob(jobId: string, learnerCode: string) {
    * the same reason: they are facts about him, and the sheet is for him.
    */
   const facts = [
-    learner.profile.school, learner.profile.year, learner.profile.stage,
+    learner?.profile.school, learner?.profile.year, learner?.profile.stage,
   ].filter((f): f is string => typeof f === 'string' && f.trim() !== '');
 
-  const check = checkOutput(html, [learnerCode], [...(await knownNames()).values()], facts);
+  /*
+   * The codes to look for, and **never an empty one**.
+   *
+   * Found by `e2e/composed.spec.ts` asking for a document with no learner: an empty
+   * string is a substring of everything, so the check reported «el código "" aparece en el
+   * material» and refused to render a perfectly good sheet. A guard that fires on
+   * everything is a guard that gets switched off, so it is filtered here rather than
+   * loosened there.
+   */
+  const codes = [who].filter((c): c is string => typeof c === 'string' && c.trim() !== '');
+
+  const check = checkOutput(html, codes, [...(await knownNames()).values()], facts);
   if (!check.ok) throw new RampaError('render-learner-data', check.findings.join(' '), check.findings);
 
   return { html, photocopy: checkPhotocopy(html) };
@@ -114,7 +151,9 @@ export async function renderPdf(html: string): Promise<Buffer> {
 /** Open the adapted document in her own editor (T094). */
 export async function openAdaptedForEditing(jobId: string, learnerCode: string): Promise<string> {
   const vault = currentVault();
-  const path = resolveInVault(vault.root, jobAdapted(jobId, learnerCode));
+  const found = await resolveDocument(vault, jobId, learnerCode);
+  if (found.of === 'none') throw new RampaError('vault-unreadable', whyNoDocument(found));
+  const path = resolveInVault(vault.root, found.path);
   const problem = await shell.openPath(path);
   if (problem) throw new RampaError('vault-unreadable', problem);
   return path;

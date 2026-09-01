@@ -1,6 +1,7 @@
 import { parseIR } from '../ir/parse.js';
 import { isSignedOff } from '../ir/types.js';
 import { readingFingerprint, freshnessOf } from '../ir/reading.js';
+import { startedFor } from '../vault/document.js';
 import {
   VAULT, jobDir, jobIR, jobSourceDir, jobLearnerDir, jobAdapted, jobReport, outputDir,
   jobAnswers, jobComposeReport,
@@ -79,7 +80,16 @@ export async function entryFor(vault: Vault, jobId: string, learner: string): Pr
    * interrupted, and find nothing in the record — the opposite of «todo lo que se
    * genere se queda ligado al alumno».
    */
-  const composedForThisLearner = str(irFm['composed_for']) === learner;
+  /*
+   * `startedFor` rather than reading `composed_for` directly (`021` T004).
+   *
+   * Found by `e2e/composed.spec.ts`: a job stamped with the current spelling
+   * (`for_learner`) **vanished from her record**, because this line knew only the older
+   * one. Which is precisely the failure `021` research R2 predicted from having two names
+   * for one fact — it just arrived from the other direction, in a reader nobody had
+   * thought to update.
+   */
+  const composedForThisLearner = startedFor(irFm) === learner;
   if (adaptedRaw === null && !composedForThisLearner) return null;
 
   const adapted = adaptedRaw !== null ? parseIR(adaptedRaw) : null;

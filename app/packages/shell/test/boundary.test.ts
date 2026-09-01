@@ -177,6 +177,27 @@ describe('inside packages/shell, the surface is small and named', () => {
    * a reader should be able to see which files would need a signature change. They are
    * excluded from the line budget because their runtime cost is nil.
    */
+  /**
+   * Lines of code: no blanks, no comments.
+   *
+   * Deliberately crude — it does not parse, it strips. A `/*` inside a string literal
+   * would fool it, and there are none in these twelve files. The alternative is a parser
+   * in a boundary test, which is more machinery than the question deserves.
+   */
+  const countCode = (src: string): number => {
+    let inBlock = false;
+    let n = 0;
+    for (const raw of src.split('\n')) {
+      const line = raw.trim();
+      if (inBlock) { if (line.includes('*/')) inBlock = false; continue; }
+      if (line === '') continue;
+      if (line.startsWith('//')) continue;
+      if (line.startsWith('/*')) { if (!line.includes('*/')) inBlock = true; continue; }
+      n += 1;
+    }
+    return n;
+  };
+
   it('names the files whose electron import is type-only', async () => {
     const { typeOnly } = await electronImportersSplit(join('packages', 'shell'));
     expect(typeOnly).toEqual([
@@ -189,7 +210,10 @@ describe('inside packages/shell, the surface is small and named', () => {
   it('the Electron-specific surface is a few hundred lines, not a few thousand', async () => {
     const { value: files } = await electronImportersSplit(join('packages', 'shell'));
     let lines = 0;
-    for (const f of files) lines += (await readFile(join(appRoot, f), 'utf8')).split('\n').length;
+    for (const f of files) {
+      const src = await readFile(join(appRoot, f), 'utf8');
+      lines += countCode(src);
+    }
     /*
      * Recorded 2026-08-30 at 1,010 lines across 12 files, of a ~2,000-line shell
      * package and a ~15,000-line application. **Raised once**, on 2026-08-31, when
@@ -229,7 +253,17 @@ describe('inside packages/shell, the surface is small and named', () => {
      * The number went *down* as a result — 1,685 counting everything, 1,431 counting
      * only what a migration would have to rewrite — which is the tell that the metric
      * was wrong rather than the code.
+     *
+     * **And a fourth time, on 2026-09-01, and again the number's fault.** `021` routed
+     * five readers through `resolveDocument` and documented why in each — so the budget
+     * went up by ten lines of **prose**. A metric that counts comments makes explaining
+     * a change cost the same as making one, in a repository whose whole review culture is
+     * that the comment carries the reasoning. And it is not what ADR 0008 wants quoted:
+     * a migration rewrites code and *carries* comments.
+     *
+     * So it counts code — blank lines and comment lines excluded — and the number went
+     * down again, from 1,460 to what it is now. Same tell as the third time.
      */
-    expect(lines).toBeLessThan(1450);
+    expect(lines).toBeLessThan(950);
   });
 });

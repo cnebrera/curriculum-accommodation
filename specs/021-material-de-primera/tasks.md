@@ -15,14 +15,14 @@ all take an IR and none of them care where it came from.
 
 ## Phase 1 · Setup · the two tests that come first
 
-- [ ] T001 Write `app/packages/core/test/answer-key-never-on-the-sheet.test.ts` **first**,
+- [x] T001 Write `app/packages/core/test/answer-key-never-on-the-sheet.test.ts` **first**,
       red, per [quickstart.md](quickstart.md) §1. **Both sides of SC-1908**: no rendering
       of a learner's material contains an answer — composed and adapted, in HTML, ODT and
       the linear text — and every rendering of the key states that it is the solutions and
       is not to be handed out. Written now because a check added after the feature works is
       a check written to fit what already happens, and this one's failure mode is a page of
-      answers in the photocopy pile
-- [ ] T002 [P] Write `app/packages/core/test/document.test.ts` **first**, red, from
+      answers in the photocopy pile *(done, red first — 7 cases, both sides.)*
+- [x] T002 [P] Write `app/packages/core/test/document.test.ts` **first**, red, from
       quickstart §2: the six resolver cases, including the two kinds of *nothing* —
       «not adapted for this learner» and «no document at all» are different sentences to a
       teacher, and today both produce «Este trabajo todavía no está adaptado»
@@ -34,21 +34,21 @@ all take an IR and none of them care where it came from.
 **Blocking**: nothing in Phase 3 or later may start until this phase is green. Eight call
 sites construct the same path today; changing them against a resolver that does not exist
 yet is eight chances to disagree about what «the document» is.
-
-- [ ] T003 `app/packages/core/src/vault/document.ts` · `resolveDocument(vault, job,
+ *(done, red first — 9 cases including the structural one.)*
+- [x] T003 `app/packages/core/src/vault/document.ts` · `resolveDocument(vault, job,
       learner?)` returning `ResolvedDocument` per [data-model.md](data-model.md). It
       returns **the case, not just a path**: printing needs the learner, and an adaptation
-      gets it from the directory name while a composition gets it from its front matter
-- [ ] T004 `startedFor(frontMatter)` in `app/packages/core`, reading `for_learner` first
+      gets it from the directory name while a composition gets it from its front matter *(done. It also refuses to hand back a composition written for another learner: printing Lucía's sheet when she asked about Marco would be worse than returning nothing, because it would print.)*
+- [x] T004 `startedFor(frontMatter)` in `app/packages/core`, reading `for_learner` first
       and `composed_for` as the older spelling. **`020` T006 specifies the same function**
       — this feature arrives first, so it is implemented here and `020` cites it (research
       R2). Two functions answering «who was this job started for?» is the defect both
-      specifications were written to avoid
-- [ ] T005 [P] A composed job with **no** learner recorded still resolves, renders with the
+      specifications were written to avoid *(done, and **it immediately found a defect nobody predicted**: `record/scan.ts` read `composed_for` directly, so a job stamped with the current spelling **vanished from her record**. Research R2 predicted the two-names failure; it arrived from the other direction, in a reader nobody had thought to update.)*
+- [x] T005 [P] A composed job with **no** learner recorded still resolves, renders with the
       default presentation, and says nobody was recorded. Every job composed before
       `020`/`021` is in that state, and refusing them would be this feature's own limbo
-      with a newer date on it
-- [ ] T006 Assert the structural rule: **no path to `adapted.md` is constructed anywhere
+      with a newer date on it *(done, and it exposed a real one: with no learner, the code passed to the learner-facts check was an empty string — a substring of everything — so it reported «el código "" aparece en el material» and refused to render a perfectly good sheet. A guard that fires on everything is a guard that gets switched off.)*
+- [x] T006 Assert the structural rule: **no path to `adapted.md` is constructed anywhere
       except the resolver and the writers.** A source-level check, because eight call sites
       is exactly how a constant creeps back
 
@@ -64,37 +64,37 @@ run and no provider called.
 
 **Independent Test**: compose material, then view, print, export and sign it, and open the
 answer key, without running an adaptation.
-
-- [ ] T007 [US1] `packages/shell/src/jobs/print.ts` reads the resolved document. **The
+ *(done. Two readers are allowed **with their reason written**: `jobs/adapt.ts` reads the adaptation it is about to replace, and `jobs/stale.ts` asks a question that is about adaptations by definition (`005` FR-520).)*
+- [x] T007 [US1] `packages/shell/src/jobs/print.ts` reads the resolved document. **The
       draft mark stays derived from the document** (`007` FR-509) — it was a parameter
       once, defaulting to false, so `job.render(job, learner, true)` produced an unmarked
       worksheet with no sign-off having happened. Routing through a resolver must not
-      reintroduce that
-- [ ] T008 [P] [US1] `packages/shell/src/jobs/linear.ts` — audio-ready and braille-ready
-      over a composed document (FR-1902)
-- [ ] T009 [P] [US1] ODT over a composed document (FR-1902)
-- [ ] T010 [US1] `packages/shell/src/ipc/signoff.ts` signs the resolved document. A
+      reintroduce that *(done, and the draft mark is still derived from the document — it was a parameter once, defaulting to false.)*
+- [x] T008 [P] [US1] `packages/shell/src/jobs/linear.ts` — audio-ready and braille-ready
+      over a composed document (FR-1902) *(done — audio-ready and braille-ready over a composition.)*
+- [x] T009 [P] [US1] ODT over a composed document (FR-1902) *(done.)*
+- [x] T010 [US1] `packages/shell/src/ipc/signoff.ts` signs the resolved document. A
       signature is about **a document** (Principle VII), so a signed composition adapted
-      for three learners produces three **unsigned** sheets — nobody has read those
-- [ ] T011 [P] [US1] `job:reportData` and `job:openForEditing` over the resolved document
-- [ ] T012 [US1] Where there is no document, say **which kind of nothing** it is (FR-1902,
+      for three learners produces three **unsigned** sheets — nobody has read those *(done, and the e2e asserts the signature does **not** travel: signing a composition and then adapting it produces an unsigned sheet, because nobody has read that one.)*
+- [x] T011 [P] [US1] `job:reportData` and `job:openForEditing` over the resolved document *(done.)*
+- [x] T012 [US1] Where there is no document, say **which kind of nothing** it is (FR-1902,
       data-model): «no la has adaptado para este alumno» and «este trabajo no tiene
       documento» are different sentences, and the second was being told to her for
-      composed material, wrongly
-- [ ] T013 [US1] The answer key renders to **its own file**, never sharing one with the
+      composed material, wrongly *(done. `whyNoDocument` lives beside the resolver so the two sentences cannot drift back into one — which is what had happened: eight places said «todavía no está adaptado», including about material that needed no adaptation.)*
+- [x] T013 [US1] The answer key renders to **its own file**, never sharing one with the
       sheet (FR-1921), with a heading that cannot be misread as a learner's page —
-      «SOLUCIONES · NO REPARTIR» (FR-1922). T001 is already asserting both
-- [ ] T014 [US1] `ui/src/viewer/` · the document, read-only, as **the printer's own HTML**
+      «SOLUCIONES · NO REPARTIR» (FR-1922). T001 is already asserting both *(done. `ANSWER_KEY_HEADING` is one shared constant read by every renderer of the key, and `renderAnswerKeyHTML` is deliberately **not** `renderHTML`: the key is a page for an adult, needs no accommodations, and is not a draft of anything.)*
+- [x] T014 [US1] `ui/src/viewer/` · the document, read-only, as **the printer's own HTML**
       in a frame with no script permission, no navigation, no form submission and no remote
       reference (FR-1905, FR-1924). `renderHTML` emits no `<script>` — checked, zero — so
       the sandbox is the guarantee for what the **document** may contain, which is
-      Principle IX
-- [ ] T015 [P] [US1] The three buttons from where she is standing when they are written:
+      Principle IX *(done. `seal()` is its own module so the e2e exercises **the real policy** rather than a copy — a duplicated CSP in a test is a test that passes while the viewer drifts. Sandbox with no permissions, `srcDoc` not `src`, and a CSP that denies every remote fetch so a planted `<img src="http://…">` cannot turn opening a sheet into a signal that a teacher opened it.)*
+- [x] T015 [P] [US1] The three buttons from where she is standing when they are written:
       the sheet, the answer key, the composition report (FR-1903). Today they exist only in
-      the record screen
-- [ ] T016 [US1] `app/e2e/composed.spec.ts` from quickstart §4 — including the viewer over
+      the record screen *(done, in the compose summary — where she is standing when the three documents are written.)*
+- [x] T016 [US1] `app/e2e/composed.spec.ts` from quickstart §4 — including the viewer over
       a document containing a `<script>`, an `onclick`, an external image and a link:
-      nothing runs, nothing loads, nothing navigates
+      nothing runs, nothing loads, nothing navigates *(done, `e2e/composed.spec.ts`, 7 cases. The last one plants a script, an inline handler, a remote image and a link in a composed document and confirms none of it runs.)*
 - [ ] T017 [P] [US1] Assert `axe` finds nothing on the viewer, at the narrowest width and
       at the largest text scale
 

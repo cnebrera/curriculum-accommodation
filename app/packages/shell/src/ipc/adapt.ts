@@ -1,6 +1,6 @@
 import { type BrowserWindow } from 'electron';
 import { parseIR, stringifyFrontMatter, buildReport, VAULT, RampaError } from '@rampa/core';
-import { jobIR, jobAdapted, jobDir, jobLearnerDir } from '@rampa/core';
+import { jobIR, jobDir, jobLearnerDir, resolveDocument } from '@rampa/core';
 import { currentVault } from './vault.js';
 import { handle } from './wrap.js';
 import { runAdaptation, type Correction } from '../jobs/adapt.js';
@@ -128,7 +128,10 @@ export function registerAdaptIpc(getWindow: () => BrowserWindow | null): void {
    */
   handle('job:reportData', async (jobId: string, learnerCode: string) => {
     const vault = currentVault();
-    const raw = await vault.readRaw(jobAdapted(jobId, learnerCode));
+    // The report is about whichever document exists (`021` T011).
+    const found = await resolveDocument(vault, jobId, learnerCode);
+    if (found.of === 'none') return null;
+    const raw = await vault.readRaw(found.path);
     if (!raw) return null;
     const report = buildReport({ adapted: parseIR(raw) });
     return { decisions: report.decisions, notDone: report.notDone, memoryApplied: [] };

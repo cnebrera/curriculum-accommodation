@@ -18,6 +18,7 @@ export * from './vault/parse.js';
 export * from './vault/schema.js';
 export * from './vault/codes.js';
 export * from './vault/io.js';
+export * from './vault/document.js';
 export * from './vault/profile.js';
 
 export * from './ir/types.js';

@@ -1,6 +1,7 @@
 import { writeFile, mkdir } from 'node:fs/promises';
 import { dirname } from 'node:path';
-import { resolveInVault, outputDir } from '@rampa/core';
+import { resolveInVault, outputDir, jobAnswers, RampaError,
+         renderAnswerKeyHTML } from '@rampa/core';
 import { currentVault } from './vault.js';
 import { handle } from './wrap.js';
 import { renderJob, renderPdf, openAdaptedForEditing } from '../jobs/print.js';
@@ -27,6 +28,41 @@ export function registerPrintIpc(): void {
    */
   handle('job:openForEditing', async (jobId: string, learnerCode: string) =>
     openAdaptedForEditing(jobId, learnerCode));
+
+  /**
+   * The document, for the viewer inside the application (`021` T014, FR-1905).
+   *
+   * Returns the **printer's own HTML**, deliberately. Rendering the document a second
+   * time for the screen would be a second renderer — two implementations of what the page
+   * looks like, and the one she checks would not be the one she prints.
+   *
+   * It writes nothing: viewing is not producing. The renderer is deterministic and calls
+   * no model, so this is free to call as often as a screen wants.
+   */
+  handle('job:documentHtml', async (jobId: string, learnerCode: string) => {
+    const { html } = await renderJob(jobId, learnerCode);
+    return html;
+  });
+
+  /**
+   * The teacher's copy, rendered (`021` T013, FR-1921/FR-1922).
+   *
+   * **Its own file, always.** `002` writes `answers.md` at the job level rather than under
+   * a learner because the key belongs to the composition, and this keeps that: a
+   * separate path, never the sheet's, so no rendering can put the two in one document.
+   *
+   * The heading comes from `ANSWER_KEY_HEADING`, one constant read by every renderer of
+   * it — because that string is what stands between a page of answers and the photocopy
+   * pile, and two copies of it is one copy that gets edited.
+   */
+  handle('job:answerKeyHtml', async (jobId: string) => {
+    const raw = await currentVault().readRaw(jobAnswers(jobId));
+    if (raw === null) {
+      throw new RampaError('vault-unreadable',
+        'Este material no tiene hoja de soluciones: no había ejercicios que yo pudiera comprobar.');
+    }
+    return renderAnswerKeyHTML(raw);
+  });
 
   handle('job:render', async (jobId: string, learnerCode: string) => {
     const vault = currentVault();

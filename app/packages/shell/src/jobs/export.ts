@@ -2,7 +2,7 @@ import {
   renderHTML, renderODT, renderLinear, renderBrailleReady, parseAudioCorpus,
   parseIR, checkOutput, isSignedOff, RampaError,
 } from '@rampa/core';
-import { jobAdapted } from '@rampa/core';
+import { resolveDocument, whyNoDocument } from '@rampa/core';
 import { currentVault } from '../ipc/vault.js';
 import { knownNames } from '../ipc/names.js';
 import { loadLearner } from '@rampa/core';
@@ -39,8 +39,12 @@ import { loadInstruction } from '../corpus/index.js';
  */
 export async function renderOdt(jobId: string, learnerCode: string): Promise<Uint8Array> {
   const vault = currentVault();
-  const raw = await vault.readRaw(jobAdapted(jobId, learnerCode));
-  if (!raw) throw new RampaError('vault-unreadable', 'No encuentro la versión adaptada.');
+  // `021` T008: composed material has these modalities too. `019`'s promise was «one
+  // document, N renderings», and a rendering that only works downstream of an adaptation
+  // is a rendering of an adaptation, not of a document.
+  const found = await resolveDocument(vault, jobId, learnerCode);
+  if (found.of === 'none') throw new RampaError('vault-unreadable', whyNoDocument(found));
+  const raw = (await vault.readRaw(found.path))!;
   const doc = parseIR(raw);
 
   /*
@@ -74,8 +78,12 @@ export async function renderOdt(jobId: string, learnerCode: string): Promise<Uin
  */
 async function linearFor(jobId: string, learnerCode: string) {
   const vault = currentVault();
-  const raw = await vault.readRaw(jobAdapted(jobId, learnerCode));
-  if (!raw) throw new RampaError('vault-unreadable', 'No encuentro la versión adaptada.');
+  // `021` T008: composed material has these modalities too. `019`'s promise was «one
+  // document, N renderings», and a rendering that only works downstream of an adaptation
+  // is a rendering of an adaptation, not of a document.
+  const found = await resolveDocument(vault, jobId, learnerCode);
+  if (found.of === 'none') throw new RampaError('vault-unreadable', whyNoDocument(found));
+  const raw = (await vault.readRaw(found.path))!;
   const doc = parseIR(raw);
 
   const corpus = parseAudioCorpus(await loadInstruction('audio'));

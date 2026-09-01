@@ -1,4 +1,4 @@
-import { jobAdapted } from '@rampa/core';
+import { resolveDocument, RampaError, whyNoDocument } from '@rampa/core';
 import { currentVault } from './vault.js';
 import { handle } from './wrap.js';
 import { refreshRecord } from './record.js';
@@ -30,7 +30,15 @@ import { refreshRecord } from './record.js';
 export function registerSignoffIpc(): void {
   handle('job:signOff', async (jobId: string, learnerCode: string, role: string) => {
     const vault = currentVault();
-    const path = jobAdapted(jobId, learnerCode);
+    /*
+     * A signature is about **a document** (Principle VII), so she can sign a composition
+     * without adapting it first (`021` T010, FR-1904). What she must not get is a
+     * signature that travels: adapting a signed composition for three learners produces
+     * three **unsigned** sheets, because nobody has read those.
+     */
+    const found = await resolveDocument(vault, jobId, learnerCode);
+    if (found.of === 'none') throw new RampaError('vault-unreadable', whyNoDocument(found));
+    const path = found.path;
     const raw = (await vault.readRaw(path)) ?? '';
     const stamp = new Date().toISOString().slice(0, 10);
     // Quoted, for the same reason the journal's is: unquoted, YAML hands back a
@@ -47,7 +55,9 @@ export function registerSignoffIpc(): void {
   });
 
   handle('job:isSignedOff', async (jobId: string, learnerCode: string) => {
-    const raw = (await currentVault().readRaw(jobAdapted(jobId, learnerCode))) ?? '';
+    const found = await resolveDocument(currentVault(), jobId, learnerCode);
+    if (found.of === 'none') return false;
+    const raw = (await currentVault().readRaw(found.path)) ?? '';
     return /signed_off:\s*true/.test(raw);
   });
 }

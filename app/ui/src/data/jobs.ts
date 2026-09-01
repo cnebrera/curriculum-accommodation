@@ -115,6 +115,22 @@ export function useStaleSheetsCommand() {
   });
 }
 
+/**
+ * The document, for the viewer (`021` T014).
+ *
+ * A command rather than a hook keyed on the job, because the viewer is opened by an
+ * action and closed again — a hook would fetch on every mount of the screen behind it.
+ */
+export function useDocumentHtml() {
+  return useCommand((id: string, learner: string) =>
+    window.rampa.job.documentHtml(id, learner) as Promise<string>);
+}
+
+/** The teacher's copy. Its own document — see the note in `sheet.ts`. */
+export function useAnswerKeyHtml() {
+  return useCommand((id: string) => window.rampa.job.answerKeyHtml(id) as Promise<string>);
+}
+
 export function useRevise() {
   return useCommand((id: string, learner: string, corrections: Array<{ text: string; scope: string }>) =>
     window.rampa.job.revise(id, learner, corrections) as Promise<{ reportData?: unknown; revision: number }>);

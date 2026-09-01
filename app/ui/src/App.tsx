@@ -178,6 +178,7 @@ export function App() {
            */
           <ComposeSummary
             result={composed.result}
+            jobId={composed.jobId}
             learners={intent.learners}
             onAdapt={() => { setIngested(composed.jobId); go({ type: 'legacy', view: 'adapt' }); }}
             onDiscard={() => { setComposed(null); go({ type: 'legacy', view: 'door' }); }} />

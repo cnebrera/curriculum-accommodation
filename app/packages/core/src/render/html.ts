@@ -3,6 +3,7 @@ import { attributionFor, pictogramAlt } from './attribution.js';
 import { parsePicto } from '../pictograms/apply.js';
 import { createRenderer, learnerFacing } from '../ir/parse.js';
 import type { IRDocument, Block } from '../ir/types.js';
+import { ANSWER_KEY_HEADING } from '../compose/sheet.js';
 
 /**
  * IR → HTML.
@@ -236,4 +237,49 @@ export function presentationFor(levels: Partial<Record<string, number | null>>):
   if (at('COG', 2) || at('ATE', 2)) p.oneTaskPerPage = true;
   if (at('REG', 2)) p.accent = '#4a5a5d';
   return p;
+}
+
+/**
+ * The teacher's copy, as a page (021 T013, FR-1921/FR-1922).
+ *
+ * ## Why this is not `renderHTML`
+ *
+ * `renderHTML` renders a **learner's document**: it applies her presentation, checks for
+ * undescribed figures, and carries the draft mark. None of that is right for the answer
+ * key — it is a page for an adult, it needs no accommodations, and it is not a draft of
+ * anything. Running it through the learner renderer would also mean one wrong call away
+ * from a sheet of answers that looks exactly like a worksheet.
+ *
+ * ## The heading, and why it is shouted
+ *
+ * `ANSWER_KEY_HEADING` is the one string standing between this page and the photocopy
+ * pile. Since `021` the key is printable, which is useful — she takes it to class — and is
+ * precisely what makes the marking load-bearing.
+ *
+ * It goes **first**, before any answer: she stops reading when she has found what she came
+ * for, and a warning below the answers is one she reads after printing them.
+ *
+ * Markdown in, HTML out, and the markdown is ours: `renderAnswerKey` wrote it from
+ * computed answers, so there is no untrusted content on this path.
+ */
+export function renderAnswerKeyHTML(markdown: string): string {
+  const md = createRenderer();
+  const body = md.render(markdown);
+  return [
+    '<!doctype html>',
+    '<html lang="es"><head><meta charset="utf-8">',
+    '<title>Soluciones · no repartir</title>',
+    '<style>',
+    // Deliberately plain and deliberately unlike a learner's sheet: this page must not
+    // be mistakable for one at arm's length, in a stack, in a hurry.
+    'body{font:16px/1.5 system-ui,sans-serif;max-width:34em;margin:2rem auto;padding:0 1rem}',
+    '.key-warn{border:3px solid #8a1c00;background:#fff2ee;color:#8a1c00;',
+    'font-weight:700;padding:.8rem 1rem;margin:0 0 1.5rem;text-transform:uppercase;',
+    'letter-spacing:.02em}',
+    '@media print{.key-warn{border-width:4px}}',
+    '</style></head><body>',
+    `<p class="key-warn">${ANSWER_KEY_HEADING}</p>`,
+    body,
+    '</body></html>',
+  ].join('\n');
 }
