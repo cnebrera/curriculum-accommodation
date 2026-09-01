@@ -31,6 +31,18 @@
 
 ## Notes
 
+**Re-validated 2026-09-01 after `/speckit-clarify`.** All sixteen items still pass. One
+question went to Carlos (where half-finished work surfaces); the other five were
+answered from the constitution and from specifications already written, each recording
+its source. Four requirements and one success criterion were added — FR-1825…FR-1828
+and SC-1808 — and «Ajustes» became **«Configuración»**, which is the word Carlos used
+when he asked for it.
+
+The clarification that changed most: half-finished work now has to be findable **without
+opening any learner**, and establishing which learners have it must cost one directory
+read rather than one per learner. That second half is a requirement rather than a note
+because the slow version only shows up at the roster size this product is for.
+
 Two things were fixed by running this checklist rather than by declaring it passed.
 
 **«No implementation details» needed a second pass.** The first draft of FR-1807 named

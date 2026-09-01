@@ -59,6 +59,49 @@ the interface must stop calling everything «una ficha», the material kind is n
 defaulted, and one job serves several learners with the first-chosen learner never
 being the only one.
 
+## Clarifications
+
+### Session 2026-09-01
+
+One question was put to Carlos. The rest are answered **from the constitution and from
+specifications already written**, each recording where the answer came from — the
+pattern `005` established, so a reviewer can disagree with the source rather than with
+my judgement.
+
+- **Q: She leaves a worksheet half-read on Tuesday. On Wednesday, where does she find
+  it?** → **A: Marked on the learner in her caseload, and waiting inside *Preparar*.**
+  The case that decides it is that on Wednesday she does not remember *which child* it
+  was for, so a card only visible inside each learner would have her opening thirty
+  learners to find it. Costs one call, not one per learner: `ingest:pending` already
+  walks `material/` once. → FR-1825, FR-1826, SC-1808.
+
+- **Q: What is the second top-level destination called?** → **A: «Configuración».**
+  Answered from Carlos's own words — «*mis servicios de IA, mis notas quizás tengan más
+  sentido en un menú de configuración*». The interface uses her vocabulary, not ours
+  (`012` FR-1011), and when the person who asked for it has already used a word, that
+  word wins.
+
+- **Q: Does the «who else?» step come before or after checking the reading?** →
+  **A: After.** Determined by `005` FR-514/FR-515: the batch's cost must be stated as
+  one figure before the run, and the unusual-cost gate must consider the batch. The
+  number of sheets therefore has to be known immediately before adapting — and asking
+  it before the reading is verified would price a run that might never happen.
+
+- **Q: Does the learner's heading carry the axis strip?** → **A: Yes.** `015`
+  FR-1310/FR-1311 forbid presenting *several* learners' axes as aligned columns or
+  summarising a child; one learner's own strip inside their own place is neither, and
+  `015` FR-1312 says the strip must keep reading as *what helps this child*.
+
+- **Q: What happens to a half-finished job that belongs to no learner — every one that
+  exists in a vault today?** → **A: Surfaced in the caseload, unattached, and it asks
+  who it is for when she resumes.** Follows from FR-1811: navigation may not lose work
+  she has entered, and a job she paid a provider for is exactly that.
+
+- **Q: Are the long flows themselves redesigned?** → **A: No.** Recorded in
+  Assumptions. This feature moves where they live and adds one step; `008`, `001`,
+  `002` and `005` own what happens inside them, and a specification that quietly
+  redesigned four others would be the scope creep `016` FR-1410 warns about.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Entering a learner (Priority: P1)
@@ -145,10 +188,10 @@ the refusals still refuse.
 
 ---
 
-### User Story 4 - Settings stop being scattered (Priority: P4)
+### User Story 4 - Configuración stops being scattered (Priority: P4)
 
 Her AI service, how she works, the display and the licences are one place called
-*Ajustes*. And what Rampa has learned **about a particular child** moves to that child,
+*Configuración*. And what Rampa has learned **about a particular child** moves to that child,
 because that is where she is thinking about him.
 
 **Why this priority**: Lowest user-visible value, highest tidiness value. It is also
@@ -159,7 +202,7 @@ learner-scoped journal entry visible inside that learner.
 
 **Acceptance Scenarios**:
 
-1. **Given** she wants to change service, **When** she opens *Ajustes*, **Then** the
+1. **Given** she wants to change service, **When** she opens *Configuración*, **Then** the
    service, her house style, the display controls and the licences are all there.
 2. **Given** a journal entry was recorded against Lucía, **When** she is inside Lucía,
    **Then** she can see what Rampa learned about her without opening a global screen.
@@ -191,9 +234,10 @@ learner-scoped journal entry visible inside that learner.
 #### The shape
 
 - **FR-1801**: The opening screen MUST be her caseload. **This retires `016` FR-1401.**
-- **FR-1802**: The top level MUST offer exactly two destinations: her learners, and
-  settings. Adding a third is adding a category, and this feature exists because there
-  were five.
+- **FR-1802**: The top level MUST offer exactly two destinations: **her learners** and
+  **«Configuración»**. Adding a third is adding a category, and this feature exists
+  because there were five. The second one carries **Carlos's own word** rather than one
+  of ours (`012` FR-1011).
 - **FR-1803**: A learner MUST be a place she enters and not a form she opens.
 - **FR-1804**: Inside a learner, these MUST be first-level destinations: **who he is**,
   **preparing something**, **what has been prepared**, and **his curriculum
@@ -202,7 +246,10 @@ learner-scoped journal entry visible inside that learner.
 - **FR-1805**: None of those destinations MAY require passing through the profile
   editor. That is the defect this specification was opened for.
 - **FR-1806**: The learner MUST be named on every screen inside them (`005` FR-513),
-  resolved in memory — no screen makes a name reachable from disk (`003`).
+  resolved in memory — no screen makes a name reachable from disk (`003`). The heading
+  MAY carry that learner's own axis strip: one child's strip inside their own place is
+  neither a comparison nor a summary, and `015` FR-1312 requires it to keep reading as
+  *what helps this child*.
 - **FR-1807**: The learner's menu MUST stay visible during multi-step flows, and the
   current step MUST be marked.
 - **FR-1808**: Leaving a flow midway MUST be possible, MUST NOT be blocked, and MUST
@@ -224,20 +271,40 @@ learner-scoped journal entry visible inside that learner.
   (FR-1402, FR-1404). An exam MUST still state its constraint before running (FR-1405).
 - **FR-1814**: The flow MUST include a step that asks **who else**, with the learner
   she entered through already included, and it MUST NOT re-ask the work or the material
-  (`016` FR-1411/FR-1412, `005` FR-503).
+  (`016` FR-1411/FR-1412, `005` FR-503). It MUST come **after** the reading is verified:
+  `005` FR-514/FR-515 require the batch's cost as one figure before the run, so the
+  number of sheets has to be known immediately before adapting — and asking earlier
+  would price a run that may never happen.
 - **FR-1815**: Reviewing and signing MUST remain per learner, with no action that signs
   two documents (`005` FR-511/FR-512).
 - **FR-1816**: Completed work MUST appear in the record of every learner it was made
   for (`016` FR-1407).
 
-#### Settings, and what belongs to a child
+#### Work left half-finished
 
-- **FR-1817**: Settings MUST hold the AI service, her house style, the display
+- **FR-1825**: A learner with work left half-finished MUST be marked as such **in her
+  caseload**, saying how far it got. On Wednesday she does not remember which child
+  Tuesday's worksheet was for, and a marker only visible inside each learner would have
+  her opening thirty of them to find one.
+- **FR-1826**: Inside that learner, *Preparar* MUST offer to continue it, and continuing
+  MUST NOT re-read the source through a provider (`005` FR-503, `016` FR-1409).
+- **FR-1827**: Half-finished work that belongs to no learner — which is **all of it in
+  any vault that exists today** — MUST be reachable from the caseload and MUST ask who
+  it is for when she continues. A job a provider has already been paid for is work she
+  entered (FR-1811).
+- **FR-1828**: Establishing which learners have work half-finished MUST cost **one**
+  read of the material directory, not one per learner. `014` FR-1214 permits a cache
+  only when a measurement demands one, and a caseload that scans per learner is how a
+  screen becomes slow at exactly the roster size the product is for.
+
+#### Configuración, and what belongs to a child
+
+- **FR-1817**: *Configuración* MUST hold the AI service, her house style, the display
   controls, the vault location, and the licences.
 - **FR-1818**: Journal entries scoped to a learner MUST be visible inside that learner.
 - **FR-1819**: Her house style and entries scoped to her practice or to the corpus MUST
-  live in settings, not inside a learner. The scope decides where it is shown, and she
-  is still the only one who sets the scope (Principle VIII).
+  live in *Configuración*, not inside a learner. The scope decides where it is shown,
+  and she is still the only one who sets the scope (Principle VIII).
 - **FR-1820**: Splitting the notes screen MUST NOT change what is written, where, or by
   whom. It is a change of where things are read.
 
@@ -283,6 +350,9 @@ learner-scoped journal entry visible inside that learner.
   once (`005` SC-502 unchanged by the move).
 - **SC-1807**: No screen anywhere in the redesigned interface presents two learners'
   axis values side by side.
+- **SC-1808**: Work left half-finished on one day is findable the next **without
+  opening any learner**, and her caseload takes no longer to appear than it does today
+  with the same number of learners.
 
 ## Assumptions
 
