@@ -148,19 +148,19 @@ offered: **sessions *and* minutes per session**, not one of them.
 Both are facts she holds with certainty — her timetable. What Rampa estimates is how much
 material fits, and FR-1928 makes it say so.
 
-- [ ] T035 `instructions/material-kinds.md` · each kind declares what to ask about
+- [x] T035 `instructions/material-kinds.md` · each kind declares what to ask about
       quantity and in what words (FR-1925). Corpus, so changing a kind's question is a
-      Markdown edit — the same reason `composing` went there
-- [ ] T036 [P] The kind with nothing to count declares exactly that, and the screen asks
-      no quantity at all for it (FR-1925, FR-1927)
-- [ ] T037 `ComposeRequest` carries `sessions` **and** `minutesPerSession`, and the screen
+      Markdown edit — the same reason `composing` went there *(done, `quantity:` per kind — unit, label, help and default, all corpus.)*
+- [x] T036 [P] The kind with nothing to count declares exactly that, and the screen asks
+      no quantity at all for it (FR-1925, FR-1927) *(done, `of: none` for study, and explicit rather than the block being absent: absence would mean nobody decided.)*
+- [x] T037 `ComposeRequest` carries `sessions` **and** `minutesPerSession`, and the screen
       asks both for every kind (FR-1926). **`sessions` has existed since `002` FR-130 and
-      no screen ever asked for it** — always `undefined`, letter held, spirit not
-- [ ] T038 [P] Where material is sized from a time, the report says it is an **estimate**
+      no screen ever asked for it** — always `undefined`, letter held, spirit not *(done. `sessions` had existed since `002` FR-130 and no screen had ever sent it, so it was always `undefined` — the field, the document slot and the ACNS reader all waiting on a question nobody asked.)*
+- [x] T038 [P] Where material is sized from a time, the report says it is an **estimate**
       (FR-1928). «Nobody knows how long this child takes over a page» is the honest
-      sentence, and it belongs where she reads what happened
-- [ ] T039 [P] What she said reaches the material and is available to `017`'s
-      temporalización (FR-1929) — one answer, used twice
+      sentence, and it belongs where she reads what happened *(done, first among the notes: «es una estimación mía, no una promesa: cuánto tarda este alumno en una página lo sabes tú y no yo».)*
+- [x] T039 [P] What she said reaches the material and is available to `017`'s
+      temporalización (FR-1929) — one answer, used twice *(done — written to the material as `sessions` and `minutes_per_session`, where `017`'s temporalización reads them.)*
 - [ ] T040 Assert per kind that the screen asks the right question and **no other**
       (SC-1909), over the rendered interface: this is a claim about what she is asked,
       which a unit test cannot see
