@@ -5,6 +5,7 @@
  * reads them back the other way round — from the learner rather than from the
  * job — which is the whole feature.
  */
+import type { ReadingFreshness } from '../ir/reading.js';
 
 /** Where the material came from, and what "the original" therefore means. */
 export type RecordSource =
@@ -71,6 +72,16 @@ export interface RecordEntry {
    * row that looks finished.
    */
   pending?: boolean;
+  /**
+   * Whether this sheet was made from the reading that is on disk now (005 FR-520).
+   *
+   * Derived here rather than reported only at the moment of the correction, because
+   * the correction is seen once and «¿cuál de estas fichas es de antes de que lo
+   * arreglara?» is a question she asks a week later with the folder in her hand.
+   *
+   * Absent while a composed job has no sheet: there is nothing to be stale.
+   */
+  freshness?: ReadingFreshness;
   source: RecordSource;
   documents: RecordDocuments;
   /**

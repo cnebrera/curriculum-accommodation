@@ -161,6 +161,8 @@ const api = {
     list: () => invoke('job:list'),
     reportData: (id: string, learner: string) => invoke('job:reportData', id, learner),
     learners: (id: string) => invoke('job:learners', id),
+    /** Sheets made from a reading that has since changed (`005` FR-520). */
+    staleSheets: (id: string) => invoke('job:staleSheets', id),
     onProgress: (cb: (p: { stage: string; detail?: string }) => void) => {
       const h = (_e: unknown, p: { stage: string; detail?: string }) => cb(p);
       ipcRenderer.on('job:progress', h);

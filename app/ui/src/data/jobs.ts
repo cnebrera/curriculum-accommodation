@@ -86,6 +86,35 @@ export function useAdapt() {
     window.rampa.job.adapt(id, learners) as Promise<BatchOutcome>);
 }
 
+/**
+ * Sheets made from a reading that has since changed (005 T027, FR-520).
+ *
+ * The name is joined **here**, in the renderer, because this is where the name map
+ * already lives (`013` FR-1107). The shell decides which sheets are stale and knows
+ * only codes, so no part of that decision can put a child's name into a file.
+ *
+ * Fresh rows are dropped and the name map is not fetched at all when there is
+ * nothing to say — the common case is a job whose sheets are all current, and
+ * decrypting the roster to tell her nothing would be work done to say nothing.
+ */
+export interface StaleSheet {
+  learner: string;
+  name: string;
+  freshness: 'stale' | 'unknown';
+}
+
+export function useStaleSheetsCommand() {
+  return useCommand(async (jobId: string): Promise<StaleSheet[]> => {
+    const rows = await window.rampa.job.staleSheets(jobId) as Array<
+      { learner: string; freshness: 'fresh' | 'stale' | 'unknown' }>;
+    const notFresh = rows.filter((r): r is { learner: string; freshness: 'stale' | 'unknown' } =>
+      r.freshness !== 'fresh');
+    if (notFresh.length === 0) return [];
+    const names = await window.rampa.names.all() as Record<string, string>;
+    return notFresh.map((r) => ({ ...r, name: names[r.learner] ?? r.learner }));
+  });
+}
+
 export function useRevise() {
   return useCommand((id: string, learner: string, corrections: Array<{ text: string; scope: string }>) =>
     window.rampa.job.revise(id, learner, corrections) as Promise<{ reportData?: unknown; revision: number }>);

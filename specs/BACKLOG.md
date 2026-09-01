@@ -413,9 +413,29 @@ every moment should have a spec. What it added beyond the seams pass:
    journey sentence → T094). Handover *import* (004 US2) recorded as deliberately
    deferred rather than silently missing.
 
-## G23 · A corrected extraction does not mark the sheets made from it
+## G23 · A corrected extraction does not mark the sheets made from it — *CLOSED 2026-09-01*
 
-Found 2026-08-31, by archiving `005`'s requirements against its tasks.
+Found 2026-08-31, by archiving `005`'s requirements against its tasks. Built the next
+day as `005` Phase 7, T021-T030.
+
+**What shipped, and why it is neither of the two options below.** Both options this
+entry recorded key on *when* the extraction was confirmed — a date, or the file's
+modification time — and `setPageVerified` rewrites `ir.md` on **every** confirmation.
+So both of them mark every sheet stale for a click that changed nothing she can see,
+and a tool that says «esto está desactualizado» about everything has said nothing.
+
+What the sheet records instead is a fingerprint of the reading itself: each block's id
+and text, in order (`packages/core/src/ir/reading.ts`). Front matter, the `verified`
+flag and her own hand edit of the sheet all move around it without moving it.
+Freshness is derived on read — there is no `stale: true` anywhere, which is this
+entry's own warning honoured rather than argued with.
+
+Three states, not two: `unknown` for every sheet made before this existed. Calling
+those fresh is a claim we cannot check, and calling them stale marks a teacher's whole
+folder as suspect the day she updates.
+
+The original analysis follows, kept because the reasoning that rejected it is worth
+more than the conclusion.
 
 **FR-520**: «Correcting the extraction after adaptations exist MUST be allowed, MUST
 mark the affected sheets stale **by learner name**, and MUST NOT re-run anything on

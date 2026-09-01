@@ -6,6 +6,7 @@ import {
   stringifyFrontMatter, injectionNotices, logger, buildAdaptPrompt, schoolYearOf, blockClassesIn,
   checkStructurallyComplete, checkCompleteness, completenessNotice,
   assertProvenance, findUnaccountedBlocks, divergence, studiesFor, applyPictograms,
+  readingFingerprint, stampReading,
   type Notice, type CompletenessIssue,
 } from '@rampa/core';
 import { sendRedacted } from '@rampa/providers';
@@ -330,8 +331,22 @@ export async function runAdaptation(
   const madeOn = new Date().toISOString().slice(0, 10);
   const stamped = result.out.replace(/^---\r?\n/,
     `---\nadapted_on: "${madeOn}"\nschool_year: "${schoolYearOf(madeOn)}"\n`);
+  /*
+   * And which reading it was made from (005 T024, FR-520).
+   *
+   * The same kind of fact as the date beside it: a property of the process at the
+   * moment the sheet was written, stamped here because here is where it is known.
+   * `doc` is the extraction as this run read it — `annotateInjection` adds notices
+   * and never touches a block's text, and the fingerprint reads only ids and text.
+   *
+   * This is what lets a correction to `ir.md` mark the sheets already made from the
+   * previous reading, by learner. Nothing has to be reset afterwards: a re-run
+   * comes back through here and stamps the current reading, which is FR-520's «MUST
+   * NOT re-run anything on its own» read from the other side — the fix is her
+   * pressing adapt again, not a flag we maintain.
+   */
   await vault.writeRaw(jobAdapted(jobId, learnerCode),
-    /^---\r?\n/.test(result.out) ? stamped : result.out);
+    stampReading(/^---\r?\n/.test(result.out) ? stamped : result.out, readingFingerprint(doc)));
 
   const report = buildReport({
     adapted, selection,

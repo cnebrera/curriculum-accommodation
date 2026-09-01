@@ -73,6 +73,27 @@ function Entry({ entry, onOpen, onReuse }: {
         </span>
       ) : null}
 
+      {/*
+        FR-520, the durable half. The callout on the verification screen is seen
+        once, on the day she corrects; «¿cuál de estas fichas es de antes de que lo
+        arreglara?» is a question she asks a week later, here, with the folder open
+        in front of her. Only when it is not current: a line on every fresh row
+        would be forty reassurances nobody reads.
+
+        **`unknown` says nothing here, deliberately.** On the verification screen it
+        is actionable — she has just corrected a reading, and «no sé si estas son de
+        antes» is precisely what she needs. In the record there is no correction to
+        relate it to, and every sheet made before this shipped is `unknown`: it would
+        put a line on every row of an existing vault, which teaches her to skip the
+        line and takes the `stale` one down with it.
+      */}
+      {entry.freshness === 'stale' ? (
+        <span className="small">
+          Se hizo con una lectura que has cambiado después. Vuelve a adaptarla si el
+          cambio le afecta.
+        </span>
+      ) : null}
+
       <div className="row gap2" style={{ flexWrap: 'wrap' }}>
         {entry.documents.adapted ? (
           <button className="btn btn-sm" disabled={gone(entry.documents.adapted)}

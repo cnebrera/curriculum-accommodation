@@ -1,5 +1,6 @@
 import { parseIR } from '../ir/parse.js';
 import { isSignedOff } from '../ir/types.js';
+import { readingFingerprint, freshnessOf } from '../ir/reading.js';
 import {
   VAULT, jobDir, jobIR, jobSourceDir, jobLearnerDir, jobAdapted, jobReport, outputDir,
   jobAnswers, jobComposeReport,
@@ -138,6 +139,18 @@ export async function entryFor(vault: Vault, jobId: string, learner: string): Pr
     ?? (await vault.modifiedAt(adaptedRaw !== null ? adaptedPath : irPath))
     ?? '';
 
+  /*
+   * Whether this sheet was made from the reading on disk now (005 T026, FR-520).
+   *
+   * Here rather than in a second implementation beside it: this function already has
+   * both parsed documents in hand, and two derivations of one answer are two
+   * derivations that can disagree about whether a sheet is stale. The verification
+   * screen and this row read the same function.
+   */
+  const freshness = adapted !== null && irRaw !== null
+    ? freshnessOf(adapted, readingFingerprint(parseIR(irRaw)))
+    : undefined;
+
   return {
     jobId,
     learner,
@@ -149,6 +162,7 @@ export async function entryFor(vault: Vault, jobId: string, learner: string): Pr
     // document nobody signs.
     signedOff: adapted !== null && isSignedOff(adapted),
     ...(adaptedRaw === null ? { pending: true } : {}),
+    ...(freshness ? { freshness } : {}),
     revision: revisions.length + 1,
     source: sourceOf(irFm, sourceFiles),
     documents,

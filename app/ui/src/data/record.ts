@@ -19,6 +19,13 @@ export interface RecordEntry {
   revision: number;
   /** Composed and not yet adapted for this learner (`016` T006). */
   pending?: boolean;
+  /**
+   * Whether this sheet came from the reading that is on disk now (`005` FR-520).
+   *
+   * `unknown` for every sheet made before Rampa recorded it, which is honest and
+   * not a fault — see the note in `packages/core/src/ir/reading.ts`.
+   */
+  freshness?: 'fresh' | 'stale' | 'unknown';
   source: RecordSource;
   documents: {
     ir: string;

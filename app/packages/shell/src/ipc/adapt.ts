@@ -5,6 +5,7 @@ import { currentVault } from './vault.js';
 import { handle } from './wrap.js';
 import { runAdaptation, type Correction } from '../jobs/adapt.js';
 import { runBatch } from '../jobs/batch.js';
+import { staleSheets } from '../jobs/stale.js';
 import { refreshRecord } from './record.js';
 import { materialKind } from '../corpus/index.js';
 
@@ -138,4 +139,13 @@ export function registerAdaptIpc(getWindow: () => BrowserWindow | null): void {
     const entries = await currentVault().list(jobDir(jobId));
     return entries.filter((e) => !e.includes('.') && e !== 'source');
   });
+
+  /**
+   * Which sheets were made from a reading that has since changed (005 T027, FR-520).
+   *
+   * A read, and codes only. The name is joined in the renderer, where the name map
+   * already lives (`013` FR-1107) — so the layer that decides which sheets are stale
+   * never holds a learner's name, and nothing here could write one to a file.
+   */
+  handle('job:staleSheets', async (jobId: string) => staleSheets(currentVault(), jobId));
 }

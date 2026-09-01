@@ -27,6 +27,7 @@ export * from './ir/injection.js';
 export * from './ir/hidden.js';
 export * from './ir/bounds.js';
 export * from './ir/completeness.js';
+export * from './ir/reading.js';
 
 export * from './recipes/index.js';
 export * from './recipes/kinds.js';

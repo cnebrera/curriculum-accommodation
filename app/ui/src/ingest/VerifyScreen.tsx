@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useExtractionCommand, usePageImageCommand, useBlocksCommand,
          useCorrectAndConfirm, useUnconfirmPage } from '../data/ingest.js';
+import { useStaleSheetsCommand, type StaleSheet } from '../data/jobs.js';
 import { Page } from '../shell/Page.js';
 import { Callout } from '../components/Callout.js';
 import { Badge } from '../components/Badge.js';
@@ -44,7 +45,9 @@ export function VerifyScreen({ jobId, onVerified }: { jobId: string; onVerified:
   const [images, setImages] = useState<Record<number, string>>({});
   const [blocks, setBlocks] = useState<Array<{ id: string; page: number; content: string; number?: string }>>([]);
   const [edited, setEdited] = useState<Record<string, string>>({});
+  const [stale, setStale] = useState<StaleSheet[]>([]);
   const extractionFor = useExtractionCommand();
+  const staleSheetsFor = useStaleSheetsCommand();
   const pageImage = usePageImageCommand();
   const blocksFor = useBlocksCommand();
   const confirmPage = useCorrectAndConfirm();
@@ -63,6 +66,16 @@ export function VerifyScreen({ jobId, onVerified }: { jobId: string; onVerified:
     }
     const b = await blocksFor.run(jobId);
     if (b) setBlocks(b as typeof blocks);
+    /*
+     * FR-520 · which sheets were made from the reading as it was before.
+     *
+     * Asked on every refresh rather than only after a correction, because she can
+     * reach this screen from `ingest:pending` days later and the question is the
+     * same one. A job with no sheets yet — the common case, right after an ingest —
+     * answers with an empty list and nothing appears.
+     */
+    const s = await staleSheetsFor.run(jobId);
+    if (s) setStale(s);
   };
 
   useEffect(() => { void refresh(); }, [jobId]);
@@ -103,6 +116,37 @@ export function VerifyScreen({ jobId, onVerified }: { jobId: string; onVerified:
               </li>
             ))}
           </ul>
+        </Callout>
+      ) : null}
+
+      {/*
+        FR-520 · the sheets already made from the reading she has just changed.
+        Named, because «2 fichas afectadas» is a number she cannot act on and a
+        name is a child she can picture. Nothing here re-runs anything: the third
+        clause of FR-520 is that a correction spends no money on a decision she
+        did not make, so this points at the adaptation she already knows how to
+        start and stops talking.
+      */}
+      {stale.some((s) => s.freshness === 'stale') ? (
+        <Callout intent="decide" title="Hay fichas hechas con la lectura de antes">
+          Has cambiado lo que yo había leído, así que estas fichas se hicieron con la
+          versión anterior:{' '}
+          <strong>{stale.filter((s) => s.freshness === 'stale').map((s) => s.name).join(', ')}</strong>.
+          No he vuelto a hacer nada por mi cuenta. Si esas fichas ya están impresas y el
+          cambio les afecta, vuelve a adaptarlas cuando termines aquí.
+        </Callout>
+      ) : null}
+
+      {/*
+        The honest third state. A sheet made before Rampa started recording which
+        reading it came from cannot be called current and cannot be called old, and
+        saying either would be inventing an answer about a document in her folder.
+      */}
+      {stale.some((s) => s.freshness === 'unknown') ? (
+        <Callout intent="info" title="De estas fichas no sé con qué lectura se hicieron">
+          Son de antes de que empezara a anotarlo:{' '}
+          <strong>{stale.filter((s) => s.freshness === 'unknown').map((s) => s.name).join(', ')}</strong>.
+          Si las hiciste antes de corregir esta lectura, conviene volver a adaptarlas.
         </Callout>
       ) : null}
 

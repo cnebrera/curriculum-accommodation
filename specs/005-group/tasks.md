@@ -136,38 +136,38 @@ re-run, a revision, a sign-off and a hand edit, and `014` already found that a s
 fact about the vault is a second copy of a truth the filesystem holds. A re-run
 rewrites the stamp and the sheet is fresh again, with nothing to reset.
 
-- [ ] T021 Write `packages/core/test/reading.test.ts` **first**, red. The two cases
+- [x] T021 Write `packages/core/test/reading.test.ts` **first**, red. The two cases
       that decide whether this works at all: the fingerprint moves when a block's
       text changes, and does **not** move when the front matter does — which is the
-      exact difference between this and the mtime version
-- [ ] T022 `packages/core/src/ir/reading.ts` · `readingFingerprint(doc)` over block
+      exact difference between this and the mtime version *(done, red first — 12 cases.)*
+- [x] T022 `packages/core/src/ir/reading.ts` · `readingFingerprint(doc)` over block
       id + text, in document order, whitespace collapsed. Over the **blocks**, never
-      the file
-- [ ] T023 [P] `freshnessOf(sheet, current)` → `fresh` | `stale` | `unknown`, and
+      the file *(done. Twelve hex characters of SHA-256, short because she can open the document in Obsidian and forty characters of hexadecimal beside `adapted_on` is a document explaining itself badly.)*
+- [x] T023 [P] `freshnessOf(sheet, current)` → `fresh` | `stale` | `unknown`, and
       `readingOf(sheet)`. **Three states, because a sheet made before this existed
       carries no stamp**: calling it fresh is a claim we cannot make, and calling it
-      stale marks every sheet in every vault that exists today
-- [ ] T024 Stamp `from_extraction` beside `adapted_on` in
+      stale marks every sheet in every vault that exists today *(done, and the type is `ReadingFreshness`: `providers/catalogue.ts` already owns `Freshness` for how old the provider catalogue is. **The fourth name collision in this codebase**, after `Verdict` three times over.)*
+- [x] T024 Stamp `from_extraction` beside `adapted_on` in
       `packages/shell/src/jobs/adapt.ts`. A fact about the process at the moment the
-      sheet is written, like the date beside it — never from the model
-- [ ] T025 `packages/shell/src/jobs/stale.ts` · `staleSheets(vault, jobId)`: one row
+      sheet is written, like the date beside it — never from the model *(done, from the extraction as that run read it. `annotateInjection` adds notices and never touches a block's text, so the value cannot drift from what a later read computes.)*
+- [x] T025 `packages/shell/src/jobs/stale.ts` · `staleSheets(vault, jobId)`: one row
       per learner the job has been adapted for, each with its freshness. `learnersOf`
-      already answers «which learners», so this is a read and writes nothing
-- [ ] T026 [P] Derive the same answer in `entryFor` (`014`), which already parses both
+      already answers «which learners», so this is a read and writes nothing *(done. A job whose `ir.md` has been deleted returns no rows rather than «todo desactualizado» — that is `014`'s missing-document case and it already has an answer there.)*
+- [x] T026 [P] Derive the same answer in `entryFor` (`014`), which already parses both
       documents. One derivation, two surfaces — the alternative is a second
-      implementation that can disagree with the first about whether a sheet is stale
-- [ ] T027 IPC `job:staleSheets`, preload, and `useStaleSheets(jobId)` joining the
+      implementation that can disagree with the first about whether a sheet is stale *(done: `RecordEntry.freshness`, derived on read, absent while a composed job has no sheet.)*
+- [x] T027 IPC `job:staleSheets`, preload, and `useStaleSheets(jobId)` joining the
       names **in the renderer** (`013` FR-1107). Codes cross the wire; the name is
-      joined where names already live, and no name reaches a file
-- [ ] T028 `VerifyScreen`: after a correction, name the learners whose sheets were
+      joined where names already live, and no name reaches a file *(done, and the name map is not decrypted at all when every sheet is current — the common case, where the work would be done to say nothing.)*
+- [x] T028 `VerifyScreen`: after a correction, name the learners whose sheets were
       made from the previous reading. It offers no «actualizar las tres» — re-running
-      is the per-learner adaptation that already exists, chosen by her, one at a time
-- [ ] T029 [P] `RecordScreen`: the row says so too. **This is the durable half** — the
+      is the per-learner adaptation that already exists, chosen by her, one at a time *(done, asked on every refresh rather than only after a correction: she reaches this screen from `ingest:pending` days later and the question is the same one.)*
+- [x] T029 [P] `RecordScreen`: the row says so too. **This is the durable half** — the
       callout is seen once, and «which of the material in my folder predates the
-      correction?» is a question she asks a week later with the folder in her hand
-- [ ] T030 Assert the negative in `packages/shell/test/`: correcting after a sheet
+      correction?» is a question she asks a week later with the folder in her hand *(done, `stale` only. `unknown` is actionable on the verification screen — she has just corrected — and noise here, where every sheet made before this shipped is `unknown` and a line on every row of an existing vault teaches her to skip the line, taking the `stale` one down with it.)*
+- [x] T030 Assert the negative in `packages/shell/test/`: correcting after a sheet
       exists reports it stale **and re-runs nothing** — no revision appears, no
-      provider is called. FR-520's third clause is the one a helpful fix breaks
+      provider is called. FR-520's third clause is the one a helpful fix breaks *(done, `packages/shell/test/stale.test.ts`, 7 cases. Two are the negative: asking writes no file, and `stale.ts` imports nothing that could adapt — so «y ya que estamos, las rehago» would have to add an import and fail this test.)*
 
 ---
 
@@ -205,4 +205,4 @@ at is a requirement nobody is keeping.**
 | FR-505 | `runBatch` calls `runAdaptation` per learner, and each call loads that learner's profile, notes and overlay. `batch.test.ts` asserts the second failing does not touch the first or third |
 | FR-508 | `job:adapt` accepts a single code, which is how the review screen retries one |
 | FR-517 | `record-erasure.test.ts` and `e2e/erasure.spec.ts`: the shared source stays when another learner still reads it, and the plan says so before touching anything |
-| FR-520 | **Not done, and not silently.** Correcting an extraction after adaptations exist is allowed (`setPageVerified`), and nothing marks the affected sheets stale by learner name. Recorded as backlog **G23** rather than left implicit — the failure it names is a teacher printing a sheet made from a reading she has since corrected |
+| FR-520 | Phase 7, T021-T030. Allowed: `setPageVerified` and `ingest:correctAndConfirm`, unchanged. Marked: `from_extraction` on each sheet against `readingFingerprint(ir.md)`, surfaced on the verification screen and on every record row. By name: joined in the renderer, so the layer that decides never holds one. Re-runs nothing: `jobs/stale.ts` imports nothing that could, and `stale.test.ts` fails if that changes |
