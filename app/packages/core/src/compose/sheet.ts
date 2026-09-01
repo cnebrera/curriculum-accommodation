@@ -74,6 +74,17 @@ export interface SheetInput {
    * practice, `problems` for word problems, `study` for a composed text.
    */
   materialKind: string;
+  /**
+   * Sentences that must be **on the page** for this kind (`021` FR-1911/FR-1912).
+   *
+   * From `material-kinds.md`'s `composing.on_document`, passed in rather than looked up:
+   * this function stays free of any knowledge about which kinds need what, which is the
+   * same separation the recipes have. For three of the four kinds it is empty.
+   *
+   * On the page and not only on the screen, because paper outlives the screen it was made
+   * on — and whoever picks up a generated exam next did not see the warning she saw.
+   */
+  kindNotes?: readonly string[];
   /** What the content rests on, for a content composition (FR-102). */
   anchor?: string;
   /**
@@ -182,6 +193,22 @@ export function buildSheet(input: SheetInput): ComposedSheet {
         ...(b.attrs['data-anchor'] ? { 'data-anchor': b.attrs['data-anchor'] } : {}),
       },
       content: b.content,
+    });
+  }
+
+  /*
+   * The kind's own sentences, before the first exercise (`021` T022).
+   *
+   * A `note` block rather than `report-notes`: `report-notes` is the model's channel to
+   * her and never reaches the sheet, and these have to be **printed**. They are the
+   * difference between a generated exam and an exam.
+   */
+  for (const [i, text] of (input.kindNotes ?? []).entries()) {
+    push({
+      id: `kind-note-${i + 1}`,
+      classes: ['note'],
+      attrs: {},
+      content: text,
     });
   }
 

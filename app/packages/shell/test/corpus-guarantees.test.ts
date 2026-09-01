@@ -241,3 +241,53 @@ describe('the guide has no ingest path of its own', () => {
     expect(readingHalf).not.toMatch(/writeRaw|writeBinary|ensureDir/);
   });
 });
+
+/**
+ * Sentences the corpus writes **for her** reach her (021 T025, and the eleventh
+ * instance).
+ *
+ * The defect this closes, found by an e2e rather than by a review: `material-kinds.md`
+ * gained `composing.before` — «te voy a proponer las preguntas de una prueba con nota…
+ * tú validas cada pregunta» — the parser read it, the type carried it, and
+ * `corpus:materialKinds` did not send it. The screen showed the label alone.
+ *
+ * That is the eleventh time in this project a field has been written, parsed, typed and
+ * read by nobody, and this one was the sentence that tells a PT what it means to ask a
+ * language model for an exam.
+ *
+ * The rule this asserts: **a field whose whole purpose is to be read by her must cross
+ * the boundary.** Fields for the model (`rule`) and for the main process (`forbids`,
+ * `composing.on_document`) deliberately do not, and the test names them so the
+ * distinction is a decision rather than an omission.
+ */
+describe('what the corpus says to her crosses to the screen', () => {
+  /** The `corpus:materialKinds` handler, sliced by its neighbours rather than by a regex
+   *  that has to guess where a nested `});` ends. */
+  const mappingSrc = async (): Promise<string> => {
+    const src = await readFile(
+      join(appRoot, 'packages', 'shell', 'src', 'corpus', 'recipes.ts'), 'utf8');
+    const from = src.indexOf("handle('corpus:materialKinds'");
+    const to = src.indexOf("handle('corpus:recipes'", from);
+    expect(from, 'the handler was not found').toBeGreaterThan(-1);
+    expect(to, 'the next handler was not found').toBeGreaterThan(from);
+    return src.slice(from, to);
+  };
+
+  it('sends every field written for her', async () => {
+    const mapping = await mappingSrc();
+    for (const forHer of ['label', 'before', 'composing']) {
+      expect(mapping, `${forHer} is written for her and must cross`).toContain(forHer);
+    }
+  });
+
+  it('keeps the model’s and the process’s fields behind', async () => {
+    const mapping = await mappingSrc();
+    // `rule` is sent to the model literally; `forbids` is machine-readable and the report
+    // is built in this process. A renderer holding either would be a second place
+    // deciding what a document says.
+    expect(mapping).not.toMatch(/\brule:/);
+    expect(mapping).not.toMatch(/\bforbids:/);
+    expect(mapping, 'on_document is printed by buildSheet, in this process')
+      .not.toMatch(/onDocument:/);
+  });
+});

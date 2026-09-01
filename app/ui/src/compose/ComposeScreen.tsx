@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { Page, Section, Field, Actions } from '../shell/Page.js';
+import { useMaterialKinds } from '../data/corpus.js';
+import { Loaded } from '../data/Loaded.js';
 import { DocumentViewer } from '../viewer/DocumentViewer.js';
 import { useDocumentHtml, useAnswerKeyHtml } from '../data/jobs.js';
 import { Callout } from '../components/Callout.js';
@@ -66,6 +68,8 @@ export function ComposeScreen({ learners, onComposed, onBack }: {
   onComposed: (jobId: string, result: ComposeResult) => void;
   onBack: () => void;
 }) {
+  const kinds = useMaterialKinds();
+  const [kind, setKind] = useState<string | null>(null);
   const [objectives, setObjectives] = useState('');
   const [anchor, setAnchor] = useState('');
   const [howMany, setHowMany] = useState(10);
@@ -78,8 +82,10 @@ export function ComposeScreen({ learners, onComposed, onBack }: {
   const lines = objectives.split('\n').map((l) => l.trim()).filter(Boolean);
   const contentLines = lines.filter(looksLikeContent);
   const needsAnchor = contentLines.length > 0;
-  const missing = lines.length === 0
-    ? 'Escribe primero qué quieres que aprenda.'
+  const missing = kind === null
+    ? 'Dime primero qué quieres que prepare.'
+    : lines.length === 0
+    ? 'Escribe qué quieres que aprenda.'
     : needsAnchor && anchor.trim() === ''
       ? 'Dame algo en lo que apoyar el contenido.'
       : !online
@@ -95,6 +101,8 @@ export function ComposeScreen({ learners, onComposed, onBack }: {
        * same composed sheet, which is `005` doing what it already does.
        */
       learnerCode: learners[0] ?? '',
+      // Hers, never defaulted (`021` FR-1907). The handler refuses a request without it.
+      kind: kind ?? '',
       objectives: lines,
       perObjective: howMany,
       ...(anchor.trim() ? { anchor: anchor.trim() } : {}),
@@ -141,6 +149,41 @@ export function ComposeScreen({ learners, onComposed, onBack }: {
       }>
 
       {compose.error ? <Callout intent="danger">{compose.error.message}</Callout> : null}
+
+      {/*
+        What kind of material, first and with nothing pre-chosen (`021` T018, FR-1907).
+        Read from the corpus, because a list of four in here would be a second copy of
+        `material-kinds.md` — and it is the copy that stops being the authority.
+
+        Before `021` the kind was **derived from whatever came out**, so «solo me ha dicho
+        de preparar fichas» was literally true: there was no way to ask for anything else,
+        and an exam was unreachable.
+      */}
+      <Section title="¿Qué quieres que prepare?">
+        <Loaded from={kinds} busyLabel="Un momento…">
+          {(rows) => (
+            <fieldset className="fieldset-bare">
+              <legend className="sr-only">Qué tipo de material</legend>
+              <div className="stack gap2">
+                {(rows as Array<{ id: string; label: string; before?: string;
+                                  composing?: { before?: string } }>).map((k) => (
+                  <button key={k.id} className="door" aria-pressed={kind === k.id}
+                          onClick={() => setKind(k.id)}>
+                    <strong>{k.label}</strong>
+                    {/*
+                      What composing this kind means, from the corpus — «te voy a proponer
+                      las preguntas de una prueba con nota… tú validas cada pregunta».
+                      Shown before she presses anything, which is `016` FR-1405's rule
+                      applied to writing rather than to adapting.
+                    */}
+                    {k.composing?.before ? <span className="small">{k.composing.before}</span> : null}
+                  </button>
+                ))}
+              </div>
+            </fieldset>
+          )}
+        </Loaded>
+      </Section>
 
       <Section title="Qué tiene que aprender"
                lede="Una cosa por línea, con tus palabras.">

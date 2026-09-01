@@ -16,6 +16,14 @@ export interface ComposeRequest {
   title?: string;
   /** Required the moment an objective is content (`002` FR-102). */
   anchor?: string;
+  /**
+   * What kind of material she wants (`021` FR-1907).
+   *
+   * Required by the handler and never defaulted — the same refusal `job:create` makes
+   * for pasted material, because a defaulted «ficha» is how an exam gets treated as a
+   * worksheet before the model ever sees it.
+   */
+  kind: string;
 }
 
 export interface AnswerLine {

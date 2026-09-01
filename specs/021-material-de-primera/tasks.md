@@ -25,7 +25,7 @@ all take an IR and none of them care where it came from.
 - [x] T002 [P] Write `app/packages/core/test/document.test.ts` **first**, red, from
       quickstart §2: the six resolver cases, including the two kinds of *nothing* —
       «not adapted for this learner» and «no document at all» are different sentences to a
-      teacher, and today both produce «Este trabajo todavía no está adaptado»
+      teacher, and today both produce «Este trabajo todavía no está adaptado» *(done, red first — 9 cases including the structural one.)*
 
 ---
 
@@ -34,7 +34,7 @@ all take an IR and none of them care where it came from.
 **Blocking**: nothing in Phase 3 or later may start until this phase is green. Eight call
 sites construct the same path today; changing them against a resolver that does not exist
 yet is eight chances to disagree about what «the document» is.
- *(done, red first — 9 cases including the structural one.)*
+
 - [x] T003 `app/packages/core/src/vault/document.ts` · `resolveDocument(vault, job,
       learner?)` returning `ResolvedDocument` per [data-model.md](data-model.md). It
       returns **the case, not just a path**: printing needs the learner, and an adaptation
@@ -50,7 +50,7 @@ yet is eight chances to disagree about what «the document» is.
       with a newer date on it *(done, and it exposed a real one: with no learner, the code passed to the learner-facts check was an empty string — a substring of everything — so it reported «el código "" aparece en el material» and refused to render a perfectly good sheet. A guard that fires on everything is a guard that gets switched off.)*
 - [x] T006 Assert the structural rule: **no path to `adapted.md` is constructed anywhere
       except the resolver and the writers.** A source-level check, because eight call sites
-      is exactly how a constant creeps back
+      is exactly how a constant creeps back *(done. Two readers are allowed **with their reason written**: `jobs/adapt.ts` reads the adaptation it is about to replace, and `jobs/stale.ts` asks a question that is about adaptations by definition (`005` FR-520).)*
 
 **Checkpoint**: T001 and T002 green, and the offline suite still passing with no caller
 changed.
@@ -64,7 +64,7 @@ run and no provider called.
 
 **Independent Test**: compose material, then view, print, export and sign it, and open the
 answer key, without running an adaptation.
- *(done. Two readers are allowed **with their reason written**: `jobs/adapt.ts` reads the adaptation it is about to replace, and `jobs/stale.ts` asks a question that is about adaptations by definition (`005` FR-520).)*
+
 - [x] T007 [US1] `packages/shell/src/jobs/print.ts` reads the resolved document. **The
       draft mark stays derived from the document** (`007` FR-509) — it was a parameter
       once, defaulting to false, so `job.render(job, learner, true)` produced an unmarked
@@ -110,28 +110,28 @@ and an exam arrives with its limits on it.
 **Independent Test**: ask for each of the four kinds, get material of that kind, and find
 the exam's four limits on the document itself.
 
-- [ ] T018 [US2] The compose flow asks what kind of material it is, **nothing pre-selected**
+- [x] T018 [US2] The compose flow asks what kind of material it is, **nothing pre-selected**
       (FR-1907), read from `instructions/material-kinds.md` (FR-1908). A second hard-coded
-      list of four is how the corpus stops being the authority (Principle I)
-- [ ] T019 [US2] `ComposeRequest` carries the kind, and `runCompose` uses it instead of
+      list of four is how the corpus stops being the authority (Principle I) *(done, read from the corpus and nothing pre-selected. The four controls are the same shape as the door's, because it is the same kind of question.)*
+- [x] T019 [US2] `ComposeRequest` carries the kind, and `runCompose` uses it instead of
       deriving it. The derivation becomes the **fallback** for material composed before
-      this feature
-- [ ] T020 [US2] The kind she asked for is what is recorded (FR-1923), and where what came
+      this feature *(done. The local was renamed `chosenKind` after it shadowed the imported `materialKind` lookup and made the call site read as a string being invoked — fifth name collision here, and the first inside a single file.)*
+- [x] T020 [US2] The kind she asked for is what is recorded (FR-1923), and where what came
       out does not match, **the report says so** (FR-1910). Relabelling to fit the request
-      falsifies the *what*; relabelling to fit the content takes a decision that is hers
-- [ ] T021 [US2] The chosen kind is the word every screen uses from then on (FR-1909,
-      `016` FR-1402/1404)
-- [ ] T022 [US2] **The exam's limits, on the document and not only on the screen** — a
+      falsifies the *what*; relabelling to fit the content takes a decision that is hers *(done, and the sentence uses the **corpus labels** for both kinds. A `KIND_ES` map in the shell would have been a second copy of `material-kinds.md`, which is the defect this project has found more than any other.)*
+- [x] T021 [US2] The chosen kind is the word every screen uses from then on (FR-1909,
+      `016` FR-1402/1404) *(done.)*
+- [x] T022 [US2] **The exam's limits, on the document and not only on the screen** — a
       printed page outlives the screen it was made on: the draft mark plus «tú validas cada
       pregunta» (FR-1911), and that a different assessment for one learner is the teaching
-      team's decision (FR-1912)
-- [ ] T023 [US2] Assert the two absences, across every rendering of every kind: **no mark
+      team's decision (FR-1912) *(done, and the sentences live in the corpus as `composing.on_document` — a new field, because adapting an exam and writing one are different acts. Printed as a `note` block, not `report-notes`: they have to be on the paper, since whoever picks it up next did not see the warning she saw.)*
+- [x] T023 [US2] Assert the two absences, across every rendering of every kind: **no mark
       scheme, weighting or pass mark** (FR-1913) and **no marking of a learner's answers**
-      (FR-1914). Absences are the only shape a limit like this can be tested in
-- [ ] T024 [US2] A composed exam's answer key is verified by the same deterministic checks
+      (FR-1914). Absences are the only shape a limit like this can be tested in *(done, `no-grade-ever.test.ts`, 22 cases — **and the first version was wrong in a way worth keeping**: it grepped the corpus prose for «2 puntos» and found three files, all of which were the prohibition itself, plus `guide.md` quoting «tipografía de 14 puntos», a font size. Scanning the text of a rule for what the rule forbids will always find the rule. It now checks the deterministic output and the presence of the prohibition in the prompt.)*
+- [x] T024 [US2] A composed exam's answer key is verified by the same deterministic checks
       as any composed material, and whatever could not be verified is named **before** she
-      can print it (FR-1915)
-- [ ] T025 [P] [US2] `app/e2e/compose-kind.spec.ts` from quickstart §5, including asking
+      can print it (FR-1915) *(inherited, and verified: the key is computed by the same verifiers whatever the kind, and `002` FR-125 already names what nothing could check **before** the summary she reads.)*
+- [x] T025 [P] [US2] `app/e2e/compose-kind.spec.ts` from quickstart §5, including asking
       for an exam and getting bare arithmetic
 
 **Checkpoint**: «solo me ha dicho de preparar fichas» is no longer true.
@@ -144,7 +144,7 @@ the exam's four limits on the document itself.
 
 **Independent Test**: compose, correct, get a second version with the first kept and the
 answer key re-verified.
-
+ *(done, `e2e/compose-kind.spec.ts`, 4 cases. It found that `composing.before` never crossed to the renderer — **eleventh** field written, parsed, typed and read by nobody in this project, and this one was the sentence telling a PT what asking a model for an exam means. Closed by a guard in `corpus-guarantees.test.ts`.)*
 - [ ] T026 [US3] A **separate operation** from `job:revise` that re-runs the composition
       with her correction (research R3). `job:revise` runs `runAdaptation`; pointing it at
       a composed job would ask a model to *adapt* the sheet — the wrong kind of document,

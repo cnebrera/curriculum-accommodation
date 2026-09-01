@@ -32,8 +32,50 @@ export interface MaterialKind {
    * without one simply says nothing rather than having a sentence invented for it.
    */
   before?: string;
+  /**
+   * What happens when Rampa **writes** this kind rather than adapting one (`021` US2).
+   *
+   * Adapting an exam and writing one are different acts: the first has a demand to
+   * respect, the second is proposing it. `on_document` goes **on the printed page** and
+   * not only on the screen — a sheet outlives the screen it was made on, and whoever
+   * picks it up next did not see the warning she saw.
+   *
+   * Optional, and absent for every kind that needs nothing extra. Corpus rather than
+   * code because which sentence a PT needs printed on a generated exam is a judgement she
+   * can correct without a release (Principle I).
+   */
+  composing?: {
+    /** Said to her before it runs. */
+    before?: string;
+    /** Printed on the document itself. */
+    onDocument: string[];
+  };
   /** Sent to the model verbatim, alongside the hard rules, which outrank it. */
   rule: string;
+}
+
+/**
+ * `composing:` from a kind entry, or nothing.
+ *
+ * Fails **open** — a malformed block yields no limits rather than throwing — for the
+ * reason `002` chose the opposite for clinical terms: there, an empty list meant a
+ * diagnosis reached the vault, so it failed closed. Here an absent block means a kind
+ * carries no extra sentence, which is the normal case for three of the four. What must
+ * not happen is the whole corpus refusing to load because somebody mis-indented a line
+ * on the exam entry, taking adapting down with it.
+ *
+ * The limits that actually matter — no mark scheme, no marking a learner's answers — are
+ * **not** here. They are asserted as absences over the output (`021` T023), because a
+ * rule that lives only in a prompt shares its context window with a document that may
+ * contradict it (`007`).
+ */
+function parseComposing(v: unknown): { before?: string; onDocument: string[] } | undefined {
+  if (!v || typeof v !== 'object') return undefined;
+  const e = v as Record<string, unknown>;
+  const onDocument = list(e['on_document']);
+  const before = str(e['before']);
+  if (onDocument.length === 0 && !before) return undefined;
+  return { onDocument, ...(before ? { before } : {}) };
 }
 
 const str = (v: unknown): string => (typeof v === 'string' ? v.trim() : '');
@@ -78,11 +120,13 @@ export function parseMaterialKinds(raw: string, path = 'material-kinds.md'): Mat
     }
     seen.add(id);
     const before = str(e['before']);
+    const composing = parseComposing(e['composing']);
     out.push({
       id, label, forbids: list(e['forbids']), rule,
       // Absent is silence, not a default sentence: an invented promise about what
       // will not be touched is worse than none.
       ...(before ? { before } : {}),
+      ...(composing ? { composing } : {}),
     });
   }
 

@@ -15,7 +15,7 @@ import { sendRedacted } from '@rampa/providers';
 import { currentVault } from '../ipc/vault.js';
 import { knownNames, unknownNamesIn } from '../ipc/names.js';
 import { activeProvider } from '../ipc/keys.js';
-import { assertCorpus, loadInstruction, findYearInCorpus } from '../corpus/index.js';
+import { assertCorpus, loadInstruction, findYearInCorpus, materialKind } from '../corpus/index.js';
 import { recordCost } from '../ipc/cost.js';
 
 /**
@@ -96,6 +96,17 @@ export interface ComposeRequest {
    * passes, and the cost of passing it is a page of confident falsehoods.
    */
   anchor?: string;
+  /**
+   * What kind of material she wants (`021` FR-1907).
+   *
+   * **Hers, and never defaulted** (`012` FR-1001). Before `021` this was derived from
+   * whatever came out, silently, and `exam` was unreachable — «solo me ha dicho de
+   * preparar fichas».
+   *
+   * Optional in the type only so a caller written before this still compiles; the
+   * handler refuses a request without one, exactly as `job:create` does.
+   */
+  kind?: string;
 }
 
 export interface ComposeResult {
@@ -344,9 +355,59 @@ export async function runCompose(
   const composedOn = new Date().toISOString().slice(0, 10);
   const title = (request.title ?? kept[0] ?? 'Material generado').trim();
 
+  /*
+   * What came out, if she had not said. Kept as the **fallback** (`021` FR-1907):
+   * material composed before she was asked has no `kind` in its request, and a vault has
+   * documents in it.
+   */
+  const derived = content.length > 0 && groups.length === 0
+    ? 'study'
+    : groups.some((g) => /\bproblema/i.test(g.instruction)) ? 'problems' : 'worksheet';
+
+  /*
+   * **What she asked for wins** (`021` FR-1923).
+   *
+   * `012` FR-1001: the kind is hers and is never Rampa's decision. Relabelling it to
+   * match the content would take that decision away; relabelling to match the request
+   * would falsify the *what* (FR-1910). So the kind is recorded as she said it, the
+   * report says what actually came out, and a later adaptation runs under the rules she
+   * chose — which in the mismatching case are the stricter ones. Conservative in the safe
+   * direction: it protects more, never less.
+   */
+  // `chosenKind`, not `materialKind`: that name is the corpus lookup imported above, and
+  // a local shadowing it made the call site read as a string being invoked. Fifth name
+  // collision in this codebase, and the only one so far inside a single file.
+  const chosenKind = request.kind ?? derived;
+  const kindMismatch = request.kind !== undefined && request.kind !== derived;
+
+  /*
+   * Both kinds, looked up — because their Spanish names live in the corpus.
+   *
+   * A `KIND_ES` map here would be a second copy of `material-kinds.md`'s `label`, which
+   * is the defect this project has found more than any other, and it would drift the day
+   * a PT rewords one.
+   */
+  const kindEntry = await materialKind(chosenKind);
+  const derivedEntry = kindMismatch ? await materialKind(derived) : null;
+  const askedKind = kindEntry?.label ?? chosenKind;
+  const cameOutKind = derivedEntry?.label ?? derived;
+
   const notes = [
     // FR-129 · the level, and who chose it. First, because it governs everything else.
     explainTarget(target, yearId ? yearLabel : undefined),
+    /*
+     * What she asked for versus what came out (`021` FR-1910).
+     *
+     * Said rather than fixed: the kind stays as she chose it (FR-1923), because
+     * relabelling to match the content would take a decision that is hers and
+     * relabelling to match the request would falsify the *what*. So it is a sentence in
+     * the report, which is where a disagreement between her and the material belongs.
+     */
+    ...(kindMismatch
+      ? [`Me pediste «${askedKind}» y lo que ha salido se parece más a «${cameOutKind}». Lo he `
+         + 'dejado como lo pediste: el tipo lo decides tú, y de él dependen las reglas '
+         + 'con las que lo adapte después. Si no es lo que querías, dímelo y lo hago otra vez.']
+      : []),
     ...(unverifiedObjectives.length
       ? [`${UNVERIFIABLE_ES} Concretamente: ${unverifiedObjectives.map((o) => `«${o}»`).join(', ')}.`]
       : []),
@@ -370,12 +431,12 @@ export async function runCompose(
    * `materialKind()` resolved it to `null` and a composed sheet reached adaptation
    * with **no kind rule governing it at all**.
    */
-  const materialKind = content.length > 0 && groups.length === 0
-    ? 'study'
-    : groups.some((g) => /\bproblema/i.test(g.instruction)) ? 'problems' : 'worksheet';
 
   const sheet = buildSheet({
-    title, lang: 'es', materialKind, objectives: kept, groups, content, composedOn, notes,
+    title, lang: 'es', materialKind: chosenKind, objectives: kept, groups, content, composedOn, notes,
+    // The kind's own sentences, printed (`021` T022). Corpus, never a literal here.
+    ...(kindEntry?.composing?.onDocument.length
+      ? { kindNotes: kindEntry.composing.onDocument } : {}),
     ...(request.sessions && request.sessions > 0
       ? { sessions: Math.min(20, Math.round(request.sessions)) } : {}),
     ...(anchorRaw ? { anchor: anchorSummary(anchorRaw) } : {}),

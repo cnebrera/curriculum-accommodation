@@ -1,9 +1,10 @@
 import { type BrowserWindow } from 'electron';
-import { jobAnswers, jobComposeReport } from '@rampa/core';
+import { jobAnswers, jobComposeReport, RampaError } from '@rampa/core';
 import { currentVault } from './vault.js';
 import { handle } from './wrap.js';
 import { runCompose, type ComposeRequest } from '../jobs/compose.js';
 import { refreshRecord } from './record.js';
+import { materialKind } from '../corpus/index.js';
 
 /**
  * Wiring, and only wiring (016 T003, `013` FR-1111).
@@ -26,6 +27,18 @@ import { refreshRecord } from './record.js';
  */
 export function registerComposeIpc(getWindow: () => BrowserWindow | null): void {
   handle('job:compose', async (jobId: string, request: ComposeRequest) => {
+    /*
+     * The kind is **required and never defaulted** (`021` FR-1907, `012` FR-1001).
+     *
+     * The same refusal `job:create` makes for pasted material, for the same reason: a
+     * defaulted «ficha» is how an exam gets treated as a worksheet, silently, before the
+     * model sees it. Refused rather than coerced — a value that should not exist is a
+     * signal, and rewriting it into something plausible hides the event worth seeing.
+     */
+    if (!request.kind || !(await materialKind(request.kind))) {
+      throw new RampaError('material-kind-missing',
+        'Dime qué quieres que prepare: una ficha, un examen, apuntes o problemas.');
+    }
     const result = await runCompose(jobId, request,
       (p) => getWindow()?.webContents.send('job:progress', p));
     /*

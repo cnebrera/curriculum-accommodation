@@ -29,6 +29,24 @@ kinds:
     before: >
       Es un examen: voy a cambiar cómo se lee y cómo contesta, y nada de lo que
       se pregunta. Si sale más fácil, es otro examen.
+    # Lo que pasa cuando el examen lo escribo yo desde cero (021 US2).
+    #
+    # Adaptar un examen que ya existe y escribirlo yo son dos cosas distintas: en el
+    # primero hay una exigencia que respetar, en el segundo la estoy proponiendo. Estas
+    # frases van IMPRESAS en el documento, no sólo en la pantalla, porque el papel
+    # sobrevive a la pantalla en la que se hizo.
+    composing:
+      before: >
+        Te voy a proponer las preguntas de una prueba con nota. Yo no sé qué habéis
+        dado en clase ni qué pesa cada cosa: tú validas cada pregunta antes de que
+        esto sea un examen.
+      on_document:
+        - >
+          Estas preguntas las he propuesto yo. Válida cada una antes de usarlas: yo no
+          sé qué se ha dado en clase.
+        - >
+          Poner a un alumno una prueba distinta de la del grupo lo decide el equipo
+          docente, no yo. Aquí no lo he decidido.
     forbids: [question-demand, item-count, curricular-demand, numbering]
     rule: >
       Es una prueba de evaluación. Cambia SÓLO la vía de acceso y la vía de

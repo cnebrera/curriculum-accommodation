@@ -106,7 +106,7 @@ export async function throughDoorToAdapt(
 
 /** Learner → «hacer material», and into the compose screen. */
 export async function throughDoorToCompose(
-  page: Page, opts: { learnerIndex?: number } = {},
+  page: Page, opts: { learnerIndex?: number; kind?: string } = {},
 ): Promise<void> {
   await page.getByRole('button', { name: RAIL_WORK }).click();
   await page.getByRole('heading', { name: '¿Qué vas a hacer?' }).waitFor();
@@ -116,6 +116,16 @@ export async function throughDoorToCompose(
   await page.getByRole('button', { name: 'Empezar', exact: true }).click();
 
   await page.locator('#objetivos').waitFor();
+  /*
+   * And the first question on that screen: **what kind of material** (`021` FR-1907).
+   *
+   * Before `021` the kind was derived from whatever came out, so «solo me ha dicho de
+   * preparar fichas» was literally true. Now nothing is pre-chosen, so a walk that does
+   * not answer it reaches a primary control that is correctly disabled — which is how
+   * this helper started failing four specs at once, and why it belongs here rather than
+   * in each of them.
+   */
+  await page.locator('.door', { hasText: opts.kind ?? KIND_WORKSHEET }).click();
 }
 
 /**
