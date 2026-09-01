@@ -31,6 +31,22 @@
 
 ## Notes
 
+**Re-validated 2026-09-01 after `/speckit-clarify`.** All sixteen items still pass. Two
+questions went to Carlos; four more were answered from the constitution and from
+specifications already written, each recording its source. Four requirements and one
+success criterion were added — FR-1921…FR-1924 and SC-1908.
+
+The clarification with the most consequence: **the answer key is printable**, in its own
+file and with a heading that cannot be misread. That adds a real risk — a page of answers
+in the photocopy pile — so SC-1908 checks **both sides**: no answer in any rendering of a
+learner's material, and every rendering of the key saying on its face that it is not to
+be handed out. One of those two failing is what puts answers in a child's hands.
+
+And one requirement arrived from a principle rather than from a question: **FR-1924, the
+viewer executes nothing**. A composed document rests on an anchor she pasted, `007` treats
+that text as content, and a viewer that ran markup from it would be the single place in
+this application where content became instruction (Principle IX).
+
 **Two things the checklist changed rather than blessed.**
 
 **«No implementation details» failed on the first pass**, and in a way worth recording:

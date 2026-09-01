@@ -41,6 +41,48 @@ talking to Rampa about a document needs its own thinking about cost per turn, ve
 and what happens to a verified answer key when the exercises change. What `021` does is
 make the **correction box that already exists** reachable from composed material.
 
+## Clarifications
+
+### Session 2026-09-01
+
+Two questions went to Carlos. The rest are answered **from the constitution and from
+specifications already written**, each recording its source — the pattern `005`
+established, so a reviewer can disagree with the source rather than with my judgement.
+
+- **Q: Can the teacher's answer key be printed, or only opened?** → **A: Printable, and
+  marked as hers.** In its own file, never the learner's, with a heading that cannot be
+  misread — «SOLUCIONES · NO REPARTIR». The useful case is real: she takes it to class.
+  The risk is that it ends up in the photocopy pile, and the marking is what makes that
+  unlikely. → FR-1921, FR-1922, SC-1908.
+
+- **Q: She asks for an exam and what comes out is bare arithmetic. What kind is the
+  document?** → **A: The kind she asked for, and the report says what happened.** The
+  kind is hers (`012` FR-1001: never defaulted, never Rampa's decision), and relabelling
+  it would be the thing FR-1910 forbids. Adapting it later then uses the exam rules,
+  which are the strictest — conservative in the safe direction: it protects more, never
+  less. → FR-1923.
+
+- **Q: Can she sign off composed material before adapting it, and what happens to that
+  signature when she later adapts it?** → **A: Yes, and the signatures are independent.**
+  A signature is about **a document** (Principle VII), and `005` FR-511 already says each
+  sheet keeps its own. A signed composition adapted for three learners produces three
+  unsigned sheets, because nobody has read those yet.
+
+- **Q: Which presentation does composed material print with?** → **A: The learner it was
+  composed for.** `ir.md` records `composed_for`, `print.ts` already derives the
+  presentation from a learner's axis levels, and the material was written at that
+  learner's level in the first place. Nothing new is needed and nothing is guessed.
+
+- **Q: May the in-application viewer run anything the document contains?** → **A: No.**
+  Principle IX with no exception: a composed document rests on an anchor she pasted, and
+  `007` treats every such passage as content. A viewer that executed markup from it would
+  be the one place in this application where content became instruction. → FR-1924.
+
+- **Q: What is the material called on screen now that there are four kinds?** → **A: By
+  its kind, always.** `012` FR-1011 and `016` FR-1402: the interface stops using one word
+  for several things, and a viewer titled «la ficha» over an exam is that defect
+  returning through a new door.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Seeing and printing what she just made (Priority: P1)
@@ -188,6 +230,22 @@ that they only exist downstream of an adaptation.
   checks as any composed material, and whatever could not be verified MUST be named
   **before** she can print it (`002`, Principle II).
 
+#### The teacher's copy
+
+- **FR-1921**: The answer key MUST be printable and exportable, in its own file, and MUST
+  NEVER share a file or a page with the learner's material (`002`).
+- **FR-1922**: Every rendering of the answer key MUST carry a heading that cannot be
+  misread as a learner's page — it states that these are the solutions and that they are
+  not to be handed out. The failure this prevents is a page of answers reaching the
+  photocopy pile.
+- **FR-1923**: The material kind recorded on a document MUST be the kind **she asked
+  for** (`012` FR-1001). Where what was produced does not match it, the report says so
+  (FR-1910) and the kind is not changed — so a later adaptation is governed by the rules
+  she chose, which in the mismatching case are the stricter ones.
+- **FR-1924**: The viewer MUST NOT execute, follow or act on anything inside a document —
+  no scripts, no remote references, no navigation the document asks for (Principle IX,
+  `007`). A composed document rests on an anchor she pasted, and that text is content.
+
 #### Correcting without adapting
 
 - **FR-1916**: She MUST be able to correct composed material and get a new version,
@@ -229,12 +287,14 @@ that they only exist downstream of an adaptation.
   this feature.**
 - **SC-1907**: Correcting composed material produces a new version and keeps the old one,
   with the answer key re-verified whenever a quantity changed.
+- **SC-1908**: No rendering of a learner's material contains an answer, and every
+  rendering of the answer key says on its face that it is not to be handed out. Checked
+  on both sides, because one of them failing is what puts answers in a child's hands.
 
 ## Assumptions
 
-- **Printing composed material needs no learner-specific presentation.** It was composed
-  at that learner's level from his objectives; the presentation rules of `007`/`019` apply
-  to it as they do to anything else.
+- **Composed material prints with the presentation of the learner it was composed for.**
+  `ir.md` records who that is, and the material was written at his level to begin with.
 - **The viewer is read-only.** Editing stays in her folder — Rampa is a guest in those
   files, and a second editor would be a second place for the document to diverge.
 - **The exam limits are stated on the document, not just in the interface.** A printed
