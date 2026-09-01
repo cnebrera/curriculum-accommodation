@@ -146,7 +146,7 @@ at is a requirement nobody is keeping.**
 
 | | Where it is satisfied |
 |---|---|
-| FR-1401 | T007 · `DoorScreen`'s two `.door` controls, neither pre-selected. `e2e/door.spec.ts` asserts both are `aria-pressed="false"` |
+| FR-1401 | **Retired 2026-09-01 by `020` FR-1801** — the opening screen is her caseload, not a question about work. Was T007 · `DoorScreen`'s two `.door` controls, neither pre-selected. The substance survives as `020` FR-1812: the same two choices, still neither pre-selected, inside the learner. The `aria-pressed="false"` assertion moves with them |
 | FR-1403 | T007 · the kinds come from `012`'s corpus with nothing pre-selected, and `e2e/material.spec.ts` asserts it over all four |
 | FR-1406 | T017 · straight through `005`'s `runBatch`. The door's learner is the **first**, not the only one — the checkbox list stays on the adapt screen, which `e2e/group.spec.ts` caught when it briefly did not |
 | FR-1407 | `job:adapt` calls `refreshRecord` per learner that got a sheet, and `job:compose` calls it too (T006) |

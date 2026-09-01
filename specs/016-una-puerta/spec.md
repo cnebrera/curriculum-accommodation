@@ -193,8 +193,20 @@ shortcut into the same door, so nothing else depends on it.
 
 ## Requirements *(mandatory)*
 
-- **FR-1401**: The first screen MUST ask what kind of work this is, offering *adapt
-  existing material* and *create material from objectives* as peers.
+- **FR-1401**: ~~The first screen MUST ask what kind of work this is, offering *adapt
+  existing material* and *create material from objectives* as peers.~~
+  **RETIRED 2026-09-01 by `020` FR-1801.** The opening screen is her caseload.
+
+  Not a reversal of this specification's argument but its conclusion. FR-1401 exists
+  because Carlos chose learner-first in clarification, against my recommendation, on
+  the grounds that *«she arrives thinking about a child»*. That grounds held; the
+  screen did not. If she arrives thinking about a child, the child is the **place**,
+  not the first question of a form — and a door that only asked was a door she had to
+  pass through to get anywhere.
+
+  **The substance moves rather than disappearing**: adapting and composing are still
+  offered as peers with neither pre-selected, inside the learner, as `020` FR-1812.
+  Everything else here — FR-1402 through FR-1412 — is unchanged and restated in `020`.
 - **FR-1402**: The interface MUST stop naming everything «una ficha» (`012`
   FR-1011). This feature is where that requirement becomes visible.
 - **FR-1403**: The material kind MUST be chosen explicitly and MUST NOT default
