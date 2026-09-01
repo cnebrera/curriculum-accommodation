@@ -413,6 +413,42 @@ every moment should have a spec. What it added beyond the seams pass:
    journey sentence → T094). Handover *import* (004 US2) recorded as deliberately
    deferred rather than silently missing.
 
+## G28 · Rampa told a teacher more than the licence says — *TEXT CORRECTED, TWO ITEMS OPEN*
+
+Carlos, reading the pictogram screen: «esto qué mierda es? no puedo decirle al usuario
+que se tiene que bajar algo… la herramienta va a ser gratis, podemos usar eso o no?»
+
+Fair, and going to read CC BY-NC-SA 4.0's text instead of remembering it found that **two
+of the three things Rampa told her claimed more than the licence does**. I wrote them, two
+days ago, in `018`.
+
+| What Rampa said | What the licence says |
+|---|---|
+| «No se pueden usar con fines comerciales» — as a flat prohibition | §1.11: *«not primarily intended for or directed towards commercial advantage or monetary compensation»*. A public classroom is precisely what that is not. **Her use was never the problem** |
+| «Una hoja con un pictograma es obra derivada, así que hereda la misma licencia. Eso afecta a lo que puedes hacer con tu propio material» | §3(b) applies ShareAlike to the **adapted material**, not to the whole work containing it. Told flatly to a PT it reads as «everything you make with this becomes restricted» — a reason not to use a legitimate resource |
+| «Toda hoja lleva la atribución, la pongo yo y no se puede quitar» | Correct, and unchanged |
+
+**What survives, and it is the only real constraint**: Rampa must not **bundle** them —
+not because the tool is free, but because the repository is **Apache-2.0**, which permits
+commercial use. Somebody could take the repo, sell it, and be distributing NC material in
+a commercial product. The conflict is about the *code's* licence, not about her.
+
+### Two items open
+
+**1 · `018`'s «not even behind a confirmation» is more conservative than the licence
+requires.** Fetching from the official source, at her request, is a client using a public
+service — not redistribution. Nothing is hosted and nothing enters the repository.
+Carlos chose the assisted download.
+
+**BLOCKER, and it is real**: I could not read ARASAAC's **own** terms of use. Their terms
+page returned no content and `api.arasaac.org/docs` is a 404. I know they publish an API
+and that free applications use it; **I have not confirmed it in their source**, so the
+download must not ship on my assumption. Somebody reads that page first.
+
+**2 · A legal read of the on-screen text.** Requested by Carlos and correct: I am not a
+lawyer, and a sentence about licences on a teacher's screen is read as fact. The text now
+stays inside what the licence text says, which is the most I can honestly do alone.
+
 ## G27 · An error that asked a question with nowhere to answer it — *CLOSED 2026-09-01*
 
 Reported by Carlos, adapting a worksheet: «no entiendo este mensaje que me ha salido».

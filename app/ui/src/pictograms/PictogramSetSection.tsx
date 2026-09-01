@@ -96,18 +96,41 @@ export function PictogramSetSection({ compact = false }: {
                 Palao, y tienen licencia <strong>CC BY-NC-SA</strong>. Los descargas
                 tú de <code>arasaac.org</code> y aceptas esa licencia directamente.
               </p>
+              {/*
+                Corrected 2026-09-01, after reading the licence text instead of
+                remembering it. Two of these three claimed more than CC BY-NC-SA says,
+                and a sentence about licences on a teacher's screen gets read as fact.
+
+                1 · «No comercial» was stated as a flat prohibition. The licence defines
+                    it as «not primarily intended for or directed towards commercial
+                    advantage or monetary compensation» — which is exactly what a
+                    classroom is not. Her use was never the problem; **bundling them into
+                    an Apache-2.0 repository** is, because that licence permits commercial
+                    use and somebody could sell the result.
+
+                2 · «Una hoja con un pictograma es obra derivada, así que hereda la misma
+                    licencia» was the worse one. §3(b) applies ShareAlike to the **adapted
+                    material**, not to the whole work containing it. Told a PT flatly, it
+                    reads as «everything you make with this becomes restricted», which is
+                    not what the licence says and is a reason not to use a legitimate
+                    resource.
+
+                Still marked for a legal read — Carlos asked for one and I am not a
+                lawyer. What is written here now stays inside what the text says.
+              */}
               <ul className="bullets">
                 <li>
-                  <strong>No se pueden usar con fines comerciales.</strong>
+                  Son para uso <strong>educativo y sin ánimo de lucro</strong>, que es
+                  para lo que ARASAAC los publica. Tu clase entra de lleno; venderlos, no.
                 </li>
                 <li>
                   Toda hoja que lleve un pictograma lleva la atribución. La pongo yo y
                   no se puede quitar: si se cayera, la hoja infractora sería la tuya.
                 </li>
                 <li>
-                  <strong>Una hoja con un pictograma dentro es obra derivada</strong>,
-                  así que hereda la misma licencia. Eso afecta a lo que puedes hacer
-                  después con tu propio material.
+                  Si <strong>modificas</strong> un pictograma, lo que salga de ahí va con
+                  la misma licencia. Usarlo tal cual dentro de una ficha tuya no convierte
+                  tu ficha en suya.
                 </li>
               </ul>
             </Callout>
