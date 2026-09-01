@@ -138,6 +138,35 @@ the exam's four limits on the document itself.
 
 ---
 
+## Phase 4b · How much material, in the units of the kind (added 2026-09-01)
+
+Carlos, using US2 the hour it shipped: «si voy a preparar material de estudio, no tiene
+sentido que me pregunte número de ejercicios… tendría sentido que me preguntara cuánto
+tiempo de estudio o algo así». Correct, and the fix he proposed is better than the one I
+offered: **sessions *and* minutes per session**, not one of them.
+
+Both are facts she holds with certainty — her timetable. What Rampa estimates is how much
+material fits, and FR-1928 makes it say so.
+
+- [ ] T035 `instructions/material-kinds.md` · each kind declares what to ask about
+      quantity and in what words (FR-1925). Corpus, so changing a kind's question is a
+      Markdown edit — the same reason `composing` went there
+- [ ] T036 [P] The kind with nothing to count declares exactly that, and the screen asks
+      no quantity at all for it (FR-1925, FR-1927)
+- [ ] T037 `ComposeRequest` carries `sessions` **and** `minutesPerSession`, and the screen
+      asks both for every kind (FR-1926). **`sessions` has existed since `002` FR-130 and
+      no screen ever asked for it** — always `undefined`, letter held, spirit not
+- [ ] T038 [P] Where material is sized from a time, the report says it is an **estimate**
+      (FR-1928). «Nobody knows how long this child takes over a page» is the honest
+      sentence, and it belongs where she reads what happened
+- [ ] T039 [P] What she said reaches the material and is available to `017`'s
+      temporalización (FR-1929) — one answer, used twice
+- [ ] T040 Assert per kind that the screen asks the right question and **no other**
+      (SC-1909), over the rendered interface: this is a claim about what she is asked,
+      which a unit test cannot see
+
+---
+
 ## Phase 5 · User Story 3 · Correcting composed material without adapting (P3)
 
 **Goal**: the correction box she already knows, reaching composed material.
@@ -233,6 +262,11 @@ answer key re-verified.
 | FR-1918 | T029 |
 | FR-1919 | T027 |
 | FR-1920 | T029 |
+| FR-1925 | T035, T036 |
+| FR-1926 | T037 |
+| FR-1927 | T036 |
+| FR-1928 | T038 |
+| FR-1929 | T039 |
 | FR-1921 | T013 · its own file, asserted by T001 |
 | FR-1922 | T013 · the heading, asserted by T001 |
 | FR-1923 | T020 |

@@ -78,6 +78,27 @@ established, so a reviewer can disagree with the source rather than with my judg
   `007` treats every such passage as content. A viewer that executed markup from it would
   be the one place in this application where content became instruction. → FR-1924.
 
+- **Q: If she asks for a study text, does «how many exercises of each» still make
+  sense?** → **A: No, and the question changes with the kind.** Carlos, using it: «si voy
+  a preparar material de estudio, no tiene sentido que me pregunte número de ejercicios».
+  Each kind declares in the corpus what to ask and in what words — exercises, questions,
+  problems — and a study text has nothing to count.
+
+  And the replacement is **two** answers, not one: «tres sesiones de veinte minutos», his
+  correction to my proposal of one. Both are facts she holds with certainty — how many
+  sessions she has and how long they are is her timetable. What Rampa estimates is how
+  much material fits in that, and it must say so as an estimate rather than a promise.
+
+  Available for **every** kind rather than only for study, because «this worksheet is for
+  two sessions» is also true, `017`'s ACNS needs it for the temporalización, and it gives
+  an exam its duration without inventing a field — «one session of forty-five minutes»,
+  with the time set by her. → FR-1925…FR-1929, SC-1909.
+
+  **And it found a requirement already half-built**: `sessions` has been in the compose
+  request since `002` FR-130, is written into the document, and **no screen has ever asked
+  for it** — so it has always been `undefined`. FR-130 says material «MUST be able to
+  record» it, so the letter held while the spirit did not.
+
 - **Q: What is the material called on screen now that there are four kinds?** → **A: By
   its kind, always.** `012` FR-1011 and `016` FR-1402: the interface stops using one word
   for several things, and a viewer titled «la ficha» over an exam is that defect
@@ -215,6 +236,24 @@ that they only exist downstream of an adaptation.
   say so. Relabelling the material to match the request is falsifying the *what*
   (Principle III).
 
+#### How much material, in the units of the kind she chose
+
+- **FR-1925**: The question about **how much** material to make MUST come from the kind
+  she chose, in that kind's own words, and MUST be absent for a kind with nothing to
+  count. Asking «cuántos ejercicios» for a study text is the interface talking about
+  itself.
+- **FR-1926**: Both the **number of sessions** and the **length of a session** MUST be
+  askable, for every kind. They are two facts she holds with certainty — how many
+  sessions she has and how long they are — and together they are how a PT plans.
+- **FR-1927**: For a kind with nothing to count, those two MUST be how she says how much
+  material she wants.
+- **FR-1928**: Where Rampa sizes material from a time, it MUST present the result as an
+  **estimate and not a promise**. How long a particular child takes over a page is the one
+  thing in this exchange nobody knows, and a text calibrated to a time that does not hold
+  is worse than a text with no time on it.
+- **FR-1929**: What she said MUST be recorded on the material (`002` FR-130) and MUST be
+  available to the ACNS draft's temporalización (`017`). One answer, used twice.
+
 #### What Rampa may not do with an exam it wrote
 
 - **FR-1911**: A composed exam MUST carry the draft mark and MUST state that she
@@ -290,6 +329,8 @@ that they only exist downstream of an adaptation.
 - **SC-1908**: No rendering of a learner's material contains an answer, and every
   rendering of the answer key says on its face that it is not to be handed out. Checked
   on both sides, because one of them failing is what puts answers in a child's hands.
+- **SC-1909**: No screen asks a question that does not apply to the kind she chose, and
+  what she answers about sessions reaches both the material and the ACNS draft.
 
 ## Assumptions
 
