@@ -4,8 +4,9 @@ import { Callout } from '../components/Callout.js';
 import { Loaded } from '../data/Loaded.js';
 import {
   useCurrentSet, useChooseSet, useInspectSet, useUseSet, usePublishers,
-  useAcceptLicence, useWithdrawLicence, useFetchPictograms,
-  type SetInspection, type FetchResult,
+  useAcceptLicence, useWithdrawLicence, useFetchPictograms, useSetState,
+  useCheckUpdate, useDeclineUpdate,
+  type SetInspection, type FetchResult, type UpdateStatus,
 } from '../data/pictograms.js';
 
 /**
@@ -54,8 +55,11 @@ export function PictogramSetSection({ compact = false }: {
   const withdraw = useWithdrawLicence();
   const bring = useFetchPictograms();
   const [looked, setLooked] = useState<{ root: string; result: SetInspection } | null>(null);
-  const [words, setWords] = useState('');
   const [result, setResult] = useState<FetchResult | null>(null);
+  const setState = useSetState();
+  const check = useCheckUpdate();
+  const decline = useDeclineUpdate();
+  const [update, setUpdate] = useState<UpdateStatus | null>(null);
 
   const pick = async (): Promise<void> => {
     const root = await choose.run();
@@ -92,11 +96,21 @@ export function PictogramSetSection({ compact = false }: {
   };
 
   const fetchThem = async (): Promise<void> => {
-    const asked = words.split(/[\s,;\n]+/).filter(Boolean);
-    if (asked.length === 0) return;
-    const got = await bring.run(asked);
-    if (got) { setResult(got); setWords(''); current.reload(); }
+    const got = await bring.run();
+    if (got) { setResult(got); setUpdate(null); current.reload(); setState.reload(); }
   };
+
+  const look = async (): Promise<void> => {
+    const found = await check.run();
+    if (found) setUpdate(found);
+  };
+
+  const notNow = async (highWater: string): Promise<void> => {
+    if (await decline.run(highWater)) { setUpdate(null); setState.reload(); }
+  };
+
+  const have = setState.state === 'ready' ? setState.value : null;
+  const status = update ?? have?.status ?? { state: 'unknown' as const };
 
   const body = (
     <Loaded from={current} busyLabel="Mirando si ya tienes un juego de pictogramas">
@@ -179,16 +193,22 @@ export function PictogramSetSection({ compact = false }: {
                   tu ficha en suya.
                 </li>
                 {/*
-                  FR-2110. She is entitled to know what leaves before it leaves, and
-                  «una palabra por consulta» is the whole guarantee: `wordListOf`
-                  removes the names Rampa knows, and the request carries nothing else —
-                  no code, no perfil, no identificador.
+                  FR-2110, **corrected by `024`** — and found by looking at the screen
+                  rather than by any test.
+
+                  This said «salen palabras de tu ordenador, una por consulta», which
+                  was true of `023` and is now false: `024` deleted the word-by-word
+                  path, so what leaves is a language and a list of numbers. Leaving it
+                  would have been an overstatement in the text her acceptance rests on,
+                  which is the same class of mistake as backlog G28 — and this time in
+                  the direction of claiming Rampa sends *more* than it does.
                 */}
                 <li>
-                  Al traerlos <strong>salen palabras de tu ordenador</strong>, una por
-                  consulta, a {(publisher?.site ?? 'arasaac.org').replace(/^https?:\/\//, '')}.
-                  Nunca el nombre de un alumno, ni su código, ni su perfil, ni nada que
-                  identifique tu ordenador.
+                  Al traerlos, de tu ordenador <strong>no sale ninguna palabra</strong>:
+                  le pido a {(publisher?.site ?? 'arasaac.org').replace(/^https?:\/\//, '')}{' '}
+                  su lista completa y luego los dibujos por su número. Nunca el nombre de
+                  un alumno, ni su código, ni su perfil, ni nada que identifique tu
+                  ordenador.
                 </li>
               </ul>
               {publisher?.licenceUrl ? (
@@ -225,38 +245,90 @@ export function PictogramSetSection({ compact = false }: {
             </Callout>
 
             {/*
-              **The button** (FR-2111, T015). Beside the folder picker, never instead
-              of it.
+              **The button** (`024` FR-2201, T015).
 
-              Words rather than «traerlo todo»: ARASAAC holds some fourteen thousand
-              pictograms, and fetching all of them would be hundreds of megabytes of
-              vocabulary no learner of hers will meet, in a download she has to
-              babysit. The words of the material in front of her are the ones that
-              make a sheet work.
+              One press, no textarea. `023` had a box where she typed «casa, perro,
+              comer» and Carlos said twice that this was the wrong thing to ask for —
+              she does not know which words the next worksheet will contain. The whole
+              catalogue is 13.802 pictograms, one indexed request and ~55 MB at the size
+              the corpus asks for, all measured rather than guessed.
+
+              And once it is complete this asks her for **nothing** (FR-2209): «que no
+              me lo vuelva a preguntar salvo que haya una actualización».
             */}
             {accepted && publisher ? (
-              <Field label="Traer pictogramas" htmlFor="picto-words"
-                     help={`Escribe las palabras que necesitas, separadas por comas. Pido `
-                       + `una por una, hasta ${state?.wordsPerFetch ?? 0} de golpe, y no `
-                       + `vuelvo a pedir las que ya tengas.`}>
-                {/* `htmlFor`/`id` paired: a label pointing at nothing is worse
-                    than no label, because axe passes it and a screen reader does not. */}
-                <textarea id="picto-words" className="input" rows={3} value={words}
-                          placeholder="casa, perro, comer, colegio, agua"
-                          onChange={(e) => setWords(e.target.value)} />
-                <Actions
-                  primary={
-                    <button className={strong} onClick={() => void fetchThem()}
-                            disabled={bring.busy || words.trim() === ''}>
-                      {bring.busy ? 'Trayéndolos…' : 'Traer los pictogramas'}
-                    </button>
-                  }
-                  note={bring.error?.message} />
-              </Field>
+              <>
+                {status.state === 'complete' && have?.inventory ? (
+                  <Callout intent="ok" title="Ya los tienes">
+                    <p>
+                      {have.inventory.images.toLocaleString('es-ES')} dibujos de{' '}
+                      {publisher.label}, desde el {have.inventory.broughtOn}. No hace
+                      falta que bajes nada más.
+                    </p>
+                    <Actions note={check.busy ? 'Mirando…' : undefined}>
+                      <button className="btn btn-ghost" onClick={() => void look()}
+                              disabled={check.busy}>
+                        ¿Hay pictogramas nuevos?
+                      </button>
+                    </Actions>
+                  </Callout>
+                ) : null}
+
+                {status.state === 'update' ? (
+                  <Callout intent="decide" title={`Hay ${status.added.toLocaleString('es-ES')} pictogramas nuevos`}>
+                    <p>
+                      {publisher.label} ha añadido dibujos desde que los bajaste. Sólo
+                      pido los que faltan.
+                    </p>
+                    <Actions
+                      primary={
+                        <button className={strong} onClick={() => void fetchThem()}
+                                disabled={bring.busy}>
+                          {bring.busy ? 'Trayéndolos…' : 'Traer los nuevos'}
+                        </button>
+                      }>
+                      <button className="btn btn-ghost"
+                              onClick={() => void notNow(status.highWater)}
+                              disabled={decline.busy}>
+                        Ahora no
+                      </button>
+                    </Actions>
+                  </Callout>
+                ) : null}
+
+                {status.state !== 'complete' && status.state !== 'update' ? (
+                  <Field
+                    help={status.state === 'incomplete'
+                      ? `Te faltan ${status.missing.toLocaleString('es-ES')}. Sigo por `
+                        + 'donde iba y no vuelvo a pedir los que ya tienes.'
+                      /*
+                        Both numbers from the corpus, and «55 MB» was hardcoded here
+                        until a real download said 157. Two copies of one truth is the
+                        defect this project has found six times, and this copy was the
+                        one that would have told her the wrong thing.
+                      */
+                      : `Son unos ${state?.expectedTotal.toLocaleString('es-ES') ?? ''} `
+                        + `dibujos y ocupan unos ${state?.expectedMegabytes ?? '?'} MB. `
+                        + 'Se guardan con tus cosas de Rampa, así que tu copia de '
+                        + 'seguridad los lleva. Puedes cerrar la ventana: sigo por donde '
+                        + 'iba cuando vuelvas.'}>
+                    <Actions
+                      primary={
+                        <button className={strong} onClick={() => void fetchThem()}
+                                disabled={bring.busy}>
+                          {bring.busy ? 'Trayéndolos…'
+                            : status.state === 'incomplete' ? 'Seguir bajándolos'
+                            : 'Traer los pictogramas'}
+                        </button>
+                      }
+                      note={bring.error?.message} />
+                  </Field>
+                ) : null}
+              </>
             ) : null}
 
             {result ? (
-              <Callout intent={result.outcome.found.length > 0 ? 'ok' : 'decide'}
+              <Callout intent={result.failed > 0 || result.stopped ? 'decide' : 'ok'}
                        title="Lo que he traído">
                 {result.lines.map((l, i) => <p key={i}>{l}</p>)}
                 <p className="small">Están en <code>{result.root}</code>.</p>

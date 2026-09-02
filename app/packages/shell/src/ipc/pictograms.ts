@@ -3,6 +3,7 @@ import { basename } from 'node:path';
 import { readSet } from '@rampa/core';
 import {
   publisherState, acceptLicence, withdrawLicence, bringPictograms, configureSet,
+  setState, checkUpdate, declineUpdate, candidatesFor, chooseWord, unchooseWord,
 } from '../pictograms/bring.js';
 import { handle } from './wrap.js';
 import { currentVault } from './vault.js';
@@ -75,13 +76,27 @@ export function registerPictogramIpc(getWindow: () => BrowserWindow | null): voi
   /** Stops further fetching, deletes nothing already hers (FR-2106). */
   handle('pictograms:withdrawLicence', () => withdrawLicence());
 
-  /** **The button** (FR-2107/2111). The guards are in `bringPictograms`. */
-  handle('pictograms:fetch', (args: { words: string[]; language?: string }) =>
+  /**
+   * What she has, answered **from disk** (`024` FR-2209/2210).
+   *
+   * Opening the screen a hundred times reaches nobody. «Que no me lo vuelva a
+   * preguntar» is a requirement about silence, and silence means no request.
+   */
+  handle('pictograms:state', () => setState());
+
+  /** **The button.** No word list (`024` FR-2201). Guards in `bringPictograms`. */
+  handle('pictograms:fetch', (args: { language?: string } = {}) =>
     bringPictograms({
       ...args,
       onProgress: (stage, detail) =>
         getWindow()?.webContents.send('job:progress', { stage, detail }),
     }));
+
+  /** One request, and only because she asked (`024` FR-2211). */
+  handle('pictograms:checkUpdate', () => checkUpdate());
+
+  /** She said no. Not offered again until the index moves further (FR-2212). */
+  handle('pictograms:declineUpdate', (highWater: string) => declineUpdate(highWater));
 
   /** She picks a folder — still, and on purpose (FR-2103). */
   handle('pictograms:choose', async () => {
@@ -119,6 +134,29 @@ export function registerPictogramIpc(getWindow: () => BrowserWindow | null): voi
     await configureSet(root, reading);
     return { ok: true, summary: reading.summary, problems: reading.problems };
   });
+
+  /**
+   * The words her set cannot decide, with their pictures (`024` FR-2217).
+   *
+   * An id is not something a person can choose between, so this returns `data:` URIs.
+   */
+  handle('pictograms:candidates', (args: { words: string[]; language?: string }) =>
+    candidatesFor(args));
+
+  /**
+   * She picks one. Once, for every learner (`024` FR-2214).
+   *
+   * `chooseWord` and not `choose`: `pictograms:choose` is the **folder picker**, and
+   * registering this as `choose` threw «Attempted to register a second handler» and
+   * took the whole application down at startup. Found by the e2e, because a channel
+   * name is a string and no compiler was ever going to see it — hence
+   * `ipc-channels.test.ts`, added the same minute.
+   */
+  handle('pictograms:chooseWord',
+    (args: { word: string; id: string; language?: string }) => chooseWord(args));
+
+  handle('pictograms:unchooseWord', (args: { word: string; language?: string }) =>
+    unchooseWord(args));
 
   /** Ids → `data:` URIs. The logic is `loadImages`; this supplies the disk. */
   handle('pictograms:images', async (ids: string[]) =>

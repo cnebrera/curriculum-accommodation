@@ -1,9 +1,20 @@
 import { normalise } from './set.js';
 import type { PictogramEntry } from './set.js';
-import type { WordList } from './wordlist.js';
 
 /**
- * Planning and parsing a fetch (023 T005-T007, FR-2111…2115).
+ * Planning and parsing a fetch (023 T005-T007; 024 T002/T003).
+ *
+ * ## `024` deleted the word-by-word path, and the privacy story got shorter
+ *
+ * `023` sent one vocabulary word per request, and three of its requirements existed to
+ * bound what that leaked: a word list built by removing the names Rampa knows, a filter
+ * rejecting anything that was not a plain word, and an assertion on what the transport
+ * was asked for.
+ *
+ * `024` fetches the whole catalogue in one indexed request, so **no word leaves at
+ * all** — a language and a set of numeric ids, and nothing else. FR-2108's guarantee
+ * stopped needing machinery to hold it up. Deleting the path rather than deprecating it
+ * is the point: two ways in is how the one without the guard gets called.
  *
  * ## Pure, and it stays pure
  *
@@ -25,54 +36,10 @@ import type { WordList } from './wordlist.js';
  */
 
 export interface FetchLimits {
-  /** From the corpus. Reached is reported, never silently applied (FR-2117). */
-  wordsPerFetch: number;
-}
-
-export interface FetchPlan {
-  /** The words to ask for, in order. */
-  fetch: string[];
-  /** Already in the set, so not asked for again (FR-2112). */
-  present: string[];
-  /**
-   * Cut by the bound (FR-2117).
-   *
-   * Returned rather than dropped, so the screen can say «me he traído 300 y faltan
-   * 47» — a bound applied in silence reads as «that is all there was».
-   */
-  cut: string[];
-}
-
-/**
- * What to ask for, given what is already there.
- *
- * `present` is the set's own keyword map for this language, so «already there» means
- * «this word already resolves to at least one pictogram» — not «some file with a
- * similar name exists». A word whose only candidate has no image is **not** present:
- * `018` FR-1616 renders that as a named gap, and re-fetching is how the gap closes.
- */
-export function planFetch(
-  list: WordList,
-  present: ReadonlyMap<string, string[]> | undefined,
-  images: ReadonlySet<string> | undefined,
-  limits: FetchLimits,
-): FetchPlan {
-  const already: string[] = [];
-  const wanted: string[] = [];
-
-  for (const word of list.words) {
-    const ids = present?.get(normalise(word)) ?? [];
-    const usable = ids.length > 0 && ids.some((id) => images?.has(id) ?? false);
-    if (usable) already.push(word);
-    else wanted.push(word);
-  }
-
-  const bound = limits.wordsPerFetch > 0 ? limits.wordsPerFetch : wanted.length;
-  return {
-    fetch: wanted.slice(0, bound),
-    present: already,
-    cut: wanted.slice(bound),
-  };
+  /** Pixels per image, from the corpus (024 FR-2204). */
+  imageSize: number;
+  /** How many images at once (024 FR-2207). */
+  concurrency: number;
 }
 
 /**
@@ -135,7 +102,13 @@ export function readCandidates(json: unknown, word: string): PictogramCandidate[
      * recognise would write entries with no words — which `readSet` skips, so the
      * fetch would report success and the set would gain nothing.
      */
-    keywords.add(normalise(word));
+    /*
+     * Only when there is one. `readIndex` calls this with an empty «searched word»
+     * because a bulk index has no search behind it — and an unconditional `add('')`
+     * meant an entry with no keywords survived carrying `['']`, which `readSet` then
+     * skips silently. The fetch would report success and the set would gain nothing.
+     */
+    if (normalise(word)) keywords.add(normalise(word));
 
     const raws = Array.isArray(e['keywords']) ? e['keywords'] : [];
     for (const k of raws) {
@@ -186,98 +159,8 @@ export function mergeSet(
     .map(([id, words]) => ({ id, keywords: [...words].sort() }));
 }
 
-/** What she is told a fetch did (FR-2114, FR-2117). */
-export interface FetchOutcome {
-  /** Words that gained at least one pictogram. */
-  found: string[];
-  /** Words the publisher does not have. By name (FR-2114). */
-  missing: string[];
-  /** Words already in the set (FR-2112). */
-  present: string[];
-  /** Words the bound cut (FR-2117). */
-  cut: string[];
-  /** Words whose request failed — network, timeout, refusal. Retryable. */
-  failed: string[];
-  images: number;
-  /** How many words never left because they were a name (FR-2109). */
-  namesRemoved: number;
-  /**
-   * Words that came back with **several** pictograms (`018` FR-1609).
-   *
-   * ## Why a fetch has to say this
-   *
-   * The first real fetch against ARASAAC, 2026-09-02: three words —
-   * «casa», «perro», «multiplicar» — returned **26 pictograms**. Every candidate is
-   * kept on purpose (FR-2113), because the wrong pictogram is worse than none. But
-   * `018` FR-1609 then omits an ambiguous word from the sheet.
-   *
-   * So without this number the button would appear to work perfectly and the sheet
-   * would come out with no pictograms on it, and she would have no way to connect the
-   * two. «He traído 3 palabras» would be true and useless.
-   *
-   * It is not a defect `023` introduced — a folder assembled by hand from ARASAAC's
-   * own site behaves identically, and `018` shipped that way. What `023` changes is
-   * that it is now easy to reach, which is exactly when a latent gap starts costing
-   * somebody an afternoon. Recorded in backlog G30.
-   */
-  ambiguous: string[];
-}
-
 /**
- * «He traído 42 palabras nuevas. 3 no las tiene ARASAAC.»
- *
- * Every non-empty category gets a sentence, and the order is what she can act on
- * first: what worked, what she could retry, what she could ask for again, what was
- * simply not there.
- */
-export function describeOutcome(o: FetchOutcome, publisher: string): string[] {
-  const lines: string[] = [];
-  const n = (x: number) => x.toLocaleString('es-ES');
-
-  if (o.found.length > 0) {
-    lines.push(`He traído ${n(o.found.length)} `
-      + `palabra${o.found.length === 1 ? '' : 's'} nueva${o.found.length === 1 ? '' : 's'}`
-      + ` y ${n(o.images)} dibujo${o.images === 1 ? '' : 's'}.`);
-  }
-  if (o.failed.length > 0) {
-    lines.push(`${n(o.failed.length)} se han quedado a medias por la conexión. `
-      + 'Si vuelves a darle, sólo pido las que faltan.');
-  }
-  if (o.cut.length > 0) {
-    lines.push(`Me he parado en el tope de esta descarga, así que faltan `
-      + `${n(o.cut.length)}. Dale otra vez para seguir.`);
-  }
-  if (o.present.length > 0) {
-    lines.push(`${n(o.present.length)} ya las tenías, así que no las he vuelto a pedir.`);
-  }
-  /*
-   * Before the misses, because it is the line that explains an empty sheet — and she
-   * has to be able to act on it while she still remembers pressing the button.
-   */
-  if (o.ambiguous.length > 0) {
-    const shown = o.ambiguous.slice(0, 6).map((w) => `«${w}»`).join(', ');
-    lines.push(`Ojo: ${n(o.ambiguous.length)} `
-      + `palabra${o.ambiguous.length === 1 ? '' : 's'} `
-      + `${o.ambiguous.length === 1 ? 'tiene' : 'tienen'} varios dibujos posibles `
-      + `(${shown}${o.ambiguous.length > 6 ? '…' : ''}). Hasta que elijas cuál, `
-      + 'no pongo ninguno: un dibujo equivocado es peor que ninguno.');
-  }
-  if (o.missing.length > 0) {
-    const shown = o.missing.slice(0, 8).map((w) => `«${w}»`).join(', ');
-    lines.push(`${n(o.missing.length)} no las tiene ${publisher}: ${shown}`
-      + `${o.missing.length > 8 ? '…' : ''}. No es un fallo tuyo ni mío.`);
-  }
-  if (o.namesRemoved > 0) {
-    lines.push(`${n(o.namesRemoved)} palabra${o.namesRemoved === 1 ? '' : 's'} no `
-      + `${o.namesRemoved === 1 ? 'ha' : 'han'} salido de tu ordenador porque `
-      + `${o.namesRemoved === 1 ? 'era un nombre' : 'eran nombres'}.`);
-  }
-  if (lines.length === 0) lines.push('No había nada que traer.');
-  return lines;
-}
-
-/**
- * May anything be fetched? (FR-2104, SC-2103.)
+ * May anything be fetched? (`023` FR-2104, SC-2103.)
  *
  * ## Why the gate is a pure function
  *
@@ -286,15 +169,11 @@ export function describeOutcome(o: FetchOutcome, publisher: string): string[] {
  * encrypted name map, so it cannot run in the offline suite — and «nothing is fetched
  * before she accepts» asserted only through Electron is a guarantee asserted nowhere.
  *
- * So the decision lives here and the effects live there. The shell calls this and
- * obeys it; this is what the tests interrogate.
- *
  * ## Why the publisher has to match
  *
- * Accepting ARASAAC's licence is not accepting somebody else's. A second publisher
- * added to the corpus must ask again — otherwise a corpus edit would silently extend
- * an agreement she made about one specific licence, which is the shape of consent this
- * project refuses everywhere else.
+ * Accepting ARASAAC's licence is not accepting somebody else's. A second publisher added
+ * to the corpus must ask again — otherwise a corpus edit would silently extend an
+ * agreement she made about one specific licence.
  */
 export type FetchGate =
   | { may: true; publisherId: string }
@@ -325,4 +204,158 @@ export function fetchGate(
     return { may: false, because: 'not-accepted', publisher: id };
   }
   return { may: true, publisherId: id };
+}
+
+/* ── The whole set, in one press (024 US1) ────────────────────────────────── */
+
+/**
+ * One entry of the publisher's bulk index, plus what decides its turn.
+ *
+ * `popularity` is the publisher's own download count. It orders **arrival** and
+ * nothing else — never which pictogram is used, which stays `018` FR-1609 and her
+ * choice (FR-2203, and the Principle III line in `024`'s plan).
+ */
+export interface IndexEntry extends PictogramCandidate {
+  popularity: number;
+  /** The publisher's own last-modified stamp, for the update check (FR-2213). */
+  updated: string;
+}
+
+/**
+ * The bulk index → entries (024 T002, FR-2202).
+ *
+ * ## Why this exists at all, when `readCandidates` already parses a search response
+ *
+ * Because the whole point of `024` is that **she types nothing**. `023` asked her for a
+ * word list, which is a task she cannot do well: she does not know which words the next
+ * worksheet will contain. One request for the whole catalogue replaces it — measured on
+ * 2026-09-02 at 8,1 MB for 13.802 entries, which is an order of magnitude cheaper than
+ * the guess that produced `023`'s design.
+ *
+ * ## Read structurally, like everything else from a publisher
+ *
+ * ARASAAC returns `[{ _id, keywords: [{ keyword }], downloads, lastUpdated }]`. The id
+ * allowlist is `readCandidates`'s and matters 13.802 times over here: an id becomes a
+ * filename and a URL segment (Principle IX). A missing `downloads` sorts last rather
+ * than failing — it costs an entry its place in the queue, not its existence.
+ */
+export function readIndex(json: unknown): IndexEntry[] {
+  if (!Array.isArray(json)) return [];
+  const out: IndexEntry[] = [];
+
+  for (const item of json) {
+    if (!item || typeof item !== 'object') continue;
+    const e = item as Record<string, unknown>;
+
+    /*
+     * `readCandidates` with the entry's own first keyword as the «searched word».
+     *
+     * Not an empty string: it always adds the searched word to the keyword set, which
+     * is the guard that stops an unrecognised keyword shape producing entries with no
+     * words at all. Here there is no search, so the guard has nothing useful to add and
+     * an empty word would be dropped by `mergeSet` anyway.
+     */
+    const [parsed] = readCandidates([e], '');
+    if (!parsed || parsed.keywords.length === 0) continue;
+
+    out.push({
+      ...parsed,
+      popularity: typeof e['downloads'] === 'number' ? e['downloads'] : 0,
+      updated: typeof e['lastUpdated'] === 'string' ? e['lastUpdated'] : '',
+    });
+  }
+  return out;
+}
+
+export interface WholeSetPlan {
+  /** Ids to fetch an image for, most-used first (FR-2203). */
+  fetch: IndexEntry[];
+  /** Already on disk, so never requested again (FR-2206). */
+  present: number;
+  /** Everything the publisher has, for «3.140 de 13.802». */
+  total: number;
+  /** The publisher's high-water mark, for the update check (FR-2213). */
+  highWater: string;
+}
+
+/**
+ * What is missing, in the order that makes the set useful before it is complete.
+ *
+ * ## Why popularity and not id order
+ *
+ * SC-2202: the most-used two thousand within one minute. Ordered by id, the first
+ * thousand images are whatever ARASAAC happened to draw in 2009, and she waits ten
+ * minutes before "casa" arrives. Ordered by the publisher's own download count, the
+ * words a classroom actually uses land first and she can start.
+ *
+ * It costs nothing — the index carries the number — and it decides **arrival only**.
+ */
+export function planWholeSet(
+  index: readonly IndexEntry[], images: ReadonlySet<string> | undefined,
+): WholeSetPlan {
+  const missing: IndexEntry[] = [];
+  let present = 0;
+  let highWater = '';
+
+  for (const entry of index) {
+    if (entry.updated > highWater) highWater = entry.updated;
+    if (images?.has(entry.id)) { present += 1; continue; }
+    missing.push(entry);
+  }
+
+  // Descending popularity, then by id so the order is stable across runs — an
+  // unstable order would make a resumed download re-plan differently every time.
+  missing.sort((a, b) => b.popularity - a.popularity || a.id.localeCompare(b.id));
+  return { fetch: missing, present, total: index.length, highWater };
+}
+
+/** What is on disk and how current it is (FR-2213). Recorded, so it is answerable offline. */
+export interface SetInventory {
+  publisher: string;
+  language: string;
+  /** How many images are on disk. */
+  images: number;
+  /** What the publisher had when we last looked. */
+  total: number;
+  /** The publisher's high-water mark at that moment. */
+  highWater: string;
+  broughtOn: string;
+  /**
+   * A high-water mark she was offered and declined (FR-2212).
+   *
+   * So «no me lo vuelvas a preguntar» means until the index changes **further** — not
+   * until the next time she opens the screen.
+   */
+  declined?: string;
+}
+
+export type UpdateStatus =
+  | { state: 'complete' }
+  | { state: 'incomplete'; missing: number }
+  | { state: 'update'; added: number; highWater: string }
+  | { state: 'unknown' };
+
+/**
+ * Is what she has current? (FR-2209, FR-2211, FR-2212.)
+ *
+ * `complete` is the answer that matters, because FR-2209 says a complete set means the
+ * screen asks her for **nothing**. «Ya lo tiene, no me lo vuelva a preguntar» is a
+ * requirement about silence, and silence needs a value that means it.
+ *
+ * Pure, and takes the fresh index only when there is one — so the ordinary case,
+ * opening the screen, costs no request at all (FR-2210).
+ */
+export function updateStatus(
+  inventory: SetInventory | null, fresh?: { total: number; highWater: string },
+): UpdateStatus {
+  if (!inventory) return { state: 'unknown' };
+
+  if (fresh) {
+    const added = fresh.total - inventory.total;
+    if (added > 0 && fresh.highWater !== inventory.declined) {
+      return { state: 'update', added, highWater: fresh.highWater };
+    }
+  }
+  const missing = inventory.total - inventory.images;
+  return missing > 0 ? { state: 'incomplete', missing } : { state: 'complete' };
 }

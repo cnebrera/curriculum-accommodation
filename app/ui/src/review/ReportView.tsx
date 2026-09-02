@@ -1,4 +1,6 @@
 import { Callout } from '../components/Callout.js';
+import { ChooseWord } from '../pictograms/ChooseWord.js';
+import { skippedWords } from '../data/pictograms.js';
 
 /**
  * The report, as a designed reading experience (spec 010 FR-826, T011).
@@ -47,6 +49,17 @@ export function ReportView({ decisions, notDone, notices, memoryApplied }: {
           <div className="stack gap2">{rest.map((n, i) => <p key={i}>{n}</p>)}</div>
         </Callout>
       )}
+
+      {/*
+        The chooser, **here** — where she learns the word was skipped (024 T019).
+        A settings page she has to go and find would mean reading «no he puesto
+        ninguno» and having nowhere to answer, which is the dead-end this project
+        already fixed once for `name-unconfirmed` (backlog G27).
+
+        `skippedWords` lives next to the function that writes those lines, so the two
+        cannot drift apart without a test failing.
+      */}
+      <ChooseWord words={skippedWords(notDone)} />
 
       {notices && notices.length > 0 && (
         <Callout intent="danger" title="Ojo con este material">

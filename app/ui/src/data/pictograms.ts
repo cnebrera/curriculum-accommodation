@@ -60,7 +60,9 @@ export interface PublisherView {
 export interface PublisherState {
   publishers: PublisherView[];
   accepted: { publisher: string; licence: string; acceptedOn: string } | null;
-  wordsPerFetch: number;
+  expectedTotal: number;
+  /** From the corpus, and measured rather than sampled — see `instructions`. */
+  expectedMegabytes: number;
 }
 
 /**
@@ -84,17 +86,116 @@ export function useWithdrawLicence() {
 }
 
 export interface FetchResult {
-  outcome: {
-    found: string[]; missing: string[]; present: string[]; cut: string[];
-    failed: string[]; images: number; namesRemoved: number; ambiguous: string[];
-  };
-  /** Already in her language, from `describeOutcome`. */
+  brought: number;
+  present: number;
+  total: number;
+  failed: number;
+  stopped: boolean;
+  /** Already in her language, from the shell. */
   lines: string[];
   root: string;
 }
 
-/** Words in, pictograms on disk. One word per request; names never leave. */
+/**
+ * One press, the whole set (`024` FR-2201). **She types nothing.**
+ *
+ * `023` had a `words: string[]` here and a textarea above it. Carlos, twice: «que se lo
+ * baje solo». He was right — she does not know which words the next worksheet contains,
+ * and asking her was asking for the wrong thing.
+ */
 export function useFetchPictograms() {
-  return useCommand((words: string[], language: string = 'es') =>
-    window.rampa.pictograms.fetch({ words, language }) as Promise<FetchResult>);
+  return useCommand((language: string = 'es') =>
+    window.rampa.pictograms.fetch({ language }) as Promise<FetchResult>);
+}
+
+export interface SetInventory {
+  publisher: string;
+  language: string;
+  images: number;
+  total: number;
+  highWater: string;
+  broughtOn: string;
+  declined?: string;
+}
+
+export type UpdateStatus =
+  | { state: 'complete' }
+  | { state: 'incomplete'; missing: number }
+  | { state: 'update'; added: number; highWater: string }
+  | { state: 'unknown' };
+
+/**
+ * What she has — **and it costs no request** (`024` FR-2209/2210).
+ *
+ * Answered from disk, so opening this screen a hundred times reaches nobody. «Que no me
+ * lo vuelva a preguntar salvo que haya una actualización» is a requirement about
+ * silence, and silence means not asking anyone anything.
+ */
+export function useSetState(): Loadable<{
+  status: UpdateStatus; inventory: SetInventory | null; root: string;
+}> {
+  return useAsync(() => window.rampa.pictograms.state() as Promise<{
+    status: UpdateStatus; inventory: SetInventory | null; root: string;
+  }>, []);
+}
+
+/** One request, and only because she pressed something (`024` FR-2211). */
+export function useCheckUpdate() {
+  return useCommand(() => window.rampa.pictograms.checkUpdate() as Promise<UpdateStatus>);
+}
+
+export function useDeclineUpdate() {
+  return useCommand((highWater: string) =>
+    window.rampa.pictograms.declineUpdate(highWater) as Promise<boolean>);
+}
+
+export interface WordChoice {
+  word: string;
+  chosen?: string;
+  candidates: Array<{ id: string; image: string | null }>;
+}
+
+/**
+ * The words the set cannot decide, with their pictures (`024` FR-2217).
+ *
+ * Only the genuinely ambiguous ones come back: a word with one candidate needs no
+ * decision, and a word with none is the ordinary case for most words in most sentences.
+ */
+export function useCandidates(words: string[], language = 'es'): Loadable<WordChoice[]> {
+  const key = words.join('|');
+  return useAsync(() => window.rampa.pictograms.candidates({ words, language }) as
+    Promise<WordChoice[]>, [key, language]);
+}
+
+/** Her choice. Once, for every learner (`024` FR-2214). */
+export function useChooseWord() {
+  return useCommand((args: { word: string; id: string; language?: string }) =>
+    window.rampa.pictograms.chooseWord(args) as Promise<boolean>);
+}
+
+/**
+ * The words out of the report's own «hay N dibujos posibles» lines.
+ *
+ * ## Duplicated from `@rampa/core`, deliberately and with a test
+ *
+ * `packages/core/src/pictograms/match.ts` has this beside `reportSkipped`, which is the
+ * function that writes those sentences — that is where it belongs, so the pattern and
+ * the prose move together. The renderer cannot import `@rampa/core` (it talks to the
+ * main process over IPC), so this is a second copy.
+ *
+ * A second copy of one truth is the defect this project has found five times, so it is
+ * not left to trust: `ui/test/styles.test.tsx`'s sibling assertion in
+ * `pictogram-report.test.tsx` runs both against the same input and fails if they
+ * disagree.
+ */
+export function skippedWords(lines: readonly string[]): string[] {
+  const out: string[] = [];
+  for (const line of lines) {
+    const m = /^«([^»]+)»: hay \d+ dibujos posibles/.exec(line);
+    if (m?.[1]) {
+      out.push(m[1].normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase().replace(/\s+/g, ' ').trim());
+    }
+  }
+  return [...new Set(out)];
 }

@@ -38,7 +38,9 @@ export interface Publisher {
   label: string;
   /** `{lang}` and `{word}` — the only two placeholders permitted. */
   search: string;
-  /** `{id}` — likewise. */
+  /** `{lang}`: the whole catalogue in one request (024 FR-2202). */
+  index: string;
+  /** `{id}` and `{size}` — likewise. */
   image: string;
   site: string;
   licence: string;
@@ -49,8 +51,20 @@ export interface Publisher {
 
 export interface PictogramFetchCorpus {
   publishers: Publisher[];
-  /** The bound on one fetch. Reached is reported, never silently applied (FR-2117). */
-  wordsPerFetch: number;
+  /**
+   * Pixels per image (024 FR-2204).
+   *
+   * From the corpus because it **is** the minimum-print-size decision, which is already
+   * corpus data: 12 mm at 300 dpi is 142 pixels, so 300 prints to 25 mm with room. Split
+   * across two files, the two stop agreeing.
+   */
+  imageSize: number;
+  /** How many images at once. A CDN's purpose, not a licence to hammer it (FR-2207). */
+  concurrency: number;
+  /** For «3.140 de 13.802» before the real number arrives with the index. */
+  expectedTotal: number;
+  /** For the free-space check before the first byte (FR-2208). */
+  expectedMegabytes: number;
 }
 
 /**
@@ -62,7 +76,21 @@ export interface PictogramFetchCorpus {
  * failure — and a built-in URL would reintroduce exactly the compiled-in assumption
  * this file exists to avoid.
  */
-const NOTHING: PictogramFetchCorpus = { publishers: [], wordsPerFetch: 0 };
+const NOTHING: PictogramFetchCorpus = {
+  publishers: [],
+  /*
+   * Zeroes, and every one of them fails closed.
+   *
+   * `imageSize: 0` builds no URL, `concurrency: 0` starts nothing. A plausible default
+   * here — 500, say — would mean a corpus somebody broke still downloaded 200 MB at a
+   * size nobody chose, which is worse than a visible failure.
+   */
+  imageSize: 0, concurrency: 0, expectedTotal: 0, expectedMegabytes: 0,
+};
+
+/** A positive integer from the corpus, or 0 — which every caller treats as «refuse». */
+const count = (v: unknown): number =>
+  typeof v === 'number' && Number.isFinite(v) && v > 0 ? Math.floor(v) : 0;
 
 const str = (v: unknown): string => (typeof v === 'string' ? v.trim() : '');
 
@@ -71,8 +99,15 @@ export function parsePictogramFetchCorpus(
 ): PictogramFetchCorpus {
   const { data } = parseFrontMatter(raw, file);
 
-  const wordsPerFetch = typeof data['words_per_fetch'] === 'number'
-    ? Math.max(0, Math.floor(data['words_per_fetch'])) : 0;
+  const numbers = {
+    imageSize: count(data['image_size']),
+    concurrency: count(data['fetch_concurrency']),
+    expectedTotal: count(data['expected_total']),
+    expectedMegabytes: count(data['expected_megabytes']),
+  };
+  for (const [key, value] of Object.entries(numbers)) {
+    if (value === 0) logger.error('pictograms.corpus-number-missing', { file, key });
+  }
 
   const raws = Array.isArray(data['publishers']) ? data['publishers'] : [];
   const publishers: Publisher[] = [];
@@ -84,7 +119,7 @@ export function parsePictogramFetchCorpus(
 
     const p: Publisher = {
       id: str(e['id']), label: str(e['label']),
-      search: str(e['search']), image: str(e['image']),
+      search: str(e['search']), index: str(e['index']), image: str(e['image']),
       site: str(e['site']), licence: str(e['licence']),
       licenceUrl: str(e['licence_url']),
       languages: Array.isArray(e['languages'])
@@ -104,6 +139,7 @@ export function parsePictogramFetchCorpus(
      */
     const missing = [
       ['id', p.id], ['label', p.label], ['search', p.search], ['image', p.image],
+      ['index', p.index],
       ['site', p.site], ['licence', p.licence], ['licence_url', p.licenceUrl],
       ['attribution.author', p.attribution.author],
       ['attribution.owner', p.attribution.owner],
@@ -125,14 +161,18 @@ export function parsePictogramFetchCorpus(
       logger.error('pictograms.publisher-bad-image', { file, id: p.id });
       continue;
     }
+    if (!p.index.includes('{lang}')) {
+      logger.error('pictograms.publisher-bad-index', { file, id: p.id });
+      continue;
+    }
     publishers.push(p);
   }
 
   if (publishers.length === 0) {
     logger.error('pictograms.no-publishers', { file });
-    return { ...NOTHING, wordsPerFetch };
+    return { ...NOTHING, ...numbers };
   }
-  return { publishers, wordsPerFetch };
+  return { publishers, ...numbers };
 }
 
 /**
@@ -144,9 +184,10 @@ export function parsePictogramFetchCorpus(
  * steer a request, because one of them is somebody else's discipline.
  */
 export function urlFor(
-  template: string, values: Record<'lang' | 'word' | 'id', string | undefined>,
+  template: string,
+  values: Partial<Record<'lang' | 'word' | 'id' | 'size', string>>,
 ): string {
-  return template.replace(/\{(lang|word|id)\}/g, (_, key: 'lang' | 'word' | 'id') => {
+  return template.replace(/\{(lang|word|id|size)\}/g, (_, key: 'lang' | 'word' | 'id' | 'size') => {
     const v = values[key];
     if (v === undefined) throw new Error(`urlFor: «${key}» no tiene valor`);
     return encodeURIComponent(v);

@@ -27,7 +27,10 @@ publishers:
     label: ARASAAC
     # Comprobado el 2026-09-02: pública, sin clave, sin registro.
     search: "https://api.arasaac.org/v1/pictograms/{lang}/search/{word}"
-    image: "https://static.arasaac.org/pictograms/{id}/{id}_500.png"
+    # El catálogo entero en una sola petición: 8,1 MB, 13.802 pictogramas con todas
+    # sus palabras, su popularidad y su fecha. Comprobado el 2026-09-02.
+    index: "https://api.arasaac.org/v1/pictograms/all/{lang}"
+    image: "https://static.arasaac.org/pictograms/{id}/{id}_{size}.png"
     site: "https://arasaac.org"
     licence: CC BY-NC-SA 4.0
     licence_url: "https://creativecommons.org/licenses/by-nc-sa/4.0/deed.es"
@@ -37,7 +40,39 @@ publishers:
       owner: Gobierno de Aragón
       source: "ARASAAC (https://arasaac.org)"
 
-words_per_fetch: 300
+# Cómo se trae el juego entero (024 T001, FR-2204/2207).
+#
+# `image_size` sale de `min_print_mm` de más abajo, no de una intuición: 20 mm a 300 dpi
+# son 236 píxeles, así que 300 px imprime a ese tamaño con holgura. A 500 px cada dibujo
+# pesa cuatro veces más (15 KB contra 4 KB) para un detalle que no se ve en una
+# fotocopia. Está aquí y no en el código porque **es la misma decisión** que el tamaño
+# mínimo, y partirla en dos sitios es cómo dejan de coincidir — hay un test que
+# comprueba que este número sigue dando para imprimir a `min_print_mm`.
+#
+# Si una PT dice que los pictogramas salen borrosos, esto es una edición y volver a
+# bajarlos — no una release.
+image_size: 300
+
+# Cuántas imágenes se piden a la vez. `static.arasaac.org` es un CDN y servir ficheros
+# es su función, pero educado no es lo mismo que ilimitado.
+fetch_concurrency: 6
+
+# Cuántos pictogramas tiene el catálogo, para poder decirle «3.140 de 13.802» y para
+# comprobar el disco antes de empezar. Aproximado a propósito: el número real sale del
+# índice que se descarga, esto es sólo para hablar antes de tenerlo.
+expected_total: 13802
+
+# Cuánto ocupa el juego entero, en megas, para avisar si no cabe (FR-2208).
+#
+# **Medido, no estimado.** Puse 60 a partir de un solo pictograma que pesaba 4 KB, y la
+# descarga real de las 13.802 son **157 MB** — o sea unos 11 KB de media, porque hay
+# dibujos con mucho más detalle que una casa. Es el mismo error que llevó a `023` a
+# hacer que la profesora escribiera las palabras a mano: generalizar desde una muestra.
+# Ahora sale de una descarga completa del 2026-09-02, que tardó 2 min 45 s.
+#
+# Con margen, porque el catálogo crece.
+expected_megabytes: 180
+
 
 # El tamaño mínimo al que se imprime un pictograma, en milímetros.
 #

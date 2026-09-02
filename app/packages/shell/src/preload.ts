@@ -113,9 +113,33 @@ const api = {
     acceptLicence: (publisherId: string) =>
       invoke('pictograms:acceptLicence', publisherId),
     withdrawLicence: () => invoke('pictograms:withdrawLicence'),
-    /** Words in, pictograms on disk. One word per request, names removed. */
-    fetch: (args: { words: string[]; language?: string; publisherId?: string }) =>
-      invoke('pictograms:fetch', args),
+    /**
+     * One press, the whole set (`024`). **No word list**: `023` asked her to type the
+     * words she needed, which is a task she cannot do — she does not know what the next
+     * worksheet contains. One indexed request plus the images.
+     *
+     * A consequence worth naming: no word leaves her machine now, only a language and
+     * numeric ids.
+     */
+    fetch: (args: { language?: string } = {}) => invoke('pictograms:fetch', args),
+    /** What she has, from disk. Costs no request. */
+    state: () => invoke('pictograms:state'),
+    /** One request, and only because she asked. */
+    checkUpdate: () => invoke('pictograms:checkUpdate'),
+    declineUpdate: (highWater: string) => invoke('pictograms:declineUpdate', highWater),
+    /**
+     * The words the set cannot decide, with their pictures (`024` US2).
+     *
+     * Without this, downloading the whole catalogue produces empty worksheets: most
+     * words have several candidates and `018` FR-1609 correctly refuses to guess.
+     */
+    candidates: (args: { words: string[]; language?: string }) =>
+      invoke('pictograms:candidates', args),
+    /** Her choice, recorded once and used for every learner. */
+    chooseWord: (args: { word: string; id: string; language?: string }) =>
+      invoke('pictograms:chooseWord', args),
+    unchooseWord: (args: { word: string; language?: string }) =>
+      invoke('pictograms:unchooseWord', args),
   },
   /**
    * The adaptación curricular (`017`).

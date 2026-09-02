@@ -730,3 +730,72 @@ body { container: window / inline-size; }
 @container page (max-width: 34em) {
   .door-choices { grid-template-columns: 1fr; }
 }
+
+/* ── Choosing between pictograms (024 T018, FR-2217) ────────────────────────
+   Pictures, not ids: the candidates for «casa» are 6964, 2483, 11251 and 28926,
+   and nobody can choose between those. A pictogram is a drawing the child already
+   recognises, so looking at it is the only way to pick one.
+
+   `auto-fill` with a floor rather than a fixed column count: a word can have two
+   candidates or nine, and at 560px with `xlarge` text there is room for two. The
+   floor is 96px because a pictogram below that is not something you can recognise
+   at a glance, which is the whole task here. */
+.picto-choices {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: var(--s2);
+  /* Or the buttons below dictate the container's width. */
+  min-width: 0;
+}
+
+.picto-choice {
+  display: grid;
+  place-items: center;
+  min-width: 0;
+  /* 44px is the touch floor; a pictogram needs to be looked at, so this is bigger. */
+  min-height: 96px;
+  padding: var(--s2);
+  cursor: pointer;
+  font: inherit;
+  font-size: var(--text-xs);
+  color: var(--ink-soft);
+  background: var(--paper);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-control);
+  box-shadow: var(--shadow-sm);
+}
+
+.picto-choice img {
+  width: 100%;
+  height: auto;
+  max-height: 120px;
+  object-fit: contain;
+}
+
+.picto-choice:hover { border-color: var(--n-400); }
+.picto-choice:focus-visible { border-color: var(--accent); }
+
+/* The chosen one, marked by **border weight and a check**, never by colour alone
+   (010 FR-812) — and the class exists as well as `aria-pressed`, which is the
+   defect from 2026-09-01: a selected state that lived only in the accessibility
+   tree. Carlos: «no me deja seleccionar». It did; it never said so. */
+.picto-choice-on {
+  border-color: var(--accent);
+  border-width: 3px;
+  padding: calc(var(--s2) - 2px);
+  background: var(--accent-soft);
+}
+
+.picto-choice-on::after {
+  content: '✓';
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.picto-choice-gap {
+  font-size: var(--text-xs);
+  color: var(--ink-faint);
+  text-align: center;
+  overflow-wrap: anywhere;
+}

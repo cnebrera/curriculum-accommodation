@@ -1,11 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { parseIR } from '../src/ir/parse.js';
 import { readSet } from '../src/pictograms/set.js';
-import { nameWords, matchWord } from '../src/pictograms/match.js';
-import { wordListFrom, wordListOf } from '../src/pictograms/wordlist.js';
 import {
-  planFetch, readCandidates, mergeSet, describeOutcome, fetchGate,
-} from '../src/pictograms/fetch.js';
+  nameWords, matchWord, reportSkipped, skippedWords,
+} from '../src/pictograms/match.js';
+import { choose, emptyVocabulary, forLanguage } from '../src/pictograms/vocabulary.js';
+import { readCandidates, mergeSet, fetchGate } from '../src/pictograms/fetch.js';
 import { parsePictogramFetchCorpus, urlFor } from '../src/pictograms/publisher.js';
 import { readFileSync } from 'node:fs';
 
@@ -24,58 +23,6 @@ const CORPUS = readFileSync(
 const folder = (files: Record<string, string>) => ({
   list: async () => Object.keys(files),
   readText: async (path: string) => files[path.replace(/^.*\//, '')] ?? null,
-});
-
-describe('nothing about a child leaves her machine (FR-2108, FR-2109, SC-2104)', () => {
-  const names = new Set(['lucia', 'iker', 'nebrera']);
-
-  it('builds a word list from material without the names in it', () => {
-    const doc = parseIR([
-      '---', 'lang: es', '---', '',
-      '::: {#b1 .instruction}',
-      'Lucía tiene que leer sobre la casa y el perro de Iker.', ':::', '',
-      '::: {#b2 .explanation}',
-      'Colegio Nebrera, curso 3.º. El gato bebe agua.', ':::',
-    ].join('\n'));
-
-    const list = wordListFrom(doc, { language: 'es', names });
-
-    expect(list.words).toContain('casa');
-    expect(list.words).toContain('perro');
-    expect(list.words).toContain('gato');
-    for (const forbidden of ['lucia', 'lucía', 'iker', 'nebrera']) {
-      expect(list.words, `«${forbidden}» must never be sent`).not.toContain(forbidden);
-    }
-    expect(list.namesRemoved).toBe(3);
-  });
-
-  it('reports how many names it dropped and never which ones', () => {
-    const list = wordListOf(['Lucía', 'casa'], { language: 'es', names });
-    // A count, not the names: a return value carrying them is a return value
-    // somebody logs.
-    expect(list.namesRemoved).toBe(1);
-    expect(JSON.stringify(list)).not.toMatch(/luc/i);
-  });
-
-  it('sends nothing that is not a plain word', () => {
-    const list = wordListOf(
-      ['casa', '../../etc/passwd', 'http://x.test/a', '3.º', 'K42', '', 'a'.repeat(60)],
-      { language: 'es' });
-    /*
-     * Only «casa». A path, a URL, «3.º», the learner code «K42» and a 60-character
-     * token are all rejected before a name check even runs — a publisher's search
-     * endpoint has no business receiving any of them, and `K42` is the one that
-     * would have been a leak.
-     */
-    expect(list.words).toEqual(['casa']);
-  });
-
-  it('encodes every substitution, so a word cannot steer a request', () => {
-    const url = urlFor('https://x.test/{lang}/search/{word}', {
-      lang: 'es', word: 'a/../b?q=1', id: undefined,
-    });
-    expect(url).toBe('https://x.test/es/search/a%2F..%2Fb%3Fq%3D1');
-  });
 });
 
 describe('a name never gets a pictogram, accents and all (018 FR-1610)', () => {
@@ -112,11 +59,21 @@ describe('a name never gets a pictogram, accents and all (018 FR-1610)', () => {
     expect([...nameWords(['José de la Cruz'])].sort()).toEqual(['cruz', 'jose']);
   });
 
-  it('is what the word list uses too, so a name cannot leave either', () => {
-    const list = wordListOf(['María', 'casa'], {
-      language: 'es', names: nameWords(['María Nebrera']),
-    });
-    expect(list.words).toEqual(['casa']);
+  it('is consulted before her vocabulary, so a choice cannot resurrect a name', () => {
+    /*
+     * The name check is step 1 and her vocabulary is step 3. If she somehow recorded a
+     * choice for a word that is also a learner's name, the name still wins — a
+     * pictogram beside a child's own name is not something either of them asked for.
+     */
+    const set = {
+      root: '/x',
+      byLanguage: new Map([['es', new Map([['maria', ['7']]])]]),
+      images: new Set(['7']),
+    };
+    const chosen = forLanguage(choose(emptyVocabulary(), 'es', 'maria', '7'), 'es');
+    expect(matchWord('María', set, {
+      language: 'es', names: nameWords(['María']), chosen,
+    }).kind).toBe('name');
   });
 });
 
@@ -193,68 +150,30 @@ describe("the downloader writes the format 018's reader already reads (FR-2102, 
   });
 });
 
-describe('only what she asked for, and the bound is spoken (FR-2111, FR-2112, FR-2117)', () => {
-  const list = (words: string[]) => ({ words, language: 'es', namesRemoved: 0 });
-
-  it('does not ask again for a word that already has a usable pictogram', () => {
-    const plan = planFetch(
-      list(['casa', 'perro']),
-      new Map([['casa', ['1']]]), new Set(['1']),
-      { wordsPerFetch: 100 });
-    expect(plan.present).toEqual(['casa']);
-    expect(plan.fetch).toEqual(['perro']);
+describe('the chooser is offered the words the report skipped (024 T019)', () => {
+  it('round-trips reportSkipped own sentence', () => {
+    /*
+     * These two functions live next to each other for this reason: the renderer needs
+     * the words out of a sentence another package wrote, and a regular expression over
+     * prose works until somebody improves the wording. Then the chooser silently offers
+     * nothing and no test fails — the twelve-unread-fields failure, with a string
+     * instead of a field.
+     */
+    const matches = [
+      { kind: 'ambiguous' as const, word: 'Casa', candidates: ['1', '2'] },
+      { kind: 'ambiguous' as const, word: 'rana', candidates: ['3', '4', '5'] },
+      { kind: 'none' as const, word: 'inexistente' },
+      { kind: 'matched' as const, word: 'perro', id: '9', source: 'set' as const },
+    ];
+    expect(skippedWords(reportSkipped(matches))).toEqual(['casa', 'rana']);
   });
 
-  it('re-fetches a word whose only pictogram has no image', () => {
-    // 018 FR-1616 renders that as a named gap; fetching is how the gap closes.
-    const plan = planFetch(
-      list(['casa']), new Map([['casa', ['1']]]), new Set(),
-      { wordsPerFetch: 100 });
-    expect(plan.fetch).toEqual(['casa']);
-  });
-
-  it('reports what the bound cut instead of applying it silently', () => {
-    const plan = planFetch(
-      list(['a', 'b', 'c', 'd']), undefined, undefined, { wordsPerFetch: 2 });
-    expect(plan.fetch).toEqual(['a', 'b']);
-    expect(plan.cut).toEqual(['c', 'd']);
-    expect(describeOutcome({
-      found: ['a', 'b'], missing: [], present: [], cut: plan.cut, failed: [],
-      images: 2, namesRemoved: 0, ambiguous: [],
-    }, 'ARASAAC').join(' ')).toMatch(/faltan 2/);
-  });
-
-  it('never fetches the whole catalogue', () => {
-    // No path through planFetch returns words nobody asked for.
-    const plan = planFetch(list([]), undefined, undefined, { wordsPerFetch: 300 });
-    expect(plan.fetch).toEqual([]);
-  });
-});
-
-describe('an ambiguous word is said out loud, or the button lies (018 FR-1609)', () => {
-  /*
-   * The first real fetch against ARASAAC returned 26 pictograms for three words. Every
-   * candidate is kept on purpose (FR-2113) and `018` FR-1609 then omits the word — so
-   * without this line «he traído 3 palabras» would be true, and the sheet would come
-   * out bare with nothing connecting the two.
-   */
-  it('explains the empty sheet before it happens', () => {
-    const lines = describeOutcome({
-      found: ['casa', 'perro'], missing: [], present: [], cut: [], failed: [],
-      images: 18, namesRemoved: 0, ambiguous: ['casa', 'perro'],
-    }, 'ARASAAC');
-    const all = lines.join(' ');
-    expect(all).toMatch(/varios dibujos/);
-    expect(all).toMatch(/«casa»/);
-    expect(all).toMatch(/peor que ninguno/);
-  });
-
-  it('says nothing about it when every word had exactly one', () => {
-    const lines = describeOutcome({
-      found: ['casa'], missing: [], present: [], cut: [], failed: [],
-      images: 1, namesRemoved: 0, ambiguous: [],
-    }, 'ARASAAC');
-    expect(lines.join(' ')).not.toMatch(/varios/);
+  it('ignores every other line in the report', () => {
+    expect(skippedWords([
+      'Necesita que lo decidas tú: algo',
+      'No he tocado el enunciado.',
+      '',
+    ])).toEqual([]);
   });
 });
 
@@ -311,7 +230,7 @@ describe('the publisher is corpus data, not code (FR-2116, 018 FR-1604)', () => 
     expect(arasaac!.attribution.owner).toBe('Gobierno de Aragón');
     expect(arasaac!.licence).toMatch(/BY-NC-SA/);
     expect(arasaac!.languages).toContain('es');
-    expect(corpus.wordsPerFetch).toBeGreaterThan(0);
+    expect(corpus.imageSize).toBeGreaterThan(0);
   });
 
   it('names no URL in code', () => {

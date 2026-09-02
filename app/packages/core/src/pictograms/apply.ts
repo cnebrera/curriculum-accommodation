@@ -54,7 +54,10 @@ export interface ApplyOptions extends MatchOptions {
 export interface Applied {
   doc: IRDocument;
   /** Which pictogram went where, for provenance and for the report (FR-1611). */
-  used: Array<{ blockId: string; word: string; id: string; source: 'set' | 'override' }>;
+  used: Array<{
+    blockId: string; word: string; id: string;
+    source: 'set' | 'override' | 'vocabulary';
+  }>;
   /** Ambiguities, in her language (FR-1609). */
   skipped: string[];
 }

@@ -413,6 +413,69 @@ every moment should have a spec. What it added beyond the seams pass:
    journey sentence → T094). Handover *import* (004 US2) recorded as deliberately
    deferred rather than silently missing.
 
+## G33 · Sizes extrapolated from one sample, twice in two days
+
+**Closed 2026-09-02** by measuring instead.
+
+`023` was designed word-by-word because I asserted the whole catalogue would be
+«hundreds of megabytes of vocabulary no learner of hers will meet». That was a guess,
+and it cost a whole specification: the numbers turned out to be an order of magnitude
+cheaper, and Carlos had to ask twice for a button that should have been there.
+
+Then `024` did it again in the other direction. `expected_megabytes: 60`, derived from
+**one** pictogram — «casa» at 300px, 3.960 bytes — multiplied by 13.802. A complete real
+download came to **157 MB**: an average near 11 KB, because a drawing with interior
+detail is not a house. Left in, the free-space check would have cleared a disk with
+72 MB spare and then filled it two thirds of the way through.
+
+Both are the same move: one observation, generalised, stated as a fact, and then used as
+the basis for a design decision. It is what `cost_measured: false` in the service
+catalogue is honest about and what these numbers were not.
+
+Now: `expected_megabytes` carries a comment saying where the figure came from and when,
+the UI reads it from the corpus instead of holding its own hardcoded «55 MB», and
+`pictogram-whole-set.test.ts` fails if anybody tidies the number back down below what
+was actually observed.
+
+**What did NOT go wrong**, and is worth recording because it is the counter-example: the
+same download measured 2 min 45 s against a promised fifteen minutes, and 13.800 of
+13.802 images with two unavailable upstream and reported. Those held because the plan
+said «measure it» and the task list had a line for doing so.
+
+---
+
+## G32 · An IPC channel name is a string, and nothing checked them
+
+**Closed 2026-09-02**, by a crash.
+
+`024` registered `pictograms:choose` for «she picks a pictogram». That channel was
+already the **folder picker**, and Electron's response is not a warning:
+
+    Error: Attempted to register a second handler for 'pictograms:choose'
+
+thrown during startup, before the window. The whole application was dead — every
+pictogram e2e test failed, and so did the screenshot script, which is how it surfaced.
+
+It is the **fourth name collision of the day**, after `inScope`, `Candidate` and
+`vocabulary`. The first three were caught the moment they were written: two by the
+barrel file at the point of export, one by the type checker. This one could not be,
+because a channel name is a string — and the cost was correspondingly higher: not a
+confusing import six weeks later, but the application refusing to start.
+
+`packages/shell/test/ipc-channels.test.ts` now asserts three things: no channel is
+registered twice, the preload never invokes a channel nobody handles, and every
+registration uses a literal string so the first two cannot be blinded.
+
+**Lesson.** Four collisions in one day is not four accidents. This repository has
+`Verdict` three times, `Freshness` twice, `materialKind` shadowed, and now this. The
+pattern is that a name is chosen for what it means *locally* — «choose», «candidate»,
+«in scope» — in a codebase where the same local meaning recurs in every feature. The
+cheap defence is what worked three times out of four: a single place that sees all the
+names at once and fails when two collide. Where the language cannot provide one, a test
+has to.
+
+---
+
 ## G31 · «One primary control per screen» has never been tested
 
 **Open**, small, and found by looking rather than by running anything.
@@ -440,7 +503,21 @@ lives only in a specification is a rule that holds until somebody is in a hurry.
 
 ## G30 · Bajar los pictogramas es fácil; elegir entre varios, todavía no
 
-**Open**, and it is the next thing.
+**Closed 2026-09-02 by `024`.** The chooser exists: `ui/src/pictograms/ChooseWord.tsx`,
+reachable from the report line that says the word was skipped, showing the candidates as
+**pictures** rather than ids, and recording her answer **once for every learner** rather
+than per child — which was the data-model defect `018` shipped and `024` FR-2214
+corrects.
+
+What is *not* done is recorded in `024` T021: the full loop — adapt, choose, re-adapt,
+pictogram present — is not asserted in the real window, because it needs a provider key.
+The pieces are covered offline.
+
+The original entry follows, because the reasoning is what produced `024`.
+
+---
+
+**Was open, and was the next thing.**
 
 `023` made fetching pictograms one button. The first real fetch against ARASAAC —
 «casa», «perro», «multiplicar» — returned **26 pictograms for three words**.

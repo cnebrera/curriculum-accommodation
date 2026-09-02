@@ -50,8 +50,8 @@ test.describe('bringing the pictograms', () => {
   test('the corpus says who they come from, and what the licence asks', async () => {
     const state = await page.evaluate(() => window.rampa.pictograms.publishers()) as {
       publishers: Array<{ id: string; licence: string; licenceUrl: string;
-        attribution: { author: string; owner: string } }>;
-      accepted: unknown; wordsPerFetch: number;
+        index: string; attribution: { author: string; owner: string } }>;
+      accepted: unknown; expectedTotal: number;
     };
 
     const arasaac = state.publishers.find((p) => p.id === 'arasaac');
@@ -60,7 +60,7 @@ test.describe('bringing the pictograms', () => {
     expect(arasaac!.attribution.owner).toBe('Gobierno de Aragón');
     expect(arasaac!.licence).toMatch(/BY-NC-SA/);
     expect(arasaac!.licenceUrl).toMatch(/^https:\/\//);
-    expect(state.wordsPerFetch).toBeGreaterThan(0);
+    expect(state.expectedTotal).toBeGreaterThan(10_000);
     // A fresh install has accepted nothing.
     expect(state.accepted).toBeNull();
   });
@@ -68,7 +68,7 @@ test.describe('bringing the pictograms', () => {
   test('nothing is fetched before she accepts, and she is told why', async () => {
     const refused = await page.evaluate(async () => {
       try {
-        await window.rampa.pictograms.fetch({ words: ['casa'] });
+        await window.rampa.pictograms.fetch();
         return 'it fetched';
       } catch (e) { return (e as Error).message; }
     });
@@ -104,6 +104,19 @@ test.describe('bringing the pictograms', () => {
     // does not confiscate (FR-2106).
     const set = await page.evaluate(() => window.rampa.pictograms.current());
     expect(set).toBeNull();
+  });
+
+  test('opening the screen costs no request (024 FR-2209/2210)', async () => {
+    /*
+     * «Que no me lo vuelva a preguntar» is a requirement about silence, so the ordinary
+     * case — she opens this screen — has to be answerable from disk alone.
+     */
+    const state = await page.evaluate(() => window.rampa.pictograms.state()) as {
+      status: { state: string }; inventory: unknown; root: string;
+    };
+    expect(state.status.state).toBe('unknown');   // a fresh vault, nothing brought yet
+    expect(state.inventory).toBeNull();
+    expect(state.root).toMatch(/pictogramas$/);   // inside her Rampa folder (FR-2205)
   });
 
   test('the folder path still works, with nothing downloaded (FR-2103)', async () => {

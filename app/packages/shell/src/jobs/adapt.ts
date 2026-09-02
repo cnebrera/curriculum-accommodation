@@ -12,6 +12,7 @@ import {
 import { sendRedacted } from '@rampa/providers';
 import { currentVault } from '../ipc/vault.js';
 import { nameWordSet, knownNames, unknownNamesIn } from '../ipc/names.js';
+import { chosenWords } from '../pictograms/bring.js';
 import { activeProvider } from '../ipc/keys.js';
 import { allRecipes, assertCorpus, loadInstruction, findYearInCorpus, materialKind } from '../corpus/index.js';
 import { currentPictogramSet } from '../pictograms/access.js';
@@ -459,6 +460,13 @@ async function applyPictogramsIfSheSaidSo(
      * pictogram beside it.
      */
     names: await nameWordSet(),
+    /*
+     * Her vocabulary (`024` FR-2214). Without this line the chooser writes a file that
+     * nothing reads — the thirteenth unread field, in the very feature written to fix
+     * the twelfth. `profile.pictograms.overrides` was exactly this defect: carried by
+     * the profile editor, surfaced by no screen, consulted by nothing.
+     */
+    chosen: await chosenWords(lang),
     isExam: kind === 'exam',
   });
 
