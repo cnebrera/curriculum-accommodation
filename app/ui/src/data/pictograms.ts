@@ -199,3 +199,8 @@ export function skippedWords(lines: readonly string[]): string[] {
   }
   return [...new Set(out)];
 }
+
+/** She pressed «Parar». What arrived is already usable (`024` FR-2118). */
+export function useStopBringing() {
+  return useCommand(() => window.rampa.pictograms.stop() as Promise<boolean>);
+}

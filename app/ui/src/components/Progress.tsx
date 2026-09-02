@@ -42,23 +42,46 @@ export function Stream({ label, chars }: { label: string; chars: number }) {
 }
 
 /**
- * A bar for work whose size is genuinely known (008 T018).
+ * A bar for work whose size is genuinely known (008 T018; 024 T012).
  *
  * `Stream` deliberately shows characters rather than a percentage, because during
  * an adaptation nothing knows how long the answer will be and a fake percentage
- * that sticks at 90% is worse than an honest count. Ingest is different: the
- * page count is known before the first call, so a real fraction is available and
- * showing it is not a guess.
+ * that sticks at 90% is worse than an honest count. This is the other case: the
+ * total is known before the first call, so a real fraction is available and showing
+ * it is not a guess.
+ *
+ * ## Why it is `Counted` and not `Pages`
+ *
+ * It was `Pages`, for ingest. `024` needed exactly this — a download of 13.802
+ * pictograms knows its own size — and the honest options were a second bar or a
+ * noun. A second bar would have been the seventh instance of two copies of one
+ * truth in this repository, so: a noun.
  */
-export function Pages({ done, total }: { done: number; total: number }) {
+export function Counted({ done, total, one, many }: {
+  done: number;
+  total: number;
+  /** «Página», «Dibujo» — the singular, because 1 de 13.802 is a real state. */
+  one: string;
+  /** The plural for the accessible label. */
+  many?: string;
+}) {
   const pct = total > 0 ? Math.min(100, Math.round((done / total) * 100)) : 0;
+  const n = (x: number) => x.toLocaleString('es-ES');
+  const label = `${one} ${n(done)} de ${n(total)}`;
   return (
     <div className="stack gap1">
       <div className="progress" role="progressbar" aria-valuemin={0} aria-valuemax={total}
-           aria-valuenow={done} aria-label={`Página ${done} de ${total}`}>
+           aria-valuenow={done} aria-label={label}>
         <i style={{ width: `${pct}%` }} />
       </div>
-      <span className="meta">Página {done} de {total}</span>
+      {/*
+        The number in text as well as in the bar. A bar alone carries its meaning in
+        width, which is the same failure as carrying it in colour (010 FR-812) — and
+        «13.140 de 13.802» is the thing she actually wants to know.
+      */}
+      <span className="meta">
+        {n(done)} de {n(total)} {many ?? `${one.toLowerCase()}s`} · {pct}%
+      </span>
     </div>
   );
 }

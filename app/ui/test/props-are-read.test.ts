@@ -85,3 +85,42 @@ describe('a declared prop is a used prop', () => {
     expect(found[0]!.props).toContain('presetJobId');
   });
 });
+
+/**
+ * The same defect, one layer down: a **payload field** nobody reads (the thirteenth).
+ *
+ * `024` sent the pictogram download's progress over `job:progress` as
+ * «3.140 de 13.802» and `PictogramSetSection` never subscribed. The consequence was
+ * 2 min 45 s of «Trayéndolos…» with no bar, on a 157 MB download — and it was found by
+ * Carlos asking for a progress bar, not by any test. The task for it was already
+ * ticked.
+ *
+ * A prop is destructured, so the guard above can see it. An IPC payload field is a
+ * property on an interface, sent by the main process and read — or not — by whatever
+ * subscribes. Same signature, one layer down, and just as mechanical: every field the
+ * renderer *declares* it receives must appear somewhere in the renderer.
+ */
+describe('every field the renderer declares it receives is read', () => {
+  it('reads every field of Progress', async () => {
+    const jobs = await readFile(join(uiRoot, 'data', 'jobs.ts'), 'utf8');
+    const block = /export interface Progress \{([\s\S]*?)\n\}/.exec(jobs)?.[1] ?? '';
+    expect(block, 'the Progress interface must be findable').not.toBe('');
+
+    const fields = [...block.matchAll(/^\s{2}(\w+)\??:/gm)].map((m) => m[1]!);
+    expect(fields.length, 'and must have fields').toBeGreaterThan(2);
+
+    const all = (await Promise.all((await walk(uiRoot)).concat(
+      join(uiRoot, 'data', 'jobs.ts'), join(uiRoot, 'data', 'ingest.ts'),
+    ).map((f) => readFile(f, 'utf8')))).join('\n');
+
+    const unread = fields.filter((f) => {
+      // Read as `p.done`, destructured as `{ done }`, or named in a payload literal.
+      const uses = new RegExp(`[.{,\\s]${f}\\b`, 'g');
+      const hits = [...all.matchAll(uses)].length;
+      // One hit is the declaration itself.
+      return hits <= 1;
+    });
+    expect(unread,
+      'a progress field the main process sends and no screen reads').toEqual([]);
+  });
+});

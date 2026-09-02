@@ -1,7 +1,21 @@
 import { useEffect } from 'react';
 import { useAsync, useCommand, type Loadable } from './async.js';
 
-export interface Progress { stage: string; detail?: string }
+export interface Progress {
+  stage: string;
+  detail?: string;
+  /**
+   * A real fraction, where the work knows its own size (`024` T012).
+   *
+   * Numbers rather than a sentence to parse. The pictogram download used to send
+   * «3.140 de 13.802» in `detail` and nothing rendered it — the thirteenth field in
+   * this project written by one place and read by nobody, and the one I had already
+   * ticked off as done. `ui/test/props-are-read.test.ts` now fails if a field here
+   * goes unread.
+   */
+  done?: number;
+  total?: number;
+}
 
 /**
  * Adapting a worksheet (013 FR-1107).

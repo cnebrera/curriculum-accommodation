@@ -124,6 +124,8 @@ const api = {
     fetch: (args: { language?: string } = {}) => invoke('pictograms:fetch', args),
     /** What she has, from disk. Costs no request. */
     state: () => invoke('pictograms:state'),
+    /** She pressed «Parar». What arrived is already usable (`024` FR-2118). */
+    stop: () => invoke('pictograms:stop'),
     /** One request, and only because she asked. */
     checkUpdate: () => invoke('pictograms:checkUpdate'),
     declineUpdate: (highWater: string) => invoke('pictograms:declineUpdate', highWater),

@@ -4,6 +4,7 @@ import { readSet } from '@rampa/core';
 import {
   publisherState, acceptLicence, withdrawLicence, bringPictograms, configureSet,
   setState, checkUpdate, declineUpdate, candidatesFor, chooseWord, unchooseWord,
+  stopBringing,
 } from '../pictograms/bring.js';
 import { handle } from './wrap.js';
 import { currentVault } from './vault.js';
@@ -88,9 +89,17 @@ export function registerPictogramIpc(getWindow: () => BrowserWindow | null): voi
   handle('pictograms:fetch', (args: { language?: string } = {}) =>
     bringPictograms({
       ...args,
-      onProgress: (stage, detail) =>
-        getWindow()?.webContents.send('job:progress', { stage, detail }),
+      /*
+       * `done` and `total` as numbers, not only inside `detail`. They used to be a
+       * sentence, and `PictogramSetSection` never listened — 2 min 45 s of
+       * «Trayéndolos…» and no bar. Carlos asked for one, which is how the thirteenth
+       * unread field was found.
+       */
+      onProgress: (p) => getWindow()?.webContents.send('job:progress', p),
     }));
+
+  /** She pressed «Parar» (`024` FR-2118). Stopping is not a failure. */
+  handle('pictograms:stop', () => stopBringing());
 
   /** One request, and only because she asked (`024` FR-2211). */
   handle('pictograms:checkUpdate', () => checkUpdate());

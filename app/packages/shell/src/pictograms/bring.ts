@@ -140,9 +140,40 @@ export async function configureSet(root: string, reading: SetReading): Promise<v
 export interface BringArgs {
   language?: string;
   publisherId?: string;
-  onProgress?: (stage: string, detail: string) => void;
+  onProgress?: (p: { stage: string; detail: string; done: number; total: number }) => void;
   transport?: Transport;
   signal?: AbortSignal;
+}
+
+/**
+ * The download in flight, so she can stop it (FR-2118).
+ *
+ * ## Why this module-level variable exists
+ *
+ * `fetchWholeSet` has taken an `AbortSignal` since it was written, and **nothing ever
+ * passed one**: the requirement «a fetch MUST be interruptible» was satisfied in the
+ * core and unreachable from the window. That is the same defect as the thirteen unread
+ * fields, in its other form — a capability implemented and wired to nothing.
+ *
+ * One at a time, because two concurrent whole-set downloads into the same folder would
+ * fetch everything twice; a second press while one is running stops nothing and starts
+ * nothing, and the screen shows the one already going.
+ */
+let inFlight: AbortController | null = null;
+
+/** True while a download is going, so the screen knows to offer «Parar». */
+export const isBringing = (): boolean => inFlight !== null;
+
+/**
+ * She pressed «Parar» (FR-2118).
+ *
+ * Aborting is not a failure: `fetchWholeSet` returns `stopped: true`, what arrived is
+ * already a readable set, and pressing again resumes at the cost of what is missing.
+ */
+export function stopBringing(): boolean {
+  if (!inFlight) return false;
+  inFlight.abort();
+  return true;
 }
 
 /**
@@ -235,18 +266,41 @@ export async function bringPictograms(args: BringArgs = {}): Promise<{
       + 'Haz sitio y vuelve a darle — no he escrito nada.');
   }
 
-  args.onProgress?.('Trayendo pictogramas', 'pidiendo la lista completa');
-  const result = await fetchWholeSet({
-    root, publisher, language,
-    limits: {
-      imageSize: corpusData.imageSize,
-      concurrency: corpusData.concurrency,
-    },
-    ...(args.transport ? { transport: args.transport } : {}),
-    ...(args.signal ? { signal: args.signal } : {}),
-    onProgress: (done, total) => args.onProgress?.('Trayendo pictogramas',
-      `${done.toLocaleString('es-ES')} de ${total.toLocaleString('es-ES')}`),
+  args.onProgress?.({
+    stage: 'Trayendo pictogramas', detail: 'pidiendo la lista completa',
+    done: 0, total: corpusData.expectedTotal,
   });
+
+  /*
+   * Her signal if she gave one, otherwise ours — so `stopBringing` has something to
+   * abort. Cleared in `finally`, because a controller left behind would make the next
+   * press look like a download already in progress.
+   */
+  const controller = new AbortController();
+  inFlight = controller;
+  if (args.signal) {
+    args.signal.addEventListener('abort', () => controller.abort(), { once: true });
+  }
+
+  let result;
+  try {
+    result = await fetchWholeSet({
+      root, publisher, language,
+      limits: {
+        imageSize: corpusData.imageSize,
+        concurrency: corpusData.concurrency,
+      },
+      ...(args.transport ? { transport: args.transport } : {}),
+      signal: controller.signal,
+      onProgress: (done, total) => args.onProgress?.({
+        stage: 'Trayendo pictogramas',
+        detail: `${done.toLocaleString('es-ES')} de ${total.toLocaleString('es-ES')}`,
+        done, total,
+      }),
+    });
+  } finally {
+    inFlight = null;
+  }
 
   await writeInventory({
     publisher: publisher.id, language,

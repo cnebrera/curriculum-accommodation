@@ -1,11 +1,13 @@
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { Section, Field, Actions } from '../shell/Page.js';
 import { Callout } from '../components/Callout.js';
 import { Loaded } from '../data/Loaded.js';
+import { Counted } from '../components/Progress.js';
+import { useJobProgress, type Progress } from '../data/jobs.js';
 import {
   useCurrentSet, useChooseSet, useInspectSet, useUseSet, usePublishers,
   useAcceptLicence, useWithdrawLicence, useFetchPictograms, useSetState,
-  useCheckUpdate, useDeclineUpdate,
+  useCheckUpdate, useDeclineUpdate, useStopBringing,
   type SetInspection, type FetchResult, type UpdateStatus,
 } from '../data/pictograms.js';
 
@@ -60,6 +62,19 @@ export function PictogramSetSection({ compact = false }: {
   const check = useCheckUpdate();
   const decline = useDeclineUpdate();
   const [update, setUpdate] = useState<UpdateStatus | null>(null);
+  const stop = useStopBringing();
+  /*
+   * Live progress (`024` T012). The main process was already sending it and **nothing
+   * was listening** — 2 min 45 s of «Trayéndolos…» with no bar, which is what Carlos
+   * asked about. The thirteenth field in this project written by one place and read by
+   * nobody, and the one I had already ticked off.
+   */
+  const [at, setAt] = useState<{ done: number; total: number } | null>(null);
+  useJobProgress(useCallback((p: Progress) => {
+    if (p.stage === 'Trayendo pictogramas' && typeof p.total === 'number') {
+      setAt({ done: p.done ?? 0, total: p.total });
+    }
+  }, []));
 
   const pick = async (): Promise<void> => {
     const root = await choose.run();
@@ -96,7 +111,9 @@ export function PictogramSetSection({ compact = false }: {
   };
 
   const fetchThem = async (): Promise<void> => {
+    setAt({ done: 0, total: state?.expectedTotal ?? 0 });
     const got = await bring.run();
+    setAt(null);
     if (got) { setResult(got); setUpdate(null); current.reload(); setState.reload(); }
   };
 
@@ -325,6 +342,28 @@ export function PictogramSetSection({ compact = false }: {
                   </Field>
                 ) : null}
               </>
+            ) : null}
+
+            {/*
+              The bar and the way out, together (`024` T012, FR-2118).
+
+              `Counted` and not a spinner because the total is genuinely known — 13.802
+              before the first image — so a real fraction is not a guess. And «Parar»
+              because `fetchWholeSet` has accepted an `AbortSignal` since it was
+              written and **nothing ever passed one**: «a fetch MUST be interruptible»
+              was satisfied in the core and unreachable from here.
+            */}
+            {bring.busy && at ? (
+              <Field help="Puedes parar cuando quieras: lo que ya ha llegado sirve, y si
+                           vuelves a darle sigo por donde iba.">
+                <Counted done={at.done} total={at.total} one="Dibujo" many="dibujos" />
+                <Actions>
+                  <button className="btn btn-ghost" onClick={() => void stop.run()}
+                          disabled={stop.busy}>
+                    Parar
+                  </button>
+                </Actions>
+              </Field>
             ) : null}
 
             {result ? (

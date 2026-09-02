@@ -119,6 +119,51 @@ test.describe('bringing the pictograms', () => {
     expect(state.root).toMatch(/pictogramas$/);   // inside her Rampa folder (FR-2205)
   });
 
+  test('progress arrives with real numbers, and stopping works (024 T012, FR-2118)', async () => {
+    /*
+     * The **contract**, not the screen. This drives the real download for a few
+     * seconds — the only outbound request in the suite — and stops it.
+     *
+     * It asserts the IPC surface rather than the bar because the pictogram screen is
+     * moving out of the learner's profile into Configuración (`025`), and an assertion
+     * that walks a navigation about to change is an assertion that will be loosened
+     * rather than fixed. The bar itself is asserted where it is stable: the component
+     * test, and `025`'s own e2e once it has a home.
+     *
+     * The first version of this test called `fetch()` directly and then waited for a
+     * progressbar — which never appeared, because the component was not mounted. That
+     * is the mistake this comment exists to stop somebody repeating.
+     */
+    await page.evaluate(() => window.rampa.pictograms.acceptLicence('arasaac'));
+
+    const seen: Array<{ stage: string; done?: number; total?: number }> = [];
+    await page.exposeFunction('__rampaProgress', (p: unknown) => {
+      seen.push(p as { stage: string; done?: number; total?: number });
+    });
+    await page.evaluate(() => window.rampa.job.onProgress((p: unknown) => {
+      (window as unknown as { __rampaProgress: (x: unknown) => void }).__rampaProgress(p);
+    }));
+
+    const started = page.evaluate(() => window.rampa.pictograms.fetch());
+    await page.waitForTimeout(8000);
+    expect(await page.evaluate(() => window.rampa.pictograms.stop())).toBe(true);
+    const result = await started as { stopped: boolean; brought: number };
+
+    expect(result.stopped).toBe(true);
+    // What arrived is usable, and pressing again resumes.
+    expect(result.brought).toBeGreaterThan(0);
+
+    const withNumbers = seen.filter((p) =>
+      p.stage === 'Trayendo pictogramas' && typeof p.total === 'number');
+    /*
+     * **Numbers**, not a sentence. They used to be only inside `detail` and nothing
+     * rendered them — the thirteenth field written by one place and read by nobody.
+     */
+    expect(withNumbers.length).toBeGreaterThan(0);
+    expect(withNumbers.at(-1)!.total).toBeGreaterThan(10_000);
+    expect(withNumbers.at(-1)!.done).toBeGreaterThan(0);
+  });
+
   test('the folder path still works, with nothing downloaded (FR-2103)', async () => {
     // `018`'s promise, still true. A teacher who assembled a folder by hand — or who
     // has no internet — is not worse off for `023` existing.

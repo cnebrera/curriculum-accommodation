@@ -37,6 +37,17 @@
 - [X] T011 `bringPictograms` takes **no word list** (FR-2201). The word path is deleted,
   not deprecated: two ways in is how the one without the guard gets called.
 - [X] T012 Progress that says something true — «3.140 de 13.802», not a spinner.
+  **Ticked once while broken.** The main process sent it and `PictogramSetSection`
+  never subscribed: 2 min 45 s of «Trayéndolos…» on a 157 MB download. Found by Carlos
+  asking for a progress bar, not by a test. Now a real `Counted` bar with a genuine
+  fraction (the total is known before the first image), the numbers in text as well as
+  in the width, and `ui/test/props-are-read.test.ts` extended so an unread **payload
+  field** fails the way an unread prop already did — verified by adding a field and
+  watching it fail.
+- [X] T012b The **stop** button (FR-2118). `fetchWholeSet` had accepted an
+  `AbortSignal` since it was written and nothing ever passed one — «a fetch MUST be
+  interruptible» satisfied in the core and unreachable from the window. The same defect
+  shape as an unread field, from the other direction: a capability wired to nothing.
 - [X] T013 [P] Test: a spy transport that throws proves nothing is fetched on launch or
   on a second complete pass (SC-2203, SC-2204).
 - [X] T014 [P] Test: interrupted at an arbitrary point, `readSet` finds no problems

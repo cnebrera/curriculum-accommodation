@@ -4,7 +4,7 @@ import { useAcceptedFormats, usePhotoWarningSeen, usePendingIngest, useIngestPro
          useChooseFiles, useIngestEstimate, useRunIngest, useAcknowledgePhotoWarning } from '../data/ingest.js';
 import { useStrings } from '../i18n/context.js';
 import { Callout } from '../components/Callout.js';
-import { Pages } from '../components/Progress.js';
+import { Counted } from '../components/Progress.js';
 
 /**
  * Where the material comes in (008 T018, US1).
@@ -204,7 +204,8 @@ export function IngestScreen({ onIngested, onResume }: {
 
       {running ? (
         <div className="stack gap2" aria-live="polite">
-          <Pages done={progress?.page ?? 0} total={progress?.of ?? paths.length} />
+          <Counted done={progress?.page ?? 0} total={progress?.of ?? paths.length}
+                   one="Página" many="páginas" />
           <span className="meta">
             {progress?.stage ?? 'Empezando'}
             {progress?.detail ? ` · ${progress.detail}` : ''}
