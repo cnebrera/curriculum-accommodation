@@ -1,6 +1,9 @@
 import type { ReactNode } from 'react';
 import { Wordmark } from '../components/Logo.js';
-import { MAIN_TABS, type LearnerTab, type Route, type RouteAction } from './route.js';
+import {
+  MAIN_TABS, settingsPanes,
+  type LearnerTab, type Route, type RouteAction, type SettingsPane,
+} from './route.js';
 
 /**
  * One rail, and it changes with where she is (020 T009, option A).
@@ -21,8 +24,16 @@ import { MAIN_TABS, type LearnerTab, type Route, type RouteAction } from './rout
  * ## What that costs, stated
  *
  * «Configuración» is not visible from inside a learner. It is a destination she reaches
- * twice a month, and it sits in the rail's foot beside the cost badge and the text-size
- * control — which is where the things-you-adjust already live.
+ * twice a month, and the one time she needs it urgently — the pictogram set is missing —
+ * the learner's own page points at it (`025` FR-2303).
+ *
+ * ## The third shape (025 T005)
+ *
+ * The rail now becomes Configuración's too, by the same rule: outside anything it holds
+ * her caseload and the top level, inside a learner it holds their sections, inside
+ * Configuración it holds its own. Three shapes, one column, one `aria-label` that
+ * follows the contents — and no second menu, which is the thing Carlos rejected on
+ * sight and the measurement that killed it (501px of chrome).
  */
 
 const TAB_LABEL: Record<LearnerTab, string> = {
@@ -49,11 +60,42 @@ export function Rail({ route, go, learnerName, labels, foot }: {
   /** Her name for the learner she is inside, if she is inside one. Display only. */
   learnerName?: string;
   /** The top-level labels, from the locale. */
-  labels: { learners: string; work: string; notes: string; connection: string; about: string };
+  /**
+   * Every label in the rail, from the locale — including Configuración's sections.
+   *
+   * Hardcoding «Pictogramas» here would put it out of reach of the locale sweep, which
+   * is the same shape as a class name a stylesheet does not have: it works, in one
+   * language, until somebody offers another.
+   */
+  labels: {
+    learners: string; work: string; notes: string;
+    connection: string; about: string; settings: string; pictograms: string;
+  };
   /** The cost badge, the display controls and the locale — unchanged (`013` FR-1106). */
   foot: ReactNode;
 }) {
   const inside = route.at === 'learner';
+  const inSettings = route.at === 'settings';
+
+  /**
+   * Configuración's sections, labelled from the locale.
+   *
+   * «Pictogramas» is first because it is the only one she is ever *sent* here for: a
+   * learner's page points at it when the set is missing.
+   */
+  const paneLabel: Record<SettingsPane, string> = {
+    pictograms: labels.pictograms,
+    service: labels.connection,
+    about: labels.about,
+  };
+
+  const pane = (p: SettingsPane) => (
+    <button key={p}
+            {...(inSettings && route.pane === p ? { 'aria-current': 'page' as const } : {})}
+            onClick={() => go({ type: 'settings', pane: p })}>
+      {paneLabel[p]}
+    </button>
+  );
 
   const tab = (t: LearnerTab) => (
     <button key={t}
@@ -63,7 +105,7 @@ export function Rail({ route, go, learnerName, labels, foot }: {
     </button>
   );
 
-  const top = (view: 'notes' | 'connection' | 'about' | 'door', label: string) => (
+  const top = (view: 'notes' | 'door', label: string) => (
     <button aria-current={route.at === 'legacy' && route.view === view ? 'page' : undefined}
             onClick={() => go({ type: 'legacy', view })}>
       {label}
@@ -79,9 +121,34 @@ export function Rail({ route, go, learnerName, labels, foot }: {
        * reader. «Apartados» rather than «Secciones» inside a learner so the two never
        * collide in a locator or in a region list (FR-1822).
        */
-      aria-label={inside ? `Apartados de ${learnerName ?? route.code}` : 'Secciones de Rampa'}
+      aria-label={
+        inside ? `Apartados de ${learnerName ?? route.code}`
+          : inSettings ? 'Apartados de Configuración'
+          : 'Secciones de Rampa'
+      }
     >
-      {inside ? (
+      {inSettings ? (
+        <>
+          {/*
+            The way back names where it goes, like the learner's does — and when she
+            arrived from a learner it goes back to **him**, not to the caseload
+            (FR-2304). Route state, so it survives her moving between sections.
+          */}
+          {route.from ? (
+            <button className="rail-back"
+                    onClick={() => go({ type: 'learner/open', code: route.from!.code })}>
+              ← {learnerName ?? route.from.code}
+            </button>
+          ) : (
+            <button className="rail-back" onClick={() => go({ type: 'caseload' })}>
+              ← {labels.learners}
+            </button>
+          )}
+          {/* A `<p>`, for the reason on the learner's one above. */}
+          <p className="rail-who">{labels.settings}</p>
+          {settingsPanes.map(pane)}
+        </>
+      ) : inside ? (
         <>
           {/*
             The way back names where it goes rather than saying «atrás»: a control that
@@ -93,11 +160,22 @@ export function Rail({ route, go, learnerName, labels, foot }: {
           {/*
             Who this is, at the top of their own rail (FR-1806, `005` FR-513). The name
             is resolved in memory; the code is what reaches disk (`003`).
+
+            **A `<p>` and not an `<h2>`** (025, from `e2e/a11y.spec.ts`). The rail comes
+            before `<main>` in the DOM, so a heading here is the document's *first*
+            heading and the page's own `h1` then arrives second: «starts at H2, not H1».
+            It went unnoticed because the a11y sweep only walked top-level screens and
+            the rail only showed this inside a learner — until `025` gave Configuración
+            the same treatment and the sweep reached it.
+
+            Nothing is lost: the `<nav>` already carries «Apartados de Lucía» as its
+            accessible name, which is what a screen reader announces on entering the
+            region. A heading inside a navigation landmark was decoration with a tag.
           */}
-          <h2 className="rail-who">
+          <p className="rail-who">
             {learnerName ?? route.code}
             <span>{route.code}</span>
-          </h2>
+          </p>
           {MAIN_TABS.map(tab)}
           <hr />
           {FOOT_TABS.map(tab)}
@@ -122,8 +200,21 @@ export function Rail({ route, go, learnerName, labels, foot }: {
           */}
           {top('door', labels.work)}
           {top('notes', labels.notes)}
-          {top('connection', labels.connection)}
-          {top('about', labels.about)}
+          {/*
+            Four entries, not five (`025` FR-2310). «Mi servicio de IA» and «Acerca de»
+            were never siblings of «Mis alumnos» — `020`'s own diagnosis was that this
+            rail mixed «una acción, una entidad, datos, un ajuste e información» as if
+            they were the same kind of thing. They are settings, so they are in
+            Configuración.
+          */}
+          {/*
+            No `aria-current` here: this branch only renders when she is *not* in
+            Configuración, so the compiler narrowed the comparison away — correctly, and
+            it is the kind of dead condition that would otherwise sit there looking like
+            a guarantee. Inside Configuración the rail shows its own sections, and each
+            of those carries the `aria-current`.
+          */}
+          <button onClick={() => go({ type: 'settings' })}>{labels.settings}</button>
         </>
       )}
       <div className="grow" />

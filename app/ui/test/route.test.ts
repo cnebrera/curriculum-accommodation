@@ -2,7 +2,8 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import {
-  startRoute, reduceRoute, learnerTabs, type Route,
+  startRoute, reduceRoute, learnerTabs, settingsPanes,
+  type Route, type SettingsPane,
 } from '../src/nav/route.js';
 
 /**
@@ -161,5 +162,74 @@ describe('settings is a place too', () => {
     const s = reduceRoute(intoLearner(), { type: 'settings' });
     expect(s.at).toBe('settings');
     expect(reduceRoute(s, { type: 'caseload' })).toEqual({ at: 'caseload' });
+  });
+});
+
+/**
+ * Configuración, and the way back (025 T003).
+ *
+ * `020` wrote `{ at: 'settings' }` into the reducer and **nothing ever navigated
+ * there** — so these are the first tests that case has had. The one that matters is the
+ * way back: a pointer that takes her out of a learner has to return her to *that*
+ * learner, and both navigation defects this project has found were this state living
+ * somewhere it did not survive.
+ */
+describe('Configuración', () => {
+  it('opens at Pictogramas, because that is what she is usually sent for', () => {
+    expect(reduceRoute(startRoute(), { type: 'settings' }))
+      .toEqual({ at: 'settings', pane: 'pictograms' });
+  });
+
+  it('moves between its own sections', () => {
+    const at = reduceRoute(startRoute(), { type: 'settings', pane: 'service' });
+    expect(reduceRoute(at, { type: 'settings', pane: 'about' }))
+      .toEqual({ at: 'settings', pane: 'about' });
+  });
+
+  it('remembers the learner she came from', () => {
+    const from = { code: 'K42', tab: 'who' as const };
+    expect(reduceRoute(
+      { at: 'learner', code: 'K42', tab: 'who' },
+      { type: 'settings', pane: 'pictograms', from },
+    )).toEqual({ at: 'settings', pane: 'pictograms', from });
+  });
+
+  it('keeps the way back while she moves between sections', () => {
+    /*
+     * The natural `{ at: 'settings', pane }` drops `from`, and the loss would only show
+     * up as a «volver» landing on the caseload instead of on Iker — which reads as a
+     * design choice rather than a bug.
+     */
+    const from = { code: 'K42', tab: 'who' as const };
+    let at = reduceRoute(startRoute(), { type: 'settings', pane: 'pictograms', from });
+    at = reduceRoute(at, { type: 'settings', pane: 'service' });
+    expect(at).toEqual({ at: 'settings', pane: 'service', from });
+  });
+
+  it('carries no name, only a code (003)', () => {
+    const from = { code: 'K42', tab: 'who' as const };
+    const at = reduceRoute(startRoute(), { type: 'settings', pane: 'pictograms', from });
+    expect(JSON.stringify(at)).not.toMatch(/[A-Za-z]{4,}\s[A-Z]/);
+    expect(JSON.stringify(at)).toContain('K42');
+  });
+
+  it('lets «Mis alumnos» win from inside it', () => {
+    const from = { code: 'K42', tab: 'who' as const };
+    const at = reduceRoute(startRoute(), { type: 'settings', pane: 'pictograms', from });
+    expect(reduceRoute(at, { type: 'caseload' })).toEqual({ at: 'caseload' });
+  });
+
+  it('has a menu list that matches the type exactly', () => {
+    /*
+     * `SettingsPane` had five values and no screen could draw one of them. The list the
+     * rail renders from and the type are two copies of «which sections exist», so they
+     * are checked against each other rather than trusted to stay in step.
+     *
+     * Three, and no `display`: the text-size and contrast controls live in the rail's
+     * foot (`013` FR-1106) and work from every screen. A second home for them would be
+     * two copies of one truth, and the copy she found first would feel broken.
+     */
+    const panes: SettingsPane[] = ['pictograms', 'service', 'about'];
+    expect([...settingsPanes].sort()).toEqual([...panes].sort());
   });
 });

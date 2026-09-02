@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { Section, Field, Actions } from '../shell/Page.js';
+import { Field, Actions } from '../shell/Page.js';
 import { Callout } from '../components/Callout.js';
 import { Loaded } from '../data/Loaded.js';
 import { Counted } from '../components/Progress.js';
@@ -37,17 +37,18 @@ import {
  * The three claims in it were corrected on 2026-09-01 (G28) after reading the licence
  * text instead of remembering it. Two of them said more than CC BY-NC-SA says.
  */
-export function PictogramSetSection({ compact = false }: {
-  /**
-   * Rendered inside the profile editor rather than as its own page section.
-   *
-   * That is where it belongs: the set is only needed once she has decided a learner
-   * uses pictograms, and the requirement and the decision are the same moment. A
-   * settings page she has to find first would mean turning the family on and
-   * getting nothing, with no idea why.
-   */
-  compact?: boolean;
-} = {}) {
+/*
+ * `compact` is gone (025 T007).
+ *
+ * It existed for one reason: to render this inside a profile form. A prop whose only
+ * job is «be smaller inside a page you should not be on» is the design defect in prop
+ * form, so it went with the page.
+ *
+ * `018`'s reason for putting it in the form was real — «turning the family on and
+ * getting nothing, with no idea why» — and it is now answered by a pointer on the
+ * learner's page instead of by moving the destination into the form.
+ */
+export function PictogramSetSection() {
   const current = useCurrentSet();
   const choose = useChooseSet();
   const inspect = useInspectSet();
@@ -91,15 +92,12 @@ export function PictogramSetSection({ compact = false }: {
   /*
    * `013` FR-1105: exactly one control per screen may carry primary weight.
    *
-   * In `compact` mode this section lives inside the profile editor, whose primary is
-   * «Guardar» — so the two buttons added here must not compete with it. Seen in a
-   * screenshot at 900px with `xlarge` text (023 T024): «Traer los pictogramas» and
-   * «Guardar» both solid, which is two primaries and therefore none.
-   *
-   * As its own `Section` there is no rival, and the download is the point of the
-   * screen, so there it stays primary.
+   * This is now its own page and the download is the point of it, so the strong button
+   * is primary. It was conditional while this rendered inside the profile form, whose
+   * primary is «Guardar» — two solid buttons on one screen, which `023` T024 caught in
+   * a screenshot at 900px. The condition went with the form.
    */
-  const strong = compact ? 'btn' : 'btn btn-primary';
+  const strong = 'btn btn-primary';
 
   const state = publishers.state === 'ready' ? publishers.value : null;
   const publisher = state?.publishers[0] ?? null;
@@ -411,20 +409,11 @@ export function PictogramSetSection({ compact = false }: {
     </Loaded>
   );
 
-  if (compact) {
-    return (
-      <div className="stack gap3">
-        <h4>El juego de pictogramas</h4>
-        {body}
-      </div>
-    );
-  }
 
-  return (
-    <Section
-      title="Pictogramas"
-      lede="Para los alumnos que los usan. Ni se activan solos ni se los pongo a nadie por su perfil.">
-      {body}
-    </Section>
-  );
+  /*
+   * No `Section` wrapper: `SettingsSections` already gives this a `Page` with the title
+   * and the lede, and a section heading under a page heading of the same name is the
+   * «two titles» defect `013` fixed once already.
+   */
+  return body;
 }

@@ -2,7 +2,7 @@ import { test, expect, _electron as electron, type Page, type ElectronApplicatio
 import { mkdtemp, mkdir, readdir } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { RAIL_WORK, throughDoorToAdapt } from './nav.js';
+import { RAIL_WORK, throughDoorToAdapt, SCREENS, toScreen } from './nav.js';
 
 /**
  * One worksheet, three learners (005 T018-T020).
@@ -115,14 +115,19 @@ test.describe('one worksheet, several learners', () => {
     await seedThree(page, vault);
 
     const forbidden = /firmar (todo|todas|las tres|los tres)|firmar en bloque|sign all/i;
-    for (const screen of [RAIL_WORK, 'Mis alumnos', 'Mis notas', 'Acerca de']) {
-      await page.getByRole('button', { name: screen }).click();
-      await page.waitForTimeout(150);
+    /*
+     * `SCREENS` and `toScreen`, not a hand-rolled list: `025` moved «Acerca de» into
+     * Configuración and this loop waited thirty seconds for a top-level button that no
+     * longer exists. Fourth spec to hand-roll the walk and break, which is `nav.ts`'s
+     * own opening note coming true.
+     */
+    for (const screen of SCREENS) {
+      await toScreen(page, screen);
       const labels = await page.evaluate(() =>
         Array.from(document.querySelectorAll('button, a, [role="button"]'))
           .map((el) => (el.textContent ?? '').trim()));
       expect(labels.filter((l) => forbidden.test(l)),
-        `${screen} offers a way to sign several documents at once`).toEqual([]);
+        `${screen.label} offers a way to sign several documents at once`).toEqual([]);
     }
 
     await app.close();

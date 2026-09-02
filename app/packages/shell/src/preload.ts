@@ -137,6 +137,8 @@ const api = {
      */
     candidates: (args: { words: string[]; language?: string }) =>
       invoke('pictograms:candidates', args),
+    /** Everything she has chosen, so she can change her mind (`025` FR-2308). */
+    chosenSoFar: (language?: string) => invoke('pictograms:chosenSoFar', language),
     /** Her choice, recorded once and used for every learner. */
     chooseWord: (args: { word: string; id: string; language?: string }) =>
       invoke('pictograms:chooseWord', args),

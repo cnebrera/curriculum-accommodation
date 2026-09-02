@@ -4,7 +4,7 @@ import { readSet } from '@rampa/core';
 import {
   publisherState, acceptLicence, withdrawLicence, bringPictograms, configureSet,
   setState, checkUpdate, declineUpdate, candidatesFor, chooseWord, unchooseWord,
-  stopBringing,
+  stopBringing, chosenSoFar,
 } from '../pictograms/bring.js';
 import { handle } from './wrap.js';
 import { currentVault } from './vault.js';
@@ -161,6 +161,9 @@ export function registerPictogramIpc(getWindow: () => BrowserWindow | null): voi
    * name is a string and no compiler was ever going to see it — hence
    * `ipc-channels.test.ts`, added the same minute.
    */
+  /** Everything she has chosen, so she can change her mind (`025` FR-2308). */
+  handle('pictograms:chosenSoFar', (language?: string) => chosenSoFar(language));
+
   handle('pictograms:chooseWord',
     (args: { word: string; id: string; language?: string }) => chooseWord(args));
 

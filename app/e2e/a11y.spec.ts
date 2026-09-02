@@ -4,7 +4,7 @@ import { mkdtemp, mkdir } from 'node:fs/promises';
 import { readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { RAIL_WORK, throughDoorToAdapt } from './nav.js';
+import { RAIL_WORK, throughDoorToAdapt, SCREENS, toScreen } from './nav.js';
 
 /**
  * The accessibility gate (spec 010 T018/T019, closing backlog G7 and 006 T075).
@@ -156,13 +156,11 @@ test.describe('accessibility · WCAG 2.2 AA', () => {
     await seed(page, vault);
 
     // Navigate by the rail, which is how she does it.
-    const screens = [RAIL_WORK, 'Mis alumnos', 'Mis notas', 'Mi servicio de IA', 'Acerca de'];
-    for (const label of screens) {
-      await page.getByRole('button', { name: label }).click();
-      await page.waitForTimeout(200);
+    for (const screen of SCREENS) {
+      await toScreen(page, screen);
       for (const m of MODES) {
         await setMode(page, m);
-        await scan(page, `${label} · ${m.name}`);
+        await scan(page, `${screen.label} · ${m.name}`);
       }
     }
     await app.close();
@@ -264,9 +262,9 @@ test.describe('accessibility · WCAG 2.2 AA', () => {
     const { app, page, vault } = await launch();
     await seed(page, vault);
 
-    for (const label of [RAIL_WORK, 'Mis alumnos', 'Mis notas', 'Mi servicio de IA', 'Acerca de']) {
-      await page.getByRole('button', { name: label }).click();
-      await page.waitForTimeout(200);
+    for (const screen of SCREENS) {
+      await toScreen(page, screen);
+      const label = screen.label;
 
       const problems = await page.evaluate(() => {
         const out: string[] = [];

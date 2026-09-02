@@ -5,10 +5,21 @@ import { useStrings } from '../i18n/context.js';
 import { AxisEditor } from './AxisEditor.js';
 import { YearPicker, type Who } from './YearPicker.js';
 import { Notice } from '../components/Notice.js';
-import { PictogramSetSection } from '../pictograms/PictogramSetSection.js';
+import { LearnerPictograms } from '../pictograms/LearnerPictograms.js';
 import { RepairNotice } from '../components/RepairNotice.js';
 
-export function ProfileEditor({ code, onSaved }: { code: string | null; onSaved: (code: string) => void }) {
+export function ProfileEditor({ code, onSaved, onConfigure }: {
+  code: string | null;
+  onSaved: (code: string) => void;
+  /**
+   * Take her to Configuración ▸ Pictogramas, and bring her back (`025` FR-2303/2304).
+   *
+   * Passed in rather than dispatched here: the route lives in `App.tsx` and knowing
+   * where she came from is route state, which is precisely what both of this project's
+   * navigation defects got wrong by keeping it in a component.
+   */
+  onConfigure: () => void;
+}) {
   const { t: es } = useStrings();
   const [current, setCurrent] = useState<string>(code ?? '');
   const [name, setName] = useState('');
@@ -192,48 +203,20 @@ export function ProfileEditor({ code, onSaved }: { code: string | null; onSaved:
         The one decision in this form that is about how a child is seen rather than
         about what he can do. It says what it costs, because «por si acaso» has a
         social cost here that no other family has.
-      */}
-      <fieldset className="fieldset-bare">
-        <legend><h3>Pictogramas</h3></legend>
-        <label className="check" htmlFor="pictos-on">
-          <input type="checkbox" id="pictos-on" checked={pictos.enabled}
-                 onChange={(e) => setPictos((p) => ({ ...p, enabled: e.target.checked }))} />
-          <span>Usa pictogramas</span>
-        </label>
-        <p className="field-help">
-          Sólo si ya los usa. Si lee, aunque sea despacio, los pictogramas le añaden
-          trabajo — y una hoja llena de dibujos en un aula donde nadie más la tiene
-          se ve desde la última fila.
-        </p>
-        {pictos.enabled ? (
-          <div className="field">
-            <label htmlFor="pictos-scope">Dónde</label>
-            <select className="select" id="pictos-scope" value={pictos.scope}
-                    onChange={(e) => setPictos((p) => ({ ...p, scope: e.target.value }))}>
-              <option value="vocabulary">Sólo en el vocabulario clave</option>
-              <option value="instructions">Sólo en lo que hay que hacer</option>
-              <option value="all">En todo</option>
-            </select>
-            <p className="field-help">
-              «En todo» es para quien lee con pictogramas como vía principal. Es el
-              caso menos frecuente.
-            </p>
-          </div>
-        ) : null}
-        {/*
-          The set, at the moment it becomes necessary. A settings page she has to
-          find first would mean turning the family on and getting nothing, with no
-          idea why.
 
-          **Outside the `.field`, and that is the point** (023 T024). It was inside
-          it, and `.field` carries `max-width: var(--measure-field)` — 480px, which is
-          right for a `select` and wrong for a licence, a box she types words into and
-          a panel of results. Measured at 1366px wide: the block sat in 480px with a
-          third of the screen empty beside it. It is not part of the «Dónde» control,
-          so it is not inside its field.
-        */}
-        {pictos.enabled ? <PictogramSetSection compact /> : null}
-      </fieldset>
+        **Three lines, not thirty** (`025` FR-2301). This used to be the switch, the
+        scope, and then the whole pictogram set: a licence, four bullets of terms, a
+        licence URL, an acceptance, a withdrawal, a 157 MB download, a progress bar, a
+        stop button, a folder picker and an update check — inside a profile form. None
+        of which is about a child. `020` already taught this project that lesson and I
+        repeated it two specifications later, larger.
+      */}
+      <LearnerPictograms
+        enabled={pictos.enabled}
+        scope={pictos.scope}
+        onEnabled={(on) => setPictos((p) => ({ ...p, enabled: on }))}
+        onScope={(scope) => setPictos((p) => ({ ...p, scope }))}
+        onConfigure={onConfigure} />
 
       <div className="row">
         <button className="btn btn-primary" disabled={!current || saveLearner.busy}

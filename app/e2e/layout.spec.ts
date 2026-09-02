@@ -2,7 +2,7 @@ import { test, expect, _electron as electron, type Page, type ElectronApplicatio
 import { mkdtemp, mkdir } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { RAIL_WORK, throughDoorToAdapt } from './nav.js';
+import { RAIL_WORK, throughDoorToAdapt, SCREENS, toScreen } from './nav.js';
 
 /**
  * Layout, on the screen she actually has (spec 010 T017/T030, SC-802/SC-804).
@@ -132,7 +132,7 @@ async function checkLayout(page: Page, where: string): Promise<void> {
   expect(await overlappingControls(page), `${where}: overlapping controls`).toEqual([]);
 }
 
-const SCREENS = [RAIL_WORK, 'Mis alumnos', 'Mis notas', 'Mi servicio de IA', 'Acerca de'];
+
 
 test.describe('layout at 1366×768', () => {
   test('onboarding fits', async () => {
@@ -144,8 +144,9 @@ test.describe('layout at 1366×768', () => {
   test('every screen fits', async () => {
     const { app, page, vault } = await launch();
     await seed(page, vault);
-    for (const label of SCREENS) {
-      await page.getByRole('button', { name: label }).click();
+    for (const screen of SCREENS) {
+      await toScreen(page, screen);
+      const label = screen.label;
       await checkLayout(page, label);
     }
     await app.close();
@@ -171,8 +172,9 @@ test.describe('layout at 1366×768', () => {
     // CSS size. Reflow, not a second scrollbar (WCAG 2.2 SC 1.4.10).
     await page.evaluate(() => { document.body.style.zoom = '2'; });
 
-    for (const label of SCREENS) {
-      await page.getByRole('button', { name: label }).click();
+    for (const screen of SCREENS) {
+      await toScreen(page, screen);
+      const label = screen.label;
       await checkLayout(page, `${label} · xlarge+high+dark @200%`);
       // And the text is still reachable: something must be scrollable
       // vertically, never horizontally.
@@ -306,8 +308,9 @@ test.describe('every width the window can be', () => {
 
     for (const width of WIDTHS) {
       await page.setViewportSize({ width, height: 800 });
-      for (const label of SCREENS) {
-        await page.getByRole('button', { name: label }).click();
+      for (const screen of SCREENS) {
+        await toScreen(page, screen);
+        const label = screen.label;
         await checkLayout(page, `${label} @ ${width}px`);
         expect(await regionsShareTheWindow(page), `${label} @ ${width}px: the shell`).toEqual([]);
       }
@@ -394,8 +397,9 @@ test.describe('every width the window can be', () => {
     await page.waitForTimeout(180);
     expect(await railIsAStrip(), 'at 1100px and xlarge text the same window is too narrow for a column').toBe(true);
 
-    for (const label of SCREENS) {
-      await page.getByRole('button', { name: label }).click();
+    for (const screen of SCREENS) {
+      await toScreen(page, screen);
+      const label = screen.label;
       await checkLayout(page, `${label} @ 1100px · xlarge`);
       expect(await regionsShareTheWindow(page), `${label} @ 1100px · xlarge: the shell`).toEqual([]);
     }

@@ -31,11 +31,14 @@ import { useCandidates, useChooseWord, type WordChoice } from '../data/pictogram
  * so. This adds a way to answer the question; it does not answer it for her, and the
  * popularity order is a fact about downloads rather than a recommendation.
  */
-export function ChooseWord({ words, language = 'es', onChosen }: {
+export function ChooseWord({ words, language = 'es', onChosen, title, lede }: {
   /** The ambiguous words to offer. Usually the ones a report just listed. */
   words: string[];
   language?: string;
   onChosen?: () => void;
+  /** Overridden when this is «what you have chosen» rather than «choose» (`025`). */
+  title?: string;
+  lede?: string;
 }) {
   const candidates = useCandidates(words, language);
   const pick = useChooseWord();
@@ -51,11 +54,13 @@ export function ChooseWord({ words, language = 'es', onChosen }: {
   };
 
   return (
-    <Callout intent="decide" title="Palabras con varios dibujos">
+    <Callout intent="decide" title={title ?? 'Palabras con varios dibujos'}>
       <p>
-        Estas palabras tienen más de un dibujo posible, así que <strong>no he puesto
-        ninguno</strong>. Elige tú cuál usas: lo eliges una vez y vale para todos tus
-        alumnos.
+        {lede ?? <>
+          Estas palabras tienen más de un dibujo posible, así que <strong>no he puesto
+          ninguno</strong>. Elige tú cuál usas: lo eliges una vez y vale para todos tus
+          alumnos.
+        </>}
       </p>
       <p className="small">
         Si no eliges, la hoja sale sin ese dibujo y te lo digo. Un dibujo equivocado es

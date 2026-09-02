@@ -482,3 +482,38 @@ export async function unchooseWord(args: {
   await currentVault().writeRaw(vocabularyPath, renderVocabulary(after));
   return true;
 }
+
+/**
+ * Every choice she has made, for review (024 FR-2214 finished by 025 FR-2308).
+ *
+ * Until now her vocabulary could only be *answered* — the chooser appeared on a report
+ * that had just skipped a word. There was no way to see what she had chosen or change
+ * her mind, which made it a file she owned and could not read from inside Rampa. That
+ * is the same half-built shape as `profile.pictograms.overrides`, which sat in the
+ * schema for a month with no screen.
+ */
+export async function chosenSoFar(language = 'es'): Promise<WordChoice[]> {
+  const vocabulary = await loadVocabulary();
+  const chosen = forLanguage(vocabulary, language);
+  if (chosen.size === 0) return [];
+
+  const set = await currentPictogramSet();
+  const out: WordChoice[] = [];
+  for (const [word, id] of [...chosen.entries()].sort(([a], [b]) => a.localeCompare(b))) {
+    /*
+     * Every candidate, not only the one she picked — because the point of reviewing is
+     * changing her mind, and that needs the alternatives beside it. Where the set is
+     * gone, her choice is still shown: it is hers, and `018` FR-1616 already renders the
+     * missing image as a named gap rather than pretending the decision never happened.
+     */
+    const ids = set?.byLanguage.get(language)?.get(word) ?? [id];
+    const images = await pictogramImagesFor(ids.includes(id) ? ids : [...ids, id]);
+    out.push({
+      word, chosen: id,
+      candidates: [...new Set([...ids, id])].map((c) => ({
+        id: c, image: images.get(c) ?? null,
+      })),
+    });
+  }
+  return out;
+}

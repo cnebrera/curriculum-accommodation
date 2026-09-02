@@ -413,6 +413,35 @@ every moment should have a spec. What it added beyond the seams pass:
    journey sentence → T094). Handover *import* (004 US2) recorded as deliberately
    deferred rather than silently missing.
 
+## G34 · Three e2e suites at once, and an hour each
+
+**Closed 2026-09-02** by not doing it again.
+
+While implementing `025` I started a full Playwright run, edited the navigation, started
+another, and then a third — each in the background, each launching Electron instances,
+all on one laptop. They took **1.1, 1.6 and 1.6 hours** instead of 1.6 minutes, with
+individual tests timing out at 15–17 minutes against a 60-second limit.
+
+The result was 11, 15 and 12 «failures» that were almost entirely contention, and I
+could not tell them apart from real ones without discarding all three and running one
+suite alone. Which is worse than having run nothing: three hours of laptop, no
+information, and it is exactly the disruption Carlos had complained about that morning
+(«no puedo currar mientras tú testeas»). `RAMPA_HIDDEN=1` stopped the windows appearing;
+it does not stop three suites fighting for the CPU.
+
+**One real defect did come out of it**, and it is recorded because the sweep was right
+to catch it: the rail's `rail-who` was an `<h2>`, and the rail precedes `<main>` in the
+DOM — so Configuración's document started at H2 and its own `h1` arrived second. It had
+been latent since `020`, invisible because the a11y sweep only walked top-level screens
+and the rail only showed that heading inside a learner. `025` gave Configuración the
+same shape and the sweep reached it. Now a `<p>`: the `<nav>` already carries the
+accessible name, so a heading inside a navigation landmark was decoration with a tag.
+
+**Rule.** One suite at a time, and wait for it. A second run started «to save time»
+costs more than the first one took, and it poisons the evidence.
+
+---
+
 ## G33 · Sizes extrapolated from one sample, twice in two days
 
 **Closed 2026-09-02** by measuring instead.

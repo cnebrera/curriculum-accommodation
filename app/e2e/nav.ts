@@ -152,3 +152,71 @@ export async function assertDoorAsksInOrder(page: Page): Promise<void> {
   await page.locator('.door', { hasText: KIND_WORKSHEET }).click();
   await expect(start).toBeEnabled();
 }
+
+/* ── The screens the rail reaches (025 T015) ──────────────────────────────── */
+
+/**
+ * Every top-level screen, by the name she reads.
+ *
+ * `025` moved «Mi servicio de IA» and «Acerca de» into Configuración, so they are one
+ * level deeper. Three specs hand-rolled `getByRole('button', {name}).click()` over a
+ * flat list and all three broke — which is the right outcome and exactly what this
+ * file's opening note says: «a spec that hand-rolls a walk is a spec that quietly stops
+ * testing the navigation the day one of its steps changes».
+ *
+ * So the walk is here and the sweeps iterate over `SCREENS`.
+ */
+export const SCREENS = [
+  { label: RAIL_WORK },
+  { label: 'Mis alumnos' },
+  { label: 'Mis notas' },
+  { label: 'Pictogramas', under: 'Configuración' },
+  { label: 'Mi servicio de IA', under: 'Configuración' },
+  { label: 'Acerca de y licencias', under: 'Configuración' },
+] as const;
+
+/**
+ * Walk to one of them.
+ *
+ * `exact: true` throughout, because Playwright matches an accessible name by
+ * **substring** and this application has «Parar» inside «Preparar», «Preparar material»
+ * inside nothing but next to «Preparar», and «Configuración» twice once she is in it
+ * (the rail's heading is an `h2`, not a button, but the entry and the section share
+ * prefixes). Twenty minutes went into a defect that was in a locator.
+ */
+export async function toScreen(
+  page: Page, screen: { label: string; under?: string },
+): Promise<void> {
+  const target = page.getByRole('button', { name: screen.label, exact: true });
+
+  /*
+   * ## The rail has three shapes, so the walk needs two steps
+   *
+   * `020` option A: **one** column that becomes the learner's inside a learner and
+   * Configuración's inside Configuración. Which means neither of the naive versions of
+   * this helper works, and both were written before this one:
+   *
+   * 1. «Always click `under` first» hung walking *between* Configuración's own sections:
+   *    the «Configuración» entry has been replaced by the sections it leads to. Seven
+   *    tests, all «waiting for getByRole('button', { name: 'Configuración' })».
+   * 2. «Descend only if the target is not visible» then hung on the *next* width of the
+   *    sweep, coming back to a top-level entry while still inside Configuración:
+   *    «waiting for 'Preparar material'».
+   *
+   * So: if the target is not on screen, come out to the caseload first — the rail always
+   * offers that, in every shape — and then descend if the destination is nested. Two
+   * clicks at most, and no shape it cannot leave.
+   *
+   * The rail is right and the helper was wrong both times, which is why the fix is here
+   * and not a redundant «Configuración» entry kept on screen for a test's convenience.
+   */
+  if (!(await target.isVisible())) {
+    await toCaseload(page);
+    if (screen.under) {
+      await page.getByRole('button', { name: screen.under, exact: true }).click();
+      await page.waitForTimeout(150);
+    }
+  }
+  await target.click();
+  await page.waitForTimeout(200);
+}

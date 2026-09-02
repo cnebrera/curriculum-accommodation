@@ -39,7 +39,39 @@ export const learnerTabs: readonly LearnerTab[] =
 /** The four she works in; the last two are lifecycle and sit below a rule. */
 export const MAIN_TABS: readonly LearnerTab[] = ['who', 'prepare', 'made', 'curriculum'];
 
-export type SettingsPane = 'service' | 'house' | 'display' | 'vault' | 'about';
+/**
+ * The sections of Configuración (025 T001).
+ *
+ * ## This type existed before anything could render it
+ *
+ * `020` declared `SettingsPane` with five values — `service`, `house`, `display`,
+ * `vault`, `about` — and wired `{ at: 'settings' }` into `reduceRoute`. **Nothing ever
+ * navigated there and no screen ever rendered it**, because `020` US3/US4 were never
+ * built. The fourteenth declaration in this project written by one place and read by
+ * nobody, and it was in the file whose whole purpose is «where she is».
+ *
+ * So it shrinks to what exists. `house` and `vault` come back when the screens do; a
+ * type that can express a destination nothing can draw is a type that will be trusted
+ * by a caller and then crash — or worse, render blank.
+ */
+export type SettingsPane = 'pictograms' | 'service' | 'about';
+
+/**
+ * In menu order, and the rail renders from **this** rather than a second list.
+ *
+ * The same arrangement as `learnerTabs`, for the same reason: two copies of «which
+ * sections exist» is where one gets a destination the other does not.
+ */
+export const settingsPanes: readonly SettingsPane[] =
+  ['pictograms', 'service', 'about'] as const;
+
+/*
+ * No `display` pane. The text size, contrast and motion controls already live in the
+ * rail's foot (`013` FR-1106, «the rail's foot MUST be a composed block»), which is
+ * where the things-you-adjust belong and where they work from every screen. A second
+ * home for them would be the seventh instance of two copies of one truth in this
+ * repository — and the copy she found first would be the one that felt broken.
+ */
 
 /**
  * A step of a flow inside `prepare`.
@@ -65,12 +97,18 @@ const FIRST_STEP = { adapt: 'kind', compose: 'ask' } as const;
  * inside a profile in the first place.
  *
  * So they live here, named for what they are, and this type **shrinks to nothing**:
- * T028 takes the door and the flows, T033/T036 take the settings and «Acerca de».
+ * `025` took «Mi servicio de IA» and «Acerca de» into Configuración, and `020` T028
+ * takes the door and the flows.
  */
 export type LegacyView =
   | 'door' | 'adapt' | 'compose' | 'composed'
   | 'ingest' | 'verify' | 'review'
-  | 'notes' | 'connection' | 'about'
+  /*
+   * `connection` and `about` were removed by `025`: they are sections of Configuración
+   * now. Removed from the type rather than left as spare values, because `SettingsPane`
+   * spent two specifications carrying three destinations nothing could draw.
+   */
+  | 'notes'
   | 'guide' | 'guide-ask' | 'acns' | 'acs';
 
 export type Route =
@@ -87,7 +125,19 @@ export type Route =
    * tests caught it in the first full run after the rewire.
    */
   | { at: 'newLearner' }
-  | { at: 'settings'; pane: SettingsPane }
+  | {
+      at: 'settings';
+      pane: SettingsPane;
+      /**
+       * The learner she came from, so «volver» goes back to him (FR-2304).
+       *
+       * A **code**, like everywhere else in this file — never his name (`003`). And
+       * route state rather than a component's `useState`, because both navigation
+       * defects this project has found were exactly that: the door forgot which child
+       * it was for, and «Mis alumnos» did nothing from inside a profile.
+       */
+      from?: { code: string; tab: LearnerTab };
+    }
   | { at: 'legacy'; view: LegacyView }
   | {
       at: 'learner';
@@ -103,7 +153,7 @@ export type Route =
 
 export type RouteAction =
   | { type: 'caseload' }
-  | { type: 'settings'; pane?: SettingsPane }
+  | { type: 'settings'; pane?: SettingsPane; from?: { code: string; tab: LearnerTab } }
   /**
    * Open a learner. Takes a **code and nothing else**: a name in navigation state is a
    * name a future «restore where I was» could try to persist, and `003` says a
@@ -138,7 +188,18 @@ export function reduceRoute(route: Route, action: RouteAction): Route {
       return { at: 'caseload' };
 
     case 'settings':
-      return { at: 'settings', pane: action.pane ?? 'service' };
+      return {
+        at: 'settings',
+        pane: action.pane ?? 'pictograms',
+        /*
+         * `from` is carried when given and **kept** when only the pane changes, so
+         * moving between sections does not lose the way back to Iker. Explicit,
+         * because the natural `{ at: 'settings', pane }` drops it and the loss would
+         * only show up as a «volver» that goes to the caseload instead.
+         */
+        ...(action.from ? { from: action.from }
+          : route.at === 'settings' && route.from ? { from: route.from } : {}),
+      };
 
     /*
      * A different learner is a different place. The job, the flow and the others are

@@ -204,3 +204,15 @@ export function skippedWords(lines: readonly string[]): string[] {
 export function useStopBringing() {
   return useCommand(() => window.rampa.pictograms.stop() as Promise<boolean>);
 }
+
+/**
+ * Everything she has chosen, for review (`025` FR-2308).
+ *
+ * `useCandidates` asks about the words a *report* just skipped; this asks what she has
+ * already decided. Until `025` there was no second question — her vocabulary could be
+ * answered and never re-read, which made it a file she owned and could not see.
+ */
+export function useChosenSoFar(language = 'es'): Loadable<WordChoice[]> {
+  return useAsync(() =>
+    window.rampa.pictograms.chosenSoFar(language) as Promise<WordChoice[]>, [language]);
+}

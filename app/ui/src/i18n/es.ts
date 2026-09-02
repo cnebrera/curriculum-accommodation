@@ -17,8 +17,15 @@ export const es = {
    * FR-1011 forbids exactly that: the interface must stop using one word for
    * several things.
    */
+  /*
+   * `settings` and `pictograms` added by `025`: «Mi servicio de IA» and «Acerca de»
+   * became sections of Configuración rather than siblings of «Mis alumnos», so their
+   * keys stay and gain two neighbours. The rail reads all of them from here — a label
+   * hardcoded in a component is a label the locale sweep cannot reach.
+   */
   nav: { learners: 'Mis alumnos', work: 'Preparar material', notes: 'Mis notas',
-         connection: 'Mi servicio de IA', about: 'Acerca de' },
+         connection: 'Mi servicio de IA', about: 'Acerca de y licencias',
+         settings: 'Configuración', pictograms: 'Pictogramas' },
 
   onboarding: {
     welcome: 'Vamos a dejarlo listo',

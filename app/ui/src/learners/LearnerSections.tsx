@@ -28,7 +28,9 @@ import type { LearnerTab } from '../nav/route.js';
  * card. `020` moves things; `003`, `004`, `014` and `017` still own what they do.
  */
 
-export function LearnerSection({ code, name, tab, onGuide, onReuse, onPrepare, onErased }: {
+export function LearnerSection({
+  code, name, tab, onGuide, onReuse, onPrepare, onErased, onConfigure,
+}: {
   code: string;
   name?: string;
   tab: LearnerTab;
@@ -46,15 +48,20 @@ export function LearnerSection({ code, name, tab, onGuide, onReuse, onPrepare, o
   onPrepare: () => void;
   /** She erased this learner: there is no learner left to be inside. */
   onErased: () => void;
+  /** Into Configuración ▸ Pictogramas, and back to him after (`025` FR-2303/2304). */
+  onConfigure: () => void;
 }) {
   switch (tab) {
     case 'who':
       /*
-       * Only the editor and the pictogram section it already contained (T011).
-       * Everything else that used to hang below it is now a sibling of this section
-       * rather than a card inside it.
+       * Only the editor (T011). Everything else that used to hang below it is a sibling
+       * of this section rather than a card inside it — and as of `025` that includes the
+       * pictogram set, which was the last thing still living in the form.
        */
-      return <ProfileEditor code={code} onSaved={() => { /* the list reloads on return */ }} />;
+      return (
+        <ProfileEditor code={code} onConfigure={onConfigure}
+                       onSaved={() => { /* the list reloads on return */ }} />
+      );
 
     case 'prepare':
       return (

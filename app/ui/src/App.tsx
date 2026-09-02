@@ -17,8 +17,7 @@ import { IngestScreen } from './ingest/IngestScreen.js';
 import { VerifyScreen } from './ingest/VerifyScreen.js';
 import { ReviewScreen } from './review/ReviewScreen.js';
 import { NotesScreen } from './notes/NotesScreen.js';
-import { AboutScreen } from './about/AboutScreen.js';
-import { ConnectionScreen } from './settings/ConnectionScreen.js';
+import { SettingsSections } from './settings/SettingsSections.js';
 import { VaultStep } from './onboarding/VaultStep.js';
 import { ConnectStep } from './onboarding/ConnectStep.js';
 import { ProfileEditor } from './learners/ProfileEditor.js';
@@ -122,7 +121,8 @@ export function App() {
           <div className="stack">
             <h2>{es.onboarding.learnerTitle}</h2>
             <p>{es.onboarding.learnerWhy}</p>
-            <ProfileEditor code={null} onSaved={() => { saveState({ step: 'done' }); setStep('done'); go({ type: 'legacy', view: 'door' }); }} />
+            <ProfileEditor code={null} onConfigure={() => go({ type: 'settings' })}
+                           onSaved={() => { saveState({ step: 'done' }); setStep('done'); go({ type: 'legacy', view: 'door' }); }} />
           </div>
         )}
       </main>
@@ -272,7 +272,8 @@ export function App() {
               tells her it worked — so she pressed save and the screen changed under her
               with no confirmation. She leaves when she decides to, by «← Mis alumnos».
             */}
-            <ProfileEditor code={null} onSaved={() => { /* she stays, and sees «Guardado» */ }} />
+            <ProfileEditor code={null} onConfigure={() => go({ type: 'settings' })}
+                           onSaved={() => { /* she stays, and sees «Guardado» */ }} />
           </Page>
         ) : null}
 
@@ -326,22 +327,36 @@ export function App() {
                 dispatch({ type: 'learner/add', code: route.code });
                 go({ type: 'legacy', view: 'door' });
               }}
-              onErased={() => go({ type: 'caseload' })} />
+              onErased={() => go({ type: 'caseload' })}
+              /*
+               * Out to Configuración ▸ Pictogramas **carrying where she came from**, so
+               * the way back lands on this learner and this section rather than on the
+               * caseload (`025` FR-2304).
+               */
+              onConfigure={() => go({
+                type: 'settings', pane: 'pictograms',
+                from: { code: route.code, tab: route.tab },
+              })} />
         ) : null}
 
         {route.at === 'legacy' && route.view === 'notes' ? <NotesScreen /> : null}
-        {route.at === 'legacy' && route.view === 'connection' ? (
+        {/*
+          Configuración (`025` FR-2305). «Mi servicio de IA» and «Acerca de» used to be
+          top-level `legacy` views beside «Mis alumnos»; they are settings, so they are
+          sections of this. `020`'s own diagnosis was that the rail mixed «una acción,
+          una entidad, datos, un ajuste e información» as if they were siblings.
+        */}
+        {route.at === 'settings' ? (
           /*
-           * Reconnecting reuses the onboarding step rather than a second paste
-           * box: the walkthrough, the five failure sentences and the
-           * validate-before-store ordering all live there, and a second copy
-           * would be a second place for them to drift.
+           * Reconnecting reuses the onboarding step rather than a second paste box: the
+           * walkthrough, the five failure sentences and the validate-before-store
+           * ordering all live there, and a second copy would be a second place for them
+           * to drift. Moved with the screen, unchanged (FR-2307).
            */
           reconnect
-            ? <ConnectStep onDone={() => { setReconnect(null); go({ type: 'legacy', view: 'connection' }); }} />
-            : <ConnectionScreen onReconnect={(id) => setReconnect(id)} />
+            ? <ConnectStep onDone={() => { setReconnect(null); go({ type: 'settings', pane: 'service' }); }} />
+            : <SettingsSections pane={route.pane} onReconnect={(id) => setReconnect(id)} />
         ) : null}
-        {route.at === 'legacy' && route.view === 'about' ? <AboutScreen /> : null}
       </main>
     </div>
   );
