@@ -77,17 +77,27 @@ describe('the preload only invokes channels that exist', () => {
       'the renderer would get «no handler registered» when she presses it').toEqual([]);
   });
 
-  it('and every handler is reachable from the renderer or named as internal', () => {
+  it('and every handler is reachable from the renderer', () => {
     /*
-     * The other direction, and a weaker claim on purpose: a handler nothing invokes is
-     * usually dead code, but `job:progress`-style pushes and things the main process
-     * calls itself are legitimate. So this reports rather than fails — it exists so the
-     * number is visible when somebody looks.
+     * This was `expect(orphans.length).toBeLessThanOrEqual(orphans.length)` — `x <= x`,
+     * pure theatre, and it could not even do what its comment claimed («so the number is
+     * visible when somebody looks»), because a Vitest label prints only on failure.
+     *
+     * A review called it out, and it is the test that would have caught
+     * `pictograms:unchooseWord`: a complete four-layer feature — core function, shell
+     * function, handler, preload binding — with no hook and no component. Nobody can
+     * unpick a choice, and its doc comment describes her doing it.
+     *
+     * Now it is an empty-list assertion with a named exception list, so a channel that
+     * genuinely has no renderer caller has to be justified in writing.
      */
+    const INTERNAL: string[] = [];
     const preload = readFileSync(join(src, 'preload.ts'), 'utf8');
-    const orphans = registered().filter((c) => !preload.includes(`'${c}'`));
-    expect(orphans.length, `unreachable channels: ${orphans.join(', ')}`)
-      .toBeLessThanOrEqual(orphans.length);
+    const orphans = registered()
+      .filter((c) => !preload.includes(`'${c}'`))
+      .filter((c) => !INTERNAL.includes(c));
+    expect(orphans, 'a handler no screen can reach is dead code or a missing hook')
+      .toEqual([]);
   });
 });
 

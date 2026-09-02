@@ -69,7 +69,7 @@ export interface Applied {
  * pictogram on a worked example is decoration on a thing that is already support.
  */
 /**
- * Exported for `wordlist.ts`, so the words fetched are the words that get used.
+ * Exported for its own test only, since `024` deleted `wordlist.ts`.
  *
  * `pictogramInScope` and not `inScope`: `recipes/index.ts` already exports that name,
  * and this project has now had `Verdict` three times and `Freshness` twice. The

@@ -424,8 +424,22 @@ export async function runAdaptation(
  * about it. The three ways this returns nothing are all «she said no or said
  * nothing», never «it did not work»: no decision recorded, no set configured, or a
  * set whose language does not match the material.
+ *
+ * ## Exported for one reason: this is the seam nothing tested
+ *
+ * A review mutated `names: await nameWordSet()` to `names: new Set()` — deleting
+ * FR-1610, «a learner's name never gets a pictogram» — and **all 1.458 offline tests
+ * passed**. Same for `chosen: await chosenWords(lang)`, which disconnects `024`'s
+ * headline feature.
+ *
+ * The tests were on both sides of this line and not on it: `nameWords` in isolation,
+ * `matchWord` given a hand-built set, and nothing asserting the two are ever joined —
+ * which is exactly where the accent defect lived. It was in this call.
+ *
+ * `packages/shell/test/adapt-pictograms.test.ts` now drives it with the vault and
+ * keychain mocked, and both mutations fail it. A comment defending a line is not a test.
  */
-async function applyPictogramsIfSheSaidSo(
+export async function applyPictogramsIfSheSaidSo(
   adapted: ReturnType<typeof parseIR>,
   learner: Awaited<ReturnType<typeof loadLearner>>,
   original: ReturnType<typeof parseIR>,

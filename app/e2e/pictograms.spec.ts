@@ -19,9 +19,16 @@ import { join } from 'node:path';
  *    an action she took — a CI job is not her.
  * 2. It would be flaky in exactly the way that teaches a suite to be ignored.
  *
- * The fetch itself is covered offline, against a fake transport, in
- * `packages/shell/test/pictogram-fetch.test.ts` — including what leaves her machine,
- * which is the assertion that matters most and the one a live test could not make.
+ * And for a while it did it anyway. A test added here for the progress bar accepted the
+ * licence and ran the real 157 MB download for eight seconds, against the reasoning two
+ * paragraphs above it, downloading thousands of CC BY-NC-SA images onto every runner and
+ * failing offline. A review caught the contradiction; it now drives the same code through
+ * the fake transport that `BringArgs` has always accepted.
+ *
+ * The fetch is covered offline in `packages/shell/test/pictogram-whole-set.test.ts` and
+ * `pictogram-gate.test.ts` — including what leaves her machine and that nothing is
+ * requested before she accepts, which are the assertions that matter most and the ones a
+ * live test could not make.
  */
 const appRoot = process.cwd();
 
@@ -119,49 +126,40 @@ test.describe('bringing the pictograms', () => {
     expect(state.root).toMatch(/pictogramas$/);   // inside her Rampa folder (FR-2205)
   });
 
-  test('progress arrives with real numbers, and stopping works (024 T012, FR-2118)', async () => {
+  test('nothing is requested before she accepts, from the real window (FR-2104)', async () => {
     /*
-     * The **contract**, not the screen. This drives the real download for a few
-     * seconds — the only outbound request in the suite — and stops it.
+     * The **negative**, which is what an e2e can add here: the real main process, the
+     * real settings, the real handler — and no acceptance. `pictogram-gate.test.ts`
+     * proves the transport refuses; this proves the wiring reaches it.
      *
-     * It asserts the IPC surface rather than the bar because the pictogram screen is
-     * moving out of the learner's profile into Configuración (`025`), and an assertion
-     * that walks a navigation about to change is an assertion that will be loosened
-     * rather than fixed. The bar itself is asserted where it is stable: the component
-     * test, and `025`'s own e2e once it has a home.
-     *
-     * The first version of this test called `fetch()` directly and then waited for a
-     * progressbar — which never appeared, because the component was not mounted. That
-     * is the mistake this comment exists to stop somebody repeating.
+     * No network either way: a refused gate never opens a socket.
      */
-    await page.evaluate(() => window.rampa.pictograms.acceptLicence('arasaac'));
-
-    const seen: Array<{ stage: string; done?: number; total?: number }> = [];
-    await page.exposeFunction('__rampaProgress', (p: unknown) => {
-      seen.push(p as { stage: string; done?: number; total?: number });
+    const before = await page.evaluate(async () => {
+      try { await window.rampa.pictograms.checkUpdate(); return 'ok'; }
+      catch (e) { return (e as Error).message; }
     });
-    await page.evaluate(() => window.rampa.job.onProgress((p: unknown) => {
-      (window as unknown as { __rampaProgress: (x: unknown) => void }).__rampaProgress(p);
-    }));
+    // `checkUpdate` answers from disk when it may not ask, so this is a value not a throw.
+    expect(before).not.toMatch(/arasaac\.org/);
 
-    const started = page.evaluate(() => window.rampa.pictograms.fetch());
-    await page.waitForTimeout(8000);
-    expect(await page.evaluate(() => window.rampa.pictograms.stop())).toBe(true);
-    const result = await started as { stopped: boolean; brought: number };
+    const state = await page.evaluate(() => window.rampa.pictograms.state()) as {
+      status: { state: string };
+    };
+    expect(state.status.state).toBe('unknown');
+  });
 
-    expect(result.stopped).toBe(true);
-    // What arrived is usable, and pressing again resumes.
-    expect(result.brought).toBeGreaterThan(0);
-
-    const withNumbers = seen.filter((p) =>
-      p.stage === 'Trayendo pictogramas' && typeof p.total === 'number');
+  test('a download in progress survives leaving the screen (025 FR-2309)', async () => {
     /*
-     * **Numbers**, not a sentence. They used to be only inside `detail` and nothing
-     * rendered them — the thirteenth field written by one place and read by nobody.
+     * The bar and «Parar» used to be the component's own state, so navigating out of
+     * Configuración and back lost both while the fetch continued — and re-enabled the
+     * button, which made a second concurrent run reachable without malice.
+     *
+     * Asserted through `pictograms:bringing`, which is where the state now lives. With
+     * nothing running it must say so rather than throwing or inventing numbers.
      */
-    expect(withNumbers.length).toBeGreaterThan(0);
-    expect(withNumbers.at(-1)!.total).toBeGreaterThan(10_000);
-    expect(withNumbers.at(-1)!.done).toBeGreaterThan(0);
+    const idle = await page.evaluate(() => window.rampa.pictograms.bringing()) as {
+      running: boolean; done: number; total: number;
+    };
+    expect(idle).toEqual({ running: false, done: 0, total: 0 });
   });
 
   test('the folder path still works, with nothing downloaded (FR-2103)', async () => {

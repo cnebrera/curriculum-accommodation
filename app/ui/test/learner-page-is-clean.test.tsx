@@ -40,7 +40,13 @@ const render = (enabled: boolean, hasSet = false) => {
 };
 
 describe('what is not on it any more', () => {
-  const html = render(true);
+  /*
+   * **Both states** (from a review, 2026-09-02). These ran against `render(true)` only,
+   * which leaves the set *missing* — so a reviewer added every banned phrase inside the
+   * `!missing` branch and all eleven tests passed. The page a teacher sees every day was
+   * the one nobody looked at.
+   */
+  const html = `${render(true, false)}\n${render(true, true)}\n${render(false, true)}`;
 
   it('carries no licence text', () => {
     for (const phrase of ['CC BY-NC-SA', 'Sergio Palao', 'Gobierno de Aragón',
@@ -57,6 +63,7 @@ describe('what is not on it any more', () => {
   });
 
   it('what looks like a download button is a pointer', () => {
+    const html = render(true, false);
     /*
      * «Traer los pictogramas →» **is** on the page, and that is FR-2303: it says what
      * she will get rather than «Configuración», which would make her guess. The arrow
@@ -90,14 +97,19 @@ describe('what is on it', () => {
      * «tu propia cuenta de IA» lived in a `title` attribute and Carlos read the bare
      * figure as a commercial plan.
      */
-    const html = render(true);
+    const html = render(true, true);
     expect(html).toMatch(/significado fijo/);
     expect(html).toMatch(/ya los usa/);
-    expect(html).not.toMatch(/title="/);
+    /*
+     * The hint is in the body, not in a `title` attribute — `024`'s cost badge learned
+     * that one the hard way. Asserted as «the text is in the body», not as «no `title`
+     * anywhere», which a review noted would fail on an innocent `<abbr title>`.
+     */
+    expect(html).toMatch(/<p[^>]*>[^<]*Son dibujos/);
   });
 
   it('offers exactly one way to fix a missing set (FR-2303)', () => {
-    const html = render(true);
+    const html = render(true, false);
     expect(html).toContain('No tienes el juego de pictogramas');
     expect([...html.matchAll(/<button/g)]).toHaveLength(1);
     expect(html).toContain('Traer los pictogramas →');
@@ -146,21 +158,23 @@ describe('and it is short (SC-2303)', () => {
     /*
      * The exception explains itself and then stops. Three: what will happen to his
      * sheets, that it is a one-off for everybody, and the way to fix it.
+     *
+     * The bound was `<= 5` while the title and this comment said three — a review
+     * pointed out the test read as tighter than it enforced. Measured delta is 3.
      */
     const missing = sentencesIn(render(true, false));
     const ordinary = sentencesIn(render(true, true));
     expect(missing.length - ordinary.length,
-      `the exception is too talkative:\n${missing.join('\n')}`).toBeLessThanOrEqual(5);
+      `the exception is too talkative:\n${missing.join('\n')}`).toBe(3);
   });
 
-  it('and the whole component is smaller than what it replaced', () => {
-    const now = readFileSync(
-      new URL('../src/pictograms/LearnerPictograms.tsx', import.meta.url), 'utf8');
-    const set = readFileSync(
-      new URL('../src/pictograms/PictogramSetSection.tsx', import.meta.url), 'utf8');
-    const code = (src: string) => src.split('\n')
-      .filter((l) => l.trim() && !/^\s*(\/\/|\/\*|\*)/.test(l)).length;
-    // The set's screen is the big one, and it is no longer on a learner's page.
-    expect(code(now)).toBeLessThan(code(set));
-  });
+  /*
+   * Deleted: «and the whole component is smaller than what it replaced».
+   *
+   * It compared this file's line count to `PictogramSetSection.tsx`'s — a different,
+   * still-shipping file — so it asserted nothing about behaviour and could not fail
+   * short of a deliberate rewrite. A review called it what it was, and this repository
+   * has thirteen recorded cases of exactly that shape. The sentence-count bounds above
+   * are the measurement that means something.
+   */
 });

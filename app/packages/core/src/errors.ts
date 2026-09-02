@@ -25,6 +25,7 @@ export type ErrorKind =
   | 'guide-no-work'          // an ACNS drafted from nothing is a form filled in by a model
   | 'guide-no-evaluation'    // an ACS with no evaluación psicopedagógica is procedurally void
   | 'pictogram-not-accepted'  // a fetch attempted before she accepted the licence (023 FR-2104)
+  | 'pictogram-in-progress'  // a second whole-set download while one is running (024 FR-2118)
   | 'pictogram-language'     // her publisher has no pictograms in this language
   | 'pictogram-no-publisher' // the corpus defines nowhere to fetch from
   | 'key-missing' | 'key-invalid' | 'key-wrong-provider' | 'key-no-credit'

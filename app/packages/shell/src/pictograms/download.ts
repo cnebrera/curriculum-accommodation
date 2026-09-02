@@ -2,7 +2,7 @@ import { mkdir, readFile, readdir, rename, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import {
   mergeSet, urlFor, RampaError, readIndex, planWholeSet,
-  type Publisher, type FetchLimits, type PictogramEntry,
+  type Publisher, type FetchLimits, type PictogramEntry, type FetchGate,
 } from '@rampa/core';
 import { logger } from '@rampa/core';
 
@@ -40,7 +40,41 @@ export interface Transport {
 /** ~15s: a slow morning in a school is not a failure (`006`). */
 const TIMEOUT_MS = 15_000;
 
-export const httpTransport: Transport = {
+/**
+ * The **only** way to get a working transport (from a security review, 2026-09-02).
+ *
+ * ## Why the gate mints it instead of being checked
+ *
+ * `fetchGate` was correct and `bringPictograms` called it. Then `checkUpdate` was
+ * written three hours later and **did not** — so a teacher who had never accepted the
+ * licence, or who had withdrawn it, still reached `api.arasaac.org`. FR-2104 and FR-2106
+ * both failed.
+ *
+ * The comments in `fetch.ts` and `preload.ts` had warned about exactly this: «a gate in
+ * a caller is a gate the second caller walks past». I was the second caller.
+ *
+ * A re-check in `checkUpdate` would fix the instance. This fixes the class: there is no
+ * exported `httpTransport` any more, so a fourth call site cannot make a request without
+ * a `FetchGate` that says `may`. The type system carries the requirement.
+ */
+export function transportFor(gate: FetchGate): Transport {
+  if (!gate.may) {
+    /*
+     * A refusing transport rather than a throw here, so the caller decides what to say
+     * — `checkUpdate` answers from disk, `bringPictograms` raises her sentence.
+     */
+    return {
+      json: async () => { throw new RampaError('pictogram-not-accepted', GATE_MESSAGE); },
+      bytes: async () => { throw new RampaError('pictogram-not-accepted', GATE_MESSAGE); },
+    };
+  }
+  return httpTransport;
+}
+
+const GATE_MESSAGE =
+  'No he pedido nada: todavía no has aceptado la licencia de los pictogramas.';
+
+const httpTransport: Transport = {
   json: async (url) => {
     const res = await fetch(url, {
       signal: AbortSignal.timeout(TIMEOUT_MS),
@@ -78,9 +112,19 @@ async function readExisting(root: string, language: string): Promise<PictogramEn
   }
 }
 
-/** Temp then rename, so an interrupted write cannot lose the set she had. */
-async function writeAtomic(path: string, body: string | Uint8Array): Promise<void> {
-  const tmp = `${path}.parcial`;
+/**
+ * Temp then rename, so an interrupted write cannot lose the set she had.
+ *
+ * The temp name carries a **run id** (from a review, 2026-09-02). It was
+ * `${path}.parcial`, shared by every writer — so two concurrent whole-set downloads
+ * interleaved into one temp file and `rename` published truncated PNG bytes into the
+ * set. `bringPictograms` now refuses a second run, and this makes atomicity hold even
+ * if that guard is ever lost: correctness should not depend on there being one writer.
+ */
+async function writeAtomic(
+  path: string, body: string | Uint8Array, runId: string,
+): Promise<void> {
+  const tmp = `${path}.${runId}.parcial`;
   await writeFile(tmp, body);
   await rename(tmp, path);
 }
@@ -104,8 +148,25 @@ export interface WholeSetResult {
   present: number;
   /** What the publisher has. */
   total: number;
-  /** Requests that failed. Retryable, and pressing again asks only for these. */
+  /**
+   * Requests that failed for a reason that may pass — network, timeout, refusal.
+   * Retryable, and pressing again asks only for these.
+   */
   failed: number;
+  /**
+   * Images the publisher's index lists and its CDN **does not have** (404).
+   *
+   * Split from `failed` after a review (2026-09-02). The transport already treated a
+   * 404 as «no lo tengo, which is an answer and not a failure» — and then both were
+   * collapsed into one counter, so the inventory recorded 13.800 images out of 13.802
+   * and `updateStatus` reported `incomplete` **for ever**. «Te faltan 2. Sigo por donde
+   * iba» on a screen whose whole requirement (FR-2209) is to ask her for nothing once
+   * the set is done, re-requesting two dead ids on every press.
+   *
+   * ARASAAC really has two such ids today, which is why the measurement in `024`'s
+   * SC-2202 reads «13.800 of 13.802» — the number that should have given this away.
+   */
+  absent: number;
   highWater: string;
   /** True where she stopped it or the window closed (FR-2118). */
   stopped: boolean;
@@ -166,8 +227,9 @@ export async function fetchWholeSet(args: WholeSetArgs): Promise<WholeSetResult>
   const onDisk = new Set(await imagesOnDisk(args.root));
 
   const plan = planWholeSet(index, onDisk);
+  const runId = `${process.pid}-${Math.round(performance.now())}`;
   const result: WholeSetResult = {
-    brought: 0, present: plan.present, total: plan.total, failed: 0,
+    brought: 0, present: plan.present, total: plan.total, failed: 0, absent: 0,
     highWater: plan.highWater, stopped: false,
   };
 
@@ -180,7 +242,7 @@ export async function fetchWholeSet(args: WholeSetArgs): Promise<WholeSetResult>
    * other order would leave images nothing can find.
    */
   entries = mergeSet(entries, index);
-  await writeAtomic(metadataPath, `${JSON.stringify(entries, null, 2)}\n`);
+  await writeAtomic(metadataPath, `${JSON.stringify(entries, null, 2)}\n`, runId);
 
   /*
    * `entries` is not touched again. The index was complete, so the file is complete —
@@ -202,8 +264,9 @@ export async function fetchWholeSet(args: WholeSetArgs): Promise<WholeSetResult>
         const bytes = await transport.bytes(urlFor(args.publisher.image, {
           id: next.id, size: String(limits.imageSize),
         }));
-        if (bytes === null) { result.failed += 1; continue; }
-        await writeAtomic(join(args.root, `${next.id}.png`), bytes);
+        // `null` is the transport's 404: listed by the index, absent from the CDN.
+        if (bytes === null) { result.absent += 1; continue; }
+        await writeAtomic(join(args.root, `${next.id}.png`), bytes, runId);
         result.brought += 1;
       } catch (e) {
         logger.warn('pictograms.image-failed', { id: next.id, error: String(e) });
@@ -215,8 +278,8 @@ export async function fetchWholeSet(args: WholeSetArgs): Promise<WholeSetResult>
   await Promise.all(Array.from({ length: limits.concurrency }, () => worker()));
   logger.info('pictograms.whole-set', {
     publisher: args.publisher.id, language,
-    brought: result.brought, present: result.present, failed: result.failed,
-    stopped: result.stopped,
+    brought: result.brought, present: result.present,
+    failed: result.failed, absent: result.absent, stopped: result.stopped,
   });
   return result;
 }

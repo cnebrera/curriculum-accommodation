@@ -4,10 +4,11 @@ import { Callout } from '../components/Callout.js';
 import { Loaded } from '../data/Loaded.js';
 import { Counted } from '../components/Progress.js';
 import { useJobProgress, type Progress } from '../data/jobs.js';
+import { PICTOGRAM_PROGRESS_STAGE } from '../data/pictograms.js';
 import {
   useCurrentSet, useChooseSet, useInspectSet, useUseSet, usePublishers,
   useAcceptLicence, useWithdrawLicence, useFetchPictograms, useSetState,
-  useCheckUpdate, useDeclineUpdate, useStopBringing,
+  useCheckUpdate, useDeclineUpdate, useStopBringing, useBringing,
   type SetInspection, type FetchResult, type UpdateStatus,
 } from '../data/pictograms.js';
 
@@ -71,8 +72,17 @@ export function PictogramSetSection() {
    * nobody, and the one I had already ticked off.
    */
   const [at, setAt] = useState<{ done: number; total: number } | null>(null);
+  /*
+   * Seeded from the main process on mount (FR-2309), because a download outlives this
+   * screen: `at` and `bring.busy` are both component state, so navigating away and back
+   * used to lose the bar while the fetch carried on — and re-enable the button.
+   */
+  const already = useBringing();
+  const running = bring.busy || (already.state === 'ready' && already.value.running);
+  const shown = at ?? (already.state === 'ready' && already.value.running
+    ? { done: already.value.done, total: already.value.total } : null);
   useJobProgress(useCallback((p: Progress) => {
-    if (p.stage === 'Trayendo pictogramas' && typeof p.total === 'number') {
+    if (p.stage === PICTOGRAM_PROGRESS_STAGE && typeof p.total === 'number') {
       setAt({ done: p.done ?? 0, total: p.total });
     }
   }, []));
@@ -265,8 +275,9 @@ export function PictogramSetSection() {
               One press, no textarea. `023` had a box where she typed «casa, perro,
               comer» and Carlos said twice that this was the wrong thing to ask for —
               she does not know which words the next worksheet will contain. The whole
-              catalogue is 13.802 pictograms, one indexed request and ~55 MB at the size
-              the corpus asks for, all measured rather than guessed.
+              catalogue is one indexed request plus the images; the count and the size
+              come from the corpus, which carries the figures a real download measured
+              (157 MB, not the 55 MB a single sampled pictogram suggested).
 
               And once it is complete this asks her for **nothing** (FR-2209): «que no
               me lo vuelva a preguntar salvo que haya una actualización».
@@ -298,8 +309,8 @@ export function PictogramSetSection() {
                     <Actions
                       primary={
                         <button className={strong} onClick={() => void fetchThem()}
-                                disabled={bring.busy}>
-                          {bring.busy ? 'Trayéndolos…' : 'Traer los nuevos'}
+                                disabled={running}>
+                          {running ? 'Trayéndolos…' : 'Traer los nuevos'}
                         </button>
                       }>
                       <button className="btn btn-ghost"
@@ -330,8 +341,8 @@ export function PictogramSetSection() {
                     <Actions
                       primary={
                         <button className={strong} onClick={() => void fetchThem()}
-                                disabled={bring.busy}>
-                          {bring.busy ? 'Trayéndolos…'
+                                disabled={running}>
+                          {running ? 'Trayéndolos…'
                             : status.state === 'incomplete' ? 'Seguir bajándolos'
                             : 'Traer los pictogramas'}
                         </button>
@@ -351,10 +362,11 @@ export function PictogramSetSection() {
               written and **nothing ever passed one**: «a fetch MUST be interruptible»
               was satisfied in the core and unreachable from here.
             */}
-            {bring.busy && at ? (
+            {running && shown ? (
               <Field help="Puedes parar cuando quieras: lo que ya ha llegado sirve, y si
                            vuelves a darle sigo por donde iba.">
-                <Counted done={at.done} total={at.total} one="Dibujo" many="dibujos" />
+                <Counted done={shown.done} total={shown.total}
+                         one="Dibujo" many="dibujos" />
                 <Actions>
                   <button className="btn btn-ghost" onClick={() => void stop.run()}
                           disabled={stop.busy}>

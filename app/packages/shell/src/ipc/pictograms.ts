@@ -4,7 +4,7 @@ import { readSet } from '@rampa/core';
 import {
   publisherState, acceptLicence, withdrawLicence, bringPictograms, configureSet,
   setState, checkUpdate, declineUpdate, candidatesFor, chooseWord, unchooseWord,
-  stopBringing, chosenSoFar,
+  stopBringing, chosenSoFar, bringing,
 } from '../pictograms/bring.js';
 import { handle } from './wrap.js';
 import { currentVault } from './vault.js';
@@ -100,6 +100,16 @@ export function registerPictogramIpc(getWindow: () => BrowserWindow | null): voi
 
   /** She pressed «Parar» (`024` FR-2118). Stopping is not a failure. */
   handle('pictograms:stop', () => stopBringing());
+
+  /**
+   * A download in progress, so a remounted screen picks it up (`025` FR-2309).
+   *
+   * Without this the bar and «Parar» were `PictogramSetSection`'s own state: navigate out
+   * of Configuración and back during a 157 MB download and both vanished while the fetch
+   * carried on — and the button came back enabled, which made a second concurrent run
+   * reachable by accident.
+   */
+  handle('pictograms:bringing', () => bringing());
 
   /** One request, and only because she asked (`024` FR-2211). */
   handle('pictograms:checkUpdate', () => checkUpdate());

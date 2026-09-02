@@ -88,13 +88,78 @@ const MODES = [
   { name: 'oscuro · muy grande', theme: 'dark',  text: 'xlarge' },
 ] as const;
 
+/**
+ * Switch mode and wait until the interface has **finished** changing.
+ *
+ * ## What this chased, because the answer was not what it looked like
+ *
+ * Symptom: one `color-contrast` violation per full run, on «Elegir otra carpeta», in a
+ * different mode each time, and never when this spec ran alone. It looked like flakiness
+ * from a busy machine.
+ *
+ * It was not. `.btn` transitions `background` (`components.css:68`) and does **not**
+ * transition `color`, so on a theme change the text flips instantly and the background
+ * takes `--dur` to arrive. Sampled in that window, axe correctly measured light text on
+ * a still-light background: **1.05:1**, with real numbers, on a button that is 13:1 in
+ * dark and 17:1 in light once it settles.
+ *
+ * So the product was right and the test was measuring an animation. Two intermediate
+ * fixes made it worse before this one: a flat `waitForTimeout(120)` hid it into
+ * flakiness, and waiting two animation frames (~33 ms) made it fail *reproducibly* —
+ * which was progress, because a deterministic failure could be chased.
+ *
+ * ## The wait
+ *
+ * `document.getAnimations()` — the Web Animations API, which includes CSS transitions —
+ * and await every one of them finishing. Not a duration: durations got this wrong twice,
+ * and my own «wait until two frames agree» got it wrong a third time, because with an
+ * ease-in curve frame 1 can equal frame 0 and the loop exits before the transition has
+ * started moving.
+ *
+ * This is the thing the platform provides for exactly this question.
+ *
+ * It also writes the preference **and** the attribute, so the application's own
+ * `apply()` cannot clobber what the test set: `data/preferences.ts` owns these
+ * attributes too, and two writers is a second race waiting to be found.
+ */
 async function setMode(page: Page, m: typeof MODES[number]): Promise<void> {
+  await page.evaluate(({ theme, text }) => window.rampa.settings.setDisplay({
+    theme: theme ?? 'system', text: text ?? 'normal',
+  }), { theme: m.theme, text: m.text });
+
   await page.evaluate(({ theme, text }) => {
     const r = document.documentElement;
     if (theme) r.setAttribute('data-theme', theme); else r.removeAttribute('data-theme');
     if (text) r.setAttribute('data-text', text); else r.removeAttribute('data-text');
   }, { theme: m.theme, text: m.text });
-  await page.waitForTimeout(120);
+
+  const applied = await page.evaluate(async ({ theme, text }) => {
+    // A frame first, so the transitions the attribute change starts actually exist.
+    await new Promise((done) => requestAnimationFrame(() => done(null)));
+
+    /*
+     * Every running transition, awaited. `finished` rejects if an animation is
+     * cancelled — which is normal when a later change supersedes it — so failures are
+     * swallowed rather than treated as an error.
+     */
+    await Promise.race([
+      Promise.allSettled(document.getAnimations().map((a) => a.finished)),
+      new Promise((done) => setTimeout(done, 2000)),
+    ]);
+    await new Promise((done) => requestAnimationFrame(() => done(null)));
+
+    const r = document.documentElement;
+    return {
+      theme: r.getAttribute('data-theme') ?? '',
+      text: r.getAttribute('data-text') ?? '',
+      base: getComputedStyle(r).getPropertyValue('--text-base').trim(),
+    };
+  }, { theme: m.theme, text: m.text });
+
+  expect(applied.theme, `${m.name}: data-theme`).toBe(m.theme ?? '');
+  expect(applied.text, `${m.name}: data-text`).toBe(m.text ?? '');
+  // And the tokens really did recompute, which is what axe is about to read.
+  expect(applied.base, `${m.name}: --text-base`).not.toBe('');
 }
 
 /**

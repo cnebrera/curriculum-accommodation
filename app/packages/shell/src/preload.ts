@@ -126,6 +126,8 @@ const api = {
     state: () => invoke('pictograms:state'),
     /** She pressed «Parar». What arrived is already usable (`024` FR-2118). */
     stop: () => invoke('pictograms:stop'),
+    /** A download already going, so a reopened screen shows it (`025` FR-2309). */
+    bringing: () => invoke('pictograms:bringing'),
     /** One request, and only because she asked. */
     checkUpdate: () => invoke('pictograms:checkUpdate'),
     declineUpdate: (highWater: string) => invoke('pictograms:declineUpdate', highWater),

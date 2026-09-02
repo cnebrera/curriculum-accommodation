@@ -238,33 +238,47 @@ describe('the publisher is corpus data, not code (FR-2116, 018 FR-1604)', () => 
       new URL('../src/pictograms/publisher.ts', import.meta.url), 'utf8')
       + readFileSync(new URL('../src/pictograms/fetch.ts', import.meta.url), 'utf8');
     /*
-     * 018 FR-1604 requires the set to be replaceable, and a URL compiled into core
-     * is the quiet version of the dependency it forbids: it would work, and the
-     * assumption would only surface the day somebody had a different set.
+     * 018 FR-1604 requires the set to be replaceable, and a URL compiled into core is
+     * the quiet version of the dependency it forbids: it would work, and the assumption
+     * would only surface the day somebody had a different set.
+     *
+     * **This used to `.replace(/https:\/\/arasaac\.org/g, '')` first** — it deleted the
+     * one URL it was looking for before looking. A review proved it by adding
+     * `const FALLBACK_INDEX = 'https://arasaac.org/…'` to `fetch.ts`; the test passed.
+     * The whitelist had no legitimate purpose: `arasaac.org` appears in neither file.
+     *
+     * `x.test` is still allowed because these files' comments quote example templates.
      */
-    expect(src.replace(/https:\/\/arasaac\.org/g, ''), 'no endpoint in core')
-      .not.toMatch(/https?:\/\/(?!x\.test)[a-z]/i);
+    const urls = [...src.matchAll(/https?:\/\/[\w.-]+/g)].map((m) => m[0])
+      .filter((u) => !u.includes('x.test'));
+    expect(urls, 'no endpoint in core').toEqual([]);
   });
 
   it('refuses a publisher missing the attribution its licence requires', () => {
     const bad = ['---', 'publishers:', '  - id: x', '    label: X',
-      '    search: "https://x.test/{lang}/{word}"', '    image: "https://x.test/{id}"',
+      '    image: "https://x.test/{id}"',
       '    site: "https://x.test"', '    licence: CC BY', '    licence_url: "https://x.test/l"',
       '    languages: [es]', '---', ''].join('\n');
     // It would fetch, the sheets would render, and the credit would be blank.
     expect(parsePictogramFetchCorpus(bad, 'test').publishers).toEqual([]);
   });
 
-  it('refuses a template that cannot carry a word or an id', () => {
-    const mk = (search: string, image: string) => ['---', 'publishers:',
-      '  - id: x', '    label: X', `    search: "${search}"`, `    image: "${image}"`,
+  it('refuses a template that cannot carry an id or a language', () => {
+    const mk = (index: string, image: string) => ['---', 'publishers:',
+      '  - id: x', '    label: X', `    index: "${index}"`, `    image: "${image}"`,
       '    site: "https://x.test"', '    licence: L', '    licence_url: "https://x.test/l"',
       '    languages: [es]', '    attribution:', '      author: A', '      owner: O',
       '      source: S', '---', ''].join('\n');
-    expect(parsePictogramFetchCorpus(mk('https://x.test/all', 'https://x.test/{id}'), 't')
-      .publishers).toEqual([]);
+    // An image template with no `{id}` would fetch the same picture 13.802 times.
     expect(parsePictogramFetchCorpus(
-      mk('https://x.test/{lang}/{word}', 'https://x.test/img'), 't').publishers).toEqual([]);
+      mk('https://x.test/all/{lang}', 'https://x.test/img'), 't').publishers).toEqual([]);
+    // An index with no `{lang}` cannot ask for her language.
+    expect(parsePictogramFetchCorpus(
+      mk('https://x.test/all', 'https://x.test/{id}'), 't').publishers).toEqual([]);
+    // And the shape that works, so this test cannot pass by refusing everything.
+    expect(parsePictogramFetchCorpus(
+      mk('https://x.test/all/{lang}', 'https://x.test/{id}'), 't').publishers)
+      .toHaveLength(1);
   });
 
   it('fails closed when the corpus has no publishers at all', () => {

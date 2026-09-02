@@ -15,7 +15,6 @@ import { fetchWholeSet, roomFor, type Transport } from '../src/pictograms/downlo
 
 const PUBLISHER: Publisher = {
   id: 'test', label: 'Editor de prueba',
-  search: 'https://x.test/{lang}/search/{word}',
   index: 'https://x.test/{lang}/all',
   image: 'https://x.test/img/{id}_{size}.png',
   site: 'https://x.test', licence: 'CC BY-NC-SA 4.0',
@@ -94,6 +93,8 @@ describe('one indexed request, then the images (FR-2202, FR-2203)', () => {
     await fetchWholeSet({
       root, publisher: PUBLISHER, language: 'es', limits: LIMITS, transport: f.transport,
     });
+    // Or a `queue = []` mutation would make everything below vacuously true.
+    expect(f.urls.length, 'the fixture must have made requests').toBeGreaterThan(3);
     /*
      * `023` needed a name filter, a word allowlist and an assertion on the transport to
      * bound what a word list leaked. `024` deleted the word path, so the guarantee is
@@ -132,7 +133,42 @@ describe('never twice, and always readable (FR-2206, SC-2203, SC-2205)', () => {
     expect(r.present).toBe(4);
   });
 
-  it("writes the metadata before the first image, so ten seconds in is a usable set", async () => {
+  it('has the metadata complete before the first image byte is written', async () => {
+    /*
+     * Asserted **from inside the transport**, which is the only place it can be seen.
+     *
+     * A review moved `writeAtomic(metadataPath, …)` to after `Promise.all(workers)` and
+     * every test still passed: they all awaited the function to completion and then read
+     * the disk, by which point the order is invisible. So the documented rationale for
+     * the write order — «an interruption ten seconds in leaves a set that knows every
+     * word; the other order would leave images nothing could find», SC-2205 — was
+     * unasserted.
+     */
+    const root = await dir();
+    let metadataAtFirstImage: string | null = null;
+    const t: Transport = {
+      json: async () => Array.from({ length: 5 }, (_, i) =>
+        ({ _id: i + 1, keywords: [{ keyword: `p${i + 1}` }], downloads: 5 - i })),
+      bytes: async () => {
+        if (metadataAtFirstImage === null) {
+          metadataAtFirstImage = await readFile(
+            join(root, 'pictograms.es.json'), 'utf8').catch(() => '');
+        }
+        return new Uint8Array([1]);
+      },
+    };
+    await fetchWholeSet({
+      root, publisher: PUBLISHER, language: 'es',
+      limits: { imageSize: 300, concurrency: 1 }, transport: t,
+    });
+
+    expect(metadataAtFirstImage, 'no metadata existed when the first image arrived')
+      .not.toBe('');
+    const entries = JSON.parse(metadataAtFirstImage!) as Array<{ id: string }>;
+    expect(entries, 'every word must be known before any image lands').toHaveLength(5);
+  });
+
+  it("survives dying before any image arrives", async () => {
     const root = await dir();
     /*
      * SC-2205 at an *arbitrary* point, not at the end. The index arrives complete, so
@@ -185,13 +221,64 @@ describe('never twice, and always readable (FR-2206, SC-2203, SC-2205)', () => {
       .toEqual([4, 5, 6]);
   });
 
-  it('leaves no `.parcial` behind', async () => {
+  it('leaves no `.parcial` behind, and writes through one', async () => {
+    /*
+     * The «no leftovers» half could only fail if atomicity *leaked*, never if it were
+     * removed: a review replaced temp-file+rename with a plain `writeFile` and the test
+     * passed. Atomicity is the documented defence for FR-2115 («the failure it prevents
+     * is the one that loses a set she already had») and it was untested.
+     *
+     * So the write path is observed: a pre-existing metadata file must never be seen
+     * truncated or absent while the new one is being written, which is what rename gives
+     * and a direct write does not.
+     */
     const root = await dir();
+    await writeFile(join(root, 'pictograms.es.json'),
+      JSON.stringify([{ id: '999', keywords: ['viejo'] }]));
+
+    let sawTornMetadata = false;
+    const t: Transport = {
+      json: async () => [{ _id: 1, keywords: [{ keyword: 'casa' }], downloads: 1 }],
+      bytes: async () => {
+        const raw = await readFile(join(root, 'pictograms.es.json'), 'utf8')
+          .catch(() => null);
+        // Either the old file or the new one. Never nothing, never half of one.
+        if (raw === null) sawTornMetadata = true;
+        else { try { JSON.parse(raw); } catch { sawTornMetadata = true; } }
+        return new Uint8Array([1]);
+      },
+    };
     await fetchWholeSet({
-      root, publisher: PUBLISHER, language: 'es', limits: LIMITS,
-      transport: fake(3).transport,
+      root, publisher: PUBLISHER, language: 'es',
+      limits: { imageSize: 300, concurrency: 1 }, transport: t,
     });
-    expect((await readdir(root)).filter((f) => f.endsWith('.parcial'))).toEqual([]);
+
+    expect(sawTornMetadata, 'a reader saw the metadata mid-write').toBe(false);
+    expect((await readdir(root)).filter((f) => f.includes('.parcial'))).toEqual([]);
+
+    /*
+     * ## And the mechanism, because the guarantee is not observable here
+     *
+     * Said plainly: the two assertions above **do not catch atomicity being removed.**
+     * I replaced temp-file+rename with a plain `writeFile` and they both passed — a
+     * small buffer lands in one syscall, so a reader between whole calls never sees a
+     * torn file. The failure this defends against needs a crash or a competing writer
+     * inside the write, which userland cannot stage with a 300-byte JSON file.
+     *
+     * So the mechanism is asserted in the source. A source-text assertion is a weak
+     * test and this repository has thirteen recorded cases of them being traps — but the
+     * alternative here is a comment claiming a defence nothing checks, which is the
+     * thing this whole review round was about. It bites: the `writeFile` mutation fails
+     * this line.
+     */
+    const src = await readFile(
+      new URL('../src/pictograms/download.ts', import.meta.url).pathname, 'utf8');
+    const writer = /async function writeAtomic\([^)]*\)[^{]*\{([\s\S]*?)\n\}/.exec(src)?.[1];
+    expect(writer, 'writeAtomic must be findable').toBeTruthy();
+    expect(writer!, 'writes through a temp file').toMatch(/\.parcial/);
+    expect(writer!, 'and publishes by rename').toMatch(/\brename\(/);
+    expect(writer!, 'never writes the destination directly')
+      .not.toMatch(/writeFile\(\s*path\b/);
   });
 
   it('stops when she stops it, and says so', async () => {
@@ -233,13 +320,20 @@ describe('it refuses before it asks (FR-2208, and 023 FR-2107)', () => {
     })).rejects.toThrow(/lista de pictogramas/);
   });
 
-  it('answers the disk question, or says it does not know', async () => {
-    const room = await roomFor(await dir(), 60);
-    // `unknown` is a legitimate answer: refusing on the basis of a check we could not
-    // run would be worse than the risk it guards against.
-    expect([true, false, 'unknown']).toContain(room.ok);
-    const impossible = await roomFor(await dir(), 1_000_000_000);
-    expect(impossible.ok === false || impossible.ok === 'unknown').toBe(true);
+  it('answers the disk question with a real answer', async () => {
+    /*
+     * `expect([true, false, 'unknown']).toContain(room.ok)` enumerated the whole return
+     * type — it could not fail, and a review proved it by making `roomFor` return
+     * `'unknown'` unconditionally, which turns FR-2208's guard into a permanent no-op.
+     *
+     * So: a laptop with room must answer `true` (not «I don't know»), and a
+     * petabyte-sized ask must answer `false`. `statfs` exists on every platform this
+     * ships to; if it is ever missing, this test fails and says so, which is better than
+     * a guard that quietly stopped guarding.
+     */
+    expect((await roomFor(await dir(), 1)).ok, 'a temp dir has room for 1 MB').toBe(true);
+    expect((await roomFor(await dir(), 1_000_000_000)).ok,
+      'no laptop has a petabyte free').toBe(false);
   });
 });
 

@@ -413,6 +413,128 @@ every moment should have a spec. What it added beyond the seams pass:
    journey sentence → T094). Handover *import* (004 US2) recorded as deliberately
    deferred rather than silently missing.
 
+## G37 · What three clean reviewers found in six thousand lines
+
+**2026-09-02.** Carlos, before looking at `023`–`025` himself: «lo revisas bien antes de
+que lo mire yo? con un agente limpio por favor.» Right instinct — I had been inside this
+for hours and was the worst available reviewer of it.
+
+Three independent reviews, told what the code was for and **not** what I thought of it.
+What they found, and what it says:
+
+### The thing that mattered most
+
+**Rampa told her, in Spanish, on screen and inside her own vault file, that changing a
+pictogram marked her old sheets as out of date. Nothing did that.** Staleness compares
+`ir.md`'s fingerprint, and a vocabulary change does not touch `ir.md`. `024` FR-2218 was
+claimed in a doc comment, in a sentence she reads, and in a file that outlives the
+application — and implemented in none of the three. The `previous` variable computed for
+it existed only to fill a log field, which is what a requirement satisfied by nobody
+looks like from the inside.
+
+Fixed by saying what actually happens. Reopened as G35.
+
+### Two security findings, and the second is the shape of the first
+
+`checkUpdate` reached ARASAAC **with no licence gate** — and kept reaching it after she
+withdrew, so `withdrawLicence`'s «stops further fetching» was false. I had written
+comments in two files warning about precisely this: «a gate in a caller is a gate the
+second caller walks past». I was the second caller, three hours later.
+
+And it interpolated `inventory.language` into the URL with no allowlist, from a vault
+file the renderer can write — a one-shot arbitrary-text egress channel to a third-party
+government server's access logs. «De tu ordenador no sale ninguna palabra» is what the
+licence screen *tells her*, so the screen was lying too.
+
+Fixed structurally rather than per-instance: `httpTransport` is no longer exported and
+`transportFor(gate)` is the only way to obtain one. A fourth call site cannot make a
+request without a gate result. **That is the lesson**: a rule enforced by a caller is a
+convention; a rule enforced by a type is a rule.
+
+### And the reviews of the tests were worse than the reviews of the code
+
+The test reviewer mutated the source and ran the suite. Results:
+
+| mutation | 1.458 tests |
+|---|---|
+| `names: await nameWordSet()` → `new Set()` (FR-1610, the accent fix) | **all passed** |
+| `chosen: await chosenWords(lang)` → `new Map()` (`024`'s headline) | **all passed** |
+| delete the progress subscription (the defect Carlos reported) | **all passed** |
+| `writeAtomic` → plain `writeFile` | **all passed** |
+| metadata written last instead of first (SC-2205) | **all passed** |
+| every banned phrase added to the learner page's installed state | **all passed** |
+| selection state deleted from the chooser entirely | **all passed** |
+| `roomFor` always `'unknown'` (FR-2208 becomes a no-op) | **all passed** |
+| a PNG added to `instructions/`, which ships | **all passed** |
+
+The pattern: **the tests were on both sides of every seam and on none of them.**
+`nameWords` had unit tests. `matchWord` had unit tests given a hand-built set. Nothing
+asserted the two were ever joined — and the accent defect had lived in that join.
+
+Also found: a test asserting `x <= x`; one that deleted the URL it was searching for
+before searching; one enumerating its own return type; one comparing a file's line count
+to a different file that still exists.
+
+All of the above are now fixed and **each fix was verified by re-running the reviewer's
+mutation**. One could not be: atomicity is not observable from userland with a 300-byte
+file, so it is asserted in the source with that limitation written down.
+
+### One guard was deleted rather than fixed
+
+`props-are-read.test.ts`'s payload-field check could not be made to work. Two versions
+both passed with the subscription deleted — the defect it existed for — because a text
+search cannot tell a read of *this* payload from a read of any other `done`. Replaced by
+a component test that asserts the bar renders. A test that looks like a guarantee and is
+not is worse than no test; see G36 for the general problem.
+
+### The count
+
+Sixteen values written and read by nobody are now recorded in this repository. Two of
+them were in the commit whose comments counted to fourteen. It is not carelessness in
+one place — it is what happens when a comment is allowed to stand in for a test, and the
+review's sharpest single line was about a defended line of code: **«a comment defending
+a line is not a test.»**
+
+---
+
+## G36 · «Is this declared field ever read?» needs the type checker
+
+**Open.** `props-are-read.test.ts` catches an unread **prop** because a prop is
+destructured — a mechanical, local signature. It cannot catch an unread **field of a
+payload**: two attempts at a text heuristic both passed while the actual subscription was
+deleted, because `at.done` and `screen.label` are indistinguishable from a read of the
+thing you meant.
+
+Sixteen instances of this defect are on record here, so the guard is worth having
+properly. It wants a TypeScript program: resolve the symbol, count references, exclude
+declaration sites. `ts-morph` or the compiler API, run as a test.
+
+Recorded rather than attempted, because a broken guard on this is worse than none — it
+is what the deleted one was.
+
+---
+
+## G35 · Changing a pictogram does not mark the old sheets
+
+**Open**, and it was briefly a lie rather than a gap (see G37).
+
+`024` FR-2218: changing her answer for an ambiguous word MUST mark the sheets made from
+the previous one as stale rather than rewriting them (`005` FR-520's rule). Not
+implemented. Staleness compares `readingFingerprint(parseIR(ir.md))`, and a vocabulary
+change does not touch `ir.md`.
+
+**It is computable**, which is why this is a gap and not a design problem: `data-picto`
+already records word→id per block on every adapted sheet, so a sheet whose recorded id
+for a word differs from her current answer is stale by inspection. What it needs is a
+second freshness axis beside the reading fingerprint — which is a spec, because
+`005`'s data model has exactly one today and adding a second silently would be the
+fourteenth thing in this repository that two places disagree about.
+
+Until then the screen and `vocabulario.md` say what actually happens: the old sheets keep
+the old drawing, and she is not told they are out of date.
+
+---
+
 ## G34 · Three e2e suites at once, and an hour each
 
 **Closed 2026-09-02** by not doing it again.

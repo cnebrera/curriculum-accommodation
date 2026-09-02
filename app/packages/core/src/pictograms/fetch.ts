@@ -96,17 +96,13 @@ export function readCandidates(json: unknown, word: string): PictogramCandidate[
 
     const keywords = new Set<string>();
     /*
-     * The searched word is always a keyword of its own results.
+     * The searched word is a keyword of its own results — **when there is one**.
      *
-     * Without this, a publisher that returns keywords in a shape we do not
-     * recognise would write entries with no words — which `readSet` skips, so the
-     * fetch would report success and the set would gain nothing.
-     */
-    /*
-     * Only when there is one. `readIndex` calls this with an empty «searched word»
-     * because a bulk index has no search behind it — and an unconditional `add('')`
-     * meant an entry with no keywords survived carrying `['']`, which `readSet` then
-     * skips silently. The fetch would report success and the set would gain nothing.
+     * Without it, a publisher returning keywords in a shape we do not recognise would
+     * write entries with no words, which `readSet` skips: the fetch would report success
+     * and the set would gain nothing. With it unconditional, `readIndex` (which has no
+     * search behind it, so passes `''`) produced entries carrying `['']`, skipped the
+     * same way. Both halves matter, which is why it is a condition and not a line.
      */
     if (normalise(word)) keywords.add(normalise(word));
 
@@ -206,6 +202,16 @@ export function fetchGate(
   return { may: true, publisherId: id };
 }
 
+/**
+ * The `stage` the download reports, shared across the process boundary (from a review).
+ *
+ * It was the literal `'Trayendo pictogramas'` written twice in the shell and once in the
+ * renderer, which compared it to decide whether a progress event was this download's. A
+ * typo in any of the three would have silently killed the bar — which is exactly how the
+ * thirteenth unread field happened in the first place.
+ */
+export const PICTOGRAM_PROGRESS_STAGE = 'Trayendo pictogramas';
+
 /* ── The whole set, in one press (024 US1) ────────────────────────────────── */
 
 /**
@@ -248,12 +254,12 @@ export function readIndex(json: unknown): IndexEntry[] {
     const e = item as Record<string, unknown>;
 
     /*
-     * `readCandidates` with the entry's own first keyword as the «searched word».
+     * `readCandidates` with **no** searched word: a bulk index has no search behind it.
      *
-     * Not an empty string: it always adds the searched word to the keyword set, which
-     * is the guard that stops an unrecognised keyword shape producing entries with no
-     * words at all. Here there is no search, so the guard has nothing useful to add and
-     * an empty word would be dropped by `mergeSet` anyway.
+     * Which is why that function adds the searched word only when there is one — an
+     * unconditional add put `''` into every entry here, and `readSet` skips a keyword
+     * that normalises to nothing, so the fetch reported success and the set gained
+     * nothing.
      */
     const [parsed] = readCandidates([e], '');
     if (!parsed || parsed.keywords.length === 0) continue;
@@ -315,6 +321,19 @@ export interface SetInventory {
   language: string;
   /** How many images are on disk. */
   images: number;
+  /**
+   * Images plus the ones the publisher's index lists and does not serve.
+   *
+   * `updateStatus` compares **this** against `total`, not `images` — because ARASAAC
+   * lists two ids its CDN 404s, so a complete run left `images` two short and the screen
+   * said «te faltan 2» for ever, re-requesting two dead ids on every press. FR-2209 says
+   * a complete set asks her for nothing.
+   *
+   * Optional so an inventory written before this existed still reads; absent means «fall
+   * back to `images`», which is the old behaviour and merely says «incomplete» once more
+   * until she presses again.
+   */
+  accountedFor?: number;
   /** What the publisher had when we last looked. */
   total: number;
   /** The publisher's high-water mark at that moment. */
@@ -356,6 +375,6 @@ export function updateStatus(
       return { state: 'update', added, highWater: fresh.highWater };
     }
   }
-  const missing = inventory.total - inventory.images;
+  const missing = inventory.total - (inventory.accountedFor ?? inventory.images);
   return missing > 0 ? { state: 'incomplete', missing } : { state: 'complete' };
 }

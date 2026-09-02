@@ -39,20 +39,37 @@ const CANDIDATES = [{
   ],
 }];
 
+/**
+ * The same word with one already chosen.
+ *
+ * There was no such fixture, so `current` was always `undefined` and **the selected
+ * state was never rendered**. A review deleted the class, the `aria-pressed` and the
+ * «elegido» badge from the component and all eleven tests passed — from a file whose own
+ * docblock names «a selected state that lived only in the accessibility tree» as the
+ * first defect it was written against.
+ */
+const WITH_CHOICE = [{ ...CANDIDATES[0]!, chosen: '2317' }];
+
+let fixture = CANDIDATES;
+
 /** `useAsync` resolves on mount, so static markup needs the value already there. */
 vi.mock('../src/data/pictograms.js', async () => {
   const real = await vi.importActual<typeof import('../src/data/pictograms.js')>(
     '../src/data/pictograms.js');
   return {
     ...real,
-    useCandidates: () => ({ state: 'ready', value: CANDIDATES, reload: () => {} }),
+    useCandidates: () => ({ state: 'ready', value: fixture, reload: () => {} }),
     useChooseWord: () => ({ run: async () => true, busy: false, error: null,
       clearError: () => {} }),
   };
 });
 
 let html = '';
-beforeEach(() => { html = renderToStaticMarkup(<ChooseWord words={['casa']} />); });
+const render = (which = CANDIDATES) => {
+  fixture = which;
+  return renderToStaticMarkup(<ChooseWord words={['casa']} />);
+};
+beforeEach(() => { html = render(CANDIDATES); });
 
 describe('she chooses by looking (FR-2217)', () => {
   it('shows the pictures', () => {
@@ -94,12 +111,29 @@ describe('the state is visible, not only announced', () => {
     expect([...html.matchAll(/aria-pressed="false"/g)]).toHaveLength(3);
   });
 
-  it('marks the chosen one with a class as well', () => {
-    const chosen = renderToStaticMarkup(
-      <ChooseWord words={['casa']} />);
-    // Nothing is chosen in the fixture, so the class must be absent here — and
-    // present in the CSS, which is the half `.primary` failed for weeks.
-    expect(chosen).not.toContain('picto-choice-on');
+  it('marks the chosen one, in the DOM and in the accessibility tree', () => {
+    const chosen = render(WITH_CHOICE);
+    /*
+     * Both, on the chosen one only. This is what the file was written for and what it
+     * did not test: the class, the `aria-pressed="true"`, and exactly one of each.
+     */
+    expect(chosen).toContain('picto-choice-on');
+    expect([...chosen.matchAll(/picto-choice-on/g)],
+      'exactly one candidate is the chosen one').toHaveLength(1);
+    expect([...chosen.matchAll(/aria-pressed="true"/g)]).toHaveLength(1);
+    expect([...chosen.matchAll(/aria-pressed="false"/g)]).toHaveLength(2);
+    // And it says so in words too, not only in a border.
+    expect(chosen).toContain('elegido');
+  });
+
+  it('marks nothing when she has not chosen', () => {
+    expect(html).not.toContain('picto-choice-on');
+    expect(html).not.toContain('aria-pressed="true"');
+    expect(html).not.toContain('elegido');
+  });
+
+  it('and the class exists in a stylesheet', () => {
+    // The half `.primary` failed for weeks: a class name no stylesheet has.
     expect(css, 'the selected class must exist in a stylesheet')
       .toMatch(/\.picto-choice-on\s*\{/);
   });
@@ -115,9 +149,22 @@ describe('the state is visible, not only announced', () => {
   });
 
   it('uses only classes the stylesheets define', () => {
-    for (const cls of ['picto-choices', 'picto-choice', 'picto-choice-gap']) {
-      expect(css, `.${cls} is used in the component`).toMatch(
-        new RegExp(`\\.${cls}[\\s,{:]`));
+    /*
+     * Read out of the component rather than from a hardcoded list of three — a review
+     * pointed out that a fourth class added to `ChooseWord.tsx` was unchecked, which is
+     * the `.primary` defect with one more step.
+     */
+    const src = readFileSync(
+      new URL('../src/pictograms/ChooseWord.tsx', import.meta.url), 'utf8');
+    // Both quote styles: `className="picto-choices"` and the ternary's `'picto-choice
+    // picto-choice-on'`. Matching only one of them found two classes and missed two.
+    const used = new Set([...src.matchAll(/['"]([\w -]*picto-[\w -]*)['"]/g)]
+      .flatMap((m) => m[1]!.split(' ')).filter(Boolean));
+    expect([...used].sort(), 'every picto- class the component uses')
+      .toEqual(['picto-choice', 'picto-choice-gap', 'picto-choice-on', 'picto-choices']);
+    for (const cls of used) {
+      expect(css, `.${cls} is used by the component and defined nowhere`)
+        .toMatch(new RegExp(`\\.${cls}[\\s,{:]`));
     }
   });
 });

@@ -20,13 +20,10 @@ reviewed_by_teacher: false
 # `attribution` es lo que la licencia obliga a poner en cada hoja. No es cortesía y
 # no se puede quitar: si se cae, la hoja infractora es la de la profesora.
 #
-# `words_per_fetch` acota una descarga. Si se alcanza, se dice — no se aplica en
-# silencio (la misma regla que 008 y 022).
 publishers:
   - id: arasaac
     label: ARASAAC
     # Comprobado el 2026-09-02: pública, sin clave, sin registro.
-    search: "https://api.arasaac.org/v1/pictograms/{lang}/search/{word}"
     # El catálogo entero en una sola petición: 8,1 MB, 13.802 pictogramas con todas
     # sus palabras, su popularidad y su fecha. Comprobado el 2026-09-02.
     index: "https://api.arasaac.org/v1/pictograms/all/{lang}"

@@ -96,9 +96,10 @@ export function renderVocabulary(v: Vocabulary): string {
   lines.push('Aquí está lo que has elegido. Lo eliges **una vez** y vale para todos tus');
   lines.push('alumnos. Si un alumno concreto necesita otro dibujo, eso va en su perfil y');
   lines.push('gana sobre esto.', '');
-  lines.push('Puedes cambiarlo desde Rampa o editando el número de aquí arriba. Las hojas');
-  lines.push('que ya hiciste con el dibujo anterior quedan marcadas como desactualizadas:');
-  lines.push('no las reescribo por mi cuenta.', '');
+  lines.push('Puedes cambiarlo desde Rampa o editando el número de aquí arriba.', '');
+  lines.push('**Las hojas que ya hiciste no cambian.** Se quedan con el dibujo anterior, y');
+  lines.push('no te aviso de que están desactualizadas — todavía no sé hacerlo. Si quieres');
+  lines.push('que lleven el nuevo, vuelve a prepararlas.', '');
   lines.push('**No pongas aquí nada de un alumno** — ni nombres, ni códigos. Este fichero');
   lines.push('viaja en un traspaso, y viaja precisamente porque no dice nada de nadie.');
   lines.push('');

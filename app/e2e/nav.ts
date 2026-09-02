@@ -214,9 +214,13 @@ export async function toScreen(
     await toCaseload(page);
     if (screen.under) {
       await page.getByRole('button', { name: screen.under, exact: true }).click();
-      await page.waitForTimeout(150);
+      // Wait for the destination, not for a duration — a review flagged the bare
+      // sleeps here, and this file's own note warns against loosening a walk to make
+      // it pass. A sleep is that, and it produces the fake timeouts the suite is
+      // already sensitive to.
+      await target.waitFor({ state: 'visible' });
     }
   }
   await target.click();
-  await page.waitForTimeout(200);
+  await expect(target).toHaveAttribute('aria-current', 'page');
 }

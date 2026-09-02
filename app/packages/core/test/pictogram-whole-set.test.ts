@@ -69,7 +69,7 @@ describe('the corpus decides the size, not the code (FR-2204, FR-2207)', () => {
 
   it('refuses a publisher with no bulk index', () => {
     const mk = (extra: string) => ['---', 'publishers:', '  - id: x', '    label: X',
-      '    search: "https://x.test/{lang}/{word}"', '    image: "https://x.test/{id}_{size}.png"',
+      '    image: "https://x.test/{id}_{size}.png"',
       extra, '    site: "https://x.test"', '    licence: L',
       '    licence_url: "https://x.test/l"', '    languages: [es]', '    attribution:',
       '      author: A', '      owner: O', '      source: S', '---', ''].join('\n');
@@ -289,5 +289,38 @@ describe('the four rungs, and the one that still refuses (FR-2215, FR-2216)', ()
     expect(matchWord('casa', set, {
       language: 'es', chosen: forLanguage(choose(emptyVocabulary(), 'es', 'otra', '1'), 'es'),
     }).kind).toBe('ambiguous');
+  });
+});
+
+/**
+ * «Te faltan 2» for ever (from a review, 2026-09-02).
+ *
+ * ARASAAC's index lists two ids its CDN does not serve. `updateStatus` compared `images`
+ * against `total`, so a **complete** run left the screen saying «Te faltan 2. Sigo por
+ * donde iba» with a «Seguir bajándolos» button, permanently, re-requesting two dead ids
+ * on every press — on the screen whose requirement (FR-2209) is to ask her for nothing
+ * once she is done.
+ *
+ * The number that should have given it away was in `024`'s own success criterion:
+ * «13.800 of 13.802».
+ */
+describe('a complete set stops asking, even when the publisher lists dead ids', () => {
+  const have = (over: Partial<SetInventory> = {}): SetInventory => ({
+    publisher: 'arasaac', language: 'es', images: 13_800, total: 13_802,
+    highWater: '2026-08-01', broughtOn: '2026-09-02', ...over,
+  });
+
+  it('counts what the publisher does not have as accounted for', () => {
+    expect(updateStatus(have({ accountedFor: 13_802 }))).toEqual({ state: 'complete' });
+  });
+
+  it('still says incomplete when images are genuinely missing', () => {
+    expect(updateStatus(have({ images: 9_000, accountedFor: 9_002 })))
+      .toEqual({ state: 'incomplete', missing: 4_800 });
+  });
+
+  it('falls back to `images` for an inventory written before this existed', () => {
+    // Which is the old behaviour: one more «incomplete» until she presses again.
+    expect(updateStatus(have())).toEqual({ state: 'incomplete', missing: 2 });
   });
 });

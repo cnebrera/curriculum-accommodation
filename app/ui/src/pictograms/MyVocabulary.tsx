@@ -1,5 +1,5 @@
 import { Callout } from '../components/Callout.js';
-import { useChosenSoFar, useChooseWord } from '../data/pictograms.js';
+import { useChosenSoFar, useChooseWord, useUnchooseWord } from '../data/pictograms.js';
 import { useState } from 'react';
 
 /**
@@ -24,11 +24,14 @@ import { useState } from 'react';
 export function MyVocabulary({ language = 'es' }: { language?: string }) {
   const chosen = useChosenSoFar(language);
   const pick = useChooseWord();
+  const drop = useUnchooseWord();
   const [changed, setChanged] = useState<Record<string, string>>({});
+  const [dropped, setDropped] = useState<string[]>([]);
 
   if (chosen.state !== 'ready') return null;
+  const rows = chosen.value.filter((c) => !dropped.includes(c.word));
 
-  if (chosen.value.length === 0) {
+  if (chosen.value.length === 0 || rows.length === 0) {
     return (
       <Callout intent="info" title="Todavía no has elegido ningún dibujo">
         <p>
@@ -46,17 +49,31 @@ export function MyVocabulary({ language = 'es' }: { language?: string }) {
   };
 
   return (
-    <Callout intent="ok" title={`Tu vocabulario · ${chosen.value.length} `
-      + `${chosen.value.length === 1 ? 'palabra' : 'palabras'}`}>
+    <Callout intent="ok" title={`Tu vocabulario · ${rows.length} `
+      + `${rows.length === 1 ? 'palabra' : 'palabras'}`}>
       <p>
         Lo que has elegido para las palabras con varios dibujos. Vale para todos tus
         alumnos, y puedes cambiarlo aquí.
       </p>
+      {/*
+        The truth, after an independent review found the previous sentence was a lie.
+        It said «las hojas que ya hiciste quedan marcadas como desactualizadas», and
+        **nothing did that**: staleness compares the fingerprint of `ir.md`, and changing
+        a pictogram choice does not touch `ir.md`. `024` FR-2218 was claimed in a doc
+        comment, in this sentence, and in her own vault file — implemented in none of
+        the three.
+
+        Saying what actually happens is not a smaller promise than the false one; it is
+        the only one that leaves her able to act. FR-2218 is reopened as backlog G35
+        with the design, because `data-picto` already records word→id per block and the
+        answer is computable — it is just not written.
+      */}
       <p className="small">
-        Si cambias uno, las hojas que ya hiciste quedan marcadas como desactualizadas:
-        no las reescribo por mi cuenta.
+        Si cambias uno, <strong>las hojas que ya hiciste no cambian</strong>: se quedan
+        con el dibujo anterior y todavía no sé avisarte de que están desactualizadas. Si
+        quieres que lleven el nuevo, vuelve a prepararlas.
       </p>
-      {chosen.value.map((choice) => {
+      {rows.map((choice) => {
         const current = changed[choice.word] ?? choice.chosen;
         return (
           <fieldset className="fieldset-bare" key={choice.word}>
@@ -77,6 +94,21 @@ export function MyVocabulary({ language = 'es' }: { language?: string }) {
                     : <span className="picto-choice-gap">falta el dibujo · {c.id}</span>}
                 </button>
               ))}
+            </div>
+            {/*
+              Undoing it (`024` `unchooseWord`, given a caller by `025`). Not a
+              destructive action — the word simply goes back to being reported as
+              ambiguous next time, which is `018` FR-1609's ordinary state.
+            */}
+            <div className="row">
+              <button type="button" className="btn btn-ghost" disabled={drop.busy}
+                      onClick={() => void (async () => {
+                        if (await drop.run({ word: choice.word, language })) {
+                          setDropped((d) => [...d, choice.word]);
+                        }
+                      })()}>
+                Dejar de elegir «{choice.word}»
+              </button>
             </div>
           </fieldset>
         );

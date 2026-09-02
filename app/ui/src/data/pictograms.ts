@@ -167,6 +167,19 @@ export function useCandidates(words: string[], language = 'es'): Loadable<WordCh
     Promise<WordChoice[]>, [key, language]);
 }
 
+/**
+ * She stops choosing, and the word goes back to being reported as ambiguous.
+ *
+ * `unchooseWord` existed in `core`, in the shell, as an IPC handler **and** in the
+ * preload — four layers, no hook, no component. Its doc comment described her doing
+ * something she could not do. Found by a review; it is a legitimate capability, so it
+ * gets a caller rather than being deleted.
+ */
+export function useUnchooseWord() {
+  return useCommand((args: { word: string; language?: string }) =>
+    window.rampa.pictograms.unchooseWord(args) as Promise<boolean>);
+}
+
 /** Her choice. Once, for every learner (`024` FR-2214). */
 export function useChooseWord() {
   return useCommand((args: { word: string; id: string; language?: string }) =>
@@ -200,6 +213,20 @@ export function skippedWords(lines: readonly string[]): string[] {
   return [...new Set(out)];
 }
 
+export interface Bringing { running: boolean; done: number; total: number }
+
+/**
+ * A download already going, so a reopened screen shows it (`025` FR-2309).
+ *
+ * The bar and «Parar» were the component's own state, so navigating out of Configuración
+ * and back lost both while the fetch carried on — and re-enabled the button, which made
+ * a second concurrent run reachable by accident. `isBringing` had been written for
+ * exactly this and read by nobody (the fifteenth).
+ */
+export function useBringing(): Loadable<Bringing> {
+  return useAsync(() => window.rampa.pictograms.bringing() as Promise<Bringing>, []);
+}
+
 /** She pressed «Parar». What arrived is already usable (`024` FR-2118). */
 export function useStopBringing() {
   return useCommand(() => window.rampa.pictograms.stop() as Promise<boolean>);
@@ -216,3 +243,17 @@ export function useChosenSoFar(language = 'es'): Loadable<WordChoice[]> {
   return useAsync(() =>
     window.rampa.pictograms.chosenSoFar(language) as Promise<WordChoice[]>, [language]);
 }
+
+/**
+ * The `stage` the pictogram download reports, mirrored from `@rampa/core`.
+ *
+ * The renderer cannot import `@rampa/core` (it talks to the main process over IPC), and
+ * this string is compared on both sides to decide whether a progress event belongs to
+ * this download. It was a literal in three places; a typo in any of them silently killed
+ * the bar, which is how the thirteenth unread field happened.
+ *
+ * `ui/test/download-progress.test.tsx` asserts this equals the core constant, so the
+ * two cannot drift — the same arrangement `skippedWords` above has, and for the same
+ * reason.
+ */
+export const PICTOGRAM_PROGRESS_STAGE = 'Trayendo pictogramas';

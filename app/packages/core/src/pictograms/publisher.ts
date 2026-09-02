@@ -19,6 +19,18 @@ import { logger } from '../log.js';
  * So this file knows the *shape* of a publisher and nothing about any particular
  * one. `instructions/pictograms.md` knows ARASAAC.
  *
+ * ## `search` is gone (from a review, 2026-09-02)
+ *
+ * A per-word search endpoint was required here, validated for its `{word}` placeholder,
+ * and **read by nobody** since `024` deleted the word-by-word fetch — the sixteenth
+ * value in this project written and consumed by nothing.
+ *
+ * It was not inert. A publisher with a bulk index and no per-word search was **refused
+ * from the corpus entirely** for failing a check on a field with no reader, which is the
+ * opposite of the replaceability `018` FR-1604 and this file both argue for. And a
+ * documented `{word}`-bearing template with no caller is an invitation for the next
+ * feature to re-add the leak `024` removed.
+ *
  * ## The response is untrusted (Principle IX)
  *
  * Whatever comes back from a publisher is content, not instruction. `readCandidates`
@@ -36,8 +48,6 @@ export interface PublisherAttribution {
 export interface Publisher {
   id: string;
   label: string;
-  /** `{lang}` and `{word}` — the only two placeholders permitted. */
-  search: string;
   /** `{lang}`: the whole catalogue in one request (024 FR-2202). */
   index: string;
   /** `{id}` and `{size}` — likewise. */
@@ -119,7 +129,7 @@ export function parsePictogramFetchCorpus(
 
     const p: Publisher = {
       id: str(e['id']), label: str(e['label']),
-      search: str(e['search']), index: str(e['index']), image: str(e['image']),
+      index: str(e['index']), image: str(e['image']),
       site: str(e['site']), licence: str(e['licence']),
       licenceUrl: str(e['licence_url']),
       languages: Array.isArray(e['languages'])
@@ -138,7 +148,7 @@ export function parsePictogramFetchCorpus(
      * requires would be blank. Refused instead, by name.
      */
     const missing = [
-      ['id', p.id], ['label', p.label], ['search', p.search], ['image', p.image],
+      ['id', p.id], ['label', p.label], ['image', p.image],
       ['index', p.index],
       ['site', p.site], ['licence', p.licence], ['licence_url', p.licenceUrl],
       ['attribution.author', p.attribution.author],
@@ -151,10 +161,6 @@ export function parsePictogramFetchCorpus(
         file, id: p.id || '(sin id)',
         missing: p.languages.length === 0 ? [...missing, 'languages'] : missing,
       });
-      continue;
-    }
-    if (!p.search.includes('{word}') || !p.search.includes('{lang}')) {
-      logger.error('pictograms.publisher-bad-search', { file, id: p.id });
       continue;
     }
     if (!p.image.includes('{id}')) {
@@ -178,10 +184,10 @@ export function parsePictogramFetchCorpus(
 /**
  * The only place a publisher URL is built, and the only place a word is encoded.
  *
- * `encodeURIComponent` on every substitution, and the values are checked by the
- * caller before they get here: a word is a vocabulary word (`wordlist.ts`) and an id
- * is digits-and-letters (`readCandidates`). Two independent reasons a response cannot
- * steer a request, because one of them is somebody else's discipline.
+ * `encodeURIComponent` on every substitution, and the values are checked before they
+ * get here: an id is digits-and-letters (`readCandidates`) and a language is a member of
+ * the publisher's own list — the second of which was missing in `checkUpdate` and was a
+ * one-shot text-egress channel until a security review found it.
  */
 export function urlFor(
   template: string,

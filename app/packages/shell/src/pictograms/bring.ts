@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 import {
   readSet, pictogramVaultNote, parsePictogramFetchCorpus, RampaError, fetchGate,
-  updateStatus, readIndex, urlFor, logger, normalise,
+  updateStatus, readIndex, urlFor, logger, normalise, PICTOGRAM_PROGRESS_STAGE,
   parseVocabulary, renderVocabulary, emptyVocabulary, choose, unchoose, chosenFor,
   forLanguage,
   type SetReading, type SetInventory, type UpdateStatus, type Vocabulary,
@@ -16,7 +16,7 @@ import {
 } from './access.js';
 import { nameWordSet } from '../ipc/names.js';
 import {
-  fetchWholeSet, roomFor, httpTransport, type Transport,
+  fetchWholeSet, roomFor, transportFor, type Transport,
 } from './download.js';
 
 /**
@@ -161,8 +161,34 @@ export interface BringArgs {
  */
 let inFlight: AbortController | null = null;
 
-/** True while a download is going, so the screen knows to offer «Parar». */
-export const isBringing = (): boolean => inFlight !== null;
+/**
+ * What the screen needs to pick up a download in progress (FR-2309).
+ *
+ * `isBringing()` used to be a bare boolean here, exported, documented «so the screen
+ * knows to offer Parar» — and **imported by nothing**. The fifteenth value in this
+ * project written by one place and read by nobody, in the same commit whose comments
+ * count to fourteen.
+ *
+ * It is a real requirement, not a nicety: the progress bar and «Parar» live in
+ * `PictogramSetSection`'s own state, so navigating out of Configuración and back during
+ * a 157 MB download loses both while the fetch continues — and re-enables the button,
+ * which is how a second concurrent run became reachable without malice.
+ *
+ * So the last progress is kept beside the controller, where it survives a screen.
+ */
+let lastProgress: { done: number; total: number } | null = null;
+
+export interface Bringing {
+  running: boolean;
+  done: number;
+  total: number;
+}
+
+export const bringing = (): Bringing => ({
+  running: inFlight !== null,
+  done: lastProgress?.done ?? 0,
+  total: lastProgress?.total ?? 0,
+});
 
 /**
  * She pressed «Parar» (FR-2118).
@@ -250,6 +276,24 @@ export async function bringPictograms(args: BringArgs = {}): Promise<{
       + 'pedido ningún pictograma.');
   }
 
+  /*
+   * One at a time, and now actually enforced (from a review, 2026-09-02).
+   *
+   * The comment above has always said «a second press while one is running stops
+   * nothing and starts nothing», and nothing read `inFlight`. Two runs planned the same
+   * 13.802 missing ids, doubled the traffic to a public-sector CDN in the school's name,
+   * shared one temp filename (so `rename` could publish truncated bytes), and the first
+   * run's `finally` cleared the second's controller — which left «Parar» returning false
+   * while a download was still going. FR-2118, broken in the case it exists for.
+   *
+   * Reachable without malice: `bring.busy` is component state, so navigating out of
+   * Configuración and back re-enables the button while the fetch continues.
+   */
+  if (inFlight) {
+    throw new RampaError('pictogram-in-progress',
+      'Ya los estoy trayendo. Espera a que acabe, o dale a «Parar».');
+  }
+
   const language = args.language ?? 'es';
   const configured = await configuredRoot();
   const root = configured && !configured.missing ? configured.root : defaultRoot();
@@ -267,7 +311,7 @@ export async function bringPictograms(args: BringArgs = {}): Promise<{
   }
 
   args.onProgress?.({
-    stage: 'Trayendo pictogramas', detail: 'pidiendo la lista completa',
+    stage: PICTOGRAM_PROGRESS_STAGE, detail: 'pidiendo la lista completa',
     done: 0, total: corpusData.expectedTotal,
   });
 
@@ -278,6 +322,7 @@ export async function bringPictograms(args: BringArgs = {}): Promise<{
    */
   const controller = new AbortController();
   inFlight = controller;
+  lastProgress = { done: 0, total: corpusData.expectedTotal };
   if (args.signal) {
     args.signal.addEventListener('abort', () => controller.abort(), { once: true });
   }
@@ -290,21 +335,35 @@ export async function bringPictograms(args: BringArgs = {}): Promise<{
         imageSize: corpusData.imageSize,
         concurrency: corpusData.concurrency,
       },
-      ...(args.transport ? { transport: args.transport } : {}),
+        transport: args.transport ?? transportFor(gate),
       signal: controller.signal,
-      onProgress: (done, total) => args.onProgress?.({
-        stage: 'Trayendo pictogramas',
-        detail: `${done.toLocaleString('es-ES')} de ${total.toLocaleString('es-ES')}`,
-        done, total,
-      }),
+      onProgress: (done, total) => {
+        // Beside the controller, so a remounted screen can pick it up (FR-2309).
+        lastProgress = { done, total };
+        args.onProgress?.({
+          stage: PICTOGRAM_PROGRESS_STAGE,
+          detail: `${done.toLocaleString('es-ES')} de ${total.toLocaleString('es-ES')}`,
+          done, total,
+        });
+      },
     });
   } finally {
     inFlight = null;
+    lastProgress = null;
   }
 
   await writeInventory({
     publisher: publisher.id, language,
     images: result.present + result.brought,
+    /*
+     * `absent` counts as accounted for (from a review, 2026-09-02).
+     *
+     * ARASAAC's index lists two ids its CDN does not serve, so a *complete* run left
+     * `images` two short of `total` and `updateStatus` reported «te faltan 2» for ever —
+     * on the screen whose requirement is to ask her for nothing once she is done.
+     * Recorded separately so «no las tiene» stays visible without becoming a chore.
+     */
+    accountedFor: result.present + result.brought + result.absent,
     total: result.total, highWater: result.highWater,
     broughtOn: new Date().toISOString().slice(0, 10),
   });
@@ -358,7 +417,33 @@ export async function checkUpdate(args: { transport?: Transport } = {}): Promise
   const publisher = corpusData.publishers.find((p) => p.id === inventory.publisher);
   if (!publisher) return updateStatus(inventory);
 
-  const transport = args.transport ?? httpTransport;
+  /*
+   * **The gate, which this function did not have** (security review, 2026-09-02).
+   *
+   * Two failures, from one missing line. It reached ARASAAC with no acceptance ever
+   * recorded, and it kept reaching it after she withdrew — so `withdrawLicence`'s
+   * «stops further fetching» was false.
+   *
+   * And the language: `fetchWholeSet` refuses one the publisher does not serve *before*
+   * requesting, which is what makes «no sale ninguna palabra» true there. This
+   * interpolated `inventory.language` straight into the URL — a string read from a vault
+   * file the renderer can write. `encodeURIComponent` stopped it restructuring the URL;
+   * it did not stop it **carrying a child's name to a third-party server's access log**,
+   * which `007` calls the worst outcome in the system.
+   *
+   * Both are now checked here, and the transport comes from the gate so a future caller
+   * cannot skip either.
+   */
+  if (!publisher.languages.includes(inventory.language)) {
+    logger.warn('pictograms.inventory-language-rejected', { publisher: publisher.id });
+    return updateStatus(inventory);
+  }
+  const settings = await loadSettings(pictogramSettingsDir());
+  const gate = fetchGate(
+    corpusData.publishers.map((p) => p.id), settings.pictogramLicence, inventory.publisher);
+  if (!gate.may) return updateStatus(inventory);
+
+  const transport = args.transport ?? transportFor(gate);
   const index = readIndex(await transport.json(
     urlFor(publisher.index, { lang: inventory.language })));
   if (index.length === 0) return updateStatus(inventory);
@@ -448,12 +533,27 @@ export async function candidatesFor(args: {
 }
 
 /**
- * She picks one (FR-2214, FR-2218).
+ * She picks one (FR-2214). **FR-2218 is NOT implemented** — see below.
  *
  * Recorded **once, for every learner** — «lo bajo una vez y lo uso para todos los que
- * lo necesiten». And every sheet made from the previous answer is marked stale rather
- * than rewritten: `005` FR-520's rule, because a document that changed under her
- * without saying so is worse than one she has to remake.
+ * lo necesiten».
+ *
+ * ## What this does not do, and what used to be claimed here
+ *
+ * This comment said «every sheet made from the previous answer is marked stale rather
+ * than rewritten: `005` FR-520's rule». That was false. Staleness (`jobs/stale.ts`)
+ * compares `readingFingerprint(parseIR(ir.md))` against each sheet's recorded reading,
+ * and a vocabulary change does not touch `ir.md` — so every sheet made with the old
+ * pictogram still reports `fresh`.
+ *
+ * Worse, the same claim was on screen and **written into her own vault file**, where it
+ * outlives Rampa. Found by an independent review, not by a test, and `previous` below
+ * existed only to fill a log field — which is what a requirement satisfied by nobody
+ * looks like from the inside.
+ *
+ * Reopened as backlog G35. It is computable: `data-picto` already records word→id per
+ * block, so a sheet whose recorded id for a word differs from the current answer is
+ * stale. Until it exists, the screen and the file say what actually happens.
  */
 export async function chooseWord(args: {
   word: string; id: string; language?: string;

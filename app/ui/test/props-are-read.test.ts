@@ -87,40 +87,25 @@ describe('a declared prop is a used prop', () => {
 });
 
 /**
- * The same defect, one layer down: a **payload field** nobody reads (the thirteenth).
+ * The payload-field guard was deleted. Here is why, and what replaced it.
  *
- * `024` sent the pictogram download's progress over `job:progress` as
- * «3.140 de 13.802» and `PictogramSetSection` never subscribed. The consequence was
- * 2 min 45 s of «Trayéndolos…» with no bar, on a 157 MB download — and it was found by
- * Carlos asking for a progress bar, not by any test. The task for it was already
- * ticked.
+ * `024` sent the download's progress over `job:progress` and `PictogramSetSection` never
+ * subscribed — 2 min 45 s of «Trayéndolos…» with no bar, found by Carlos asking for one.
+ * I wrote a text guard here: for each field of `Progress`, does it appear in the UI?
  *
- * A prop is destructured, so the guard above can see it. An IPC payload field is a
- * property on an interface, sent by the main process and read — or not — by whatever
- * subscribes. Same signature, one layer down, and just as mechanical: every field the
- * renderer *declares* it receives must appear somewhere in the renderer.
+ * A review measured it. It caught `etaSeconds` and `total2`; it missed `label`, `value`
+ * and `count`, and — fatally — it missed **deleting the subscription**, which is the
+ * defect it existed for. Scoping it to subscriber files improved two of those and still
+ * missed the one that mattered, because the `useJobProgress` import remains in the file
+ * and `at.done` keeps matching.
+ *
+ * A text heuristic cannot distinguish a read of *this* payload from a read of anything
+ * with the same field name. Two attempts at it produced a test that looked like a
+ * guarantee and was not, which is worse than no test — so it is gone, and the behaviour
+ * is asserted directly in `ui/test/download-progress.test.tsx`: given a progress event,
+ * the screen must render a `role="progressbar"`. That one fails when the subscription is
+ * removed, which is the whole point.
+ *
+ * The general problem — "is this declared field ever read?" — needs the type checker,
+ * not a regular expression. Recorded as backlog G36.
  */
-describe('every field the renderer declares it receives is read', () => {
-  it('reads every field of Progress', async () => {
-    const jobs = await readFile(join(uiRoot, 'data', 'jobs.ts'), 'utf8');
-    const block = /export interface Progress \{([\s\S]*?)\n\}/.exec(jobs)?.[1] ?? '';
-    expect(block, 'the Progress interface must be findable').not.toBe('');
-
-    const fields = [...block.matchAll(/^\s{2}(\w+)\??:/gm)].map((m) => m[1]!);
-    expect(fields.length, 'and must have fields').toBeGreaterThan(2);
-
-    const all = (await Promise.all((await walk(uiRoot)).concat(
-      join(uiRoot, 'data', 'jobs.ts'), join(uiRoot, 'data', 'ingest.ts'),
-    ).map((f) => readFile(f, 'utf8')))).join('\n');
-
-    const unread = fields.filter((f) => {
-      // Read as `p.done`, destructured as `{ done }`, or named in a payload literal.
-      const uses = new RegExp(`[.{,\\s]${f}\\b`, 'g');
-      const hits = [...all.matchAll(uses)].length;
-      // One hit is the declaration itself.
-      return hits <= 1;
-    });
-    expect(unread,
-      'a progress field the main process sends and no screen reads').toEqual([]);
-  });
-});
