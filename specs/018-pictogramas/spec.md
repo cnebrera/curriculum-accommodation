@@ -215,11 +215,28 @@ it.
 
 ### Licence
 
-- **FR-1601**: Rampa MUST NOT bundle, redistribute or download ARASAAC pictograms.
-  The set is fetched by the teacher, under terms she accepts directly.
-- **FR-1602**: Rampa MUST tell her what the licence requires before she configures
-  a set, including that a sheet containing pictograms is a derivative work under
-  CC BY-NC-SA.
+- **FR-1601**: Rampa MUST NOT bundle or redistribute pictograms. No release artefact
+  may contain one.
+
+  **NARROWED by `023` FR-2101 on 2026-09-02.** This requirement also said «or
+  download», and its clarification said «not even behind a confirmation». That was
+  written without reading ARASAAC's terms of use, which turn out to publish a
+  **public, keyless API** for exactly this and to require attribution and
+  non-commercial use rather than to prohibit software from fetching. Rampa MAY now
+  fetch pictograms at her explicit request, after she has accepted the publisher's
+  licence on screen — `023` FR-2104. What stays forbidden is shipping them: CC
+  BY-NC-SA files inside an Apache-2.0 application would hand every downstream user a
+  restriction our licence says they do not have.
+
+- **FR-1602**: Rampa MUST tell her what the licence requires before she configures a
+  set.
+
+  **CORRECTED on 2026-09-01 (backlog G28).** This said «including that a sheet
+  containing pictograms is a derivative work under CC BY-NC-SA». It is not: §3(b)
+  applies ShareAlike to the **adapted material** — a modified pictogram — and a
+  worksheet including one unmodified is a collection. Stated that way to a PT it reads
+  as «everything you make with this becomes restricted», which is a reason not to use
+  a legitimate resource. `023` FR-2105 says what the screen must now say.
 - **FR-1603**: Every output containing a pictogram MUST carry the attribution, and
   no setting may remove it.
 - **FR-1604**: The pictogram set MUST be replaceable. Nothing in code may assume
