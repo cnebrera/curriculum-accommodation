@@ -210,8 +210,14 @@ her less than the profile being wrong.
   download control. Asserted, because it is the requirement.
 - **SC-2302**: Every control `023` and `024` built is reachable without opening a
   learner.
-- **SC-2303**: The Pictogramas block on a learner's profile is under six lines of text.
-  Measured, because «mucho más limpio» has to mean something.
+- **SC-2303**: The Pictogramas block on a learner's profile is under six sentences **in
+  the ordinary state** — pictograms on, set installed — and the missing-set case may add
+  at most five more. Measured, because «mucho más limpio» has to mean something.
+
+  The bound started as six for every state and failed at eight, and the honest reading
+  was that the bound was on the wrong thing: when the set is missing those extra lines
+  **are** the feature — they are what stops `018`'s «turning it on and getting nothing,
+  with no idea why». What had to be short is the page she sees every other day.
 - **SC-2304**: A teacher who has never seen Rampa turns pictograms on for a child, is
   told the set is missing, brings it, and returns — without asking where to go.
   **Needs a teacher.**
