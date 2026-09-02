@@ -29,7 +29,7 @@ a guess, and the numbers are on the record now:
 |---|---|
 | The whole index — 13.802 pictograms with all their words | **one request, 8,1 MB** |
 | One image at 300px | **4 KB** (500px is 15 KB) |
-| The whole catalogue at 300px | **~55 MB** |
+| The whole catalogue at 300px | **157 MB, measured** — the 55 MB in the first draft of this table was extrapolated from one 4 KB pictogram, and the average is ~11 KB |
 | Is 300px enough? | Yes. `instructions/pictograms.md` requires 12 mm minimum; 300px prints to 25 mm at 300 dpi |
 
 So the objection was wrong by an order of magnitude, and the design that came from it —
@@ -241,13 +241,17 @@ fetches only the difference.
 - **SC-2201**: A teacher goes from «pictograms on» to a rendered worksheet **with
   pictograms on it** by accepting a licence and pressing one button, typing nothing.
 - **SC-2202**: The complete set is on disk in under fifteen minutes on a school
-  connection, and the most-used two thousand within one.
+  connection, and the most-used two thousand within one. **Measured 2026-09-02**:
+  13.800 of 13.802 in 2 min 45 s at concurrency 6, two images unavailable upstream and
+  reported, and `018`'s reader found no problems.
 - **SC-2203**: A second press after completion makes **zero** requests for images
   already present.
 - **SC-2204**: No request is made on launch. Asserted against a transport that fails the
   test if called.
-- **SC-2205**: An interrupted download leaves a set `018`'s reader reads with no
-  problems, at any point.
+- **SC-2205**: An interrupted download leaves a set `018`'s reader reads, at any point.
+  From the first image onward, with **no problems**; before it, with the one true
+  problem `018` already reports — «he encontrado la lista de palabras y ninguna imagen».
+  That distinction was found by the test rather than written into it.
 - **SC-2206**: An ambiguous word chosen once is used for every learner and never asked
   about again.
 - **SC-2207**: `018`'s reader, matcher and attribution are unchanged. Asserted by their
@@ -258,8 +262,11 @@ fetches only the difference.
 
 ## Assumptions
 
-- **The numbers above hold.** Measured against the live service on 2026-09-02. If
-  ARASAAC changes them the corpus is where the sizes live, so it is an edit.
+- **The numbers above hold.** Measured against the live service on 2026-09-02 — and one
+  of them did not: the size was extrapolated from a single 4 KB pictogram and the real
+  total is 157 MB. Corrected from a complete download rather than a sample, which is the
+  same mistake that produced `023`'s word-by-word design and the reason this
+  specification exists. The corpus is where the sizes live, so a change is an edit.
 - **`static.arasaac.org` is a CDN and serving files is its purpose.** 13.802 requests
   once per installation, throttled, is what it is for. The API host is used only for the
   index, once.
