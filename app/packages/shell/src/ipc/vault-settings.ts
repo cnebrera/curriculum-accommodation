@@ -28,7 +28,7 @@ export interface AppSettings {
    */
   photoNameWarningAcknowledged?: boolean;
   /**
-   * Where her pictogram set is (018 T014, FR-1601).
+   * Where her pictogram set is (018 T014; a fetched set lands here too, `023`).
    *
    * Here and **not in the vault**, for the same reason `vaultRoot` is: it is an
    * absolute path on this machine, and a vault has to stay portable. What goes in
@@ -47,6 +47,28 @@ export interface AppSettings {
     /** «1.243 imágenes · 980 palabras en español», as read at configuration time. */
     summary?: string;
     configuredOn: string;
+  };
+  /**
+   * The pictogram licence she accepted, and when (023 T009, FR-2104).
+   *
+   * **Nothing may be fetched until this exists**, which is the whole basis on which
+   * the download is legitimate: Rampa is a user agent acting on her instruction under
+   * terms she has read, not a program that copies somebody else's licensed work onto
+   * a teacher's computer.
+   *
+   * Here rather than in the vault, like the path above and for the same reason —
+   * except this one is also personal in a way a path is not: it records an agreement
+   * *she* made. A handover packet must not carry a colleague's acceptance, and a
+   * vault restored onto a new laptop must ask again.
+   *
+   * `licence` and `publisher` are recorded as accepted, not looked up later: the text
+   * at ARASAAC can change and Rampa cannot detect that. What she agreed to is what
+   * this says she agreed to.
+   */
+  pictogramLicence?: {
+    publisher: string;
+    licence: string;
+    acceptedOn: string;
   };
   display?: {
     theme?: 'light' | 'dark' | 'system';

@@ -3,27 +3,36 @@ import { Section, Field, Actions } from '../shell/Page.js';
 import { Callout } from '../components/Callout.js';
 import { Loaded } from '../data/Loaded.js';
 import {
-  useCurrentSet, useChooseSet, useInspectSet, useUseSet, type SetInspection,
+  useCurrentSet, useChooseSet, useInspectSet, useUseSet, usePublishers,
+  useAcceptLicence, useWithdrawLicence, useFetchPictograms,
+  type SetInspection, type FetchResult,
 } from '../data/pictograms.js';
 
 /**
- * Pointing Rampa at a pictogram set (018 T015, FR-1601/1602).
+ * Her pictogram set: bringing it, or pointing at one (018 T015; 023 T011/T015).
  *
- * ## What is deliberately not on this screen
+ * ## The download, and why it took `023` to get here
  *
- * **A download button.** Not hidden, not behind a confirmation, not "we can fetch
- * it for you". ARASAAC's pictograms are CC BY-NC-SA and Rampa is Apache-2.0:
- * distributing them would hand every downstream user a restriction our licence says
- * they do not have. So this screen tells her what to fetch and from where, and she
- * goes and gets it — the same shape as `009`'s API key, where the relationship with
- * the third party is hers and we never stand between her and terms she should read.
+ * This screen used to say «Rampa no trae los pictogramas y no los descarga» and offer
+ * one button: «Decirme dónde están». Carlos, twice: «no puedo decirle al usuario que
+ * se tiene que bajar algo», and then «sigue sin haber un botón para descargar los
+ * pictogramas».
  *
- * ## Why the licence text comes before the folder picker
+ * He was right, and the caution was in the wrong place — I had written `018` FR-1601
+ * without reading ARASAAC's terms. They publish a **public, keyless API** for exactly
+ * this, and their conditions require attribution and non-commercial use rather than
+ * prohibiting software from fetching. What would be redistribution is **shipping**
+ * them; what this does is fetch them to her disk on her instruction.
  *
- * FR-1602, and the sharp half of it: **a sheet containing a pictogram is a
- * derivative work**, so her own adapted material inherits BY-NC-SA. That is a
- * condition on her work, and she is entitled to know it before she configures
- * anything rather than after she has built a term's worth of sheets on it.
+ * ## Why the licence still comes first
+ *
+ * FR-2104/2105, and now it is not merely informative: **it is the gate**. Nothing is
+ * requested from a publisher until the acceptance is recorded, and the check is in the
+ * main process rather than in this component, because a gate in a component is a gate
+ * the second caller walks past.
+ *
+ * The three claims in it were corrected on 2026-09-01 (G28) after reading the licence
+ * text instead of remembering it. Two of them said more than CC BY-NC-SA says.
  */
 export function PictogramSetSection({ compact = false }: {
   /**
@@ -40,7 +49,13 @@ export function PictogramSetSection({ compact = false }: {
   const choose = useChooseSet();
   const inspect = useInspectSet();
   const use = useUseSet();
+  const publishers = usePublishers();
+  const accept = useAcceptLicence();
+  const withdraw = useWithdrawLicence();
+  const bring = useFetchPictograms();
   const [looked, setLooked] = useState<{ root: string; result: SetInspection } | null>(null);
+  const [words, setWords] = useState('');
+  const [result, setResult] = useState<FetchResult | null>(null);
 
   const pick = async (): Promise<void> => {
     const root = await choose.run();
@@ -52,6 +67,35 @@ export function PictogramSetSection({ compact = false }: {
   const confirm = async (): Promise<void> => {
     if (!looked) return;
     if (await use.run(looked.root)) { setLooked(null); current.reload(); }
+  };
+
+  /*
+   * `013` FR-1105: exactly one control per screen may carry primary weight.
+   *
+   * In `compact` mode this section lives inside the profile editor, whose primary is
+   * «Guardar» — so the two buttons added here must not compete with it. Seen in a
+   * screenshot at 900px with `xlarge` text (023 T024): «Traer los pictogramas» and
+   * «Guardar» both solid, which is two primaries and therefore none.
+   *
+   * As its own `Section` there is no rival, and the download is the point of the
+   * screen, so there it stays primary.
+   */
+  const strong = compact ? 'btn' : 'btn btn-primary';
+
+  const state = publishers.state === 'ready' ? publishers.value : null;
+  const publisher = state?.publishers[0] ?? null;
+  const accepted = state?.accepted ?? null;
+
+  const say = async (yes: boolean): Promise<void> => {
+    if (yes && publisher) { if (await accept.run(publisher.id)) publishers.reload(); }
+    if (!yes) { if (await withdraw.run()) publishers.reload(); }
+  };
+
+  const fetchThem = async (): Promise<void> => {
+    const asked = words.split(/[\s,;\n]+/).filter(Boolean);
+    if (asked.length === 0) return;
+    const got = await bring.run(asked);
+    if (got) { setResult(got); setWords(''); current.reload(); }
   };
 
   const body = (
@@ -91,10 +135,12 @@ export function PictogramSetSection({ compact = false }: {
             */}
             <Callout intent="decide" title="Lo que tienes que saber antes">
               <p>
-                Rampa <strong>no trae los pictogramas y no los descarga</strong>. Los
-                de ARASAAC son propiedad del Gobierno de Aragón, los hizo Sergio
-                Palao, y tienen licencia <strong>CC BY-NC-SA</strong>. Los descargas
-                tú de <code>arasaac.org</code> y aceptas esa licencia directamente.
+                Los pictogramas de <strong>{publisher?.label ?? 'ARASAAC'}</strong> son
+                propiedad del <strong>{publisher?.attribution.owner ?? 'Gobierno de Aragón'}</strong>,
+                los hizo <strong>{publisher?.attribution.author ?? 'Sergio Palao'}</strong>, y
+                tienen licencia <strong>{publisher?.licence ?? 'CC BY-NC-SA'}</strong>. Rampa
+                los trae de <code>{(publisher?.site ?? 'https://arasaac.org').replace(/^https?:\/\//, '')}</code>{' '}
+                cuando tú se lo pidas, y nunca por su cuenta. La licencia la aceptas tú.
               </p>
               {/*
                 Corrected 2026-09-01, after reading the licence text instead of
@@ -132,8 +178,90 @@ export function PictogramSetSection({ compact = false }: {
                   la misma licencia. Usarlo tal cual dentro de una ficha tuya no convierte
                   tu ficha en suya.
                 </li>
+                {/*
+                  FR-2110. She is entitled to know what leaves before it leaves, and
+                  «una palabra por consulta» is the whole guarantee: `wordListOf`
+                  removes the names Rampa knows, and the request carries nothing else —
+                  no code, no perfil, no identificador.
+                */}
+                <li>
+                  Al traerlos <strong>salen palabras de tu ordenador</strong>, una por
+                  consulta, a {(publisher?.site ?? 'arasaac.org').replace(/^https?:\/\//, '')}.
+                  Nunca el nombre de un alumno, ni su código, ni su perfil, ni nada que
+                  identifique tu ordenador.
+                </li>
               </ul>
+              {publisher?.licenceUrl ? (
+                <p className="small">
+                  El texto completo de la licencia: <code>{publisher.licenceUrl}</code>
+                </p>
+              ) : null}
+
+              {/*
+                **The gate** (FR-2104). Refusing is a real answer and stays a real
+                answer: the folder picker below works either way, which is FR-2103 and
+                also what happens if ARASAAC ever closes the API.
+              */}
+              {accepted ? (
+                <Actions
+                  note={`Aceptada el ${accepted.acceptedOn}. Lo que ya tienes en el disco es tuyo.`}>
+                  <button className="btn btn-ghost" onClick={() => void say(false)}
+                          disabled={withdraw.busy}>
+                    Retirar mi aceptación
+                  </button>
+                </Actions>
+              ) : (
+                <Actions
+                  primary={publisher ? (
+                    <button className={strong} onClick={() => void say(true)}
+                            disabled={accept.busy}>
+                      Acepto la licencia
+                    </button>
+                  ) : undefined}
+                  note={publisher
+                    ? 'Hasta que la aceptes no pido nada a nadie.'
+                    : 'No tengo de dónde traerlos. Puedes usar una carpeta que ya tengas.'} />
+              )}
             </Callout>
+
+            {/*
+              **The button** (FR-2111, T015). Beside the folder picker, never instead
+              of it.
+
+              Words rather than «traerlo todo»: ARASAAC holds some fourteen thousand
+              pictograms, and fetching all of them would be hundreds of megabytes of
+              vocabulary no learner of hers will meet, in a download she has to
+              babysit. The words of the material in front of her are the ones that
+              make a sheet work.
+            */}
+            {accepted && publisher ? (
+              <Field label="Traer pictogramas" htmlFor="picto-words"
+                     help={`Escribe las palabras que necesitas, separadas por comas. Pido `
+                       + `una por una, hasta ${state?.wordsPerFetch ?? 0} de golpe, y no `
+                       + `vuelvo a pedir las que ya tengas.`}>
+                {/* `htmlFor`/`id` paired: a label pointing at nothing is worse
+                    than no label, because axe passes it and a screen reader does not. */}
+                <textarea id="picto-words" className="input" rows={3} value={words}
+                          placeholder="casa, perro, comer, colegio, agua"
+                          onChange={(e) => setWords(e.target.value)} />
+                <Actions
+                  primary={
+                    <button className={strong} onClick={() => void fetchThem()}
+                            disabled={bring.busy || words.trim() === ''}>
+                      {bring.busy ? 'Trayéndolos…' : 'Traer los pictogramas'}
+                    </button>
+                  }
+                  note={bring.error?.message} />
+              </Field>
+            ) : null}
+
+            {result ? (
+              <Callout intent={result.outcome.found.length > 0 ? 'ok' : 'decide'}
+                       title="Lo que he traído">
+                {result.lines.map((l, i) => <p key={i}>{l}</p>)}
+                <p className="small">Están en <code>{result.root}</code>.</p>
+              </Callout>
+            ) : null}
 
             {looked ? (
               <Callout intent={looked.result.ok ? 'ok' : 'danger'}
@@ -145,7 +273,7 @@ export function PictogramSetSection({ compact = false }: {
                 ) : null}
                 <Actions
                   primary={looked.result.ok ? (
-                    <button className="btn btn-primary" onClick={() => void confirm()}>
+                    <button className={strong} onClick={() => void confirm()}>
                       Usar este juego
                     </button>
                   ) : undefined}

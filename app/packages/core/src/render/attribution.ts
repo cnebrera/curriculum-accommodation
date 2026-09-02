@@ -24,9 +24,15 @@ import type { IRDocument } from '../ir/types.js';
  *
  * ## Whose infringement it would be
  *
- * Hers. A sheet with a pictogram on it is a derivative work under CC BY-NC-SA, and
- * a rendering pipeline that dropped the credit would make **her** sheet the
- * infringing document rather than ours. That is why this is not a courtesy.
+ * Hers. Attribution is required for **any** use of a CC BY-NC-SA work, so a rendering
+ * pipeline that dropped the credit would make her sheet the infringing document rather
+ * than ours. That is why this is not a courtesy.
+ *
+ * The earlier version of this paragraph said «a sheet with a pictogram on it is a
+ * derivative work», and that is not right — §3(b) attaches ShareAlike to **adapted
+ * material**, and an unmodified pictogram inside her worksheet makes a collection. The
+ * conclusion here is unchanged, because BY applies either way; the reasoning was
+ * wrong, and it was the reasoning that reached her screen (backlog G28).
  */
 
 /** What a set says about itself, when the set's own metadata carries it. */

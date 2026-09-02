@@ -41,6 +41,41 @@ export interface MatchOptions {
   names?: ReadonlySet<string>;
 }
 
+/**
+ * Full names → the normalised single words a lookup can actually find.
+ *
+ * ## Why this is a function and not two lines at the call site
+ *
+ * It **was** two lines at the call site, in `jobs/adapt.ts`:
+ * `new Set([...names.values()].map((n) => n.toLowerCase()))`. Wrong twice, and both
+ * ways had the same consequence — a child's name with a pictogram beside it, which is
+ * exactly what FR-1610 exists to prevent:
+ *
+ * 1. **Accents.** `matchWord` looks up `normalise(word)`, which folds them. «María»
+ *    is asked about as `maria`; the set held `maría`; the check missed. Half the names
+ *    in a Spanish classroom are accented.
+ * 2. **Whole names.** A stored name is «María Nebrera», and `matchWord` is asked about
+ *    one word at a time. Neither part was ever in the set, so even unaccented names
+ *    missed.
+ *
+ * Here, in `core`, because it is a pure string function and this is where it can be
+ * tested by the offline suite. It is given names by its caller and never learns one:
+ * the same arrangement `redact` has.
+ *
+ * Particles are dropped at two letters — «de», «la», «di». «la» in this set would
+ * strip a word from every sentence she writes.
+ */
+export function nameWords(fullNames: Iterable<string>): Set<string> {
+  const words = new Set<string>();
+  for (const full of fullNames) {
+    for (const piece of full.split(/[\s'\-]+/)) {
+      const key = normalise(piece);
+      if (key.length > 2) words.add(key);
+    }
+  }
+  return words;
+}
+
 export function matchWord(
   word: string, set: PictogramSet, opts: MatchOptions,
 ): Match {

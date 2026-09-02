@@ -65,7 +65,15 @@ export interface Applied {
  * `report-notes` is never learner-facing, and `scaffold` is exempt because a
  * pictogram on a worked example is decoration on a thing that is already support.
  */
-function inScope(b: Block, scope: PictoScope): boolean {
+/**
+ * Exported for `wordlist.ts`, so the words fetched are the words that get used.
+ *
+ * `pictogramInScope` and not `inScope`: `recipes/index.ts` already exports that name,
+ * and this project has now had `Verdict` three times and `Freshness` twice. The
+ * collision was caught by the barrel file at the moment of export rather than by a
+ * confusing import six weeks from now.
+ */
+export function pictogramInScope(b: Block, scope: PictoScope): boolean {
   if (b.classes.includes('report-notes')) return false;
   if (scope === 'all') return true;
   if (scope === 'instructions') return b.classes.includes('instruction');
@@ -107,7 +115,7 @@ export function applyPictograms(
     : null;
 
   for (const b of doc.blocks) {
-    if (!inScope(b, opts.scope)) continue;
+    if (!pictogramInScope(b, opts.scope)) continue;
 
     const words = new Set(
       (b.content.match(/\p{L}[\p{L}\p{M}'-]*/gu) ?? []).map((w) => w),

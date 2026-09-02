@@ -7,10 +7,11 @@ import { logger } from '../log.js';
  * ## Whose set this is
  *
  * Hers. ARASAAC's pictograms are the property of the Gobierno de Aragón, created
- * by Sergio Palao, under CC BY-NC-SA — incompatible with Apache-2.0 on
- * NonCommercial and with our CC BY-SA content on ShareAlike. So Rampa does not
- * bundle, redistribute or **download** them (FR-1601): she fetches the set under
- * terms she accepts directly, and this reads it from where she put it.
+ * by Sergio Palao, under CC BY-NC-SA — incompatible with Apache-2.0 on NonCommercial
+ * and with our CC BY-SA content on ShareAlike. So Rampa does not bundle or
+ * redistribute them (FR-1601, narrowed by `023` FR-2101). It **may** fetch them to
+ * her disk at her request once she has accepted the licence, which is `023` and is
+ * somebody else's file: this function still just reads a folder.
  *
  * The same shape as the API key (`009`): the relationship with the third party is
  * hers, Rampa is the thing that uses it, and we never stand between her and terms

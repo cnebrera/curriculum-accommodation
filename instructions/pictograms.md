@@ -10,6 +10,35 @@ last_checked: "2026-08-31"
 # de un razonamiento sobre fotocopias, no de una fotocopia.
 reviewed_by_teacher: false
 
+# De dónde se pueden traer pictogramas (023 T001, FR-2116, 018 FR-1604).
+#
+# Aquí y no en el código por dos razones. La primera es el Principio I: una URL que
+# cambia es una edición de Markdown, no una release. La segunda es que `018` FR-1604
+# exige que el juego de pictogramas sea sustituible, y una lista de proveedores en
+# el código es exactamente la dependencia que esa regla prohíbe.
+#
+# `attribution` es lo que la licencia obliga a poner en cada hoja. No es cortesía y
+# no se puede quitar: si se cae, la hoja infractora es la de la profesora.
+#
+# `words_per_fetch` acota una descarga. Si se alcanza, se dice — no se aplica en
+# silencio (la misma regla que 008 y 022).
+publishers:
+  - id: arasaac
+    label: ARASAAC
+    # Comprobado el 2026-09-02: pública, sin clave, sin registro.
+    search: "https://api.arasaac.org/v1/pictograms/{lang}/search/{word}"
+    image: "https://static.arasaac.org/pictograms/{id}/{id}_500.png"
+    site: "https://arasaac.org"
+    licence: CC BY-NC-SA 4.0
+    licence_url: "https://creativecommons.org/licenses/by-nc-sa/4.0/deed.es"
+    languages: [es, en, ca, gl, eu, fr, pt]
+    attribution:
+      author: Sergio Palao
+      owner: Gobierno de Aragón
+      source: "ARASAAC (https://arasaac.org)"
+
+words_per_fetch: 300
+
 # El tamaño mínimo al que se imprime un pictograma, en milímetros.
 #
 # Aquí y no en el código porque va a moverse con fotocopiadoras reales. A 12 mm y
@@ -94,8 +123,19 @@ pictogramas y, si hay exactamente uno, lo pone. Si hay varios, **no pone ninguno
 te dice cuáles había para que elijas tú. Un pictograma equivocado es peor que
 ninguno: el alumno lee el dibujo, tú lees el texto, y puede que no lo notes.
 
-**El programa no descarga nada.** El juego de pictogramas es tuyo, lo traes tú, y
-la licencia la aceptas tú directamente. Rampa lo lee de donde lo hayas puesto.
+**El programa descarga los pictogramas si tú se lo pides, y nunca por su cuenta.**
+Antes de la primera descarga te enseña la licencia y tienes que aceptarla: la
+relación con quien los publica es tuya, igual que la de tu clave de IA. Ni se
+descargan al abrir el programa, ni al adaptar una ficha, ni «de fondo».
+
+**Lo que sale de tu ordenador son palabras y nada más.** Una palabra por consulta.
+Nunca el nombre de un alumno, ni su código, ni su perfil, ni nada que identifique a
+tu ordenador. Los nombres que Rampa conoce se quitan de la lista antes de salir.
+
+**Y el programa no reparte pictogramas.** No vienen dentro de Rampa, no están en el
+instalador y no se copian de una profesora a otra desde aquí: viajan del servidor de
+quien los publica a tu disco. Si ya tienes una carpeta con un juego montado, sigue
+funcionando igual y sin internet.
 
 **La atribución no se puede quitar.** Cualquier hoja que lleve un pictograma lleva
 también quién lo hizo, de dónde sale y con qué licencia. Es una condición de la

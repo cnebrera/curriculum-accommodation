@@ -33,10 +33,11 @@
     "build": "npm run bundle:corpus && electron-vite build",
     "dist": "npm run icon && npm run build && electron-builder",
     "test:all": "vitest run",
-    "test:e2e": "npm run build && playwright test",
-    "test:a11y": "npm run build && playwright test a11y",
+    "test:e2e": "npm run build && RAMPA_HIDDEN=1 playwright test",
+    "test:e2e:visible": "npm run build && playwright test",
+    "test:a11y": "npm run build && RAMPA_HIDDEN=1 playwright test a11y",
     "shots": "npm run build && node scripts/screenshot.mjs",
-    "test:layout": "npm run build && playwright test layout",
+    "test:layout": "npm run build && RAMPA_HIDDEN=1 playwright test layout",
     "icon": "node scripts/make-icon.mjs"
   },
   "devDependencies": {

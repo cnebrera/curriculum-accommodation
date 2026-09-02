@@ -1,5 +1,7 @@
 import { safeStorage } from 'electron';
-import { redact, findProbableNames, loadLearner, loadJournal, VAULT } from '@rampa/core';
+import {
+  redact, findProbableNames, loadLearner, loadJournal, VAULT, nameWords,
+} from '@rampa/core';
 import { currentVault } from './vault.js';
 import { handle } from './wrap.js';
 
@@ -65,6 +67,32 @@ async function save(map: NameMap): Promise<void> {
 }
 
 export const knownNames = async (): Promise<Map<string, string>> => new Map(Object.entries(await load()));
+
+/**
+ * Her learners' names as **normalised single words** (`018` FR-1610, `023` FR-2109).
+ *
+ * ## The defect this closes
+ *
+ * `jobs/adapt.ts` built this set inline as
+ * `new Set([...names.values()].map((n) => n.toLowerCase()))`, and it was wrong twice:
+ *
+ * 1. **Accents.** `matchWord` looks up `normalise(word)`, which folds them — «María»
+ *    becomes `maria`. The set held `maría`. So the lookup missed, and **an accented
+ *    name got a pictogram**: FR-1610 says a name must never be matched, and half the
+ *    names in a Spanish classroom are accented.
+ * 2. **Full names.** A stored name is «María Nebrera» and `matchWord` is asked about
+ *    one word at a time, so neither «María» nor «Nebrera» was ever in the set — even
+ *    unaccented ones missed.
+ *
+ * Found on 2026-09-02 while writing `023`'s word list, which needed the same set for
+ * the sharper reason that its members would otherwise **leave her machine**. Ten of
+ * the eleven unread fields in backlog G25 were found by writing something down; this
+ * is the same shape.
+ *
+ * One function, so the two callers cannot disagree about what a name is.
+ */
+export const nameWordSet = async (): Promise<Set<string>> =>
+  nameWords((await knownNames()).values());
 
 /**
  * Words she has told us are not names (T090).

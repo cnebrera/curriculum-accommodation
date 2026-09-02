@@ -413,6 +413,64 @@ every moment should have a spec. What it added beyond the seams pass:
    journey sentence → T094). Handover *import* (004 US2) recorded as deliberately
    deferred rather than silently missing.
 
+## G31 · «One primary control per screen» has never been tested
+
+**Open**, small, and found by looking rather than by running anything.
+
+`013` FR-1105: «Exactly one control per screen MAY carry primary weight. Emphasis that
+is everywhere is emphasis nowhere.» It is enforced by nobody. Two greps confirm it: no
+test counts `.btn-primary` per screen, and the two places FR-1105 appears in the e2e
+suite are about something else — an action saying what is missing rather than going
+grey.
+
+`023` broke it within an hour of adding two buttons, and it was caught by a screenshot
+at 900px with `xlarge` text: «Traer los pictogramas» and «Guardar» both solid. Fixed
+there by making the section's strong button plain in `compact` mode.
+
+The test is easy to write — walk every screen the rail reaches and count
+`.btn-primary` — and the reason it has not been written is worth stating: it would
+probably fail on several existing screens, so writing it is a small piece of work
+followed by an unknown amount. That is a reason to do it deliberately, not a reason to
+keep relying on somebody noticing.
+
+Same shape as the `aria-pressed`-without-`.door-on` defect on 2026-09-01: a rule that
+lives only in a specification is a rule that holds until somebody is in a hurry.
+
+---
+
+## G30 · Bajar los pictogramas es fácil; elegir entre varios, todavía no
+
+**Open**, and it is the next thing.
+
+`023` made fetching pictograms one button. The first real fetch against ARASAAC —
+«casa», «perro», «multiplicar» — returned **26 pictograms for three words**.
+
+Every candidate is kept deliberately (`023` FR-2113), because `018` FR-1609 says an
+ambiguous word gets **no** pictogram and gets reported: the wrong pictogram is worse
+than none, since the child reads the picture, she reads the text, and she may never
+notice. That reasoning is still right.
+
+But the consequence is that a teacher can press the button, see «he traído 3 palabras»,
+and get a sheet with no pictograms on it — with nothing connecting the two facts.
+
+**What `023` did about it**: the fetch now says so, by name, before it lists anything
+else — «Ojo: 2 palabras tienen varios dibujos posibles («casa», «perro»). Hasta que
+elijas cuál, no pongo ninguno.»
+
+**What is still missing**: the screen where she chooses. `018` FR-1612 gives her the
+override and the data model holds it (`decision.overrides`), but there is nowhere to
+see the four candidates for «casa» side by side and pick one. Until there is, the
+override is a field only a developer can set — the twelfth unread field, arriving from
+the other direction.
+
+**Not a defect `023` introduced.** A folder assembled by hand from ARASAAC's own site
+behaves identically, and `018` shipped that way in August. What `023` changed is that
+the gap is now easy to reach, which is exactly when a latent gap starts costing
+somebody an afternoon. That is an argument for building the picker, not for having
+left the download out.
+
+---
+
 ## G29 · Rampa invented a price, and quoted it in euros — *FIXED, TWO ITEMS OPEN*
 
 Carlos, reading the badge in the foot of the rail: «¿qué coño es eso de este mes gratis?
@@ -467,7 +525,31 @@ project refuses to invent an unobserved axis, an unverifiable exercise and a cri
 cannot source; the cost of a call is the same kind of fact, and it took a user asking
 «¿gastado de qué?» to notice that one number had been exempted.
 
-## G28 · Rampa told a teacher more than the licence says — *TEXT CORRECTED, TWO ITEMS OPEN*
+## G28 · Rampa told a teacher more than the licence says — *TEXT CORRECTED, THREE ITEMS OPEN*
+
+### Added 2026-09-02: the download itself needs the same review
+
+`023` reads ARASAAC's terms as permitting Rampa to fetch pictograms at her request:
+a public keyless API published for applications, conditions requiring attribution and
+non-commercial use rather than prohibiting software from fetching, and a copy that
+travels from their server to her disk rather than through a release of ours.
+
+**That reading is mine and I am not a lawyer.** It is also the reading that reversed a
+requirement I had written the other way round six days earlier, which is a reason for
+more scrutiny rather than less. What should be confirmed by somebody qualified, before
+a release rather than before a branch:
+
+1. That a fetch on her instruction, after an on-screen acceptance, is not distribution
+   by us.
+2. That a free, open-source Apache-2.0 application whose *output* she may not sell is
+   compatible with the NonCommercial term — including the case where somebody packages
+   Rampa commercially and the pictograms she already fetched are on her disk.
+3. That the three sentences now on the acceptance screen are accurate, since they are
+   the basis on which she agrees.
+
+The code holds the line either way: `023` FR-2101 keeps bundling and redistributing
+forbidden, and `no-pictograms-shipped.test.ts` now asserts it instead of promising it.
+
 
 Carlos, reading the pictogram screen: «esto qué mierda es? no puedo decirle al usuario
 que se tiene que bajar algo… la herramienta va a ser gratis, podemos usar eso o no?»

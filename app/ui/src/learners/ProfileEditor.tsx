@@ -218,14 +218,21 @@ export function ProfileEditor({ code, onSaved }: { code: string | null; onSaved:
               «En todo» es para quien lee con pictogramas como vía principal. Es el
               caso menos frecuente.
             </p>
-            {/*
-              The set, at the moment it becomes necessary. A settings page she has
-              to find first would mean turning the family on and getting nothing,
-              with no idea why.
-            */}
-            <PictogramSetSection compact />
           </div>
         ) : null}
+        {/*
+          The set, at the moment it becomes necessary. A settings page she has to
+          find first would mean turning the family on and getting nothing, with no
+          idea why.
+
+          **Outside the `.field`, and that is the point** (023 T024). It was inside
+          it, and `.field` carries `max-width: var(--measure-field)` — 480px, which is
+          right for a `select` and wrong for a licence, a box she types words into and
+          a panel of results. Measured at 1366px wide: the block sat in 480px with a
+          third of the screen empty beside it. It is not part of the «Dónde» control,
+          so it is not inside its field.
+        */}
+        {pictos.enabled ? <PictogramSetSection compact /> : null}
       </fieldset>
 
       <div className="row">

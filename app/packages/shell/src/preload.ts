@@ -91,9 +91,15 @@ const api = {
     nameRisk: () => invoke('learners:nameRisk'),
   },
   /**
-   * Her pictogram set (`018`). **There is no `download`**, deliberately: the
-   * relationship with the licence is hers, and a download button makes us the
-   * distributor of CC BY-NC-SA content inside an Apache-2.0 application.
+   * Her pictogram set (`018`, `023`).
+   *
+   * `fetch` exists as of `023`, and `acceptLicence` is why it is allowed to: nothing
+   * is requested from a publisher until she has accepted its licence, and the check
+   * lives in the main process (`ipc/pictograms.ts`) rather than in whatever calls
+   * this — a gate in a caller is a gate the second caller walks past.
+   *
+   * What Rampa still does not do is **bundle or redistribute** them (FR-2101). The
+   * bytes travel from the publisher's server to her disk.
    */
   pictograms: {
     current: () => invoke('pictograms:current'),
@@ -102,6 +108,14 @@ const api = {
     inspect: (root: string) => invoke('pictograms:inspect', root),
     use: (root: string) => invoke('pictograms:use', root),
     images: (ids: string[]) => invoke('pictograms:images', ids),
+    /** Who they can come from, and whether she has accepted (FR-2104/2105). */
+    publishers: () => invoke('pictograms:publishers'),
+    acceptLicence: (publisherId: string) =>
+      invoke('pictograms:acceptLicence', publisherId),
+    withdrawLicence: () => invoke('pictograms:withdrawLicence'),
+    /** Words in, pictograms on disk. One word per request, names removed. */
+    fetch: (args: { words: string[]; language?: string; publisherId?: string }) =>
+      invoke('pictograms:fetch', args),
   },
   /**
    * The adaptación curricular (`017`).

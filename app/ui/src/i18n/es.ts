@@ -217,6 +217,15 @@ export const es = {
      */
     'guide-no-work': 'Todavía no he adaptado nada para este alumno, así que no tengo con qué redactar la ACNS. Adapta algo primero y vuelve.',
     'guide-no-evaluation': 'Sin evaluación psicopedagógica una adaptación significativa no puede seguir adelante: es nula de procedimiento. Si existe y no lo he visto, dímelo.',
+    /*
+     * `pictogram-language` has **no** entry here, deliberately.
+     *
+     * Its message names the publisher and the language — «ARASAAC no tiene
+     * pictogramas en este idioma (eu)» — and a template here would beat it, which is
+     * the inversion this project fixed twice on 2026-09-01 in both directions.
+     */
+    'pictogram-not-accepted': 'Todavía no has aceptado la licencia de los pictogramas, así que no he pedido ninguno. La tienes justo arriba.',
+    'pictogram-no-publisher': 'No tengo de dónde traer pictogramas. Puedes seguir usando una carpeta que ya tengas.',
     /* Reading the material (008). Each one says what she does next. */
     'ingest-empty': 'No has añadido ningún fichero.',
     /*

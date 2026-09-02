@@ -11,7 +11,7 @@ import {
 } from '@rampa/core';
 import { sendRedacted } from '@rampa/providers';
 import { currentVault } from '../ipc/vault.js';
-import { knownNames, unknownNamesIn } from '../ipc/names.js';
+import { nameWordSet, knownNames, unknownNamesIn } from '../ipc/names.js';
 import { activeProvider } from '../ipc/keys.js';
 import { allRecipes, assertCorpus, loadInstruction, findYearInCorpus, materialKind } from '../corpus/index.js';
 import { currentPictogramSet } from '../pictograms/access.js';
@@ -448,11 +448,17 @@ async function applyPictogramsIfSheSaidSo(
     scope: (decision.scope as 'all' | 'instructions' | 'vocabulary') ?? 'vocabulary',
     ...(decision.overrides ? { overrides: decision.overrides } : {}),
     /*
-     * The names she knows, normalised — so «Lucía» never gets a pictogram
-     * (FR-1610). `core` never learns a learner's name, so the set of them is
+     * The names she knows, as normalised single words — so «María» never gets a
+     * pictogram (FR-1610). `core` never learns a learner's name, so the set is
      * assembled here and passed in as words.
+     *
+     * `nameWordSet` and not `.map(n => n.toLowerCase())`, which is what this line
+     * used to be and was wrong twice: it kept accents that `matchWord`'s lookup
+     * folds away, and it kept «María Nebrera» whole where the lookup asks about one
+     * word at a time. Both misses had the same effect — a child's name with a
+     * pictogram beside it.
      */
-    names: new Set([...(await knownNames()).values()].map((n) => n.toLowerCase())),
+    names: await nameWordSet(),
     isExam: kind === 'exam',
   });
 

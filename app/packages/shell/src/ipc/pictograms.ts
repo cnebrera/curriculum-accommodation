@@ -1,6 +1,9 @@
 import { app, type BrowserWindow, dialog } from 'electron';
 import { basename } from 'node:path';
-import { readSet, pictogramVaultNote } from '@rampa/core';
+import { readSet } from '@rampa/core';
+import {
+  publisherState, acceptLicence, withdrawLicence, bringPictograms, configureSet,
+} from '../pictograms/bring.js';
 import { handle } from './wrap.js';
 import { currentVault } from './vault.js';
 import { loadSettings, saveSettings } from './vault-settings.js';
@@ -12,18 +15,26 @@ import {
 /**
  * Her pictogram set (018 T014-T016).
  *
- * ## What this file does not do
+ * ## What this file does, and the line it holds (023)
  *
- * **It does not fetch anything.** There is no download, no mirror, no "get it for
- * me" behind a confirmation. ARASAAC's pictograms are CC BY-NC-SA and Rampa is
- * Apache-2.0: bundling or distributing them would hand every downstream user a
- * restriction the licence says they do not have, and a worksheet with one embedded
- * is a derivative work — so **her** sheet would become BY-NC-SA, a condition she did
- * not choose and we imposed silently.
+ * It **fetches, at her request, after she has accepted the licence** — and it never
+ * bundles or redistributes. `018` FR-1601 forbade both and `023` FR-2101 narrows it
+ * to the half that is actually true: shipping CC BY-NC-SA files inside an Apache-2.0
+ * application would hand every downstream user a restriction our licence says they do
+ * not have. A copy travelling from ARASAAC's server to her disk on her instruction is
+ * what every browser ever written does.
  *
  * The same shape as the API key (`009`): the relationship with the third party is
  * hers, Rampa is the thing that uses it, and we never stand between her and terms
  * she should read.
+ *
+ * ## The claim that used to be here and was wrong
+ *
+ * «A worksheet with a pictogram embedded is a derivative work, so **her** sheet
+ * becomes BY-NC-SA.» It is not. Under CC BY-NC-SA 4.0 §3(b) ShareAlike attaches to
+ * **Adapted Material** — a modified pictogram — and a worksheet that includes one
+ * unmodified is a collection. Corrected on screen under backlog G28 and left standing
+ * in the code until now.
  *
  * ## Why the reading happens here
  *
@@ -55,7 +66,24 @@ export function registerPictogramIpc(getWindow: () => BrowserWindow | null): voi
     return { ...s.pictogramSet, missing: found?.missing ?? true };
   });
 
-  /** She picks a folder. **No download button exists** (FR-1601). */
+  /** Who they can come from, and whether she has accepted (FR-2104/2105). */
+  handle('pictograms:publishers', () => publisherState());
+
+  /** **The gate.** Nothing is fetched until this is recorded (FR-2104). */
+  handle('pictograms:acceptLicence', (publisherId: string) => acceptLicence(publisherId));
+
+  /** Stops further fetching, deletes nothing already hers (FR-2106). */
+  handle('pictograms:withdrawLicence', () => withdrawLicence());
+
+  /** **The button** (FR-2107/2111). The guards are in `bringPictograms`. */
+  handle('pictograms:fetch', (args: { words: string[]; language?: string }) =>
+    bringPictograms({
+      ...args,
+      onProgress: (stage, detail) =>
+        getWindow()?.webContents.send('job:progress', { stage, detail }),
+    }));
+
+  /** She picks a folder — still, and on purpose (FR-2103). */
   handle('pictograms:choose', async () => {
     const win = getWindow();
     const result = await (win
@@ -88,27 +116,7 @@ export function registerPictogramIpc(getWindow: () => BrowserWindow | null): voi
   handle('pictograms:use', async (root: string) => {
     const reading = await readSet(root, fsReader);
     if (!reading.set) return { ok: false, problems: reading.problems };
-
-    const dir = pictogramSettingsDir();
-    const settings = await loadSettings(dir);
-    const configuredOn = new Date().toISOString().slice(0, 10);
-    await saveSettings(dir, {
-      ...settings,
-      pictogramSet: {
-        root,
-        ...(reading.set.licence ? { licence: reading.set.licence } : {}),
-        summary: reading.summary,
-        configuredOn,
-      },
-    });
-
-    await currentVault().writeRaw('pictogramas.md', pictogramVaultNote({
-      folder: basename(root),
-      summary: reading.summary,
-      licence: reading.set.licence,
-      configuredOn,
-    }));
-
+    await configureSet(root, reading);
     return { ok: true, summary: reading.summary, problems: reading.problems };
   });
 

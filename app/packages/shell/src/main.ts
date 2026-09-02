@@ -32,12 +32,41 @@ const getWindow = () => win;
  * window is still real, still painted and still measurable — `showInactive()`
  * rather than `show: false`, because a hidden window's layout is not reliably the
  * layout a teacher gets, and the layout suite exists to check exactly that.
+ *
+ * ## And `RAMPA_HIDDEN=1`, because inactive was not enough
+ *
+ * Carlos, while a suite was running: «lanza la app y no puedo usar el puto ordenador
+ * porque no para de arrancar y parar la aplicación… es que así no puedo currar
+ * mientras tú testeas».
+ *
+ * `showInactive()` does not take the keyboard, and that was the problem it was written
+ * to solve. It still puts a window on the screen — a hundred of them over a run,
+ * appearing and vanishing on top of whatever he is doing. Not stealing focus is not
+ * the same as staying out of the way.
+ *
+ * `RAMPA_HIDDEN=1` never shows the window at all. Playwright drives it over CDP, which
+ * does not care whether a window is on screen, so every spec that clicks and asserts
+ * text works exactly the same.
+ *
+ * ## Including the layout suite, which is the part I expected to have to exclude
+ *
+ * The paragraph above says a hidden window's layout «is not reliably the layout a
+ * teacher gets», so `layout.spec.ts` and `a11y.spec.ts` were going to keep running
+ * visible. **Checked instead of assumed**: all fifteen of them pass hidden, including
+ * the width sweep from 560px up and the largest text scale. Electron keeps compositing
+ * an unshown window, and CDP reads the same metrics either way.
+ *
+ * So every script is quiet, and `test:e2e:visible` exists for the day one of them
+ * disagrees — at which point the assumption gets tested rather than believed.
+ *
+ * `npm run shots` stays visible on purpose: its whole job is a picture for a human.
  */
 const underTest = process.env['RAMPA_TEST'] === '1';
+const hidden = process.env['RAMPA_HIDDEN'] === '1';
 
 function createWindow(): void {
   win = new BrowserWindow({
-    show: !underTest,
+    show: !underTest && !hidden,
     width: 1180, height: 820,
     /*
      * The floor was 900×640, which is not a size chosen for a teacher — it is
@@ -81,8 +110,9 @@ function createWindow(): void {
   // External links open in the browser, never inside the app.
   win.webContents.setWindowOpenHandler(({ url }) => { void shell.openExternal(url); return { action: 'deny' }; });
 
-  if (underTest) {
-    win.showInactive();
+  if (underTest || hidden) {
+    // `hidden` means never on screen at all: no `show`, no `showInactive`.
+    if (!hidden) win.showInactive();
     // macOS keeps a dock icon bouncing for each launch otherwise.
     if (process.platform === 'darwin') app.dock?.hide();
   }
