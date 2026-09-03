@@ -15,7 +15,24 @@ import { ScopeQuestion } from './ScopeQuestion.js';
  * decisions rather than re-reading prose, which is what makes the time saving
  * real — and it is where the errors that matter get caught.
  */
-export function ReviewScreen({ jobId, learner, recipes }: { jobId: string; learner: string; recipes?: string[] }) {
+export function ReviewScreen({ jobId, learner, recipes, back }: {
+  jobId: string;
+  learner: string;
+  recipes?: string[];
+  /**
+   * The way out (FLU-01, P11).
+   *
+   * There was none. This screen had no `onBack` and no `onDone`, so the only exit was
+   * the rail — and the state that put her here was never cleared, which left the
+   * adapt screen rendering *nothing* for the rest of the session. Sheets 2..N of a
+   * batch could not be signed at all: exactly the scenario `020` US2 describes as
+   * «she signs them one at a time».
+   *
+   * The label comes from the caller because the destination does: the batch she came
+   * from, or the record she opened this out of.
+   */
+  back?: { label: string; go: () => void };
+}) {
   const { t: es } = useStrings();
   const [reportData, setReportData] = useState<{
     decisions: Decision[]; notDone: string[];
@@ -53,6 +70,17 @@ export function ReviewScreen({ jobId, learner, recipes }: { jobId: string; learn
    */
   const names = useNames();
   const who = (names.state === 'ready' ? names.value[learner] : undefined) ?? learner;
+  /**
+   * What made this sheet (`005` FR-520's neighbour, and `ScopeQuestion`'s input).
+   *
+   * A review opened from the record has no recipes to hand — the run happened last
+   * month and nothing carried them. They are in the report this screen loads anyway,
+   * one per decision, so they are derived rather than asked for. Derived second: a
+   * caller that knows stays authoritative.
+   */
+  const applied = recipes?.length
+    ? recipes
+    : [...new Set((reportData?.decisions ?? []).map((d) => d.recipe).filter(Boolean))];
   const revising = reviseJob.busy;
   const error = renderJob.error?.message ?? pdf.error?.message
     ?? reviseJob.error?.message ?? signOff.error?.message ?? null;
@@ -118,6 +146,18 @@ export function ReviewScreen({ jobId, learner, recipes }: { jobId: string; learn
     <Page title={`${es.review.title} · ${who}${revision > 1 ? ` · versión ${revision}` : ''}`}
           banner={<DraftMark signedOff={signedOff} />}>
 
+      {/*
+        Above everything, and a ghost rather than a primary: the primary control on this
+        screen is the signature (`013` FR-1101). Same shape as the record's own «← Volver
+        a mis alumnos», for the same reason.
+      */}
+      {back ? (
+        <button className="btn btn-ghost btn-sm" style={{ alignSelf: 'flex-start' }}
+                onClick={back.go}>
+          {back.label}
+        </button>
+      ) : null}
+
       {reportData
         ? <ReportView {...reportData} />
         : <Callout intent="info">Cargando el informe…</Callout>}
@@ -146,7 +186,7 @@ export function ReviewScreen({ jobId, learner, recipes }: { jobId: string; learn
         </details>
       ) : null}
 
-      <ScopeQuestion learner={learner} recipes={recipes} onCaptured={(c) => setCorrections((prev) => [...prev, c])} />
+      <ScopeQuestion learner={learner} recipes={applied} onCaptured={(c) => setCorrections((prev) => [...prev, c])} />
 
       {corrections.length ? (
         <div className="card stack">

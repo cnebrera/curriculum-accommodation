@@ -111,6 +111,48 @@ export type LegacyView =
   | 'notes'
   | 'guide' | 'guide-ask' | 'acns' | 'acs';
 
+/**
+ * What a legacy screen is about, when it is about something (FLU-01/FLU-02, P11/P14).
+ *
+ * ## Why these are here and not four `useState`s in `App.tsx`
+ *
+ * They were. `review`, `ingested` and `reconnect` were written by a handler and
+ * **cleared by nobody**, and the review found what that costs: after reviewing one
+ * sheet the adapt screen rendered nothing for the rest of the session, so sheets
+ * 2..N of a batch could never be signed; a second adaptation pre-loaded the first
+ * one's material and could be paid for against the wrong document; and «cambiar de
+ * servicio» held Configuración hostage with no way out.
+ *
+ * All three are the same defect — session state with no lifecycle — and the fix is
+ * the one this file already argued for: put it where navigation decides it. A
+ * `go({ view: 'adapt' })` that carries no job **has** no job, so there is nothing to
+ * remember to clear. That is the difference between a rule and a habit.
+ */
+export interface LegacyContext {
+  /** The job this screen is about. Absent means new work, never «the last one». */
+  job?: string;
+  /**
+   * The sheet under review: whose it is, and what made it (`005` FR-513).
+   *
+   * The recipes are optional because a review reached from the record has none to
+   * hand — the screen derives them from the report it loads anyway.
+   */
+  sheet?: { learner: string; recipes?: string[] };
+  /**
+   * This job has already run, so «adaptar» shows its batch — derived from the vault
+   * — rather than the verification of new material (FLU-01, P11).
+   */
+  ran?: boolean;
+  /**
+   * Where «volver» goes from here (FLU-01).
+   *
+   * `batch` is the run she came from; `learner` is the section she came from, for a
+   * review opened out of the record. Absent means the screen offers no way back,
+   * which is what it did before and what P11 was answered against.
+   */
+  back?: { of: 'batch' } | { of: 'learner'; code: string; tab: LearnerTab };
+}
+
 export type Route =
   | { at: 'caseload' }
   /**
@@ -137,8 +179,23 @@ export type Route =
        * it was for, and «Mis alumnos» did nothing from inside a profile.
        */
       from?: { code: string; tab: LearnerTab };
+      /**
+       * A service she is in the middle of reconnecting (`009` US5, FLU-03).
+       *
+       * Here rather than beside the route, and that is the whole fix: it used to be a
+       * `useState` in `App.tsx` that cleared only on a **successful** reconnection, so
+       * a teacher who pressed «cambiar de servicio» out of curiosity and left by the
+       * rail found the paste-a-key wizard instead of every section of Configuración —
+       * including the pictograms her learner's profile had just pointed her at (`025`
+       * SC-2304).
+       *
+       * Unlike `from` it is deliberately **not** carried between sections: `from`
+       * answers «where do I go back to», which does not change when she looks at
+       * another section; this answers «what am I in the middle of», which does.
+       */
+      reconnecting?: string;
     }
-  | { at: 'legacy'; view: LegacyView }
+  | ({ at: 'legacy'; view: LegacyView } & LegacyContext)
   | {
       at: 'learner';
       /** The code. **Never** her name for him — see the note on `RouteAction`. */
@@ -153,20 +210,24 @@ export type Route =
 
 export type RouteAction =
   | { type: 'caseload' }
-  | { type: 'settings'; pane?: SettingsPane; from?: { code: string; tab: LearnerTab } }
+  | {
+      type: 'settings'; pane?: SettingsPane;
+      from?: { code: string; tab: LearnerTab };
+      reconnecting?: string;
+    }
   /**
    * Open a learner. Takes a **code and nothing else**: a name in navigation state is a
    * name a future «restore where I was» could try to persist, and `003` says a
    * learner's name never reaches a file. The heading resolves it for display.
    */
-  | { type: 'learner/open'; code: string }
+  | { type: 'learner/open'; code: string; tab?: LearnerTab }
   | { type: 'learner/tab'; tab: LearnerTab }
   | { type: 'flow/start'; of: 'adapt' | 'compose' }
   | { type: 'flow/step'; step: Flow['step'] }
   | { type: 'flow/job'; job: string }
   | { type: 'flow/also'; codes: readonly string[] }
   | { type: 'flow/leave' }
-  | { type: 'legacy'; view: LegacyView }
+  | ({ type: 'legacy'; view: LegacyView } & LegacyContext)
   | { type: 'learner/new' };
 
 export const startRoute = (): Route => ({ at: 'caseload' });
@@ -199,6 +260,13 @@ export function reduceRoute(route: Route, action: RouteAction): Route {
          */
         ...(action.from ? { from: action.from }
           : route.at === 'settings' && route.from ? { from: route.from } : {}),
+        /*
+         * And `reconnecting` is **not** carried (FLU-03). Only the action that asks for
+         * it produces it, so moving to any other section — or to this one from the
+         * profile's pictogram pointer — leaves the wizard behind by construction. There
+         * is no `setReconnect(null)` to forget.
+         */
+        ...(action.reconnecting ? { reconnecting: action.reconnecting } : {}),
       };
 
     /*
@@ -208,7 +276,12 @@ export function reduceRoute(route: Route, action: RouteAction): Route {
      * worked.
      */
     case 'learner/open':
-      return { at: 'learner', code: action.code, tab: 'who' };
+      /*
+       * `tab` because coming back from a review opened out of the record must land on
+       * the record and not on «Quién es» — the same argument `from` makes for
+       * Configuración. Defaults to «Quién es», which is where picking a learner lands.
+       */
+      return { at: 'learner', code: action.code, tab: action.tab ?? 'who' };
 
     case 'learner/tab': {
       if (route.at !== 'learner') return route;
@@ -249,7 +322,19 @@ export function reduceRoute(route: Route, action: RouteAction): Route {
     }
 
     case 'legacy':
-      return { at: 'legacy', view: action.view };
+      /*
+       * Everything the action does not carry is **gone**, and that is the point (P11,
+       * P14). The three defects this replaced were all «written by a handler, cleared by
+       * nobody»; here the absence of a job in the action is the absence of a job in the
+       * route, so a second adaptation cannot inherit the first one's material.
+       */
+      return {
+        at: 'legacy', view: action.view,
+        ...(action.job ? { job: action.job } : {}),
+        ...(action.sheet ? { sheet: action.sheet } : {}),
+        ...(action.ran ? { ran: action.ran } : {}),
+        ...(action.back ? { back: action.back } : {}),
+      };
 
     case 'learner/new':
       return { at: 'newLearner' };

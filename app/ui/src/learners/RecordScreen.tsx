@@ -36,11 +36,22 @@ function human(iso: string): string {
   return d && m && y ? `${d}/${m}/${y}` : (iso || 'sin fecha');
 }
 
-function Entry({ entry, onOpen, onReuse }: {
+function Entry({ entry, onOpen, onReuse, onReview }: {
   entry: RecordEntry;
   onOpen: (path: string) => void;
   /** «Hazlo otra vez para otro alumno» (016 T018, FR-1409). */
   onReuse?: (jobId: string, kind: string) => void;
+  /**
+   * «Revisar y firmar», for any draft still waiting (P11, FLU-01).
+   *
+   * Carlos's answer to P11 in two halves, and this is the durable one: pending-to-sign
+   * is **derived from the vault** — an adapted sheet whose front matter carries no
+   * signature — so it survives closing the application, and the row that says «Sin
+   * firmar» is the row that offers to fix it. Before this, the only door to the review
+   * was a run that had just finished, which meant a batch interrupted at sheet one
+   * could never be completed.
+   */
+  onReview?: (jobId: string, learner: string) => void;
 }) {
   const gone = (path: string): boolean => entry.missing.includes(path);
   /* Pulled out of the JSX because a closure loses the narrowing on a
@@ -95,6 +106,19 @@ function Entry({ entry, onOpen, onReuse }: {
       ) : null}
 
       <div className="row gap2" style={{ flexWrap: 'wrap' }}>
+        {/*
+          First in the row, because on an unsigned sheet it is the thing she came for.
+          Not `btn-primary`: a list of eight rows would then hold eight primary
+          controls, and `013` FR-1101 says one per screen — the «Sin firmar» badge
+          above is what marks which rows are waiting.
+        */}
+        {onReview && entry.documents.adapted && !gone(entry.documents.adapted) ? (
+          <button className="btn btn-sm"
+                  onClick={() => onReview(entry.jobId, entry.learner)}>
+            {entry.signedOff ? 'Verla otra vez' : 'Revisar y firmar'}
+          </button>
+        ) : null}
+
         {entry.documents.adapted ? (
           <button className="btn btn-sm" disabled={gone(entry.documents.adapted)}
                   onClick={() => onOpen(entry.documents.adapted!)}>
@@ -173,7 +197,7 @@ function Entry({ entry, onOpen, onReuse }: {
   );
 }
 
-export function RecordScreen({ code, name, onBack, onReuse }: {
+export function RecordScreen({ code, name, onBack, onReuse, onReview }: {
   code: string;
   name?: string;
   /**
@@ -190,6 +214,13 @@ export function RecordScreen({ code, name, onBack, onReuse }: {
    * does nothing.
    */
   onReuse?: (jobId: string, kind: string) => void;
+  /**
+   * Into the review of one sheet (P11).
+   *
+   * Optional for the same reason `onReuse` is: inside the handover flow nothing can
+   * route out of this screen, and a button that does nothing is worse than an absence.
+   */
+  onReview?: (jobId: string, learner: string) => void;
 }) {
   const record = useRecord(code);
   const open = useOpenInVault();
@@ -222,7 +253,8 @@ export function RecordScreen({ code, name, onBack, onReuse }: {
                   {entries.filter((e) => e.schoolYear === year).map((e) => (
                     <Entry key={`${e.jobId}-${e.learner}`} entry={e}
                            onOpen={(path) => void open.run(path)}
-                           {...(onReuse ? { onReuse } : {})} />
+                           {...(onReuse ? { onReuse } : {})}
+                           {...(onReview ? { onReview } : {})} />
                   ))}
                 </Section>
               ))}

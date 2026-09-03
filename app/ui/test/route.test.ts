@@ -233,3 +233,125 @@ describe('Configuración', () => {
     expect([...settingsPanes].sort()).toEqual([...panes].sort());
   });
 });
+
+/**
+ * Session state has a lifecycle, and the lifecycle is the navigation (P11/P14).
+ *
+ * `review`, `ingested` and `reconnect` were four `useState`s in `App.tsx` that a
+ * handler wrote and **nobody cleared**. What that cost, from the review:
+ *
+ * - after reviewing one sheet the adapt screen rendered nothing for the rest of the
+ *   session, so sheets 2..N of a batch could never be signed (FLU-01);
+ * - the second adaptation of a session pre-loaded the first one's material and could
+ *   be paid for against the wrong document, silently (FLU-02);
+ * - «cambiar de servicio» held every section of Configuración hostage (FLU-03).
+ *
+ * All three are one defect. The fix is that the value lives here, so *not carrying
+ * it* is what clears it — there is no `setX(null)` anybody can forget.
+ */
+describe('what a screen is about is carried, and therefore cleared', () => {
+  it('goes to «adaptar» with no job at all, so no second run inherits the first', () => {
+    // FLU-02: the exact defect. She adapts a photo, then comes back for new material
+    // and lands on the verification of the old one — «está bien leído, sigue» and she
+    // has paid to adapt the wrong document for the wrong child.
+    const after = reduceRoute(
+      { at: 'legacy', view: 'review', job: 'job-1', sheet: { learner: 'E38' } },
+      { type: 'legacy', view: 'adapt' },
+    );
+    expect(after).toEqual({ at: 'legacy', view: 'adapt' });
+    expect(after).not.toHaveProperty('job');
+    expect(after).not.toHaveProperty('sheet');
+  });
+
+  it('carries the job when the navigation is about one', () => {
+    expect(reduceRoute(startRoute(), { type: 'legacy', view: 'verify', job: 'job-7' }))
+      .toEqual({ at: 'legacy', view: 'verify', job: 'job-7' });
+  });
+
+  it('carries whose sheet it is, and where «volver» goes (FLU-01)', () => {
+    const at = reduceRoute(
+      { at: 'legacy', view: 'adapt', job: 'job-7' },
+      {
+        type: 'legacy', view: 'review',
+        job: 'job-7', sheet: { learner: 'E38', recipes: ['one-task-per-page'] },
+        back: { of: 'batch' },
+      },
+    );
+    expect(at).toEqual({
+      at: 'legacy', view: 'review', job: 'job-7',
+      sheet: { learner: 'E38', recipes: ['one-task-per-page'] },
+      back: { of: 'batch' },
+    });
+  });
+
+  it('comes back to the batch with the job and the flag that says it already ran', () => {
+    /*
+     * `ran` is what tells the adapt screen to re-derive the batch from the vault
+     * instead of offering to verify material she has already adapted. Without it the
+     * way back from a review would land her on «comprueba que lo he leído bien» for a
+     * job that is finished.
+     */
+    const at = reduceRoute(
+      { at: 'legacy', view: 'review', job: 'job-7', sheet: { learner: 'E38' }, back: { of: 'batch' } },
+      { type: 'legacy', view: 'adapt', job: 'job-7', ran: true },
+    );
+    expect(at).toEqual({ at: 'legacy', view: 'adapt', job: 'job-7', ran: true });
+  });
+
+  it('can send her back into the learner she opened the sheet out of', () => {
+    // A review reached from the record returns to the record, not to «Quién es» —
+    // which is what `learner/open` used to be able to say and now can.
+    const at = reduceRoute(startRoute(), { type: 'learner/open', code: 'E38', tab: 'made' });
+    expect(at).toEqual({ at: 'learner', code: 'E38', tab: 'made' });
+  });
+
+  it('still lands on «Quién es» when no section is asked for', () => {
+    expect(reduceRoute(startRoute(), { type: 'learner/open', code: 'E38' }))
+      .toEqual({ at: 'learner', code: 'E38', tab: 'who' });
+  });
+
+  it('carries no learner name into the review, only a code (003)', () => {
+    const at = reduceRoute(startRoute(), {
+      type: 'legacy', view: 'review', job: 'job-7', sheet: { learner: 'E38' },
+    });
+    expect(JSON.stringify(at)).toContain('E38');
+    expect(JSON.stringify(at)).not.toMatch(/Luc[ií]a|Mateo/);
+  });
+});
+
+describe('a reconnection she started is something she is in the middle of (FLU-03)', () => {
+  it('is left behind by moving to any other section', () => {
+    /*
+     * The defect, exactly: she pressed «cambiar de servicio», thought better of it and
+     * left by the rail. The wizard stayed armed, so the next time she entered
+     * Configuración — including following «Traer los pictogramas →» from a learner's
+     * profile — she got the paste-a-key box instead (`025` SC-2304).
+     */
+    const armed = reduceRoute(startRoute(), {
+      type: 'settings', pane: 'service', reconnecting: 'anthropic',
+    });
+    expect(armed).toEqual({ at: 'settings', pane: 'service', reconnecting: 'anthropic' });
+
+    const away = reduceRoute(armed, { type: 'settings', pane: 'pictograms' });
+    expect(away).not.toHaveProperty('reconnecting');
+  });
+
+  it('is left behind by leaving Configuración altogether', () => {
+    const armed = reduceRoute(startRoute(), {
+      type: 'settings', pane: 'service', reconnecting: 'anthropic',
+    });
+    expect(reduceRoute(armed, { type: 'caseload' })).toEqual({ at: 'caseload' });
+  });
+
+  it('does not take the way back with it', () => {
+    // `from` answers «where do I go back to» and survives a change of section;
+    // `reconnecting` answers «what am I in the middle of» and does not. Two different
+    // questions, and the test says which is which.
+    const from = { code: 'K42', tab: 'who' as const };
+    let at = reduceRoute(startRoute(), { type: 'settings', pane: 'pictograms', from });
+    at = reduceRoute(at, { type: 'settings', pane: 'service', reconnecting: 'anthropic' });
+    expect(at).toEqual({ at: 'settings', pane: 'service', from, reconnecting: 'anthropic' });
+    at = reduceRoute(at, { type: 'settings', pane: 'pictograms' });
+    expect(at).toEqual({ at: 'settings', pane: 'pictograms', from });
+  });
+});

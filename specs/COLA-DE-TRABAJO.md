@@ -14,12 +14,19 @@ Regla de trabajo heredada de la sesión: una suite de tests cada vez, esperándo
 
 Sin spec nueva: son defectos contra specs vigentes, con decisión tomada. Cada uno con su test.
 
-- [ ] **0.1 · Ciclo de vida del estado de sesión de App.tsx** (P11, P14; FLU-01/03/04/05, exec-tema 2).
+- [x] **0.1 · Ciclo de vida del estado de sesión de App.tsx** (P11, P14; FLU-01/03/04/05, exec-tema 2).
       `review`, `ingested`, `intent`, `reconnect`: definir cuándo se limpia cada uno.
       Incluye: «volver» desde ReviewScreen; pendientes-de-firma derivados del vault (no estado
       local) + «revisar y firmar» desde el expediente; `ingested` no precarga jobs viejos;
       `reconnect` cancelable y que no secuestre Configuración; intent reset al completar.
       Es UN refactor con cinco síntomas — hacerlo junto. e2e nuevo: firmar la 2ª hoja de una tanda.
+      **Hecho 2026-09-03:** los tres `useState` sin dueño (`review`, `ingested`, `reconnect`) viven
+      ahora en el route (`LegacyContext` en `ui/src/nav/route.ts`), así que lo que la navegación no
+      lleva, no existe. `ReviewScreen` tiene «volver»; el expediente ofrece «Revisar y firmar» para
+      cualquier borrador (derivado del vault); la tanda se re-deriva del disco al volver; el intent se
+      limpia al llegar a «hecho»; reconectar es cancelable y no sobrevive a cambiar de sección.
+      Tests: 12 nuevos en `ui/test/route.test.ts` (dos costuras verificadas por mutación), e2e nuevo
+      en `group.spec.ts` (firmar las dos hojas de una tanda) y en `connect.spec.ts` (FLU-03).
 - [ ] **0.2 · Borrado completo, los cinco residuos** (P38; COD-03/04/07/08/18/19/20, exec-tema 1).
       `forget` borra: entrada de names.enc, paquetes handover/, fila del roster, .rampa/requests,
       memory/archive. `verifyForgotten` recorre los cinco sitios. Reescribir el e2e vacuo de

@@ -2,7 +2,7 @@ import { test, expect, _electron as electron, type Page, type ElectronApplicatio
 import { mkdtemp, mkdir, readdir } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { RAIL_WORK, throughDoorToAdapt, SCREENS, toScreen } from './nav.js';
+import { RAIL_WORK, throughDoorToAdapt, SCREENS, toScreen, intoNamedLearner, toTab } from './nav.js';
 
 /**
  * One worksheet, three learners (005 T018-T020).
@@ -129,6 +129,88 @@ test.describe('one worksheet, several learners', () => {
       expect(labels.filter((l) => forbidden.test(l)),
         `${screen.label} offers a way to sign several documents at once`).toEqual([]);
     }
+
+    await app.close();
+  });
+
+
+  /**
+   * FLU-01 · the second sheet of a batch, signed.
+   *
+   * This is the defect the review ranked first among the flow findings, and the
+   * reason no test had seen it: `group.spec.ts` checked that there is no «firmar
+   * todo», and never pressed «Revisar y firmar» **twice**. One press was enough to
+   * leave the adapt screen blank for the rest of the session, because `review` was a
+   * `useState` nothing ever cleared — so Marco's and Iván's sheets became unreachable
+   * the moment Lucía's was signed.
+   *
+   * Carlos's decision (P11) is what this walks: pending-to-sign is **derived from the
+   * vault**, so every unsigned sheet is reachable from the learner it belongs to at
+   * any time — not only from inside the run that produced it. That makes the batch
+   * completable after an interruption, a restart, or a week.
+   *
+   * The batch is written to the vault rather than adapted for real: adapting needs a
+   * provider, and what is under test is reaching and signing sheet two, which is
+   * navigation and a file.
+   */
+  test('the second sheet of a batch can be signed, and the first stays signed', async () => {
+    const { app, page, vault } = await launch();
+    const codes = await seedThree(page, vault);
+
+    const job = 'job-20260602T120000';
+    await page.evaluate(async (args) => {
+      const [id, ...who] = args as string[];
+      await window.rampa.vault.write(`material/${id}/ir.md`,
+        '---\nsource: "pegado"\nverified: true\n---\n\n::: {#b1 .explanation}\nDos por tres\n:::\n');
+      for (const c of who) {
+        await window.rampa.vault.write(`material/${id}/${c}/adapted.md`,
+          '---\nadapted_on: "2026-06-02"\nschool_year: "2025-2026"\nkind: "worksheet"\n'
+          + 'subject: "Matemáticas"\n---\n\n::: {#b1 .explanation}\nDos por tres\n:::\n');
+      }
+    }, [job, codes[0]!, codes[1]!]);
+
+    await page.reload();
+    await page.waitForLoadState('domcontentloaded');
+    await page.getByRole('navigation', { name: /Secciones/ }).waitFor({ timeout: 15000 });
+
+    /*
+      One sheet at a time, and each one from the learner it belongs to. By name: the
+      caseload is not in the order this spec seeded its learners, and the two children
+      whose sheets exist are Lucía and Mateo.
+    */
+    for (const who of ['Lucía', 'Mateo']) {
+      await intoNamedLearner(page, who);
+      await toTab(page, 'made');
+      await page.getByText('Un momento, que miro qué hay…').waitFor({ state: 'detached' });
+
+      /*
+       * The row says «Sin firmar» and offers to fix it — before P11 the row said «Sin
+       * firmar» and offered nothing, which is the shape of a dead end.
+       */
+      await expect(page.getByText('Sin firmar').first()).toBeVisible();
+      await page.getByRole('button', { name: 'Revisar y firmar' }).first().click();
+
+      await page.getByRole('heading', { name: /^Revisar y firmar · / }).waitFor({ timeout: 15000 });
+      await page.getByRole('button', { name: 'Lo he mirado y lo doy por bueno' }).click();
+      await expect(page.getByText('Firmado. La marca de borrador ya no aparece.'))
+        .toBeVisible({ timeout: 20000 });
+
+      /* And a way out, which this screen did not have at all (FLU-01). */
+      await page.getByRole('button', { name: '← Volver a lo que le he preparado' }).click();
+      await page.getByRole('heading', { name: /Lo que he preparado para/ }).waitFor();
+      await page.getByText('Un momento, que miro qué hay…').waitFor({ state: 'detached' });
+      await expect(page.getByText('Firmada').first()).toBeVisible();
+    }
+
+    /* Both, on disk, independently — the signature is a file and not a screen. */
+    const signed = await page.evaluate(async (args) => {
+      const [id, ...who] = args as string[];
+      const out: boolean[] = [];
+      for (const c of who) out.push(Boolean(await window.rampa.job.isSignedOff(id, c)));
+      return out;
+    }, [job, codes[0]!, codes[1]!]);
+    expect(signed, 'signing one sheet of a batch must not leave the other unreachable')
+      .toEqual([true, true]);
 
     await app.close();
   });

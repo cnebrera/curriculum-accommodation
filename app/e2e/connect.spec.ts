@@ -67,6 +67,56 @@ test.describe('the connection step', () => {
     await app.close();
   });
 
+
+  /**
+   * FLU-03 · «cambiar de servicio» does not hold Configuración hostage.
+   *
+   * `reconnect` was a `useState` in `App.tsx` that cleared only on a **successful**
+   * reconnection, and `ConnectStep` reports nothing but success — so a teacher who
+   * pressed it out of curiosity and left by the rail found the paste-a-key wizard in
+   * place of every section of Configuración for the rest of the session, including the
+   * pictograms her learner's profile had just sent her to (`025` SC-2304).
+   *
+   * Two assertions, because there were two ways out and neither worked: leaving on
+   * purpose, and going somewhere else.
+   */
+  test('a reconnection she thinks better of can be left, and does not follow her', async () => {
+    const { app, page } = await launch();
+
+    /* Past onboarding with a key that never leaves the machine — `providers:save`
+       does not validate, which is what makes this walk offline. */
+    await page.evaluate(() => window.rampa.providers.save('anthropic', 'sk-ant-e2e-not-a-real-key'));
+    const code: string = await page.evaluate(() => window.rampa.learners.newCode());
+    await page.evaluate((c) => window.rampa.learners.save({
+      code: c, axes: { COG: 2 }, works: [], avoid: [], interests: [],
+      response: { default: 'short' }, language: { instruction: 'es' },
+    }), code);
+    await page.reload();
+    await page.waitForLoadState('domcontentloaded');
+    await page.getByRole('navigation', { name: /Secciones/ }).waitFor({ timeout: 15000 });
+
+    await page.getByRole('button', { name: 'Configuración', exact: true }).click();
+    await page.getByRole('button', { name: 'Mi servicio de IA', exact: true }).click();
+    await page.getByRole('button', { name: 'Cambiar la clave' }).first().click();
+    await page.getByRole('heading', { name: /Conectar con tu servicio/i }).waitFor({ timeout: 10000 });
+
+    /* One · she can leave on purpose. */
+    await page.getByRole('button', { name: '← Dejarlo como está' }).click();
+    await expect(page.getByRole('heading', { name: /Conectar con tu servicio/i })).toBeHidden();
+
+    /* Two · and going somewhere else leaves it behind rather than arming it. */
+    await page.getByRole('button', { name: 'Cambiar la clave' }).first().click();
+    await page.getByRole('heading', { name: /Conectar con tu servicio/i }).waitFor({ timeout: 10000 });
+    await page.getByRole('button', { name: 'Pictogramas', exact: true }).click();
+    await expect(page.getByRole('heading', { name: /Conectar con tu servicio/i })).toBeHidden();
+
+    /* And coming back to «Mi servicio de IA» is the screen, not the wizard. */
+    await page.getByRole('button', { name: 'Mi servicio de IA', exact: true }).click();
+    await expect(page.getByRole('button', { name: 'Cambiar la clave' }).first()).toBeVisible();
+
+    await app.close();
+  });
+
   test('never shows a model name, a token count, or project jargon', async () => {
     /*
      * T024 · FR-702. Asserted over the rendered text of both screens, because

@@ -29,7 +29,7 @@ import type { LearnerTab } from '../nav/route.js';
  */
 
 export function LearnerSection({
-  code, name, tab, onGuide, onReuse, onPrepare, onErased, onConfigure,
+  code, name, tab, onGuide, onReuse, onReview, onPrepare, onErased, onConfigure,
 }: {
   code: string;
   name?: string;
@@ -38,6 +38,14 @@ export function LearnerSection({
   onGuide: (what: 'guide' | 'acns' | 'acs') => void;
   /** «Hazlo otra vez para otro alumno», from a row of the record (`016` T018). */
   onReuse: (jobId: string, kind: string) => void;
+  /**
+   * «Revisar y firmar» a draft that is still waiting, from a row of the record (P11).
+   *
+   * The second half of the answer to P11: pending-to-sign is derived from the vault, so
+   * every unsigned sheet is reachable from the learner it belongs to at any time — not
+   * only from the run that produced it.
+   */
+  onReview: (jobId: string, learner: string) => void;
   /**
    * Into the work (`020` US2 replaces this with the flow itself).
    *
@@ -88,7 +96,10 @@ export function LearnerSection({
        * destination, reached from the learner's menu, and not a button on a card at the
        * bottom of a form.
        */
-      return <RecordScreen code={code} {...(name ? { name } : {})} onReuse={onReuse} />;
+      return (
+        <RecordScreen code={code} {...(name ? { name } : {})}
+                      onReuse={onReuse} onReview={onReview} />
+      );
 
     case 'curriculum':
       return (

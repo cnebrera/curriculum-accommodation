@@ -7,7 +7,7 @@ import { useMaterialKinds } from '../data/corpus.js';
 import { useNameCheck, useSetName } from '../data/names.js';
 import { useNewLearnerCode } from '../data/learners.js';
 import { useCostEstimate } from '../data/cost.js';
-import { useCreateJob, useVerifyJob, useAdapt, useJobProgress, type BatchOutcome } from '../data/jobs.js';
+import { useCreateJob, useVerifyJob, useAdapt, useJobProgress, useBatchCommand, type BatchOutcome } from '../data/jobs.js';
 import { useBlocksCommand } from '../data/ingest.js';
 import { Callout } from '../components/Callout.js';
 import { Page, Section, Field, Actions } from '../shell/Page.js';
@@ -36,7 +36,7 @@ const stageIndex = (s?: string): number => {
 interface JobNotice { block: string | null; notice: { kind: string; quote: string; message: string } }
 
 export function AdaptScreen({
-  onReview, onChooseFile, presetJobId, presetLearners, presetKind,
+  onReview, onChooseFile, onFinished, presetJobId, presetLearners, presetKind, resumeBatch,
 }: {
   onReview: (jobId: string, learner: string, recipes: string[]) => void;
   /**
@@ -66,6 +66,28 @@ export function AdaptScreen({
    */
   presetLearners?: readonly string[];
   presetKind?: string;
+  /**
+   * The work reached «hecho» (P14, FLU-08).
+   *
+   * The door's answers survive only while a job is half done. They used to survive
+   * the job itself, so the next visit to «Preparar material» arrived with «examen»
+   * already pressed for what was a worksheet — `012` FR-1001 and `016` FR-1403 exist
+   * against exactly that, and a preselection by session residue is a default wearing
+   * another name.
+   */
+  onFinished?: () => void;
+  /**
+   * A run that already happened, come back to (FLU-01, P11).
+   *
+   * The batch is re-derived from the vault — which learners got a sheet, and which of
+   * those are signed — rather than restored from the state the review unmounted. So
+   * «volver» from the review lands on the list again and the second sheet of a batch
+   * can be signed, which it could not be at all.
+   *
+   * Mutually exclusive with `presetJobId`: one says «this material is ready to
+   * verify», the other says «this job is finished».
+   */
+  resumeBatch?: string;
 }) {
   const { t: es } = useStrings();
   /*
@@ -125,6 +147,15 @@ export function AdaptScreen({
   /** Per learner, because a failure belongs to a learner (005 FR-507). */
   const [outcome, setOutcome] = useState<BatchOutcome | null>(null);
   /**
+   * Which of the batch are signed, read from the vault rather than assumed.
+   *
+   * The badge said «Sin firmar» for every sheet that produced one, which was true the
+   * instant the run ended and false the moment she signed one and came back. A
+   * signature is a file (`007` FR-509), so it is asked for rather than remembered.
+   */
+  const [signed, setSigned] = useState<Record<string, boolean>>({});
+  const batchOf = useBatchCommand();
+  /**
    * One decoder, shared with every other screen (`013` FR-1109).
    *
    * This screen had its own `es.errors[kind] ?? message`, which was a fourth copy of the
@@ -134,6 +165,8 @@ export function AdaptScreen({
   const describe = useErrorText();
   /** How many of the batch actually produced a sheet. */
   const done = outcome?.results.filter((r) => r.ok).length ?? 0;
+  /** And how many of those still need her signature — read from the disk, not assumed. */
+  const unsigned = outcome?.results.filter((r) => r.ok && !signed[r.learner]).length ?? 0;
   // 006 US4-3: told first, not billed first (T091).
   const [costGate, setCostGate] = useState<{ formatted: string; who: string[] } | null>(null);
   const online = useOnline();
@@ -159,7 +192,7 @@ export function AdaptScreen({
    * `006`'s premise is that the vault is the truth.
    */
   useEffect(() => {
-    if (!presetJobId) return;
+    if (!presetJobId || resumeBatch) return;
     setJobId(presetJobId);
     setStage('verify');
     void blocksFor.run(presetJobId).then((blocks) => {
@@ -168,7 +201,33 @@ export function AdaptScreen({
     });
     // `blocksFor` is a stable command; including it would re-read on every render.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [presetJobId]);
+  }, [presetJobId, resumeBatch]);
+
+  /**
+   * Back from the review, onto the batch it came from (FLU-01, P11).
+   *
+   * Everything here comes off the disk: `job:learners` says which learners this job
+   * produced a sheet for, and `job:isSignedOff` says which of those are done. The
+   * failures of the original run are **not** restored, because they were never
+   * written anywhere — and inventing rows for them would be the same lie in the
+   * other direction. A learner whose sheet did not happen simply is not in the list,
+   * and running again for her is one control away.
+   */
+  useEffect(() => {
+    if (!resumeBatch) return;
+    setJobId(resumeBatch);
+    void batchOf.run(resumeBatch).then((rows) => {
+      if (!rows) return;
+      setOutcome({
+        jobId: resumeBatch,
+        results: rows.map((r) => ({ learner: r.learner, ok: true as const, result: {} })),
+      });
+      setSigned(Object.fromEntries(rows.map((r) => [r.learner, r.signedOff])));
+      setStage('done');
+    });
+    // `batchOf` is a stable command; including it would re-read on every render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [resumeBatch]);
 
   // The first learner is selected once the roster arrives, and only if she has
   // not already picked someone.
@@ -193,6 +252,9 @@ export function AdaptScreen({
   const startOver = (): void => {
     setStage('compose'); setText(''); setReportData(null); setOutcome(null);
     setNotices([]); setRecipes([]); setRetried(false); setCost(null);
+    setSigned({});
+    // «Otra ficha» is a new job, so the door's answers do not come with it (P14).
+    onFinished?.();
   };
 
   const runAdapt = async (confirmedCost = false, only?: string[]) => {
@@ -251,7 +313,16 @@ export function AdaptScreen({
     }
     setCost(r.results.reduce((sum, x) =>
       sum + (x.ok && typeof x.result.costCents === 'number' ? x.result.costCents : 0), 0) || null);
+    // Nothing is signed the instant a run ends, and this says so from the disk's side
+    // rather than by assumption — see `signed`.
+    setSigned(Object.fromEntries(r.results.filter((x) => x.ok).map((x) => [x.learner, false])));
     setStage('done');
+    /*
+     * The work is done, so the door's answers stop applying (P14). Here rather than at
+     * the signature: a batch of three is «done» once, and the intent must not survive
+     * to preselect «examen» for the next worksheet.
+     */
+    onFinished?.();
   };
 
   return (
@@ -488,16 +559,27 @@ export function AdaptScreen({
               to somebody whose run produced nothing: «0 de 1 ficha adaptada, sin firmar.
               Hay que mirar cada una por separado» — mirar *qué*. Carlos hit exactly that.
             */}
-            <Callout intent={done === 0 ? 'danger' : done === outcome.results.length ? 'ok' : 'decide'}
+            {/*
+              «sin firmar» used to be part of this sentence unconditionally, which was
+              true for exactly as long as nobody had signed anything. Coming back from
+              signing Lucía's sheet, it told her three sheets were unsigned while the
+              badge beside one of them said «Firmada» — so the count is derived like
+              the badges are.
+            */}
+            <Callout intent={done === 0 ? 'danger' : unsigned === 0 ? 'ok' : 'decide'}
                      title={done === 0 ? 'No ha salido'
-                       : done === outcome.results.length ? 'Listas' : 'Casi'}>
+                       : unsigned === 0 ? 'Listas' : 'Casi'}>
               {done === 0
                 ? (outcome.results.length === 1
                     ? 'No he podido preparar la ficha. Abajo está por qué.'
                     : 'No he podido preparar ninguna. Abajo está por qué, alumno por alumno.')
                 : `${done} de ${outcome.results.length} ${
                     outcome.results.length === 1 ? 'ficha adaptada' : 'fichas adaptadas'
-                  }, sin firmar. Hay que mirar cada una por separado.`}
+                  }${
+                    unsigned === 0 ? ', y firmadas.'
+                      : unsigned === done ? ', sin firmar. Hay que mirar cada una por separado.'
+                      : `. ${unsigned === 1 ? 'Queda una por firmar' : `Quedan ${unsigned} por firmar`}.`
+                  }`}
               {cost !== null ? ` En total han costado unos ${cost} céntimo${cost === 1 ? '' : 's'}.` : ''}
             </Callout>
 
@@ -506,13 +588,21 @@ export function AdaptScreen({
                 <div className="card stack gap2" key={r.learner}>
                   <div className="row" style={{ justifyContent: 'space-between' }}>
                     <strong>{nameOf(r.learner)}</strong>
-                    <Badge>{r.ok ? 'Sin firmar' : 'No ha salido'}</Badge>
+                    <Badge>
+                      {!r.ok ? 'No ha salido' : signed[r.learner] ? 'Firmada' : 'Sin firmar'}
+                    </Badge>
                   </div>
                   {r.ok ? (
                     <div className="row">
+                      {/*
+                        One per learner, and never a «firmar todo» (FR-512). What changed
+                        with FLU-01 is that this is now reachable **again**: the review
+                        gives her a way back to this list, and the list itself is derived
+                        from the vault rather than from state that navigation destroyed.
+                      */}
                       <button className="btn btn-primary btn-sm"
                               onClick={() => onReview(jobId, r.learner, r.result.recipes ?? [])}>
-                        Revisar y firmar
+                        {signed[r.learner] ? 'Verla otra vez' : 'Revisar y firmar'}
                       </button>
                     </div>
                   ) : (

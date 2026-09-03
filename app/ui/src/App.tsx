@@ -71,11 +71,55 @@ export function App() {
    * this is about.
    */
   const [guideFor, setGuideFor] = useState<{ code: string; name?: string } | null>(null);
-  const [review, setReview] = useState<{ jobId: string; learner: string; recipes: string[] } | null>(null);
-  /** A service she is reconnecting from the connection screen (009 US5). */
-  const [reconnect, setReconnect] = useState<string | null>(null);
-  /** An ingested job waiting to be verified (008). */
-  const [ingested, setIngested] = useState<string | null>(null);
+  /*
+   * `review`, `ingested` and `reconnect` used to be three more `useState`s here, and
+   * **nothing ever cleared any of them** (review themes 2, FLU-01/02/03, P11/P14):
+   *
+   * - after reviewing one sheet, `route.view === 'adapt' && !review` rendered nothing
+   *   for the rest of the session, so sheets 2..N of a batch could never be signed;
+   * - the second adaptation of a session pre-loaded the first one's material and could
+   *   be paid for against the wrong document, silently;
+   * - «cambiar de servicio» held all of Configuración hostage with no cancel.
+   *
+   * They are in the route now (`nav/route.ts`, `LegacyContext`), which is the argument
+   * this file already makes about the sixteen views: state whose lifecycle *is* the
+   * navigation belongs where navigation decides it. A `go({ view: 'adapt' })` that
+   * carries no job has no job — there is nothing left to remember to clear.
+   */
+
+  /**
+   * «Volver» from the review (FLU-01, P11).
+   *
+   * Two destinations and no third: the batch she came from, re-derived from the vault
+   * by `AdaptScreen`; or the learner's section she opened the sheet out of. The route
+   * carries which, so the screen does not have to know where it was reached from.
+   */
+  const goBack = (back: { of: 'batch' } | { of: 'learner'; code: string; tab: LearnerTab },
+                  job?: string): void => {
+    if (back.of === 'batch') go({ type: 'legacy', view: 'adapt', ...(job ? { job } : {}), ran: true });
+    else go({ type: 'learner/open', code: back.code, tab: back.tab });
+  };
+
+  /**
+   * The review's way out, as props (FLU-01).
+   *
+   * A function rather than a ternary inside the JSX so `back` is a local `const` when
+   * the handler closes over it — the alternative was `route.back!` inside a callback,
+   * and this file's own history says a `!` in a handler is how a real null gets in.
+   */
+  const reviewBack = (
+    back?: { of: 'batch' } | { of: 'learner'; code: string; tab: LearnerTab },
+    job?: string,
+  ) => (back
+    ? {
+        back: {
+          label: back.of === 'batch'
+            ? '← Volver a la tanda'
+            : '← Volver a lo que le he preparado',
+          go: () => goBack(back, job),
+        },
+      }
+    : {});
 
   useEffect(() => {
     // Her display preferences apply before anything else, so the first frame is
@@ -180,7 +224,13 @@ export function App() {
             result={composed.result}
             jobId={composed.jobId}
             learners={intent.learners}
-            onAdapt={() => { setIngested(composed.jobId); go({ type: 'legacy', view: 'adapt' }); }}
+            onAdapt={() => {
+              const job = composed.jobId;
+              // Let go of the summary as we leave it: a composition kept in state is one
+              // more thing written by a handler and cleared by nobody.
+              setComposed(null);
+              go({ type: 'legacy', view: 'adapt', job });
+            }}
             onDiscard={() => { setComposed(null); go({ type: 'legacy', view: 'door' }); }} />
         ) : null}
         {route.at === 'legacy' && route.view === 'guide' && guideFor ? (
@@ -190,14 +240,14 @@ export function App() {
              * `ingested` is set by exactly that flow, and there is no second path
              * (FR-1505/1506).
              */
-            jobId={ingested}
+            jobId={route.job ?? null}
             learnerCode={guideFor.code}
             {...(guideFor.name ? { learnerName: guideFor.name } : {})}
             onDone={() => { setGuideFor(null); go({ type: 'caseload' }); }}
             onBack={() => { setGuideFor(null); go({ type: 'caseload' }); }} />
         ) : null}
-        {route.at === 'legacy' && route.view === 'guide-ask' && ingested ? (
-          <GuideConversation jobId={ingested} onBack={() => go({ type: 'caseload' })} />
+        {route.at === 'legacy' && route.view === 'guide-ask' && route.job ? (
+          <GuideConversation jobId={route.job} onBack={() => go({ type: 'caseload' })} />
         ) : null}
         {route.at === 'legacy' && route.view === 'acns' && guideFor ? (
           <AcnsDraftScreen
@@ -211,24 +261,36 @@ export function App() {
             {...(guideFor.name ? { learnerName: guideFor.name } : {})}
             onBack={() => { setGuideFor(null); go({ type: 'caseload' }); }} />
         ) : null}
-        {route.at === 'legacy' && route.view === 'adapt' && !review
+        {/*
+          `&& !review` is gone with the state it guarded. That condition is what made the
+          screen render nothing after one review — it was reading a value nothing ever
+          reset, and the fix is that there is no such value (FLU-01).
+        */}
+        {route.at === 'legacy' && route.view === 'adapt'
           ? <AdaptScreen
-              onReview={(jobId, learner, recipes) => { setReview({ jobId, learner, recipes }); go({ type: 'legacy', view: 'review' }); }}
+              onReview={(jobId, learner, recipes) => go({
+                type: 'legacy', view: 'review',
+                job: jobId, sheet: { learner, recipes }, back: { of: 'batch' },
+              })}
               onChooseFile={() => go({ type: 'legacy', view: 'ingest' })}
-              presetJobId={ingested ?? undefined}
+              onFinished={() => dispatch({ type: 'reset' })}
+              {...(route.ran ? { resumeBatch: route.job } : { presetJobId: route.job })}
               presetLearners={intent.learners}
               {...(intent.kind ? { presetKind: intent.kind } : {})} />
           : null}
         {route.at === 'legacy' && route.view === 'ingest'
           ? <IngestScreen
-              onIngested={(r) => { setIngested(r.jobId); go({ type: 'legacy', view: 'verify' }); }}
-              onResume={(jobId) => { setIngested(jobId); go({ type: 'legacy', view: 'verify' }); }} />
+              onIngested={(r) => go({ type: 'legacy', view: 'verify', job: r.jobId })}
+              onResume={(jobId) => go({ type: 'legacy', view: 'verify', job: jobId })} />
           : null}
-        {route.at === 'legacy' && route.view === 'verify' && ingested
-          ? <VerifyScreen jobId={ingested} onVerified={() => go({ type: 'legacy', view: 'adapt' })} />
+        {route.at === 'legacy' && route.view === 'verify' && route.job
+          ? <VerifyScreen jobId={route.job}
+                          onVerified={() => go({ type: 'legacy', view: 'adapt', job: route.job })} />
           : null}
-        {route.at === 'legacy' && route.view === 'review' && review
-          ? <ReviewScreen jobId={review.jobId} learner={review.learner} recipes={review.recipes} />
+        {route.at === 'legacy' && route.view === 'review' && route.sheet
+          ? <ReviewScreen jobId={route.job ?? ''} learner={route.sheet.learner}
+                          {...(route.sheet.recipes ? { recipes: route.sheet.recipes } : {})}
+                          {...reviewBack(route.back, route.job)} />
           : null}
         {/*
           Her caseload: the opening screen, and the only thing it does is list and say
@@ -310,12 +372,23 @@ export function App() {
                * cleared and the kind is kept: same material, different child.
                */
               onReuse={(jobId, kind) => {
-                setIngested(jobId);
                 dispatch({ type: 'reset' });
                 dispatch({ type: 'work/set', work: 'adapt' });
                 dispatch({ type: 'kind/set', kind });
-                go({ type: 'legacy', view: 'adapt' });
+                go({ type: 'legacy', view: 'adapt', job: jobId });
               }}
+              /*
+               * «Revisar y firmar» for a draft that is still waiting (P11).
+               *
+               * The route carries where to come back to, so signing a sheet from the
+               * record returns her to the record — and the review is reachable for any
+               * unsigned sheet at any time, not only inside the run that made it.
+               */
+              onReview={(jobId, learner) => go({
+                type: 'legacy', view: 'review',
+                job: jobId, sheet: { learner },
+                back: { of: 'learner', code: route.code, tab: 'made' },
+              })}
               /*
                * Until US2 builds the steps here, `Preparar` hands her to the existing
                * door **with this learner already chosen**. That is what makes US1
@@ -353,9 +426,35 @@ export function App() {
            * ordering all live there, and a second copy would be a second place for them
            * to drift. Moved with the screen, unchanged (FR-2307).
            */
-          reconnect
-            ? <ConnectStep onDone={() => { setReconnect(null); go({ type: 'settings', pane: 'service' }); }} />
-            : <SettingsSections pane={route.pane} onReconnect={(id) => setReconnect(id)} />
+          route.reconnecting
+            ? (
+              <div className="stack gap4">
+                {/*
+                  A way out (FLU-03).
+
+                  There was none: `ConnectStep` only reports success, and the state that
+                  put it on screen only cleared on a completed reconnection — so a
+                  teacher who pressed «cambiar de servicio» out of curiosity found the
+                  paste-a-key wizard in place of *every* section of Configuración, for
+                  the rest of the session. Including the pictograms her learner's profile
+                  had just sent her to (`025` SC-2304).
+
+                  The wizard itself is untouched (FR-2307 moved it unchanged); leaving is
+                  the shell's business, and this is the shell.
+                */}
+                <button className="btn btn-ghost btn-sm" style={{ alignSelf: 'flex-start' }}
+                        onClick={() => go({ type: 'settings', pane: 'service' })}>
+                  ← Dejarlo como está
+                </button>
+                <ConnectStep onDone={() => go({ type: 'settings', pane: 'service' })} />
+              </div>
+            )
+            : (
+              <SettingsSections pane={route.pane}
+                                onReconnect={(id) => go({
+                                  type: 'settings', pane: 'service', reconnecting: id,
+                                })} />
+            )
         ) : null}
       </main>
     </div>

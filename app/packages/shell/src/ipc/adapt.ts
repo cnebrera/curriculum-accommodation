@@ -1,6 +1,6 @@
 import { type BrowserWindow } from 'electron';
 import { parseIR, stringifyFrontMatter, buildReport, VAULT, RampaError } from '@rampa/core';
-import { jobIR, jobDir, jobLearnerDir, resolveDocument } from '@rampa/core';
+import { jobIR, jobLearnerDir, resolveDocument, learnersOf } from '@rampa/core';
 import { currentVault } from './vault.js';
 import { handle } from './wrap.js';
 import { runAdaptation, type Correction } from '../jobs/adapt.js';
@@ -137,11 +137,16 @@ export function registerAdaptIpc(getWindow: () => BrowserWindow | null): void {
     return { decisions: report.decisions, notDone: report.notDone, memoryApplied: [] };
   });
 
-  /** Which learners this job has already been adapted for (T092b). */
-  handle('job:learners', async (jobId: string) => {
-    const entries = await currentVault().list(jobDir(jobId));
-    return entries.filter((e) => !e.includes('.') && e !== 'source');
-  });
+  /**
+   * Which learners this job has already been adapted for (T092b).
+   *
+   * `learnersOf` rather than a directory filter of its own (FLU-01). The filter
+   * answered «which sub-directories are there», which is not the same question: a
+   * learner whose adaptation failed has a directory and no sheet, and the batch this
+   * now feeds would offer «Revisar y firmar» for a document that does not exist. One
+   * derivation, in `record/scan.ts`, where the erasure planner already reads it.
+   */
+  handle('job:learners', async (jobId: string) => learnersOf(currentVault(), jobId));
 
   /**
    * Which sheets were made from a reading that has since changed (005 T027, FR-520).

@@ -59,6 +59,32 @@ export function useSignedOffCommand() {
     window.rampa.job.isSignedOff(jobId, learner) as Promise<boolean>);
 }
 
+/**
+ * The batch of a job, derived from the vault (FLU-01, P11).
+ *
+ * ## Why this is derived and not remembered
+ *
+ * The list of «Revisar y firmar» buttons after a run lived in `AdaptScreen`'s local
+ * state, and navigating to the review unmounted it — so signing Lucía's sheet made
+ * Mateo's and Iván's unreachable for the rest of the session. Carlos's answer to P11
+ * was «pendiente de firmar se deriva del disco»: an adapted sheet with no signature
+ * is a file, and a file can be found again after any navigation.
+ *
+ * Two existing reads, joined here rather than in a new handler: which learners the
+ * job produced a sheet for, and which of those are signed. Nothing is stored.
+ */
+export interface BatchSheet { learner: string; signedOff: boolean }
+
+export function useBatchCommand() {
+  return useCommand(async (jobId: string): Promise<BatchSheet[]> => {
+    const learners = await window.rampa.job.learners(jobId) as string[];
+    return Promise.all(learners.map(async (learner) => ({
+      learner,
+      signedOff: Boolean(await window.rampa.job.isSignedOff(jobId, learner)),
+    })));
+  });
+}
+
 export function useCreateJob() {
   return useCommand((id: string, text: string, kind: string, lang?: string) =>
     window.rampa.job.create(id, text, kind, lang));

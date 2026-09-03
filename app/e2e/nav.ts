@@ -63,6 +63,20 @@ export async function intoLearner(page: Page, index = 0): Promise<void> {
   await learnerRail(page).waitFor();
 }
 
+/**
+ * Into a learner **by her name for him**, when which child it is matters.
+ *
+ * `intoLearner(page, i)` is by position in the caseload, and the caseload is not in
+ * the order a spec seeded its learners — `group.spec.ts` seeded Lucía, Mateo, Iván
+ * and index 0 opened Iván. A spec that has written a sheet for one particular child
+ * has to ask for that child, so it asks by the only thing it knows: the name it set.
+ */
+export async function intoNamedLearner(page: Page, name: string): Promise<void> {
+  await toCaseload(page);
+  await page.locator('.card-action').filter({ hasText: name }).first().click();
+  await learnerRail(page).getByText(name).first().waitFor();
+}
+
 /** A section of the learner she is already inside. */
 export async function toTab(page: Page, tab: keyof typeof TAB): Promise<void> {
   await learnerRail(page).getByRole('button', { name: TAB[tab], exact: true }).click();
