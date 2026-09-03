@@ -2,7 +2,10 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { mkdtemp } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { Vault, planForget, executeForget, recordFor, writeRecord } from '../src/index.js';
+import {
+  Vault, planForget, executeForget, verifyForgotten, recordFor, writeRecord,
+  type NameStore,
+} from '../src/index.js';
 
 /**
  * Erasing a learner who shares a worksheet (014 T019-T021, FR-1209…1211).
@@ -20,9 +23,31 @@ import { Vault, planForget, executeForget, recordFor, writeRecord } from '../src
  * three learners is now a single action.
  */
 let vault: Vault;
+let names: { map: Record<string, string>; store: NameStore };
+
+/**
+ * A stand-in for the shell's encrypted map (`NameStore`).
+ *
+ * Real, not a spy: it forgets and it answers, so a test can assert that the name is
+ * **gone** rather than that a function was called. The residue this models is the
+ * one the review ranked first — her real name surviving «he borrado todo lo de X» —
+ * and the reason it survived is that the old e2e asserted over ciphertext, which is
+ * the shape of a test that cannot fail.
+ */
+function fakeNames(initial: Record<string, string> = {}): typeof names {
+  const map: Record<string, string> = { ...initial };
+  return {
+    map,
+    store: {
+      forget: async (code: string) => { delete map[code]; },
+      knows: async (code: string) => code in map,
+    },
+  };
+}
 
 beforeEach(async () => {
   vault = new Vault(join(await mkdtemp(join(tmpdir(), 'rampa-erase-')), 'Rampa'));
+  names = fakeNames({ E38: 'Lucía', M12: 'Mateo' });
 });
 
 async function sharedJob(jobId: string, learners: string[]): Promise<void> {
@@ -49,7 +74,7 @@ describe('two learners, one worksheet', () => {
 
   it('erasing the first leaves the second untouched, with their source', async () => {
     await sharedJob('job-a', ['E38', 'M12']);
-    await executeForget(vault, await planForget(vault, 'E38'));
+    await executeForget(vault, await planForget(vault, 'E38'), names.store);
 
     // Hers is gone.
     expect(await vault.exists('material/job-a/E38/adapted.md')).toBe(false);
@@ -65,11 +90,11 @@ describe('two learners, one worksheet', () => {
 
   it('erasing the second then removes the source, because nobody reads it', async () => {
     await sharedJob('job-a', ['E38', 'M12']);
-    await executeForget(vault, await planForget(vault, 'E38'));
+    await executeForget(vault, await planForget(vault, 'E38'), names.store);
 
     const second = await planForget(vault, 'M12');
     expect(second.sharedKept, 'nobody else uses it now').toEqual([]);
-    await executeForget(vault, second);
+    await executeForget(vault, second, names.store);
 
     expect(await vault.exists('material/job-a/source/pagina-1.txt')).toBe(false);
     expect(await vault.exists('material/job-a/ir.md')).toBe(false);
@@ -77,8 +102,8 @@ describe('two learners, one worksheet', () => {
 
   it('the order does not matter', async () => {
     await sharedJob('job-a', ['E38', 'M12']);
-    await executeForget(vault, await planForget(vault, 'M12'));
-    await executeForget(vault, await planForget(vault, 'E38'));
+    await executeForget(vault, await planForget(vault, 'M12'), names.store);
+    await executeForget(vault, await planForget(vault, 'E38'), names.store);
     expect(await vault.exists('material/job-a/ir.md')).toBe(false);
   });
 });
@@ -89,7 +114,7 @@ describe('one learner, one worksheet', () => {
     const plan = await planForget(vault, 'E38');
 
     expect(plan.sharedKept).toEqual([]);
-    await executeForget(vault, plan);
+    await executeForget(vault, plan, names.store);
     expect(await vault.exists('material/job-solo/ir.md')).toBe(false);
   });
 });
@@ -107,7 +132,7 @@ describe('a directory left behind by a crash is not a reader', () => {
 
     const plan = await planForget(vault, 'E38');
     expect(plan.sharedKept).toEqual([]);
-    await executeForget(vault, plan);
+    await executeForget(vault, plan, names.store);
     expect(await vault.exists('material/job-a/ir.md')).toBe(false);
   });
 });
@@ -118,7 +143,7 @@ describe('the record goes with the learner', () => {
     await writeRecord(vault, 'E38', await recordFor(vault, 'E38'));
     expect(await vault.exists('profiles/E38/record.md')).toBe(true);
 
-    const { remaining } = await executeForget(vault, await planForget(vault, 'E38'));
+    const { remaining } = await executeForget(vault, await planForget(vault, 'E38'), names.store);
 
     expect(await vault.exists('profiles/E38/record.md')).toBe(false);
     // `verifyForgotten` searches the whole vault for the code, so this is the
@@ -130,7 +155,7 @@ describe('the record goes with the learner', () => {
     await sharedJob('job-a', ['E38', 'M12']);
     await writeRecord(vault, 'M12', await recordFor(vault, 'M12'));
 
-    await executeForget(vault, await planForget(vault, 'E38'));
+    await executeForget(vault, await planForget(vault, 'E38'), names.store);
 
     expect(await vault.exists('profiles/M12/record.md')).toBe(true);
     // And rebuilding it from the vault still finds his work — the record is

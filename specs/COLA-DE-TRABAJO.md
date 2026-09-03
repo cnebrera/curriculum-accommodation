@@ -27,10 +27,20 @@ Sin spec nueva: son defectos contra specs vigentes, con decisión tomada. Cada u
       limpia al llegar a «hecho»; reconectar es cancelable y no sobrevive a cambiar de sección.
       Tests: 12 nuevos en `ui/test/route.test.ts` (dos costuras verificadas por mutación), e2e nuevo
       en `group.spec.ts` (firmar las dos hojas de una tanda) y en `connect.spec.ts` (FLU-03).
-- [ ] **0.2 · Borrado completo, los cinco residuos** (P38; COD-03/04/07/08/18/19/20, exec-tema 1).
+- [x] **0.2 · Borrado completo, los cinco residuos** (P38; COD-03/04/07/08/18/19/20, exec-tema 1).
       `forget` borra: entrada de names.enc, paquetes handover/, fila del roster, .rampa/requests,
       memory/archive. `verifyForgotten` recorre los cinco sitios. Reescribir el e2e vacuo de
       erasure para que pueda fallar. **RGPD de menores: revisar la corrección con DPO/legal.**
+      **Hecho 2026-09-03:** el plan recoge los cinco y **nombra los dos que son ediciones y no
+      borrados** (`ForgetPlan.entries`, visibles en la pantalla antes de confirmar);
+      `verifyForgotten` recorre seis directorios, exime `.rampa/erasures.md` por nombre y
+      **pregunta** al mapa cifrado en vez de buscar dentro; el `NameStore` es parámetro
+      **obligatorio** de `executeForget` y `verifyForgotten` (la omisión es como pasó);
+      `status: 'forgotten'` retirado del enum porque nadie lo escribía y no se podía usar.
+      7 casos nuevos en `memory-audit.test.ts`, e2e de erasure reescrito sembrando los cinco
+      residuos y sin los tres `if (x) expect(…)` que hacían pasar requisitos por ausencia.
+      `validation.md` corregido. **Sigue pendiente la validación con DPO/legal — no es un
+      resultado de test.**
 - [ ] **0.3 · Endurecer los dos guardianes** (P31, P42).
       `check-fr-coverage.sh`: cada FR en tasks.md exige marcador done/deferred:razón/dropped:razón —
       la mención deja de contar. `check-spec-kit.sh`: toda spec citada por código o declarada

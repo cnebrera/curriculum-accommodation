@@ -59,6 +59,30 @@ async function seedTwo(page: Page): Promise<{ gone: string; stays: string }> {
       `---\nreview: {"signed_off": false}\n---\n\n::: {#b1 .exercise}\nEjercicio para ${c}.\n:::\n`,
     ), [code] as [string]);
   }
+  /*
+   * And something of his in each of the five places «he borrado todo» used to be
+   * false about (review theme 1, P38). `seedTwo` created none of them, which is
+   * exactly why no test saw four of the five residues.
+   */
+  for (const code of [gone, stays]) {
+    // The handover packet, written the way she writes it: through the flow.
+    await page.evaluate((c) => window.rampa.memory.handoverWrite(
+      c, '2025-2026', 'Lo que le contaría al siguiente tutor.', []), code);
+    // A composition request, with his code in clear and her own words in it.
+    await page.evaluate((c) => window.rampa.vault.write(
+      `.rampa/requests/job-${c}.json`,
+      JSON.stringify({ learnerCode: c, objectives: ['sumar llevando'] })), code);
+    // An archived journal entry, which keeps its front matter when it moves.
+    await page.evaluate((c) => window.rampa.vault.write(
+      `memory/archive/2026-01-01-${c}.md`,
+      `---\nlearner: ${c}\nrecipes: []\n---\n\nUna nota archivada.\n`), code);
+  }
+  // And a roster with a row for each of them.
+  await page.evaluate((codes) => window.rampa.learners.saveRoster({
+    academic_year: '2025-2026',
+    learners: (codes as string[]).map((c) => ({ code: c, subjects: [], status: 'active' })),
+  }), [gone, stays]);
+
   return { gone, stays };
 }
 
@@ -82,10 +106,26 @@ test.describe('erasure', () => {
     const { gone } = await seedTwo(page);
 
     const plan = await page.evaluate((c) => window.rampa.memory.forgetPlan(c), gone) as
-      { paths: string[]; survives: string[]; outOfReach: string[] };
+      {
+        paths: string[]; survives: string[]; outOfReach: string[];
+        entries: Array<{ of: string; where: string }>;
+      };
 
     expect(plan.paths.length, 'the plan found nothing to remove').toBeGreaterThan(0);
     expect(plan.paths.some((p) => p.includes(gone))).toBe(true);
+
+    /*
+     * FR-215 says list everything **before** confirming. Four of the five residues
+     * were never in this list, and one of them — the archived journal entry — then
+     * turned up in `remaining` after the deletion, so the screen said «he borrado
+     * casi todo… es un fallo mío, dímelo y lo arreglo» with nothing she could do.
+     */
+    const listed = plan.paths.join('\n');
+    expect(listed, 'the handover packet').toContain(`handover/${gone}-2025-2026.md`);
+    expect(listed, 'the composition request').toContain(`.rampa/requests/job-${gone}.json`);
+    expect(listed, 'the archived journal entry').toContain(`memory/archive/2026-01-01-${gone}.md`);
+    // And the two that are edits rather than deletions, so she is told about them.
+    expect(plan.entries.map((e) => e.of).sort()).toEqual(['name', 'roster']);
 
     // FR-218 · what does not come back, said during the flow.
     expect(plan.survives.join(' ')).toMatch(/no se retiran/i);
@@ -131,6 +171,12 @@ test.describe('erasure', () => {
      * re-identifying, because nothing left on the machine can turn `PER-abc` back
      * into a child. If the name map survived, this exception would not be
      * defensible and the tombstone would have to be codeless.
+     *
+     * **And it did survive, for as long as this file existed.** The reasoning above
+     * was right and the premise was false: nothing removed the entry from
+     * `.rampa/names.enc`, and the assertion below that was supposed to catch it
+     * searched base64 ciphertext for a code — a check that can only ever pass. The
+     * name map is now asked rather than read, and the exception is earned.
      */
     const TOMBSTONE = '.rampa/erasures.md';
     const offenders = files
@@ -139,16 +185,30 @@ test.describe('erasure', () => {
       .map((f) => f.path);
     expect(offenders, `the code survives in: ${offenders.join(', ')}`).toEqual([]);
 
-    // And the one exception carries the code and nothing else of his.
+    /*
+     * And the one exception carries the code and nothing else of his. Unconditional:
+     * `if (tombstone)` made FR-217 unasserted on any run where the file was missing,
+     * which is the whole requirement passing by absence.
+     */
     const tombstone = files.find((f) => f.path === TOMBSTONE);
-    if (tombstone) {
-      expect(tombstone.text).toContain(gone);
-      expect(tombstone.text).not.toMatch(/casillas|reloj|primer paso/i);
-    }
+    expect(tombstone, 'nothing records that the erasure happened (FR-217)').toBeDefined();
+    expect(tombstone!.text).toContain(gone);
+    expect(tombstone!.text).not.toMatch(/casillas|reloj|primer paso/i);
 
-    // The map from code to name is gone, which is what makes the exception safe.
-    const nameMap = files.find((f) => /names|\.map/.test(f.path));
-    if (nameMap) expect(nameMap.text).not.toContain(gone);
+    /*
+     * The map from code to name is gone, which is what makes the exception safe —
+     * **asked, not searched**. The previous version of this looked for the code
+     * inside `.rampa/names.enc`, which holds base64 of ciphertext: the code is not
+     * in there in any encoding, so the assertion passed on a map that still held
+     * his real name. A test that cannot fail was guarding the most personal datum
+     * in the system.
+     */
+    const resolved = await page.evaluate((c) => window.rampa.names.resolve(c), gone);
+    expect(resolved, 'his name is still in the encrypted map').toBeNull();
+    const all = await page.evaluate(() => window.rampa.names.all()) as Record<string, string>;
+    expect(Object.keys(all)).not.toContain(gone);
+    // The other learner's name is untouched — erasure is one child, not a purge.
+    expect(Object.keys(all)).toContain(stays);
 
     // Her name never touched disk in the first place, and still does not.
     for (const f of files) {
@@ -179,13 +239,16 @@ test.describe('erasure', () => {
     await page.evaluate((c) => window.rampa.memory.forget(c), gone);
 
     const files = await everyFile(vault);
-    const record = files.find((f) => f.text.includes('borrad') || f.path.includes('erasure')
-      || f.path.includes('tombstone') || f.text.includes(gone.slice(0, 4)));
-    // FR-217: a record that a removal happened, carrying no learner content.
-    // If there is one, it must not carry his notes.
-    if (record) {
-      expect(record.text).not.toMatch(/casillas|reloj|primer paso/i);
-    }
+    /*
+     * By its path, and required to be there. The previous version searched for a
+     * file matching any of four loose patterns and then asserted `if (record)` —
+     * so on a vault where none matched, FR-217 was satisfied by nothing existing.
+     */
+    const record = files.find((f) => f.path === '.rampa/erasures.md');
+    expect(record, 'no dated record of the erasure (FR-217)').toBeDefined();
+    expect(record!.text).toMatch(/datos eliminados/i);
+    expect(record!.text).toContain(gone);
+    expect(record!.text).not.toMatch(/casillas|reloj|primer paso/i);
     await app.close();
   });
 

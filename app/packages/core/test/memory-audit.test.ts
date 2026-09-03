@@ -2,7 +2,9 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync, readdirSync, statSync, existsSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { buildIndex, loadForRun, HOUSE_STYLE_LIMIT_CHARS, type JournalDoc } from '../src/memory/index.js';
-import { planForget, tombstone } from '../src/memory/forget.js';
+import {
+  planForget, executeForget, verifyForgotten, tombstone, type NameStore,
+} from '../src/memory/forget.js';
 import { retentionCandidates, findRepeatedThemes, parseDatedSections,
          DEFAULT_RETENTION_DAYS } from '../src/memory/consolidate.js';
 import { Vault } from '../src/vault/io.js';
@@ -241,6 +243,164 @@ describe('FR-215/216 · erasure lists everything, then removes it', () => {
     // And it confirms on the code, not on a word: typing a code she has to read
     // off the list is a deliberate act.
     expect(src).toMatch(/typed\.trim\(\) !== code/);
+  });
+});
+
+
+/* ── FR-216 · the five residues ──────────────────────────────────────────── */
+
+/**
+ * «He borrado todo lo de X» was false five times over, and three of the review's
+ * reviewers found it independently — which is why it ranked first of ninety-three
+ * findings. After erasure there survived: her real name in the encrypted map, the
+ * handover packets, the roster row, the composition requests, and the archived
+ * journal entries. Four of the five were **invisible to the check whose whole job is
+ * making that sentence true**, and the fifth was invisible in principle: a text
+ * search over `names.enc` reads base64 ciphertext and can never match anything.
+ *
+ * This is erasure of a minor's data. The tests are here; the correctness of the
+ * result is for whoever holds data protection to confirm (P38).
+ */
+function fakeNames(initial: Record<string, string> = {}): {
+  map: Record<string, string>; store: NameStore;
+} {
+  const map: Record<string, string> = { ...initial };
+  return {
+    map,
+    store: {
+      forget: async (code: string) => { delete map[code]; },
+      knows: async (code: string) => code in map,
+    },
+  };
+}
+
+/** A learner with something of his in every one of the five places. */
+async function learnerEverywhere(vault: Vault, code: string): Promise<void> {
+  await vault.writeRaw(`profiles/${code}/profile.yaml`, `code: ${code}\n`);
+  await vault.writeRaw(`profiles/${code}/notes.md`, `---\nlearner: ${code}\n---\n\nAlgo.\n`);
+  await vault.writeDoc('profiles/roster.yaml', {
+    academic_year: '2025-2026',
+    learners: [{ code, subjects: [], status: 'active' }, { code: 'OTR-999', subjects: [], status: 'active' }],
+  }, '');
+  await vault.writeRaw(`handover/${code}-2025-2026.md`, `# Traspaso · ${code}\n\nLo observado.\n`);
+  await vault.writeRaw('.rampa/requests/job-x.json',
+    JSON.stringify({ learnerCode: code, objectives: ['sumar llevando'] }));
+  await vault.writeRaw(`memory/archive/2026-01-01-algo.md`,
+    `---\nlearner: ${code}\nrecipes: []\n---\n\nUna nota archivada.\n`);
+  await vault.writeRaw(`memory/journal/2026-02-01-otra.md`,
+    `---\nlearner: ${code}\nrecipes: []\n---\n\nUna nota viva.\n`);
+}
+
+describe('FR-216 · the five places «he borrado todo» used to be false', () => {
+  it('the plan names all five before she confirms anything', async () => {
+    const vault = new Vault(await scratch());
+    await learnerEverywhere(vault, 'PER-abc');
+
+    const plan = await planForget(vault, 'PER-abc');
+    const listed = plan.paths.join('\n');
+
+    expect(listed, 'the handover packet').toContain('handover/PER-abc-2025-2026.md');
+    expect(listed, 'the composition request').toContain('.rampa/requests/job-x.json');
+    expect(listed, 'the archived journal entry').toContain('memory/archive/2026-01-01-algo.md');
+    expect(listed, 'the live journal entry').toContain('memory/journal/2026-02-01-otra.md');
+
+    // The two that are edits rather than deletions, so the plan can say them too.
+    expect(plan.entries.map((e) => e.of).sort()).toEqual(['name', 'roster']);
+
+    // FR-215: nothing has happened yet.
+    expect(await vault.exists('handover/PER-abc-2025-2026.md')).toBe(true);
+  });
+
+  it('erasing removes all five, and the honest check finds nothing left', async () => {
+    const vault = new Vault(await scratch());
+    await learnerEverywhere(vault, 'PER-abc');
+    const names = fakeNames({ 'PER-abc': 'Lucía', 'OTR-999': 'Mateo' });
+
+    const { remaining } = await executeForget(
+      vault, await planForget(vault, 'PER-abc'), names.store);
+
+    expect(await vault.exists('handover/PER-abc-2025-2026.md')).toBe(false);
+    expect(await vault.exists('.rampa/requests/job-x.json')).toBe(false);
+    expect(await vault.exists('memory/archive/2026-01-01-algo.md')).toBe(false);
+    expect(await vault.exists('profiles/PER-abc')).toBe(false);
+
+    // Her name for him is gone from the map — the residue no text search could see.
+    expect(names.map).not.toHaveProperty('PER-abc');
+
+    // And his row is out of the roster, while the other learner's stays.
+    const roster = await vault.readDoc('profiles/roster.yaml');
+    expect(JSON.stringify(roster?.data)).not.toContain('PER-abc');
+    expect(JSON.stringify(roster?.data)).toContain('OTR-999');
+
+    expect(remaining, 'something of his is still in the vault').toEqual([]);
+  });
+
+  it('the check looks in the two directories it used to walk past', async () => {
+    /*
+     * The load-bearing test. `verifyForgotten` walked profiles/material/output/memory
+     * and nothing else, so `handover/` and `.rampa/` residues were not merely left
+     * behind — they could not be reported. Asserted by leaving them there on purpose
+     * and requiring the check to say so.
+     */
+    const vault = new Vault(await scratch());
+    await vault.writeRaw('handover/PER-abc-2025-2026.md', '# Traspaso · PER-abc\n');
+    await vault.writeRaw('.rampa/requests/job-x.json', '{"learnerCode":"PER-abc"}');
+
+    const remaining = await verifyForgotten(vault, 'PER-abc', fakeNames().store);
+    expect(remaining).toContain('handover/PER-abc-2025-2026.md');
+    expect(remaining).toContain('.rampa/requests/job-x.json');
+  });
+
+  it('the check asks the encrypted map rather than searching it', async () => {
+    /*
+     * The residue that was invisible in principle. `names.enc` holds base64 of
+     * ciphertext, so `(?<![A-Za-z0-9])PER-abc(?![A-Za-z0-9])` over its bytes is a
+     * check that always passes — and the e2e that covered erasure asserted exactly
+     * that. Here the map is asked, so a name left behind is a finding.
+     */
+    const vault = new Vault(await scratch());
+    const stillKnown = fakeNames({ 'PER-abc': 'Lucía' });
+
+    expect(await verifyForgotten(vault, 'PER-abc', stillKnown.store))
+      .toEqual(['.rampa/names.enc']);
+    expect(await verifyForgotten(vault, 'PER-abc', fakeNames().store)).toEqual([]);
+  });
+
+  it('leaves the dated line that says the erasure happened (FR-217)', async () => {
+    /*
+     * The one place the code may survive, and the reason the exception is safe is
+     * now true rather than asserted: the map from code to name is gone, so the line
+     * identifies an event and not a child.
+     */
+    const vault = new Vault(await scratch());
+    await vault.writeRaw('.rampa/erasures.md', `# Datos eliminados\n\n${tombstone('PER-abc')}`);
+
+    expect(await verifyForgotten(vault, 'PER-abc', fakeNames().store)).toEqual([]);
+  });
+
+  it('does not take another learner\'s request or packet with it', async () => {
+    const vault = new Vault(await scratch());
+    await vault.writeRaw('profiles/PER-abc/profile.yaml', 'code: PER-abc\n');
+    await vault.writeRaw('handover/OTR-999-2025-2026.md', '# Traspaso · OTR-999\n');
+    await vault.writeRaw('.rampa/requests/job-y.json',
+      JSON.stringify({ learnerCode: 'OTR-999', objectives: ['restar'] }));
+
+    await executeForget(vault, await planForget(vault, 'PER-abc'), fakeNames().store);
+
+    expect(await vault.exists('handover/OTR-999-2025-2026.md')).toBe(true);
+    expect(await vault.exists('.rampa/requests/job-y.json')).toBe(true);
+  });
+
+  it('leaves a request it cannot read alone rather than deleting it on a filename', async () => {
+    // Erasure must not remove what it cannot understand: a file that is not JSON is
+    // not a request this application wrote, and guessing from the name is how a
+    // deletion path removes somebody else's data.
+    const vault = new Vault(await scratch());
+    await vault.writeRaw('profiles/PER-abc/profile.yaml', 'code: PER-abc\n');
+    await vault.writeRaw('.rampa/requests/job-z.json', 'no soy json');
+
+    const plan = await planForget(vault, 'PER-abc');
+    expect(plan.paths).not.toContain('.rampa/requests/job-z.json');
   });
 });
 

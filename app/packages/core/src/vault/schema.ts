@@ -119,7 +119,16 @@ export const rosterEntrySchema = z.object({
   year_group: z.string().optional(),
   group: z.string().optional(),
   subjects: z.array(z.string()).default([]),
-  status: z.enum(['active', 'archived', 'forgotten']).default('active'),
+  /**
+   * `'forgotten'` was here and **nothing in the repository ever wrote it** — the
+   * project's signature defect, in the erasure path of all places. Removed rather
+   * than left as a value a future caller might reach for, because it cannot be
+   * used: a tombstoned row still holds the code, so `verifyForgotten` would report
+   * it as a residue for ever. Erasure removes the row (P38); the dated line in
+   * `.rampa/erasures.md` is where the fact that it happened lives, with nothing of
+   * his in it (`003` FR-217).
+   */
+  status: z.enum(['active', 'archived']).default('active'),
 });
 
 export const rosterSchema = z.object({

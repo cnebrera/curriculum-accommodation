@@ -69,6 +69,33 @@ async function save(map: NameMap): Promise<void> {
 export const knownNames = async (): Promise<Map<string, string>> => new Map(Object.entries(await load()));
 
 /**
+ * Erasure's hands on the encrypted map (`003` FR-216, review COD-03).
+ *
+ * The map is the most personal datum in the system and it **survived erasure**: no
+ * path in `planForget`/`executeForget` touched it and no screen ever called
+ * `names:set(code, '')`. The e2e that covered it asserted, over base64 ciphertext,
+ * that the code did not appear in the file — a check that can only ever pass.
+ *
+ * `@rampa/core` cannot do this itself: `safeStorage` is an Electron key and
+ * `npm run test:isolation` fails if core can reach the shell. So core declares the
+ * need as a required parameter and this is what satisfies it.
+ */
+export const nameStore = {
+  forget: async (code: string): Promise<void> => {
+    const map = await load();
+    if (!(code in map)) return;   // idempotent: nothing to forget is success
+    delete map[code];
+    await save(map);
+  },
+  /**
+   * `load()` reads the cache when it is warm, which is the right answer: the cache
+   * *is* what the application would show her, so a map that still displays his name
+   * is a residue whatever the file says.
+   */
+  knows: async (code: string): Promise<boolean> => code in (await load()),
+};
+
+/**
  * Her learners' names as **normalised single words** (`018` FR-1610, `023` FR-2109).
  *
  * ## The defect this closes

@@ -588,6 +588,44 @@ and the name map is deleted with everything else. The e2e asserts the map is gon
 in the same test, because **if it ever survived, the exception would stop being
 defensible.**
 
+### And it did survive — «he borrado todo lo de X» was false five times
+
+**Corrected 2026-09-03** (review theme 1, P38; found independently by three
+reviewers, which is why it ranked first of ninety-three findings). The reasoning
+above was right and its premise was false. After erasure there survived:
+
+1. **Her real name** in `.rampa/names.enc` — the most personal datum in the system.
+   Nothing removed the entry, and the assertion that was supposed to catch it
+   searched base64 of ciphertext for a code: **a check that can only ever pass.**
+2. The **handover packets** in `handover/<code>-<year>.md`, code in the filename and
+   his barriers inside. `003` has an explicit edge case saying they go too.
+3. His **row in the roster**. The `status: 'forgotten'` enum value existed and
+   nothing ever wrote it.
+4. The **composition requests** in `.rampa/requests/<job>.json`, with his code in
+   clear and her free text in `objectives` and `anchor`.
+5. The **archived journal entries** in `memory/archive`, keeping `learner: <code>`.
+   The only one that confessed — it appeared in `remaining` *after* the deletion,
+   so the screen said «es un fallo mío, dímelo y lo arreglo» with no way to.
+
+Four of the five were invisible to `verifyForgotten`, which walked four directories
+and not `handover/` or `.rampa/`. The fifth was invisible in principle.
+
+Now: the plan collects all five and **names the two that are edits rather than
+deletions** (`ForgetPlan.entries`), so FR-215's «list everything first» includes
+them; `verifyForgotten` walks six directories, exempts `.rampa/erasures.md` by name,
+and **asks** the name store instead of reading it; and that store is a **required
+parameter** of both `executeForget` and `verifyForgotten` rather than an optional
+hook, because omission is how this happened. Seven new cases in
+`packages/core/test/memory-audit.test.ts` and a rewritten `e2e/erasure.spec.ts`
+whose seed now creates all five residues, with every `if (x) expect(…)` guard
+removed — three of them made a requirement pass by absence.
+
+**Not verified by anybody qualified:** this is erasure of a minor's personal data,
+and whether the result satisfies the right of erasure is a data-protection
+judgement, not a test result. Carlos's decision (P38) says to have it reviewed by
+whoever holds data protection. Until that happens this section records that the code
+does what the finding asked for, and nothing about whether that is sufficient.
+
 ### FR-210 and FR-209, closed 2026-08-29
 
 **FR-210's gap was noise, not absence.** The channel existed end to end and carried

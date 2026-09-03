@@ -6,6 +6,7 @@ import {
 } from '@rampa/core';
 import { currentVault } from './vault.js';
 import { handle } from './wrap.js';
+import { nameStore } from './names.js';
 
 /**
  * Memory: the teacher routes every item (Principle VIII).
@@ -170,7 +171,7 @@ export function registerMemoryIpc(): void {
   handle('memory:forget', async (code: string) => {
     const vault = currentVault();
     const plan = await planForget(vault, code);
-    const result = await executeForget(vault, plan);
+    const result = await executeForget(vault, plan, nameStore);
     const log = (await vault.readRaw('.rampa/erasures.md')) ?? '# Datos eliminados\n\n';
     await vault.writeRaw('.rampa/erasures.md', log + tombstone(code));
     return result;

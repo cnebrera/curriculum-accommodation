@@ -27,9 +27,25 @@ import { useForgetPlan, useForgetLearner } from '../data/notes.js';
 interface Plan {
   code: string;
   paths: string[];
+  /**
+   * What is removed from **inside** a file rather than by deleting one.
+   *
+   * Two of the five residues the review found are of this shape: her name for him
+   * in the encrypted map, and his row in the roster. Deleting either file would
+   * take every other learner with it, which is why a plan that only ever collected
+   * paths could not name them — and why «he borrado todo lo de X» was false about
+   * the most personal datum in the system.
+   */
+  entries: Array<{ of: 'name' | 'roster'; where: string }>;
   survives: string[];
   outOfReach: string[];
 }
+
+/** Said in her words here, because the sentence she reads is the interface's. */
+const ENTRY_SAYS: Record<'name' | 'roster', string> = {
+  name: 'Tu nombre para él, del listado cifrado de este equipo.',
+  roster: 'Su fila de la lista de clase.',
+};
 
 export function ForgetLearner({ code, name, onDone }: {
   code: string;
@@ -114,8 +130,27 @@ export function ForgetLearner({ code, name, onDone }: {
         </ul>
         {plan.paths.length === 0 ? (
           <p className="small muted" style={{ margin: 0 }}>
-            No encuentro nada suyo. Puede que ya lo borraras.
+            No encuentro ficheros suyos. Puede que ya los borraras.
           </p>
+        ) : null}
+
+        {/*
+          And the two that are edits (FR-215: list *everything* before confirming).
+          In the same card as the paths rather than in a callout of their own: from
+          her side they are not a different kind of thing, they are the rest of the
+          list — and they were missing from it entirely.
+        */}
+        {plan.entries.length ? (
+          <>
+            <span className="small"><strong>Y de dentro de dos ficheros</strong></span>
+            <ul className="stack gap1" style={{ margin: 0, paddingLeft: '1.4em' }}>
+              {plan.entries.map((e) => (
+                <li key={e.of} className="small">
+                  {ENTRY_SAYS[e.of]} <code>{e.where}</code>
+                </li>
+              ))}
+            </ul>
+          </>
         ) : null}
       </div>
 
