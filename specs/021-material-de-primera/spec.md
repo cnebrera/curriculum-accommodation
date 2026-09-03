@@ -36,7 +36,9 @@ iterating is possible only after adapting.
 
 ## What this feature is not
 
-**The conversation.** «No veo chat ni nada» is a real gap and it is `022`: iterating by
+**The conversation.** «No veo chat ni nada» is a real gap and it is `026-la-conversacion`
+*(pointer corrected 2026-09-03 — this said `022`, which turned out to be diagrams; review
+CONS-05/P24)*: iterating by
 talking to Rampa about a document needs its own thinking about cost per turn, versioning
 and what happens to a verified answer key when the exercises change. What `021` does is
 make the **correction box that already exists** reachable from composed material.
@@ -198,7 +200,9 @@ that they only exist downstream of an adaptation.
 - **Composed material for several learners.** The composition is one; adapting it for
   three is `005`, unchanged.
 - **A document with a figure that cannot be described.** Printing must fail the same way
-  it fails for adapted material (`007` FR-511), not more quietly.
+  it fails for adapted material (`001`'s essential-figure edge case, `007` FR-516), not
+  more quietly. *(Citation corrected 2026-09-03: this previously cited `007` FR-511,
+  which is the outbound-calls rule — review CONS-02/P22.)*
 - **The vault holds composed material from before this feature.** It becomes viewable and
   printable with no migration and no re-composition.
 
@@ -344,5 +348,6 @@ that they only exist downstream of an adaptation.
   are deterministic; only a correction spends money, exactly as it does today.
 - **`002`'s derivation of the kind becomes a fallback**, for material composed before this
   feature and for a vault that has documents in it already.
-- **The conversation is `022`.** This feature makes the existing correction box reachable
+- **The conversation is `026-la-conversacion`** *(corrected 2026-09-03, was `022` —
+  CONS-05/P24)*. This feature makes the existing correction box reachable
   and does not build a chat.

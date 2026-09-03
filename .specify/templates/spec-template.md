@@ -87,6 +87,13 @@
 
 ### Functional Requirements
 
+<!--
+  Citation convention (frozen 2026-09-03, review P22): every reference to a
+  functional requirement of ANOTHER spec MUST carry that spec's prefix, e.g.
+  `007` FR-511 — never a bare FR number. FR numbers are only unique within a
+  single spec.
+-->
+
 - **FR-001**: System MUST [specific capability, e.g., "allow users to create accounts"]
 - **FR-002**: System MUST [specific capability, e.g., "validate email addresses"]
 - **FR-003**: Users MUST be able to [key interaction, e.g., "reset their password"]

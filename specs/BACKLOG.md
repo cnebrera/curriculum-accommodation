@@ -413,6 +413,81 @@ every moment should have a spec. What it added beyond the seams pass:
    journey sentence → T094). Handover *import* (004 US2) recorded as deliberately
    deferred rather than silently missing.
 
+## G41 · Nobody owns code signing, and the release path is already wired
+
+**Open, added 2026-09-03** (decision P52, review CRIT-06).
+
+Deferring signature was decided well and written in the wrong place: a comment in
+`electron-builder.yml` («Revisit before any public release beyond Linux») and `006`
+research R14/R15. Meanwhile `npm run dist` plus the `publish: github` block already
+form the complete path to push an unsigned NSIS that SmartScreen will block and a
+DMG that Gatekeeper will reject — and nothing in the repo would remind whoever
+publishes.
+
+**Closure criterion, explicit:** before the first public release for macOS or
+Windows, the installers are signed (and notarised where the platform requires it);
+**until then, no macOS or Windows installer is published.** Linux (AppImage) is not
+gated. The decision now lives here rather than in a yml comment.
+
+---
+
+## G40 · Co-official languages are out of v1, and the application must say so honestly
+
+**Open, added 2026-09-03** (decision P51, review CRIT-04).
+
+The UI reserves the slot (`LocaleCode` already includes `ca`, `gl`, `eu`) but no spec
+and no recipe says what the pipeline does with classroom material whose language is
+Catalan, Galician or Basque — the majority situation in several communities. The
+linguistic recipes are reasoned over Spanish; applied to Catalan material they would
+be the wrong policy applied fluently.
+
+**Decision: out of scope for v1, declared rather than discovered.** When Rampa
+detects material in a co-official language it tells the teacher honestly that it
+cannot adapt it yet, instead of adapting in the wrong language or with the wrong
+recipes. The honest message is **pending implementation** — it is code, and it goes
+through the flow. The path in is already decided by P3/P28 (a corpus per language,
+`recipes/lang/<code>/`): these languages enter when Spanish is solid.
+
+---
+
+## G39 · Three MUSTs of `011` wait for a person who can validate real curricular content
+
+**Open, added 2026-09-03** (decision P31, review CONS-14).
+
+`011` FR-918 (official curricular elements with their codes), FR-920 (the PT/AL
+objective taxonomy) and FR-921 (built from the source instruction, not copied from
+another application) are deferred, annotated in the spec on 2026-09-03. The reason
+is the right one and it is recorded in `011`'s own tasks.md: Rampa ships no
+curriculum database, and writing a plausible one would put an invented list in
+front of her — the exact thing this project refuses to do with axes, exercises and
+criterios. What was missing was the register: the spec said MUST, the tasks said
+«not done», and nothing forced anyone to revisit.
+
+**Closes when** a person qualified to validate curricular content (a practising PT,
+or someone working from the official sources) builds or reviews the Spanish
+elements and the PT/AL taxonomy. `check-fr-coverage.sh` is being hardened in
+parallel (P31, queue item 0.3) so that a mention no longer counts as coverage.
+
+---
+
+## G38 · `022` was cited as shipped without a plan, tasks or code
+
+**Open, added 2026-09-03** (decisions P21/P42, review CONS-01/COD-10).
+
+`022-material-que-se-ve` (diagrams as markup) had, when the review ran, a spec —
+and nothing else. Yet `023`'s input said «after `022` shipped» and `023` T023
+ticked an assertion about «`022`'s diagrams». Both corrected 2026-09-03; `022`
+carries a process note in the style of `019`'s.
+
+This entry is the honest register: **`022` is genuinely pending until it has been
+through plan → tasks → implement.** Carlos's decision keeps it prioritised — it goes with
+the exam/problems and structure-material work, because teaching multiplication
+needs the diagram (queue item 3.2). The gate is being hardened so a spec cited by
+code or declared shipped/built by another spec must have `plan.md` and `tasks.md`
+(P42, queue item 0.3).
+
+---
+
 ## G37 · What three clean reviewers found in six thousand lines
 
 **2026-09-02.** Carlos, before looking at `023`–`025` himself: «lo revisas bien antes de
@@ -808,6 +883,18 @@ Carlos chose the assisted download.
 page returned no content and `api.arasaac.org/docs` is a 404. I know they publish an API
 and that free applications use it; **I have not confirmed it in their source**, so the
 download must not ship on my assumption. Somebody reads that page first.
+
+> **Reconciled 2026-09-03 (decision P26, review CONS-07).** The paragraph above and the
+> facts around it had come to contradict each other: `024` records `023` as shipped, so
+> the download *was* built ahead of this blocker, and **no human has read ARASAAC's terms
+> yet** — `023`'s «Read on 2026-09-02» is the author's own reading of the licence text,
+> verified only against the API, not a human read of ARASAAC's terms page. Carlos's
+> decision reconciles rather than erases: the blocker is superseded by an explicit
+> closure criterion — **a human reads ARASAAC's own terms of use (and compliance/legal
+> if applicable) before the first public release; until then the feature exists in the
+> repository but is not distributed.** «Must not ship» becomes «must not release», which
+> is what it should have said: the thing a teacher can be harmed by is a distributed
+> build, not a branch.
 
 **2 · A legal read of the on-screen text.** Requested by Carlos and correct: I am not a
 lawyer, and a sentence about licences on a teacher's screen is read as fact. The text now

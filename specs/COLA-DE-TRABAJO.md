@@ -41,25 +41,29 @@ Sin spec nueva: son defectos contra specs vigentes, con decisión tomada. Cada u
 
 Un solo commit de specs/corpus puede llevarlas todas. Sin código salvo donde se indica.
 
-- [ ] **1.1** Prefijo de spec obligatorio al citar FRs → AGENTS.md + plantilla; corregir 021:201 (P22).
-- [ ] **1.2** 007 FR-511 → «destinos declarados en el corpus», nota fechada → 023 (P23).
-- [ ] **1.3** Punteros de la conversación: 021/022/023/024 → apuntan a 026 (P24).
-- [ ] **1.4** 020 FR-1802/1817/1819 anotados «aplazado por 025, sigue siendo el destino»; 025 anotada
+**2026-09-03: ejecutados los 12 ítems puramente documentales** (guardianes en verde; entradas nuevas
+G38–G41 en BACKLOG). Quedan los 5 que tocan código/i18n/corpus-con-front-matter: 1.11, 1.12, 1.13,
+1.16, 1.17 — para la fase de implementación (1.17 lo construye la 032 como prerequisito propio).
+
+- [x] **1.1** Prefijo de spec obligatorio al citar FRs → AGENTS.md + plantilla; corregir 021:201 (P22).
+- [x] **1.2** 007 FR-511 → «destinos declarados en el corpus», nota fechada → 023 (P23).
+- [x] **1.3** Punteros de la conversación: 021/022/023/024 → apuntan a 026 (P24).
+- [x] **1.4** 020 FR-1802/1817/1819 anotados «aplazado por 025, sigue siendo el destino»; 025 anotada
       como paso intermedio (P25/P29).
-- [ ] **1.5** G28: actualizar con estado real + criterio de cierre «lectura humana de los términos de
+- [x] **1.5** G28: actualizar con estado real + criterio de cierre «lectura humana de los términos de
       ARASAAC antes de la primera release pública» (P26).
-- [ ] **1.6** 023: corregir «022 shipped» y el tick hueco de T023; retirar la cita de código a
+- [x] **1.6** 023: corregir «022 shipped» y el tick hueco de T023; retirar la cita de código a
       FR-2008 como precedente; 022 al BACKLOG hasta tener plan/tasks; nota de proceso en 022 (P21, P42).
-- [ ] **1.7** 011 FR-918/920/921 marcados deferred con razón + entrada BACKLOG (P31).
-- [ ] **1.8** 024 FR-2218 anotado «aplazado, ver G35» hasta la spec del segundo eje (P34).
-- [ ] **1.9** FR-122/FR-129: escribir la lectura reconciliadora (curso→corpus = input de ella) (P32).
-- [ ] **1.10** FR-707a: «mejor medido entre elegibles y con soporte de fotos, ambas ramas» (P33).
+- [x] **1.7** 011 FR-918/920/921 marcados deferred con razón + entrada BACKLOG (P31).
+- [x] **1.8** 024 FR-2218 anotado «aplazado, ver G35» hasta la spec del segundo eje (P34).
+- [x] **1.9** FR-122/FR-129: escribir la lectura reconciliadora (curso→corpus = input de ella) (P32).
+- [x] **1.10** FR-707a: «mejor medido entre elegibles y con soporte de fotos, ambas ramas» (P33).
 - [ ] **1.11** Copy de conexión → «por hoja adaptada» (spec + i18n + test) (P36).
 - [ ] **1.12** Recetas: declarar conflicts: one-task-per-page ↔ exam-access; escribir receta de
       conflicto DEC+ATE (P27). Corpus, no código.
 - [ ] **1.13** Regla dura 12 → el informe habla siempre en el idioma de la docente (P28-parte).
-- [ ] **1.14** Cooficiales: mensaje honesto al detectar la lengua + deuda registrada (P51).
-- [ ] **1.15** Firma de código: entrada BACKLOG con criterio «sin firma no hay release pública
+- [x] **1.14** Cooficiales: mensaje honesto al detectar la lengua + deuda registrada (P51).
+- [x] **1.15** Firma de código: entrada BACKLOG con criterio «sin firma no hay release pública
       mac/Windows» (P52).
 - [ ] **1.16** Tilde «Válida→Valida» del texto impreso en exámenes (AGE, sin P — hallazgo directo).
 - [ ] **1.17** Marcador de versión de esquema en el vault (P50). Pequeño código + test; va aquí
@@ -95,14 +99,14 @@ Un solo commit de specs/corpus puede llevarlas todas. Sin código salvo donde se
 
 Orden dicho por Carlos («construir ya»): 3.1–3.3 primero.
 
-**2026-09-03: las 10 specs están ESCRITAS (026–035), con checklist en verde y los guardianes del
-repo pasando.** Lo que falta de cada una: clarify (opcional si Carlos revisa la spec directamente)
-→ plan → tasks → implement. 022 y 020 no necesitaban spec nueva (3.2 y 3.10).
+**2026-09-03 (tarde): las 11 features tienen plan.md + research.md + data-model.md + quickstart.md +
+tasks.md** (026–035 y también 022, que carecía de ellos). Cobertura FR verificada: 596 requisitos, todos
+contabilizados; cero tareas marcadas. **Todo listo para `/speckit-implement <feature>`.** 020 US2–US4
+sigue siendo el único ítem del lote sin tasks propios (sus tareas viven en specs/020/tasks.md, abiertas).
 
 - [x] **3.1 · Spec ESCRITA → `027-examenes-y-problemas`** (P2). Falta: clarify → plan → tasks → implement. Formato de salida
       propio, verificación adecuada por tipo, el tipo elegido gobierna lo producido de verdad.
-- [ ] **3.2 · Spec 022 (ya existía) → plan + tasks + implementación: diagramas como marcado** (P21).
-      Pasa por el guardián endurecido de 0.3.
+- [x] **3.2 · 022 con plan + tasks ESCRITOS** (P21). Falta solo: implement.
 - [x] **3.3 · Spec ESCRITA → `026-la-conversacion`** (P24). Falta: clarify → plan → tasks → implement.
 - [x] **3.4 · Spec ESCRITA → `028-material-de-estructura`** (P4). Falta: clarify → plan → tasks → implement.
 - [x] **3.5 · Spec ESCRITA → `029-la-normativa-es-un-corpus`** (P3, incluye P8). Falta: clarify → plan → tasks → implement.

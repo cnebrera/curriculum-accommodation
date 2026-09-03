@@ -98,6 +98,10 @@ and metadata land where `018`'s reader finds them, and the sheet renders.
 
 - [X] T023 `019`'s linear renderings and `022`'s diagrams are unaffected — asserted, not
   assumed.
+  **Correction 2026-09-03 (P21/P42):** the `022` half of this tick was vacuous. `022` has
+  a spec and no plan.md, tasks.md or code — there were no diagrams to be unaffected, so
+  «asserted, not assumed» asserted nothing about `022`. The `019` half stands. Re-assert
+  the `022` half when `022` actually builds its diagrams (BACKLOG G38).
 - [X] T024 Look at it in two widths and at `xlarge` (`013` FR-1113/FR-1118).
   **Found two things by looking**, which is the whole reason the task exists:
   - The block sat in **480px with a third of the screen empty**, because it was inside

@@ -220,6 +220,13 @@ wrong answer is refused before she sees it.
   from **skill practice** (needs a level and a verifiable answer key).
 - **FR-122**: For skill practice, the level MUST come from the education corpus
   (`011`), never from the model's own sense of the learner's age.
+  **Reconciling note, 2026-09-03 (decision P32), with FR-129:** the two rules
+  looked contradictory — level from the corpus here, level from her or the
+  overlay there. The reading that holds both: **she names the course — that is
+  her input — and the corpus defines what that course contains.** Deriving
+  course→corpus is not the application's own judgement about the child; it is
+  looking up the meaning of something she said. Only when there is no course
+  either does compose ask her.
 - **FR-123**: Where the domain admits deterministic checking, the application MUST
   compute the answer key itself and MUST refuse an exercise whose stated answer
   disagrees. It MUST NOT correct it silently.
@@ -252,6 +259,12 @@ de estudios. See [docs/sda-ia-junta-andalucia.md](../../docs/sda-ia-junta-andalu
   about the child. Composing at a stated level is a different act from quietly
   lowering someone else's worksheet, which Principle III forbids; the difference
   is who decided, and it must stay visible.
+  **Reconciling note, 2026-09-03 (decision P32), with FR-122:** the learner's
+  course, named by her, counts as her input; the education corpus (`011`) then
+  defines what that course contains (FR-122). What this rule forbids is the
+  application guessing a level from its own sense of the child — not resolving
+  the course she stated. Compose asks only when neither an explicit level nor a
+  course is available.
 - **FR-130**: Material MUST be able to record how many **sessions** it is for. A PT
   works in sessions and the application has no concept of one.
 - **FR-131**: Objectives MAY be chosen from the PT/AL objective corpus (`011`)

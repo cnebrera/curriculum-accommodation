@@ -185,6 +185,12 @@ her less than the profile being wrong.
 
 - **FR-2310**: The rail's top level MUST be four entries: Mis alumnos, Preparar
   material, Mis notas, Configuración.
+  **Note added 2026-09-03 (decision P25): the four-entry rail is an intermediate
+  step, not the destination.** `020` FR-1802 (exactly two destinations), FR-1817
+  (full Configuración) and FR-1819 (notes split by scope) stand as the destination
+  and carry matching deferral notes; they were deferred rather than retired
+  because `020` US2–US4 are not built yet. When they land, Preparar material moves
+  inside the learner and Mis notas splits — and this rail goes back to two.
 - **FR-2311**: Which section of Configuración she is in MUST NOT be signalled by colour
   alone (`010` FR-812).
 - **FR-2312**: The second level MUST be reachable by keyboard alone and MUST be a named

@@ -11,7 +11,9 @@
 > «esto que mierda es? no puedo decirle al usuario que se tiene que bajar algo... la
 > herramienta va a ser gratis, podemos usar eso o no?»
 
-and, after `022` shipped without touching it:
+and, again, with `022` written and the screen unchanged *(corrected 2026-09-03: this
+line said «after `022` shipped», which was false — `022` has a spec and no plan.md,
+tasks.md or code, and nothing of it has shipped; P21/P42, process note in `022`)*:
 
 > «Sigue sin haber un botón para descargar los pictogramas...»
 
@@ -261,4 +263,5 @@ and assert what was requested — vocabulary only.
   is invented for this feature.
 - **Images are fetched at one size** and `018` already owns how they are embedded and how
   they degrade.
-- **`024` is the conversation** and unrelated.
+- **`026-la-conversacion` is the conversation** and unrelated *(corrected 2026-09-03,
+  was `024` — CONS-05/P24)*.

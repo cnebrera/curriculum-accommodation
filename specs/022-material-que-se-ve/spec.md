@@ -19,6 +19,23 @@ And, when I proposed a fixed catalogue of code-drawn diagrams:
 > combinacion hace, pero no ilusraría diagramas con IA, montaría HTMLs internos o algo
 > parecido que renderizo»
 
+## A process note, recorded rather than tidied away
+
+**This specification was cited as shipped without being so.** `023`'s input line
+said «after `022` shipped» on 2026-09-02, and `023`'s T023 ticked an assertion
+about «`022`'s diagrams» — while this feature had, at that moment, a spec and no
+`plan.md`, no `tasks.md` and no code. Nothing of it had shipped. Found by the
+2026-09-03 review (P21, P42); both downstream claims now carry corrections.
+
+What let it happen: the Spec Kit gate blocked a spec and its implementation in
+one commit, but nothing checked a spec being *declared* built by another spec.
+The gate is being hardened for exactly that (P42: a spec cited by code or
+declared shipped/built must have `plan.md` and `tasks.md`), and this feature is
+in the BACKLOG (G38) as genuinely pending until it has been through `plan` →
+`tasks` → `implement`. Carlos's decision keeps it on the table and prioritised —
+teaching multiplication needs the diagram, and the plan/tasks work is already
+queued as item 3.2.
+
 ## The gap
 
 Rampa can produce a page of prose about multiplying with carrying. It cannot produce the
@@ -237,4 +254,5 @@ a navigation attempt produces a diagram with none of them, or no diagram.
 - **ARASAAC pictograms are `023`** and blocked on reading their terms of use. Nothing here
   depends on them, and this feature is not a workaround for them: a diagram is not a
   pictogram, and a child who reads by pictogram needs the vocabulary he has learned.
-- **The conversation is `024`.**
+- **The conversation is `026-la-conversacion`** *(corrected 2026-09-03, was `024` —
+  CONS-05/P24)*.

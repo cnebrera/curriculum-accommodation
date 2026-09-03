@@ -321,9 +321,18 @@ replace the key, or switch services, without touching her learners or material.
 - **FR-707**: The chooser MUST require exactly one answer — whether she can use a
   payment card — and MUST produce a single recommendation with one sentence of
   reasoning.
-- **FR-707a**: The recommendation rule MUST be: **no card** → the no-card service
+- **FR-707a**: ~~The recommendation rule MUST be: **no card** → the no-card service
   with the best measured quality that supports photographs; **card** → the service
-  with the best measured quality overall. Quality is the measurement from
+  with the best measured quality overall.~~
+  **AMENDED 2026-09-03 (decision P33, review CONS-17):** The recommendation rule
+  MUST be, in **both** branches: the service with the best measured quality
+  **among those eligible under FR-707b** and **that supports photographs**.
+  Two corrections in one: «overall» could name a service FR-707b then vetoes
+  (FR-707b's «however cheap or capable it measures» already claimed precedence;
+  now this rule says so too), and the card branch omitted the photograph
+  requirement even though `008` makes the photographed worksheet the common path
+  — a paid recommendation without vision would break `006`'s main journey
+  (SC-401 is measured from a photographed sheet). Quality is the measurement from
   `cases/002-model-floor`, not an opinion, so the rule survives new services
   appearing and prices moving.
   Rationale, recorded because the cheaper rule is tempting: the first impression

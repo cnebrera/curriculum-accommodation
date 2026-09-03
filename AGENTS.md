@@ -155,6 +155,13 @@ What follows are the rules for working *in the repository*, which are different.
    identifiers are English. The interface is Spanish first, with no project
    jargon: no "IR", "corpus", "axis", "vault".
 
+8. **Every FR citation carries its spec prefix.** Write `` `007` FR-511``, never a
+   bare `FR-511`. FR numbers are unique only within a spec — `005` and `007` both
+   define FR-501…FR-517 with different meanings, and the decision (2026-09-03,
+   review P22/CONS-02) was to freeze the prefix convention rather than renumber.
+   A bare FR number is ambiguous, and ambiguous requirement IDs are exactly what
+   "traceability to a moving target is not traceability" means.
+
 ---
 
 ## Where things live

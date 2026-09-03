@@ -218,6 +218,11 @@ and it is the input `002` FR-127 needs. See
   the official curricular elements of that system — for Spain: competencias
   específicas, criterios de evaluación and saberes básicos — each with its
   official code.
+  **DEFERRED 2026-09-03 (decision P31): needs a person who can validate real
+  curricular content.** Not built, and rightly so far: writing a plausible list
+  of official elements without a source-checked review would put an invented
+  curriculum in front of her, which Principle III forbids in spirit. Still the
+  requirement. Debt recorded as BACKLOG G39.
 - **FR-919**: Those elements MUST remain optional. A system file that carries only
   years and ages MUST stay valid, and the Spanish file MUST be allowed to gain
   them one subject at a time. A corpus that is only useful when complete is a
@@ -228,11 +233,15 @@ and it is the input `002` FR-127 needs. See
   conflictos»). These are *objectives*, what she is working on, and they are a
   different axis from the barriers of `005`, which say what gets in the way. Both
   describe the same child and neither replaces the other.
+  **DEFERRED 2026-09-03 (decision P31): needs a person who can validate real
+  curricular content — see FR-918's note and BACKLOG G39.**
 - **FR-921**: That taxonomy MUST NOT be copied from another application's data
   file. Its structure is a fact about the profession and traceable to the
   Instrucción de la Consejería; the exact wording of two hundred objectives is
   somebody else's work. Build it from the source instruction and say where it came
   from (FR-916 already requires a file to state what it is).
+  **DEFERRED 2026-09-03 (decision P31): needs a person who can validate real
+  curricular content — see FR-918's note and BACKLOG G39.**
 - **FR-922**: Nothing in this corpus MAY carry a diagnosis, a category of
   disability or a clinical label. An objective is what a child is working on; a
   déficit is what somebody decided about them (Principle V, ADR 0002).

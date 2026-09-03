@@ -216,6 +216,12 @@ fetches only the difference.
   not something a person can choose between.
 - **FR-2218**: Changing a choice MUST mark the sheets made from the old one as stale
   rather than rewriting them (`005` FR-520).
+  **DEFERRED 2026-09-03 (decision P34): satisfied by `031-el-segundo-eje-de-frescura`.**
+  Not implemented today — staleness compares `ir.md`'s fingerprint, which a vocabulary
+  change does not touch (BACKLOG G35 has the history, including the period when screen
+  and `vocabulario.md` claimed otherwise). The second freshness axis is its own spec
+  because `005`'s data model has exactly one axis today; until `031` lands, the screen
+  says what actually happens. See G35/P34.
 - **FR-2219**: Her vocabulary MUST travel in a handover (`004`); her licence acceptance
   MUST NOT.
 - **FR-2220**: Her vocabulary MUST be per language.
@@ -276,4 +282,5 @@ fetches only the difference.
   first, never which pictogram is used — that stays FR-1609 and her choice.
 - **The licence reading is `023`'s and is still under review** (backlog G28). Nothing
   here revisits it.
-- **`025` is the conversation.**
+- **`026-la-conversacion` is the conversation** *(corrected 2026-09-03, was `025`, which
+  is the pictogram relocation — CONS-05/P24)*.

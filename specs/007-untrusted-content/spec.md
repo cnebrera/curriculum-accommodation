@@ -127,8 +127,9 @@ adaptation into a broken system.
 3. **Given** any content, **When** it asks for redaction to be disabled, **Then**
    redaction is applied by the application on egress and is not model-controlled.
 4. **Given** any content, **When** it requests network access, **Then** there is
-   no path: the deterministic layer makes no outbound calls beyond the configured
-   model endpoint.
+   no path: the deterministic layer makes no outbound calls at all, and the
+   application reaches no destination outside those declared in the corpus
+   *(reworded 2026-09-03 with the FR-511 amendment — see FR-511 and `023`)*.
 
 ---
 
@@ -187,8 +188,17 @@ provenance to declare.
   by the application.
 - **FR-510**: Name redaction MUST be applied by the application on egress and
   MUST NOT be model-controlled.
-- **FR-511**: The deterministic layer MUST make no outbound calls other than to
-  the configured model endpoint.
+- **FR-511**: ~~The deterministic layer MUST make no outbound calls other than to
+  the configured model endpoint.~~
+  **AMENDED 2026-09-03 by `023` (decision P23):** The application MUST reach **no
+  network destination outside those declared in the corpus** — today the
+  teacher's configured model endpoint and ARASAAC's pictogram service (`023`),
+  both of them reviewed destinations. And a correction of the original wording:
+  the exception hangs off the **application**, not off the deterministic layer —
+  the deterministic layer (`packages/core`) makes no outbound calls at all
+  (Principle II; `npm run test:isolation`). The original text made the model
+  endpoint an exception of the wrong layer, and it silently forbade the pictogram
+  fetch that `023` specifies.
 - **FR-512**: A block without provenance and not marked `.scaffold` MUST fail the
   job, checked deterministically.
 - **FR-516** *(added 2026-08-28, ADR 0007)*: Omissions MUST be caught as
