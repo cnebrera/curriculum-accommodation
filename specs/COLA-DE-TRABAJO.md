@@ -41,11 +41,22 @@ Sin spec nueva: son defectos contra specs vigentes, con decisión tomada. Cada u
       residuos y sin los tres `if (x) expect(…)` que hacían pasar requisitos por ausencia.
       `validation.md` corregido. **Sigue pendiente la validación con DPO/legal — no es un
       resultado de test.**
-- [ ] **0.3 · Endurecer los dos guardianes** (P31, P42).
+- [x] **0.3 · Endurecer los dos guardianes** (P31, P42).
       `check-fr-coverage.sh`: cada FR en tasks.md exige marcador done/deferred:razón/dropped:razón —
       la mención deja de contar. `check-spec-kit.sh`: toda spec citada por código o declarada
       shipped/built por otra spec debe tener plan.md y tasks.md. Hacerlo ANTES de escribir las
       specs nuevas: protege todo lo que viene.
+      **Hecho 2026-09-04:** `check-fr-coverage.sh` reescrito — cada FR declarado (`- **FR-nnn**`)
+      exige tarea / marcador `done:|deferred:|dropped:` / fila de cobertura, la mención en prosa
+      deja de contar, una cita con prefijo de OTRA spec deja de contar (regla 8 desde el otro
+      lado), y una spec que marca `**DEFERRED` no puede aparecer como cubierta en sus tasks.
+      Imprime open/done/deferred/dropped por separado: **595 requisitos, 144 open, 443 done,
+      8 deferred** — antes decía «596, todos contabilizados», que se lee como «todos hechos».
+      Encontró 11 problemas reales al estrenarse (7 FRs solo mencionados en prosa o citados con
+      el prefijo de otra spec, 4 aplazados en la spec y «cubiertos» en tasks); los 11 corregidos.
+      `check-spec-kit.sh` gana la **regla 4**: spec citada por código o llamada «shipped» por otra
+      spec ⇒ plan.md + tasks.md. Cuatro mutaciones verificadas. AGENTS.md regla 9 y la plantilla
+      de tasks documentan la convención.
 - [ ] **0.4 · Fugas y honestidad del pipeline** (P17, P18, P19, P15, P1-parte2).
       Nombres: lista INE ampliada + marcar token inicial de frase. Prompt: fence+nonce alrededor
       del material + recordatorio de tarea posterior. Compose: llevadas+resta→borrows + corte de

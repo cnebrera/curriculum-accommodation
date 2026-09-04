@@ -162,6 +162,26 @@ What follows are the rules for working *in the repository*, which are different.
    A bare FR number is ambiguous, and ambiguous requirement IDs are exactly what
    "traceability to a moving target is not traceability" means.
 
+   `scripts/check-fr-coverage.sh` now enforces this from the other side: a
+   citation carrying **another** spec's prefix does not count as coverage of
+   yours. Seven requirements looked archived on somebody else's number.
+
+9. **A requirement's `tasks.md` says what became of it, not just that it exists.**
+   Every `- **FR-nnn**` a spec declares must be cited in its own tasks, in one of
+   three shapes, and the shape is the state:
+
+   | Shape | State |
+   |---|---|
+   | in a task — `- [ ] T012 … (FR-nnn)`, continuation lines included | the checkbox |
+   | an explicit marker — `FR-nnn — deferred: <reason>`, `done:`, `dropped:` | as written; outranks a task |
+   | a coverage row — `\| FR-nnn \| where it is \|` | the table's heading decides |
+
+   A number in a sentence is **not** an account. And a requirement the spec marks
+   `**DEFERRED` or `**DROPPED` may not be reported as covered by its tasks: that
+   combination is how four MUSTs in `011` read as satisfied for a week
+   (review CONS-14, decision P31). The guard prints open / done / deferred /
+   dropped separately, because "all accounted for" reads as "all built".
+
 ---
 
 ## Where things live

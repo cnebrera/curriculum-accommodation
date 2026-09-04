@@ -176,10 +176,13 @@ rewrites the stamp and the sheet is fresh again, with nothing to reset.
 - **One sheet for a mixed group** — backlog G17, a deliberate non-goal.
 - **A persistent group or class** — `005` chooses learners per job; if groups are
   worth having they are `015`'s and need their own argument.
-- **The record entries** (`014` FR-516) — this feature ships writing files where
-  they already go and gains record rows when `014` exists. Sequenced that way in
-  the plan on purpose: building the reader before there is anything worth reading
-  is how you get a record designed for one row.
+- **The record entries** — `005` FR-516, not `014` FR-516, which is a different
+  requirement about a different thing. The prefix was wrong here from the day this
+  was written (repository rule 8, decision P22), and it made the guard read a
+  citation of somebody else's number as coverage of ours. Sequenced into `014` on
+  purpose: building the reader before there is anything worth reading is how you
+  get a record designed for one row. **Satisfied since `014` shipped** — the row
+  below says how.
 
 ## Dependencies
 
@@ -204,5 +207,6 @@ at is a requirement nobody is keeping.**
 | FR-504 | `extraction.json` is per job and `verified` is **derived** from its pages, never settable. Three verifications of one page cannot exist because there is one page record |
 | FR-505 | `runBatch` calls `runAdaptation` per learner, and each call loads that learner's profile, notes and overlay. `batch.test.ts` asserts the second failing does not touch the first or third |
 | FR-508 | `job:adapt` accepts a single code, which is how the review screen retries one |
+| FR-516 | Satisfied by `014`, which shipped after this: `recordFor` derives one entry **per learner** by walking the job directories, so a worksheet adapted for three learners gives each of them their own row resolving to the same `ir.md`. `record-erasure.test.ts` asserts exactly that shape survives erasing one of them |
 | FR-517 | `record-erasure.test.ts` and `e2e/erasure.spec.ts`: the shared source stays when another learner still reads it, and the plan says so before touching anything |
 | FR-520 | Phase 7, T021-T030. Allowed: `setPageVerified` and `ingest:correctAndConfirm`, unchanged. Marked: `from_extraction` on each sheet against `readingFingerprint(ir.md)`, surfaced on the verification screen and on every record row. By name: joined in the renderer, so the layer that decides never holds one. Re-runs nothing: `jobs/stale.ts` imports nothing that could, and `stale.test.ts` fails if that changes |

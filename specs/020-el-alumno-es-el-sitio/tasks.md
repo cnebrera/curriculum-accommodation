@@ -257,7 +257,7 @@ five requirements sat uncited for a day and one of them was a live defect.
 | | Where it is satisfied |
 |---|---|
 | FR-1801 | T010 (caseload as the opening screen) · T028 (the door retired) |
-| FR-1802 | **T037**, not T009 — US1 deliberately removes nothing, so the top level holds five destinations until US2 replaces the door. A sequencing decision, stated rather than left looking like an unmet requirement |
+| FR-1802 | deferred: **T037**, and the spec now says so in its own text (P25, 2026-09-03). US1 removes nothing, so the top level held five destinations; `025` shipped a four-entry rail as an intermediate step and the last two entries cannot go until US2 puts «Preparar» inside the learner. Still the destination — a sequencing decision, not an unmet requirement, and now the guard reads it the same way the spec does |
 | FR-1803 | T009 · `LearnerShell` is the learner as a place |
 | FR-1804 | T009, T011, T012, T013 · four sections plus two set apart |
 | FR-1805 | **T012 and T014** · the record as its own destination, and the six cards stripped out of the profile editor. The defect this specification was opened for |
@@ -272,9 +272,9 @@ five requirements sat uncited for a day and one of them was a live defect.
 | FR-1814 | T003 (in the reducer) · T023 (on the screen) |
 | FR-1815 | T025 · T030 keeps `005` FR-512's assertion passing over the new screens |
 | FR-1816 | T023, and `014` already records against every learner |
-| FR-1817 | T033 · T036 |
+| FR-1817 | deferred: T033 · T036. `025` FR-2305 shipped three sections (Pictogramas, Mi servicio de IA, Acerca de); the house style, the vault location and the licences arrive with US4 (P25) |
 | FR-1818 | T035 |
-| FR-1819 | T034 |
+| FR-1819 | deferred: T034. `025` keeps «Mis notas» at the top level as an intermediate step; splitting it by `scope` is queued with US4 (P25) |
 | FR-1820 | T034 · asserted as an absence: the notes split changes no write path |
 | FR-1821 | T039 |
 | FR-1822 | T016 · T017 asserts keyboard reach |

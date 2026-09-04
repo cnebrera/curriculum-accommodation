@@ -111,6 +111,7 @@ at is a requirement nobody is keeping.**
 | FR-1104 | `tokens.css`'s type scale, and `styles.test.tsx` fails on a literal font size |
 | FR-1108 | `ui/src/data/Loaded.tsx` — one component for loading, error and empty, so the three read identically everywhere |
 | FR-1110 | T018 · `packages/shell/src/corpus/` — bundle, recipes, services, education, links |
+| FR-1113 | `npm run shots` renders every screen and writes them to `test-results/`, and `AGENTS.md` carries the rule this requirement is («and the one that is not a test: look at it») — because it **cannot** be a test: every check `010` produced is a property, so the suite passed on screens that were correctly coloured, correctly labelled and ugly, for a whole feature, because nobody rendered them. The before/after screenshots in this file's own preamble are the record |
 | FR-1114 | **Satisfied by absence, deliberately.** There is no pixel-diff suite and ADR 0009 says why: it fails on every intentional change, gets updated without being read, and then asserts whatever the last person accepted |
 | FR-1115 | `e2e/layout.spec.ts`'s width sweep, plus `015` T016's filter-bar case — which found that the sweep had never rendered the bar, because it seeds one learner and the bar appears from six |
 | FR-1117 | `e2e/layout.spec.ts` · «the text scale moves the thresholds»: at 1100 px the rail is a column at `normal` and a strip at `xlarge`, with no second rule saying so — which is why the thresholds are containers in `em` |

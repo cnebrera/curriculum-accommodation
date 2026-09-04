@@ -61,7 +61,14 @@ export interface PictogramCandidate {
  * becomes a **filename** on her disk and a segment of an image **URL**, so an id
  * containing `../`, a slash, a null byte or a query string is a path traversal and an
  * SSRF wearing a JSON field's clothing. An allowlist, and refused rather than
- * sanitised — `007` FR-508's rule for paths, and `022` FR-2008's for markup.
+ * sanitised — `007` FR-508's rule for paths.
+ *
+ * It used to cite `022` FR-2008 beside it as the same rule for markup. Removed,
+ * and the removal is the point: `022` has a specification and no implementation,
+ * so citing one of its requirements as authority for a decision taken here read
+ * as evidence that it had shipped — which is how `023` came to say «after `022`
+ * shipped» and tick a task against behaviour that did not exist (review COD-10,
+ * decision P42). `scripts/check-spec-kit.sh` rule 4 now catches the shape.
  */
 const ID = /^[A-Za-z0-9_-]{1,40}$/;
 

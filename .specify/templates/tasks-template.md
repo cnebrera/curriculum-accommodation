@@ -241,6 +241,39 @@ With multiple developers:
 
 ---
 
+## Coverage · every requirement, and where it is
+
+**Required, and checked.** `scripts/check-fr-coverage.sh` fails if a requirement the
+spec declares is not accounted for here — and a mention in prose is not an account
+(AGENTS.md rule 9). Every `- **FR-nnn**` must be cited *for this spec* in one of:
+
+- **a task** — `- [ ] T012 [US1] … (FR-nnn)`, continuation lines included. The
+  checkbox is the state.
+- **an explicit marker** — `FR-nnn — deferred: <reason>` / `done:` / `dropped:`,
+  on the same line as the number. Outranks a task, so a requirement overtaken by a
+  decision can say so without the task being rewritten.
+- **a row in the table below.** The heading decides: a section that says «not done»
+  or «deferred» files its rows as deferred rather than satisfied.
+
+Citations carry the spec prefix (rule 8): `` `014` FR-516`` in *this* file is 014's
+requirement, not yours, and it will not count as coverage.
+
+| | Where it is satisfied |
+|---|---|
+| FR-nnn | Tnnn · what actually makes it true, and the test that would fail |
+
+### Not done, and why
+
+Delete this section if it is empty. Keep it honest if it is not — a requirement
+deferred with a reason is a decision; a requirement quietly listed as satisfied is
+how four MUSTs in `011` read as built for a week.
+
+| | Why not |
+|---|---|
+| FR-nnn | deferred: what it needs, and who or what it is waiting for |
+
+---
+
 ## Notes
 
 - [P] tasks = different files, no dependencies

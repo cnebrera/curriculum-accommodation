@@ -169,6 +169,7 @@ at is a requirement nobody is keeping.**
 | | Where it is satisfied |
 |---|---|
 | FR-1501 | **Was unbuilt until 2026-08-31**, found by `check-fr-coverage.sh`. Rampa had been producing adaptaciones no significativas since the first worksheet and never said so. `buildReport` now names the ACNS, states that no objective or criterion changed, and says Séneca is the register — asserted in `guide-acns.test.ts` |
+| FR-1503 | **Satisfied by absence, and it is the single most consequential thing this feature could get wrong.** Nothing under `packages/core/src/guide/` produces, summarises or paraphrases an evaluación psicopedagógica: the clinical filter (T001/T002) *removes* that vocabulary rather than carrying it, and the ACNS draft is built only from work she has already done. `guide-clinical.test.ts` runs a synthetic DIAC through it and asserts the diagnosis does not survive — and that the sentence naming an omission does not contain the omission. The «not in scope» note above is the decision; this row is where it is enforced |
 | FR-1506 | T013 · `readGuideJob` refuses an unverified extraction, and `corpus-guarantees.test.ts` asserts the reading half of the job contains **no write at all** |
 | FR-1507 | T001/T002 · the clinical filter, in code, over a synthetic DIAC. And the sentence naming an omission does not *contain* the omission |
 | FR-1513 | T019 · `draftAcns` assembles from `014`'s record and the overlay. A section it cannot source is **named**, never interpolated — including one the corpus adds that the code does not know |

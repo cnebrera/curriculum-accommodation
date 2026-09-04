@@ -61,8 +61,10 @@ the change it protects, which is unusual enough to be its own task.
 >
 > A layout migration touching three shipped features, for a convenience, while
 > `002` sits fully specified and unreachable, is the wrong order. It comes back
-> when a teacher asks for it or when `016` needs it — and `016` FR-1009 references
-> it without depending on it.
+> when a teacher asks for it or when `016` needs it — and `012` FR-1009 (this
+> spec's own, not `016`'s, which has no FR-1009: the prefix was wrong here from the
+> day it was written — repository rule 8, decision P22) states it as a MAY rather
+> than a MUST, so nothing depends on it.
 >
 > Nothing here is abandoned. `data-model.md` does not yet describe the parts
 > layout — my rewrite of it on 2026-08-31 dropped that section, which T017 refers
@@ -114,4 +116,5 @@ at is a requirement nobody is keeping.**
 |---|---|
 | FR-1001 | T003/T004 · the four kinds as corpus, asked and never defaulted. `job:create` refuses without one, and `kinds.test.ts` asserts no code path assigns `worksheet` |
 | FR-1007 | `material-kinds.md`'s `forbids: [quantities, operations, …]` for `problems`, sent to the model verbatim and named in the report by `FORBIDS_LABELS`. **And it is what `002` FR-126 needed**: a composed arithmetic sheet is `problems` or `worksheet`, so the prohibition protects its verified answer key from a later revision |
+| FR-1009 | deferred: the multi-part layout. A **MAY**, and the one thing in this spec that needs `material/<job>/` to stop being one IR per job — which is three shipped features and a migration of every vault that exists, for a convenience. T017 is written and blocked on `data-model.md` describing the layout; the blockquote above is the whole argument. Nothing here is abandoned, and a job with one part is what every path helper assumes today |
 | FR-1008 | `checkCompleteness` is applied to every kind with no relaxation — there is no per-kind branch in it, which is the structural form of «no relaxation». `study`'s own rule in the corpus says «no resumas, no quites apartados» |

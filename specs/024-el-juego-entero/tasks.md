@@ -63,8 +63,11 @@
   records it in her vocabulary (FR-2214, FR-2217).
 - [X] T019 Reachable from where the omission is reported, because that is where she
   learns the word was skipped (`018` FR-1609's report).
-- [ ] T020 Changing a choice marks sheets stale rather than rewriting them (FR-2218,
-  `005` FR-520).
+- [ ] T020 Changing a choice marks sheets stale rather than rewriting them — FR-2218, **deferred: 2026-09-03 (decision P34) to `031-el-segundo-eje-de-frescura`** (`005` FR-520).
+  Staleness compares `ir.md`'s fingerprint and a vocabulary change does not touch it,
+  so this needs a second freshness axis — which is a spec of its own rather than a
+  patch here. BACKLOG G35 carries the history, including the period when this screen
+  and `vocabulario.md` claimed it already worked.
 - [ ] T021 [P] e2e: adapt with an ambiguous word, choose, re-adapt, pictogram present —
   and no second question (SC-2206). **Not done**: it needs a real provider key to run an
   adaptation end to end, which is `023` T031's problem too. The pieces are covered
