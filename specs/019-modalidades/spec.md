@@ -236,8 +236,20 @@ improvises. The axis exists, the teacher sets it, and nothing reads it.
 ### Heard
 
 - **FR-1708**: An audio-ready rendering MUST have an explicit reading order.
-- **FR-1709**: A figure MUST be spoken by its description; an undescribed figure
-  MUST be announced as undescribed (`001` FR-011).
+- **FR-1709**: A figure MUST be spoken by its description. An **informative** figure
+  with no description MUST be announced as undescribed (`001` FR-011); an
+  **essential** one MUST **stop** the non-visual rendering, with an explanation
+  naming the figure.
+  *(Amended 2026-09-04, decision P43 / review COD-13. It said «an undescribed figure
+  MUST be announced as undescribed» for all of them, and `render/linear.ts` did
+  exactly that — so an exercise whose answer **is** the diagram was handed to a
+  learner who cannot see it, as a sentence saying there is a picture he cannot have.
+  `instructions/render.md` said the opposite («blocks the render») in its own
+  non-visual section, and the code did neither for the ODT, which had no check at
+  all. The rule is now the same in both places: **visual prints, non-visual
+  blocks.** The figure is on the paper, so the PDF and the ODT go out — which is a
+  deliberate loosening of the PDF, where the check used to throw — and audio and
+  braille stop, because there the picture simply is not there.)*
 - **FR-1710**: An answer space MUST be announced.
 - **FR-1711**: The draft mark MUST be heard first.
 - **FR-1712**: The learner's code MUST NOT be spoken.
