@@ -34,6 +34,14 @@ export const VAULT = {
   names: '.rampa/names.enc',
   index: '.rampa/index.md',
   costs: '.rampa/costs.json',
+  /**
+   * What shapes this vault contains (P50, `032` T003).
+   *
+   * In `.rampa/` because it is a fact **about the format** rather than part of her
+   * data — the same argument that puts `index.md` here. Absence means version 1,
+   * so every vault that already exists is versioned without being touched.
+   */
+  version: '.rampa/vault.yaml',
 } as const;
 
 export const learnerDir = (code: string) => join(VAULT.profiles, code);

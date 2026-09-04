@@ -38,12 +38,19 @@ tripwire before anyone can be tempted to re-tie it.
 writing a per-area value upgrades the profile under the vault schema version — so the
 marker must exist before the first writer, which is also COLA 1.17's stated ordering.
 
-- [ ] T003 Vault schema version marker (P50 / COLA 1.17) in
+- [x] T003 Vault schema version marker (P50 / COLA 1.17) in
       `app/packages/core/src/vault/version.ts` + test: `.rampa/vault.yaml` with
       `schema: <integer>`, **absent file ⇒ version 1**, bumped only on the first write of
       a shape older readers do not know — never on read, never on install (research R5).
       This feature owns it because it is the first motivating change; COLA 1.17 cites
       these tasks rather than duplicating them.
+      *(done 2026-09-04, out of order and on purpose: COLA's own sequencing puts the
+      marker before the shape changes of lots 2–3, and `031` needs it too. `vaultSchema`,
+      `bumpVaultSchema`, `vaultIsNewer` and the named constants —
+      `VAULT_SCHEMA_CUR_AREAS = 2` is «profiles may carry `cur_areas`» — plus
+      `packages/core/test/vault-version.test.ts`, 9 cases. Monotonic and write-time
+      verified by mutation: lowering the number fails, and writing on read fails four
+      cases. Nothing else in this feature is built: T004 onwards are still open.)*
 - [ ] T004 `app/packages/core/src/vault/schema.ts` · `cur_areas` as an **optional
       top-level sibling** of `axes` on `profileSchema` (keys: subject names; values: the
       same `axisLevel` 0–3), and `curFor(profile, area?)` beside `axisLevelOf` per

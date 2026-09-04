@@ -120,8 +120,17 @@ G38–G41 en BACKLOG). Quedan los 5 que tocan código/i18n/corpus-con-front-matt
 - [x] **1.15** Firma de código: entrada BACKLOG con criterio «sin firma no hay release pública
       mac/Windows» (P52).
 - [ ] **1.16** Tilde «Válida→Valida» del texto impreso en exámenes (AGE, sin P — hallazgo directo).
-- [ ] **1.17** Marcador de versión de esquema en el vault (P50). Pequeño código + test; va aquí
+- [x] **1.17** Marcador de versión de esquema en el vault (P50). Pequeño código + test; va aquí
       porque debe existir ANTES de los cambios de forma de los lotes 2-3.
+      **Hecho 2026-09-04 vía `032` T003**, que es donde vive la decisión (research R5): la
+      032 lo declaró como prerequisito propio, así que se implementa su tarea en vez de
+      duplicarla. `.rampa/vault.yaml` con `schema: <entero>`, **fichero ausente ⇒ versión
+      1** (todo vault existente queda versionado sin tocarlo), subida **solo al escribir**
+      una forma que los lectores viejos no conocen — nunca al leer, nunca al instalar,
+      porque en una carpeta sincronizada una escritura al abrir la app es un generador de
+      conflictos. Monotónico: el caso OneDrive (PT y tutor con builds distintos) es
+      exactamente donde bajar el número corrompería el marcador. Nada se rechaza por
+      versión: un vault del futuro se reporta, no se cierra.
 
 ## Lote 2 · Arreglos medianos con decisión cerrada (código, sin spec nueva)
 

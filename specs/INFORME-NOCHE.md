@@ -221,6 +221,41 @@ construcción y no por aserción. Anotado en G31, que queda **cerrado**.
 
 tsc limpio · 1516 casos · 115 e2e.
 
+### 1.17 · Marcador de versión de esquema del vault — P50 (CRIT-02), vía `032` T003
+
+Primero del resto del Lote 1 porque `031` y `032` dependen de él, y porque los cambios de
+forma del Lote 2 lo necesitan antes.
+
+Implementado **donde vive la decisión**: `032` lo declaró como prerequisito propio con su
+research R5, así que se implementa su tarea T003 en vez de duplicarla en otro sitio. Eso
+mantiene una sola fuente de la decisión y deja el resto de la 032 sin tocar (T004 en
+adelante siguen abiertas).
+
+El problema que cierra: la revisión aprobó tres cambios de forma almacenada —CUR por área,
+segundo eje de frescura, popularidad de pictogramas— y **no había forma de preguntar** si
+un vault se puede migrar. No hay marcador en ningún sitio, y la única migración escrita en
+todo el repositorio es la del almacén de credenciales, que está fuera del vault. Lo que sí
+hay es tolerancia por reparación (`schema.ts` conserva campos que no validan), que cubre un
+campo malformado y **esconde** un cambio de forma: un lector que no conoce `cur_areas` lo
+repara y reescribe el perfil sin él. El caso agravante ya estaba aceptado: PT y tutor
+compartiendo vault por OneDrive con builds distintos — el viejo sobreescribe al nuevo y
+**nada podía detectarlo**.
+
+`.rampa/vault.yaml`, un entero, monotónico:
+
+- **Fichero ausente ⇒ versión 1.** Todo vault que ya existe queda versionado sin tocarlo,
+  que es el único retrofit honesto.
+- **Sube al escribir**, nunca al leer y nunca al instalar. Una versión escrita al leer
+  reescribiría vaults que no ganaron nada, y en una carpeta sincronizada eso es un
+  generador de conflictos desde el acto de abrir la aplicación.
+- **Nunca baja.** Ahí está el caso OneDrive: si bajara, el build nuevo dejaría de buscar
+  áreas que siguen en los otros ficheros.
+- **Nada se rechaza por versión.** Un vault del futuro se reporta, no se cierra: su trabajo
+  está ahí dentro.
+
+9 casos en `packages/core/test/vault-version.test.ts`. Dos costuras verificadas por
+mutación: bajar el número (1 rojo) y escribir al leer (4 rojos).
+
 ## Saltados y por qué
 
 _(nada todavía)_
@@ -243,11 +278,11 @@ _(nada todavía)_
 | | |
 |---|---|
 | `npx tsc --noEmit` | verde (línea base) |
-| `npx vitest run` | verde — 1516 casos |
+| `npx vitest run` | verde — 1526 casos |
 | `npm run test:e2e` | verde — 115 casos |
 | `scripts/check-fr-coverage.sh` | verde (línea base) |
 | `scripts/check-spec-kit.sh` | verde (línea base) |
 
 ---
 
-**Lote 0 completo.** Quedan 19 ítems de la cola.
+**Lote 0 completo.** Quedan 18 ítems de la cola.
