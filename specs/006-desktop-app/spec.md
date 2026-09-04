@@ -55,7 +55,13 @@ project, say nothing, and watch. Every place she hesitates is a defect.
 2. **Given** the connection step, **When** she reaches it, **Then** she is told in
    one plain sentence what is needed and why, given a direct link to the exact
    page, a single box to paste into, and — on success — confirmation in the terms
-   she cares about: **"✓ Conectado. Unos 3 céntimos por ficha."**
+   she cares about: **"✓ Conectado. Unos 3 céntimos por hoja adaptada."**
+   *(amended 2026-09-04, decision P36 / review CONS-34: was «por ficha». `012`
+   FR-1011 says the interface must stop calling everything «una ficha» — because a
+   teacher who reads «ficha» everywhere concludes the application does not do exams
+   and never tries — and this literal is on the **first** screen she ever sees. Two
+   MUSTs in tension, resolved by changing the copy rather than by excepting the
+   rule; `009` US4-4 carries the same sentence and the same amendment.)*
 3. **Given** she closes the app mid-setup, **When** she reopens it, **Then** she
    resumes where she stopped and loses nothing.
 4. **Given** a first learner, **When** she answers the guided questions in her own

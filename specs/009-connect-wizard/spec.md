@@ -256,7 +256,9 @@ of the actual problems she has.
 3. **Given** malformed, expired, no-credit, or no-connection, **When** validated,
    **Then** each has its own sentence and its own next step.
 4. **Given** a valid key, **When** accepted, **Then** she sees the answer to the
-   question she is asking: **"✓ Conectado. Unos 3 céntimos por ficha."**
+   question she is asking: **"✓ Conectado. Unos 3 céntimos por hoja adaptada."**
+   *(amended 2026-09-04, decision P36 / review CONS-34 — see `006` US1-2 for the
+   argument. No exception to `012` FR-1011's rule about «ficha».)*
 5. **Given** validation, **When** it runs, **Then** it uses the cheapest request
    the service allows and sends no learner data and no material.
 
@@ -357,7 +359,7 @@ replace the key, or switch services, without touching her learners or material.
 - **FR-709**: The full comparison MUST be reachable in one action and MUST NOT
   block the recommended path.
 - **FR-710**: The comparison MUST show, per service: card required, free tier and
-  its limit, cost per worksheet, where it is processed, what its terms say about
+  its limit, cost per adapted sheet, where it is processed, what its terms say about
   training on submitted data, whether photographs work, and one plain sentence
   about who it suits.
 - **FR-711**: Rampa MUST NOT describe any service as compliant, safe, approved or
@@ -392,7 +394,10 @@ replace the key, or switch services, without touching her learners or material.
   offer the switch.
 - **FR-723**: Validation MUST use the cheapest request the service allows and
   MUST send no learner data and no material.
-- **FR-724**: Success MUST be reported in cost terms, in cents, per worksheet.
+- **FR-724**: Success MUST be reported in cost terms, in cents, per adapted sheet.
+  *(«per adapted sheet», not «per worksheet»: `012` FR-1011 forbids the interface
+  calling everything «una ficha», and the unit of cost is not exempt — decision
+  P36, 2026-09-04.)*
 - **FR-725**: Keys MUST be stored per service, encrypted, outside the vault.
 
 ### Living with it
