@@ -57,11 +57,28 @@ Sin spec nueva: son defectos contra specs vigentes, con decisión tomada. Cada u
       `check-spec-kit.sh` gana la **regla 4**: spec citada por código o llamada «shipped» por otra
       spec ⇒ plan.md + tasks.md. Cuatro mutaciones verificadas. AGENTS.md regla 9 y la plantilla
       de tasks documentan la convención.
-- [ ] **0.4 · Fugas y honestidad del pipeline** (P17, P18, P19, P15, P1-parte2).
+- [x] **0.4 · Fugas y honestidad del pipeline** (P17, P18, P19, P15, P1-parte2).
       Nombres: lista INE ampliada + marcar token inicial de frase. Prompt: fence+nonce alrededor
       del material + recordatorio de tarea posterior. Compose: llevadas+resta→borrows + corte de
       bucle con lote 100% unknown. Adaptar: stop con selección de recetas vacía + aviso de perfil
       insuficiente (ejes sin observar, recetas desactivadas).
+      **Hecho 2026-09-04:** (1) **Nombres** — lista ampliada de ~60 a varios cientos (español,
+      marroquí/árabe, rumano/Europa del Este, latinoamericano, chino, subsahariano) y el token
+      inicial de cada **línea** es candidato aunque sea inicio de frase, que es el hueco real;
+      el set de nombres gana al stop-list de aula (Abril, Rosa) porque es RGPD de menores.
+      Deuda en BACKLOG G42: la lista debería ser corpus extensible. (2) **Prompt** — el material
+      va entre fences con **nonce por llamada** (`<<<MATERIAL-…>>>`) y detrás va una reafirmación
+      de tarea; eso cierra la suplantación de secciones, que el detector de inyección no cubre, y
+      quita la ventaja de recencia al atacante sin perder la defensa posicional de 007.
+      (3) **Compose** — «llevadas» resuelve según la operación (resta → `borrows`) y el bucle
+      **aborta** cuando un lote entero sale `unknown`, con su propia frase («no lo sé comprobar
+      en esta operación») en vez de la que se leía como un mal día del modelo. (4) **Adaptar** —
+      selección vacía **para antes de llamar al proveedor** (`no-recipes-apply`, error por alumno
+      y no del job, así que en una tanda los otros dos siguen), y aviso de perfil insuficiente
+      **antes de gastar** vía `job:profileGap`: cuántas adaptaciones va a aplicar, qué ejes están
+      sin observar, cuántas reglas no se activan por eso, y qué mirar en clase — con las palabras
+      de `instructions/axes.md`, no de un componente.
+      34 casos nuevos, 4 e2e nuevos, 8 costuras verificadas por mutación.
 - [ ] **0.5 · Test del control primario único** (P35). Escribirlo YA aunque falle; sus fallos son
       lista de trabajo. Protege las obras de navegación del Lote 3.
 

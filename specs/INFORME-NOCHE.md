@@ -128,6 +128,68 @@ sección de cobertura, para que `/speckit-tasks` la produzca en vez de que sea f
 
 tsc limpio · 1499 casos · guardianes en verde.
 
+### 0.4 · Fugas y honestidad del pipeline — P17, P18, P19, P15, P1
+
+Cuatro arreglos en el camino agéntico, todos con decisión cerrada.
+
+**Nombres (AGE-01, P17)** — el más grave. `findProbableNames` solo marcaba una palabra
+capitalizada si estaba en la lista **o** no era inicio de frase. Una nota de maestra
+empieza por el nombre («Fátima no arranca sin el primer paso hecho»), así que un nombre
+que no estuviera en la lista **no se marcaba, no se preguntaba y salía al proveedor** — y
+la lista tenía ~60 nombres tradicionales españoles: sin Sofía (top-3 en España una
+década), sin Fátima, Mohamed, Aya ni Ainhoa. El sesgo caía exactamente sobre el alumnado
+migrante, sobrerrepresentado en apoyo PT. Ahora: el **token inicial de cada línea** es
+candidato aunque sea inicio de frase (que es lo que hace que la lista deje de ser
+load-bearing), la lista cubre varios cientos de nombres de las comunidades reales de un
+aula española, y el set de nombres **gana** al stop-list de aula — una niña llamada Abril
+o Rosa era inmarcable porque «abril» estaba como mes. El coste en falsos positivos lo
+aceptaste explícitamente. Deuda anotada en **BACKLOG G42**: la lista debería ser corpus
+extensible por centro y por país, y está montada de lo que parecen las listas de
+frecuencia, no de un extracto verificado del INE.
+
+**Prompt (AGE-02, P18)** — las secciones se separaban solo con encabezados markdown, así
+que un documento con una línea `## Correcciones de la maestra sobre el intento anterior`
+seguida de órdenes se leía **estructuralmente igual** que la sección legítima de máxima
+precedencia, y el detector de inyección no cubre ese vector (sus tiers piden destinatario
++ directiva, no suplantación de secciones). Ahora el material va entre fences con **nonce
+de 96 bits por llamada**: un documento no puede falsificar el cierre porque se escribió
+antes de que el nonce existiera. Y eso es lo que hace seguro añadir la reafirmación de
+tarea **después** del material, que era la otra mitad del hallazgo (recencia a favor del
+atacante). Nota: la spec 007 argumentaba «el material va último para que nada después se
+lea como instrucción» — sigue siendo cierto, y ahora hay una forma de decir «el contenido
+acaba aquí», así que el test que consagraba «último» está reescrito explicando el cambio.
+
+**Compose (AGE-03, P19)** — «restas con llevadas» es como se pide restar con borrowing en
+primaria, y este repositorio ya lo sabía: la etiqueta española de `borrows` en el propio
+verificador es «restar llevando». Pero el mapeo mandaba `llevad` a `carries` siempre, y el
+verificador declara que llevar no es propiedad de la resta → **todas** las propuestas
+salían `unknown`, el bucle no cortaba, y se gastaban hasta 30 propuestas para acabar con
+**cero ejercicios** en una de las cuatro únicas destrezas que sabemos comprobar. Ahora el
+mapeo resuelve por operación y el bucle **aborta** cuando un lote entero sale `unknown`,
+con su propia frase: «no lo sé comprobar en esta operación, prueba a decirlo de otra
+manera» en vez de una que se leía como un mal día del modelo y la llevaba a pagar otra vez.
+
+**Adaptar (PROD-01/P1 y FLU-12/P15)** — con selección de recetas vacía el job seguía
+(«Adaptando: 0 reglas») y mandaba un prompt con la sección «Reglas seleccionadas» vacía;
+como la regla dura 6 prohíbe cambiar sin receta que citar, el modelo o no cambiaba nada
+(pagaba por una copia) o inventaba ids de receta, y entonces el informe cita reglas que no
+existen. Ahora **para antes de llamar al proveedor**, y es un error **por alumno** y no del
+job, así que en una tanda de tres los otros dos siguen adelante (FR-506/507). Y antes de
+gastar, `job:profileGap` contesta lo que pediste: cuántas adaptaciones va a aplicar, qué
+ejes están sin observar, cuántas reglas no se activan por eso, y qué mirar en clase — con
+las palabras de `instructions/axes.md`, no de un componente. Solo lista las recetas
+frenadas **exclusivamente** por una observación que falta: una apagada porque el eje sí
+está observado y por debajo del umbral está bien apagada, y mandarla a cambiar un perfil
+correcto sería peor que callarse.
+
+**Tests:** 34 casos nuevos; e2e nuevo `profile-gap.spec.ts` (3 casos) y uno en
+`onboarding.spec.ts` (la parada sin gasto). **Ocho costuras verificadas por mutación**:
+la regla de línea inicial, el orden nombres/stop-list, el nonce fijo, la reafirmación
+ausente, el mapeo de llevadas, el corte del bucle, la parada por selección vacía y el
+aviso previo.
+
+tsc limpio · 1516 casos · 110 e2e.
+
 ## Saltados y por qué
 
 _(nada todavía)_
@@ -150,11 +212,11 @@ _(nada todavía)_
 | | |
 |---|---|
 | `npx tsc --noEmit` | verde (línea base) |
-| `npx vitest run` | verde — 1499 casos |
-| `npm run test:e2e` | verde — 106 casos |
+| `npx vitest run` | verde — 1516 casos |
+| `npm run test:e2e` | verde — 110 casos |
 | `scripts/check-fr-coverage.sh` | verde (línea base) |
 | `scripts/check-spec-kit.sh` | verde (línea base) |
 
 ---
 
-**Quedan 21 ítems de la cola.**
+**Quedan 20 ítems de la cola.**

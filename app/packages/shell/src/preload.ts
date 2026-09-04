@@ -224,6 +224,14 @@ const api = {
     learners: (id: string) => invoke('job:learners', id),
     /** Sheets made from a reading that has since changed (`005` FR-520). */
     staleSheets: (id: string) => invoke('job:staleSheets', id),
+    /**
+     * What the profile is not telling us yet, before she spends (`P15`).
+     *
+     * A read with no provider and no writes, so the screen can say «voy a aplicar
+     * N adaptaciones, estos ejes están sin observar y por eso estas reglas no se
+     * activan» *before* the run rather than in the report afterwards.
+     */
+    profileGap: (id: string, learner: string) => invoke('job:profileGap', id, learner),
     onProgress: (cb: (p: { stage: string; detail?: string }) => void) => {
       const h = (_e: unknown, p: { stage: string; detail?: string }) => cb(p);
       ipcRenderer.on('job:progress', h);

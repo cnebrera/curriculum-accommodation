@@ -92,9 +92,37 @@ export function readObjective(text: string): Objective {
   const negated = NEGATED.filter(([re]) => re.test(trimmed)).map(([, c]) => c);
   const constraints = CONSTRAINTS
     .filter(([re, c]) => re.test(trimmed) && !negated.includes(c))
-    .map(([, c]) => c);
+    .map(([, c]) => c)
+    .map((c) => resolveByOperation(c, op));
 
   return { kind: 'skill', text: trimmed, skill: { id: op, constraints } };
+}
+
+/**
+ * «Llevadas» means carrying in an addition and borrowing in a subtraction
+ * (AGE-03, decision P19).
+ *
+ * ## The most expensive contradiction in the project, and the cheapest to fix
+ *
+ * «Restas con llevadas» is how a Spanish primary teacher asks for subtraction with
+ * borrowing — the standard phrasing, and this repository already knew it: the
+ * verifier's own Spanish label for `borrows` is «restar llevando». But the mapping
+ * above sent `llevad` to `carries` unconditionally, and the verifier declares that
+ * carrying is not a property of subtraction: `case 'carries': if (p.op === '-')
+ * return 'unknown'`.
+ *
+ * So every proposal came back `unknown`, the propose→verify loop had no early exit
+ * for that case, and she paid for up to thirty proposals to be told «no he podido
+ * comprobar los que proponía» with **zero exercises** — for one of the only four
+ * skills this application can actually check.
+ *
+ * The mapping is per-language and mechanical, not pedagogical judgement: which
+ * Spanish word names which arithmetic property. Same argument as `OPERATIONS`
+ * above.
+ */
+function resolveByOperation(constraint: string, op: string): string {
+  if (constraint === 'carries' && op === 'arith.subtract') return 'borrows';
+  return constraint;
 }
 
 /** Several objectives, in the order she wrote them. */

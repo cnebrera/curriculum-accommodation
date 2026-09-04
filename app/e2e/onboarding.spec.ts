@@ -160,6 +160,73 @@ test.describe('the first ten minutes', () => {
     await app.close();
   });
 
+  /**
+   * PROD-01, decision P1 — «Adaptando: 0 reglas» was a real run, and it was paid for.
+   *
+   * A dyslexia profile is the canonical case: DEC 2 with LIN unobserved or low
+   * selects nothing at all, because every recipe that would help needs a second
+   * axis as well. The job used to proceed anyway with an empty «Reglas
+   * seleccionadas» section, and hard rule 6 forbids changing anything without a
+   * recipe to cite — so the model either changed nothing, and she paid for a copy
+   * of her own worksheet, or invented recipe ids, and the report then cited rules
+   * that do not exist.
+   *
+   * The assertion that matters is **which** error comes back: `no-recipes-apply`
+   * rather than `key-missing` proves it stopped before the provider was even
+   * looked up, on a machine with no key at all.
+   */
+  test('a profile that activates nothing stops before it costs anything', async () => {
+    const userData = await scratch();
+    const vaultRoot = join(await scratch(), 'Rampa');
+    await mkdir(vaultRoot, { recursive: true });
+
+    const app = await launch(userData, vaultRoot);
+    const page = await app.firstWindow();
+    await page.waitForLoadState('domcontentloaded');
+    await page.evaluate((root) => window.rampa.vault.use(root), vaultRoot);
+
+    const code = await page.evaluate(() => window.rampa.learners.newCode());
+    // DEC 2 and nothing else: descifrar le come la comprensión, and no recipe in
+    // the corpus applies on DEC alone (item 2.10 writes the ones that should).
+    await page.evaluate((c) => window.rampa.learners.save({
+      code: c, axes: { DEC: 2 }, works: [], avoid: [],
+      interests: [], response: {}, language: { instruction: 'es' },
+    }), code);
+
+    await page.evaluate(() =>
+      window.rampa.job.create('e2e-empty', 'Las plantas fabrican su alimento.', 'worksheet', 'es'));
+    await page.evaluate(() => window.rampa.job.verify('e2e-empty'));
+
+    /*
+     * A **per-learner** outcome and not a rejection, deliberately: «no tengo
+     * ninguna adaptación que aplicarle» is a fact about this child's profile, so
+     * in a batch of three the other two must still get their sheets (`005`
+     * FR-506/507). `key-missing` is job-level and throws; this does not, and the
+     * difference is the one `batch.ts`'s `JOB_LEVEL` exists to draw.
+     */
+    const outcome = await page.evaluate((c) =>
+      window.rampa.job.adapt('e2e-empty', c), code) as
+      { results: Array<{ ok: boolean; kind?: string; message?: string }> };
+
+    expect(outcome.results).toHaveLength(1);
+    const only = outcome.results[0]!;
+    expect(only.ok).toBe(false);
+    // Before the provider, not after: there is no key on this machine at all, so
+    // reaching the provider would have said `key-missing` instead.
+    expect(only.kind).toBe('no-recipes-apply');
+    // And it says why, and what to do — a stop with no reason is a dead end.
+    expect(only.message).toMatch(/sin observar/);
+    expect(only.message).toMatch(/no he enviado nada ni te he cobrado/i);
+
+    // Nothing was written for her either.
+    const wrote = await page.evaluate(() =>
+      window.rampa.vault.list('material/e2e-empty')) as string[];
+    expect(wrote.filter((e) => !e.includes('.')), 'a stopped run left a learner directory')
+      .toEqual([]);
+
+    await app.close();
+  });
+
   test('everything except adapting works with no network at all', async () => {
     const userData = await scratch();
     const vaultRoot = join(await scratch(), 'Rampa');

@@ -85,6 +85,29 @@ export function useBatchCommand() {
   });
 }
 
+/**
+ * What the profile is not telling us yet (FLU-12, decision P15).
+ *
+ * Asked **before** the run, which is the whole feature: the same diagnosis existed
+ * and arrived in the report, after she had paid. A tutor who is not a PT leaves
+ * half the interview blank because he genuinely does not know the answers, few
+ * recipes select, the sheet comes back looking almost like the original, and his
+ * conclusion in week one is «esta herramienta no hace nada».
+ *
+ * The words come from `instructions/axes.md`, so what she reads about what to look
+ * for is the corpus's own text and not a sentence written in a component.
+ */
+export interface ProfileGap {
+  willApply: number;
+  unobserved: Array<{ axis: string; name: string; levels: string[] }>;
+  disabled: Array<{ recipe: string; axes: string[] }>;
+}
+
+export function useProfileGap() {
+  return useCommand((jobId: string, learner: string) =>
+    window.rampa.job.profileGap(jobId, learner) as Promise<ProfileGap>);
+}
+
 export function useCreateJob() {
   return useCommand((id: string, text: string, kind: string, lang?: string) =>
     window.rampa.job.create(id, text, kind, lang));

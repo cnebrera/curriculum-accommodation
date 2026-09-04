@@ -57,6 +57,15 @@ export interface ComposeOutcome {
   /** True when the budget ran out before the sheet was full. Never silent. */
   budgetExhausted: boolean;
   proposalsUsed: number;
+  /**
+   * Stopped because a whole batch came back unverifiable (AGE-03, decision P19).
+   *
+   * A different fact from `budgetExhausted`, and a more useful one: it says the
+   * **constraint** cannot be checked for this operation, not that the model was
+   * having a bad day. Surfaced rather than folded in, because the sentence she
+   * needs is «reformula el objetivo», not «inténtalo otra vez».
+   */
+  constraintUnverifiable?: boolean;
 }
 
 /** Ask the model for more. Returns however many it returned, possibly none. */
@@ -101,6 +110,26 @@ export async function composeExercises(
      */
     if (batch.length === 0) break;
 
+    /*
+     * How this batch went, so a batch that is 100% unverifiable can stop the loop
+     * (AGE-03, decision P19).
+     *
+     * `unknown` does not mean «bad exercise». It means the verifier cannot decide
+     * whether this exercise exercises this constraint — and for a *constraint that
+     * does not apply to the operation* it means every exercise ever proposed will
+     * come back the same way. «Restas con llevadas» mapped `carries` onto a
+     * subtraction, the verifier answers `unknown` for that combination by design,
+     * and the loop had no exit for it: thirty proposals of her money, and zero
+     * exercises, for one of the four skills this application can check.
+     *
+     * The mapping is fixed too (`objectives.ts`). This is the belt: a constraint
+     * that turns out to be unverifiable for its operation — by a future mapping
+     * mistake, or by a corpus that names a property arithmetic does not have —
+     * costs one batch instead of the whole budget.
+     */
+    let judged = 0;
+    let unknowns = 0;
+
     for (const exercise of batch) {
       if (accepted.length >= budget.wanted) break;
       if (used >= budget.maxProposals) break;
@@ -111,8 +140,29 @@ export async function composeExercises(
       seen.add(key);
 
       const verdict = verify(verifier, skill, exercise);
+      judged += 1;
       if (verdict.ok) accepted.push({ exercise, answer: verdict.answer });
-      else rejected.push({ exercise, verdict });
+      else {
+        rejected.push({ exercise, verdict });
+        if (verdict.reason === 'unknown') unknowns += 1;
+      }
+    }
+
+    /*
+     * Every exercise this batch judged came back unverifiable. Asking again buys
+     * the same answer, so she is told now instead of after the budget.
+     *
+     * `judged > 0` guards the case where the whole batch was duplicates: nothing
+     * was verified, which is not the same as nothing being verifiable.
+     */
+    if (judged > 0 && unknowns === judged) {
+      return {
+        accepted,
+        rejected,
+        budgetExhausted: accepted.length < budget.wanted,
+        proposalsUsed: used,
+        constraintUnverifiable: true,
+      };
     }
   }
 
@@ -133,6 +183,24 @@ export async function composeExercises(
  */
 export function explainOutcome(o: ComposeOutcome, wanted: number): string | null {
   if (!o.budgetExhausted) return null;
+
+  /*
+   * The unverifiable-constraint case gets its own sentence (AGE-03, P19).
+   *
+   * «No he podido comprobar los que proponía» reads as a model that was having a
+   * bad day, and she would try again — and pay again. What actually happened is
+   * that the property she asked for cannot be checked for that operation, and the
+   * thing to do is rephrase the objective.
+   */
+  if (o.constraintUnverifiable) {
+    return o.accepted.length === 0
+      ? 'No he podido hacer ni uno: lo que pediste no lo sé comprobar en esta '
+        + 'operación, así que he parado en cuanto lo he visto en vez de seguir '
+        + 'gastando. Prueba a decirlo de otra manera.'
+      : `He podido hacer ${o.accepted.length} de los ${wanted} que pediste y he `
+        + 'parado ahí: el resto no lo sé comprobar en esta operación. Prueba a '
+        + 'decirlo de otra manera.';
+  }
 
   const reasons = new Map<string, number>();
   for (const r of o.rejected) {

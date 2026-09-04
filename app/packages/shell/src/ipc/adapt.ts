@@ -1,13 +1,16 @@
 import { type BrowserWindow } from 'electron';
 import { parseIR, stringifyFrontMatter, buildReport, VAULT, RampaError } from '@rampa/core';
-import { jobIR, jobLearnerDir, resolveDocument, learnersOf } from '@rampa/core';
+import {
+  jobIR, jobLearnerDir, resolveDocument, learnersOf, selectRecipes, loadLearner,
+  blockClassesIn, inScope, profileGap, parseAxisDefs,
+} from '@rampa/core';
 import { currentVault } from './vault.js';
 import { handle } from './wrap.js';
 import { runAdaptation, type Correction } from '../jobs/adapt.js';
 import { runBatch } from '../jobs/batch.js';
 import { staleSheets } from '../jobs/stale.js';
 import { refreshRecord } from './record.js';
-import { materialKind } from '../corpus/index.js';
+import { materialKind, allRecipes, loadInstruction } from '../corpus/index.js';
 
 /**
  * Wiring, and only wiring (013 T019, FR-1111).
@@ -156,4 +159,37 @@ export function registerAdaptIpc(getWindow: () => BrowserWindow | null): void {
    * never holds a learner's name, and nothing here could write one to a file.
    */
   handle('job:staleSheets', async (jobId: string) => staleSheets(currentVault(), jobId));
+
+  /**
+   * What this profile is not telling us yet, **before she spends** (FLU-12, P15).
+   *
+   * A read: it loads the profile, the recipes and `instructions/axes.md`, selects
+   * exactly as the run would, and answers. No provider, no write, no cost — which
+   * is the whole point. The same diagnosis already existed and arrived *after* the
+   * run, in the report, which is after she has paid.
+   *
+   * The learner's code and nothing else crosses this boundary, and what comes back
+   * is axis keys plus the corpus's own words. No name in either direction.
+   */
+  handle('job:profileGap', async (jobId: string, learnerCode: string) => {
+    const vault = currentVault();
+    const raw = (await vault.readRaw(jobIR(jobId))) ?? '';
+    const doc = parseIR(raw);
+    const lang = typeof doc.frontMatter['lang'] === 'string' ? doc.frontMatter['lang'] : 'es';
+    const classes = blockClassesIn(doc);
+
+    const learner = await loadLearner(vault, learnerCode);
+    const all = await allRecipes();
+    const selection = selectRecipes(all, learner.profile, lang, classes);
+
+    /*
+     * The same two cheap filters `selectRecipes` applies before it looks at the
+     * profile — so a recipe that is off because it is about assessments while this
+     * is a study text is not reported as «off for want of an observation».
+     */
+    const candidates = all.filter((r) => (!r.lang || r.lang === lang) && inScope(r, classes));
+    const defs = parseAxisDefs(await loadInstruction('axes'), 'axes.md');
+
+    return profileGap(candidates, learner.profile, defs, selection);
+  });
 }

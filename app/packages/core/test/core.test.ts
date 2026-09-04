@@ -1,6 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { redact, findProbableNames, isClean } from '../src/redact/names.js';
-import { parseRecipe, selectRecipes, applies, recipeRef } from '../src/recipes/index.js';
+import {
+  parseRecipe, selectRecipes, applies, recipeRef, profileGap,
+} from '../src/recipes/index.js';
 import { parseIR } from '../src/ir/parse.js';
 import { checkProvenance, findUnaccountedBlocks, parseRecipeRef } from '../src/ir/provenance.js';
 import { renderHTML, presentationFor } from '../src/render/html.js';
@@ -48,6 +50,53 @@ describe('redaction — the promise the harness could not keep', () => {
     expect(found).toEqual([]);
   });
 
+  /**
+   * AGE-01, decision P17 — the most serious leak the review found in the pipeline.
+   *
+   * A teacher's note starts with the child: «Fátima no arranca sin el primer paso
+   * hecho». The rule was «flag a capital only when it is *not* sentence-initial»,
+   * so an unlisted name in that position was never flagged, never asked about, and
+   * left the machine — and the sixty-name list omitted Sofía (top three in Spain
+   * for a decade), Fátima, Mohamed, Aya and Ainhoa, so the names most likely to be
+   * unlisted were the migrant ones. Data about an identifiable minor, leaving the
+   * computer, with the bias falling on the pupils over-represented in a PT's
+   * caseload.
+   */
+  it('flags an unknown name at the start of a note, whatever the list holds', () => {
+    // Not on any list, and first in the note: the exact case that leaked.
+    expect(findProbableNames('Zurie no arranca sin el primer paso hecho.'))
+      .toContain('Zurie');
+    // And on every line of a multi-line note, because that is how notes are written.
+    expect(findProbableNames('Va mejor.\nFátima necesita el enunciado en dos pasos.'))
+      .toContain('Fátima');
+  });
+
+  it('knows the names the old list left out', () => {
+    for (const name of ['Sofía', 'Fátima', 'Mohamed', 'Aya', 'Ainhoa', 'Youssef', 'Andreea']) {
+      expect(findProbableNames(`En clase ${name} trabaja bien.`), `${name} is not known`)
+        .toContain(name);
+    }
+  });
+
+  it('a name that is also an ordinary word is still a name', () => {
+    // `Abril` and `Rosa` were in the classroom stop-list as a month and a noun, so
+    // a girl called either was unflaggable. The name set is consulted first now,
+    // and the cost — an occasional question she did not need — was taken on
+    // purpose: it is a minor's personal data on the other side.
+    expect(findProbableNames('He hablado con Abril y con Rosa.')).toContain('Abril');
+    expect(findProbableNames('He hablado con Abril y con Rosa.')).toContain('Rosa');
+  });
+
+  it('still does not fire on every sentence a note contains', () => {
+    /*
+     * The other half of the decision. A detector that fires constantly is one she
+     * learns to dismiss, and then it protects nothing — so a sentence-initial
+     * capital that is *not* the first word of its line is still left alone.
+     */
+    const found = findProbableNames('Trabaja mejor por la mañana. Necesita el primer paso hecho.');
+    expect(found).not.toContain('Necesita');
+  });
+
   it('confirms a payload is clean', () => {
     expect(isClean(redact('Lucía va bien', known).text, known)).toBe(true);
     expect(isClean('Lucía va bien', known)).toBe(false);
@@ -77,6 +126,58 @@ describe('recipe selection', () => {
   it('references a recipe by id and version, so provenance is not a moving target', () => {
     expect(recipeRef(mk('x', 'COG>=2'))).toBe('x@2');
     expect(parseRecipeRef('lectura-facil-es@3')).toEqual({ id: 'lectura-facil-es', version: 3 });
+  });
+
+  /**
+   * FLU-12, decision P15 — the diagnosis arriving before the money.
+   *
+   * The design is right: `null` is not zero and recipes keyed on an unobserved
+   * axis stay off. Read from a tutor's side it produces «esta herramienta no hace
+   * nada» in week one, because the reason is invisible until the report — and the
+   * report comes after the run.
+   */
+  describe('what the profile is not telling us yet', () => {
+    const defs = [
+      { key: 'COG' as const, name: 'Cuántas cosas a la vez', levels: ['a', 'b', 'c', 'd'] },
+      { key: 'ATE' as const, name: 'Cuánto rato aguanta', levels: ['e', 'f', 'g', 'h'] },
+    ];
+
+    it('names the axes with nothing observed, in the corpus\'s own words', () => {
+      const gap = profileGap([mk('x', 'COG>=2')], profile({ DEC: 1 }), defs,
+        { selected: [], resolved: [] });
+      const axes = gap.unobserved.map((u) => u.axis);
+      expect(axes).toContain('COG');
+      expect(axes).toContain('ATE');
+      expect(axes).not.toContain('DEC');
+      // The words she reads come from `instructions/axes.md`, not from code.
+      expect(gap.unobserved.find((u) => u.axis === 'COG')?.name).toBe('Cuántas cosas a la vez');
+      expect(gap.unobserved.find((u) => u.axis === 'COG')?.levels).toEqual(['a', 'b', 'c', 'd']);
+    });
+
+    it('says which recipes are held off, and by which observation', () => {
+      const held = mk('one-task-per-page', 'COG>=2, ATE>=2');
+      const gap = profileGap([held], profile({ DEC: 1 }), defs, { selected: [], resolved: [] });
+      expect(gap.disabled).toEqual([{ recipe: 'one-task-per-page', axes: ['COG', 'ATE'] }]);
+    });
+
+    it('does not blame an observation for a recipe that is correctly off', () => {
+      /*
+       * The half that makes this usable. A recipe off because the axis **was**
+       * observed, at a level below its threshold, is correctly off — and telling
+       * her to go and observe it would send her to change a profile that is right.
+       */
+      const held = mk('lectura-facil', 'DEC>=2');
+      const gap = profileGap([held], profile({ DEC: 1 }), defs, { selected: [], resolved: [] });
+      expect(gap.disabled).toEqual([]);
+    });
+
+    it('counts what will actually be applied, which is the number she is deciding on', () => {
+      const on = mk('applies', 'DEC>=1');
+      const gap = profileGap([on], profile({ DEC: 1 }), defs,
+        { selected: [on], resolved: [] });
+      expect(gap.willApply).toBe(1);
+      expect(gap.disabled).toEqual([]);
+    });
   });
 });
 

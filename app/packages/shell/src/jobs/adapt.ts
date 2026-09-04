@@ -6,7 +6,7 @@ import {
   stringifyFrontMatter, injectionNotices, logger, buildAdaptPrompt, schoolYearOf, blockClassesIn,
   checkStructurallyComplete, checkCompleteness, completenessNotice,
   assertProvenance, findUnaccountedBlocks, divergence, studiesFor, applyPictograms,
-  readingFingerprint, stampReading,
+  readingFingerprint, stampReading, AXES, axisLevelOf,
   type Notice, type CompletenessIssue, addCost,
 } from '@rampa/core';
 import { sendRedacted } from '@rampa/providers';
@@ -171,6 +171,39 @@ export async function runAdaptation(
    * `packages/core/test/selection-baseline.test.ts` records both sides of it.
    */
   const selection = selectRecipes(await allRecipes(), learner.profile, lang, blockClassesIn(doc));
+
+  /*
+   * Nothing applies, so nothing happens — **before the provider is called**
+   * (PROD-01, decision P1).
+   *
+   * The run used to proceed with «Adaptando: 0 reglas» and a prompt whose «Reglas
+   * seleccionadas» section was empty. Hard rule 6 forbids changing anything with
+   * no recipe to cite, so the model either changed nothing — she paid for a copy
+   * of her own worksheet — or invented recipe ids, and then the report cites rules
+   * that do not exist, which is the traceability claim of this whole project
+   * failing quietly.
+   *
+   * `assertCorpus()` above is a different check and does not cover this: it asks
+   * whether the recipes are installed, not whether any of them apply. The comment
+   * beside it («No recipes means no guards… worse than not adapting») was making
+   * exactly this argument about a case it could not see.
+   *
+   * The axes are named because «no tengo nada que aplicar» with no reason is a
+   * dead end, and `job:profileGap` is what the screen uses to say it *before* she
+   * gets here.
+   */
+  if (selection.selected.length === 0) {
+    const blind = AXES.filter((a) => axisLevelOf(learner.profile, a) === null);
+    throw new RampaError('no-recipes-apply',
+      'Con lo que sé de este alumno no tengo ninguna adaptación que aplicar, así que '
+      + 'no he enviado nada ni te he cobrado.'
+      + (blind.length
+        ? ` Tiene ${blind.length === 1 ? 'un eje' : `${blind.length} ejes`} sin observar `
+          + `(${blind.join(', ')}): si apuntas lo que ves en clase, se activan solas.`
+        : ' Su perfil está completo y ninguna regla encaja con él: cuéntamelo, porque'
+          + ' entonces es que faltan reglas.'),
+      blind);
+  }
 
   // Memory is never loaded wholesale: only entries for the recipes selected.
   const memory = await loadForRun(vault, selection.selected.map((r) => r.id));

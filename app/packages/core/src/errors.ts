@@ -10,6 +10,18 @@ export type ErrorKind =
   | 'output-incomplete'      // truncated, or content gone without being declared
   | 'name-unconfirmed'       // a probable name in her own notes, not yet resolved
   | 'corpus-missing'         // the bundled recipes are not there: broken install
+  /**
+   * Nothing in the profile activates any adaptation, so there is nothing to do
+   * (PROD-01, decision P1).
+   *
+   * A stop, not a warning, and **before the provider is called**: the run used to
+   * proceed with «Adaptando: 0 reglas», sending a prompt whose «Reglas
+   * seleccionadas» section was empty. Hard rule 6 forbids a change with no recipe
+   * to cite, so the model either changed nothing — she paid for a copy of her own
+   * worksheet — or invented recipe ids, which is worse because the report then
+   * cites rules that do not exist.
+   */
+  | 'no-recipes-apply'
   | 'render-learner-data'    // learner data reached learner-facing output
   | 'render-undescribed'     // an essential figure with no description
   | 'input-too-large'

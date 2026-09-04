@@ -7,7 +7,10 @@ import { useMaterialKinds } from '../data/corpus.js';
 import { useNameCheck, useSetName } from '../data/names.js';
 import { useNewLearnerCode } from '../data/learners.js';
 import { useCostEstimate } from '../data/cost.js';
-import { useCreateJob, useVerifyJob, useAdapt, useJobProgress, useBatchCommand, type BatchOutcome } from '../data/jobs.js';
+import {
+  useCreateJob, useVerifyJob, useAdapt, useJobProgress, useBatchCommand, useProfileGap,
+  type BatchOutcome, type ProfileGap,
+} from '../data/jobs.js';
 import { useBlocksCommand } from '../data/ingest.js';
 import { Callout } from '../components/Callout.js';
 import { Page, Section, Field, Actions } from '../shell/Page.js';
@@ -169,6 +172,32 @@ export function AdaptScreen({
   const unsigned = outcome?.results.filter((r) => r.ok && !signed[r.learner]).length ?? 0;
   // 006 US4-3: told first, not billed first (T091).
   const [costGate, setCostGate] = useState<{ formatted: string; who: string[] } | null>(null);
+  /**
+   * What the profile is not telling us yet, asked **before** the run (P15).
+   *
+   * The diagnosis already existed and arrived in the report — after she had paid.
+   * A tutor who is not a PT leaves half the interview blank because he does not
+   * know the answers, few recipes select, the sheet comes back looking almost like
+   * the original, and his conclusion in week one is «esta herramienta no hace
+   * nada» rather than «mi perfil está incompleto».
+   *
+   * Once she has seen it and said «seguir igual», it does not ask again on this
+   * screen: a question asked every time is a question that gets clicked through,
+   * which is the argument `005` FR-514 makes about cost.
+   */
+  const [profileGate, setProfileGate] = useState<{
+    /**
+     * The whole batch, not only the learners with a gap.
+     *
+     * Carrying the flagged ones and re-running with those would silently drop the
+     * learners whose profile was fine — «seguir igual» has to mean the run she
+     * asked for, not the subset this notice happened to be about.
+     */
+    who: string[];
+    gaps: Array<{ learner: string; gap: ProfileGap }>;
+  } | null>(null);
+  const [profileSeen, setProfileSeen] = useState(false);
+  const profileGapFor = useProfileGap();
   const online = useOnline();
   /** Her name for the child; the code is what is on the sheet, not on this screen. */
   const nameOf = (code: string): string =>
@@ -253,6 +282,8 @@ export function AdaptScreen({
     setStage('compose'); setText(''); setReportData(null); setOutcome(null);
     setNotices([]); setRecipes([]); setRetried(false); setCost(null);
     setSigned({});
+    // A new piece of material is a new decision, so the profile notice comes back.
+    setProfileGate(null); setProfileSeen(false);
     // «Otra ficha» is a new job, so the door's answers do not come with it (P14).
     onFinished?.();
   };
@@ -260,6 +291,24 @@ export function AdaptScreen({
   const runAdapt = async (confirmedCost = false, only?: string[]) => {
     const who = only ?? learners;
     if (who.length === 0) return;
+
+    /*
+     * Before the estimate, because this one can end the run without spending
+     * anything at all — and because «voy a aplicar 2 adaptaciones» is what tells
+     * her whether the price is worth paying.
+     *
+     * Offline: `job:profileGap` reads the profile, the recipes and
+     * `instructions/axes.md`. No provider, no writes, no cost.
+     */
+    if (!profileSeen) {
+      const gaps = (await Promise.all(who.map(async (learner) => {
+        const gap = await profileGapFor.run(jobId, learner);
+        return gap ? { learner, gap } : null;
+      }))).filter((g): g is { learner: string; gap: ProfileGap } => g !== null);
+      setProfileSeen(true);
+      const worth = gaps.filter((g) => g.gap.unobserved.length > 0 || g.gap.willApply === 0);
+      if (worth.length) { setProfileGate({ who: [...who], gaps: worth }); return; }
+    }
 
     if (!confirmedCost) {
       /*
@@ -463,6 +512,71 @@ export function AdaptScreen({
           <Callout intent="decide" title={es.adapt.verifyTitle}>{es.adapt.verifyWhy}</Callout>
           <div className="material" lang="es">{text}</div>
           {error ? <Callout intent="danger">{error}</Callout> : null}
+
+          {/*
+            Before she spends (FLU-12, decision P15). «Voy a aplicar N
+            adaptaciones; estos ejes están sin observar y por eso estas reglas no
+            se activan; esto es lo que habría que mirar en clase» — and she decides
+            whether to go on or fill the profile in first.
+
+            Every word about what to observe comes from `instructions/axes.md`
+            through `job:profileGap`, not from this file: what to look for in a
+            child is pedagogical judgement (Principle I).
+          */}
+          {profileGate ? (
+            <Callout intent="decide" title="Antes de gastar: lo que sé de este alumno">
+              {profileGate.gaps.map(({ learner, gap }) => (
+                <div className="stack gap2" key={learner}>
+                  <p style={{ margin: 0 }}>
+                    <strong>{nameOf(learner)}</strong>{' — '}
+                    {gap.willApply === 0
+                      ? 'no tengo ninguna adaptación que aplicarle.'
+                      : `voy a aplicarle ${gap.willApply} ${
+                          gap.willApply === 1 ? 'adaptación' : 'adaptaciones'}.`}
+                    {gap.disabled.length
+                      ? ` Hay ${gap.disabled.length} más que no se activan porque falta observar algo.`
+                      : ''}
+                  </p>
+                  {gap.unobserved.length ? (
+                    <>
+                      <p className="small" style={{ margin: 0 }}>
+                        Sin observar:{' '}
+                        {gap.unobserved.map((u) => u.name).join(' · ')}
+                      </p>
+                      <details className="small">
+                        <summary style={{ cursor: 'pointer' }}>
+                          Qué mirar en clase para completarlo
+                        </summary>
+                        <div className="stack gap2" style={{ marginTop: 'var(--s2)' }}>
+                          {gap.unobserved.map((u) => (
+                            <div key={u.axis}>
+                              <strong>{u.name}</strong>
+                              <ul className="bullets" style={{ margin: 0 }}>
+                                {u.levels.map((l, i) => <li key={i}>{l}</li>)}
+                              </ul>
+                            </div>
+                          ))}
+                        </div>
+                      </details>
+                    </>
+                  ) : null}
+                </div>
+              ))}
+              <div className="row">
+                <button className="btn btn-primary"
+                        onClick={() => {
+                          const { who } = profileGate;
+                          setProfileGate(null);
+                          void runAdapt(false, who);
+                        }}>
+                  Seguir igual
+                </button>
+                <button className="btn" onClick={() => setProfileGate(null)}>
+                  Antes completo su perfil
+                </button>
+              </div>
+            </Callout>
+          ) : null}
 
           {costGate ? (
             <Callout intent="decide" title="Esto va a costar más de lo normal">

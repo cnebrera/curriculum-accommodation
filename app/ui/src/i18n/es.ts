@@ -205,6 +205,12 @@ export const es = {
      * a fallback, it is the correct answer.
      */
     'corpus-missing': 'No encuentro las reglas de adaptación. Es un problema de la instalación, no tuyo: vuelve a instalar Rampa.',
+    /*
+     * PROD-01, decision P1. The thrown message names the axes, so this is the
+     * fallback and not the sentence she normally reads — same arrangement as
+     * `name-unconfirmed`, where the value she needs is in the message.
+     */
+    'no-recipes-apply': 'Con lo que sé de este alumno no tengo ninguna adaptación que aplicar. No he enviado nada ni te he cobrado.',
     'render-learner-data': 'Iba a aparecer información de tu alumno en su propia ficha. Lo he parado.',
     'render-undescribed': 'Hay una imagen imprescindible sin describir. Sin ella, el ejercicio no se puede resolver.',
     'input-too-large': 'Esta ficha es muy larga. Pártela en dos y lo hacemos por trozos.',

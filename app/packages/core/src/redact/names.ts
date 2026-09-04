@@ -19,13 +19,76 @@ export interface RedactionResult {
   flagged: string[];
 }
 
-/** Frequent Spanish given names. Small on purpose: this only has to catch the common case. */
+/**
+ * Frequent given names in Spanish classrooms.
+ *
+ * ## Why this list grew, and whose problem the old one was
+ *
+ * It held about sixty traditional Spanish names and the review (AGE-01, decision
+ * P17) found what that cost: **Sofía** — top three in Spain for a decade —
+ * **Fátima**, **Mohamed**, **Aya** and **Ainhoa** were all absent, and an absent
+ * name is a name that reaches the provider without the teacher being asked. The
+ * bias fell precisely on migrant pupils, who are over-represented in a PT's
+ * caseload. The canonical example in this file's own docblock («Lucía no
+ * arranca…») worked only because Lucía happened to be on the list.
+ *
+ * So: the frequent names of the whole classroom, Spanish-origin and not —
+ * Moroccan and Arabic, Romanian, Latin American, Chinese, Sub-Saharan, Eastern
+ * European. Accented and unaccented forms both, because `findProbableNames`
+ * lower-cases without folding.
+ *
+ * **Two honest caveats.** This is assembled from what frequency lists in Spain
+ * look like, not from a verified INE extract — a name that is common somewhere
+ * and missing here is a defect, and BACKLOG G42 records that the list wants to
+ * become corpus a teacher can extend for her own school and her own country.
+ * And it is deliberately **not load-bearing**: the note-initial rule below
+ * catches an unknown name at the start of a note whether it is listed or not,
+ * which is the case the review found. The list is what catches it in the middle.
+ */
 const COMMON_NAMES = new Set([
+  // Spanish-origin, girls
   'lucia','lucía','maria','maría','carmen','ana','isabel','laura','marta','sara','paula','julia',
   'alba','elena','claudia','irene','noa','vega','daniela','valeria','martina','carla','nerea',
+  'sofia','sofía','emma','olivia','mia','mía','valentina','lara','jimena','abril','ines','inés',
+  'candela','manuela','chloe','chloé','ainhoa','aitana','alma','ariadna','nora','triana','vera',
+  'adriana','alicia','africa','áfrica','angela','ángela','beatriz','blanca','celia','clara','cristina',
+  'gabriela','gemma','gloria','iria','leire','lidia','lorena','lucero','luna','marina','mar','mireia',
+  'natalia','nayara','nieves','patricia','pilar','raquel','rocio','rocío','rosa','ruth','silvia',
+  'teresa','veronica','verónica','victoria','yaiza','zoe','zoé',
+  // Spanish-origin, boys
   'antonio','jose','josé','manuel','francisco','juan','david','javier','daniel','carlos','miguel',
   'alejandro','pablo','sergio','jorge','alberto','adrian','adrián','diego','mario','hugo','martin',
   'martín','lucas','leo','izan','thiago','marco','bruno','gael','enzo','dylan','aitor','unai',
+  'alvaro','álvaro','angel','ángel','dario','darío','eric','fernando','gonzalo','guillermo','ian',
+  'ignacio','inigo','iñigo','isaac','ismael','ivan','iván','joel','jon','luis','marcos','mateo',
+  'matias','matías','nicolas','nicolás','oliver','oscar','óscar','pau','pedro','rafael','raul','raúl',
+  'ruben','rubén','samuel','santiago','sergi','victor','víctor','xavier','yago',
+  // Moroccan and Arabic — the largest migrant community in Spanish schools
+  'mohamed','mohammed','muhammad','ahmed','ahmad','ali','omar','yusuf','youssef','yassin','yassine',
+  'amine','amin','anas','bilal','hamza','hicham','ibrahim','idris','ilias','imran','ismail','karim',
+  'khalid','mehdi','nabil','nadir','rachid','rayan','said','salah','samir','tarik','tariq','walid',
+  'zakaria','aya','amina','asma','asmae','dounia','fatima','fátima','fatiha','hajar','hanane','ikram',
+  'imane','iman','jamila','kaoutar','khadija','latifa','leila','lina','malak','mariam','maryam',
+  'meryem','naima','nour','noor','rania','rim','safa','sakina','salma','samira','sara','sanae',
+  'siham','soukaina','yasmin','yasmina','zineb','zahra',
+  // Romanian and Eastern European
+  'andrei','alexandru','bogdan','catalin','cătălin','ciprian','constantin','cosmin','cristian',
+  'daniel','dragos','dragoș','florin','gabriel','george','ionut','ionuț','marian','mihai','nicu',
+  'petru','razvan','răzvan','stefan','ștefan','valentin','vasile','viorel','alexandra','andreea',
+  'bianca','cristina','daniela','denisa','elena','florina','gabriela','georgiana','ioana','ionela',
+  'iulia','larisa','madalina','mădălina','mihaela','monica','nicoleta','roxana','simona','stefania',
+  'ștefania','vasilica','oleksandr','dmytro','iryna','olena','kateryna','yulia','anastasiia',
+  // Latin American — often the same names, plus these
+  'brayan','brian','deivid','edwin','jefferson','jhon','jhonny','kevin','maicol','wilson','yeison',
+  'anahi','anahí','arianna','dayana','genesis','génesis','karol','katherine','lisbeth','marisol',
+  'milagros','nayeli','rosmery','yamileth','yulissa',
+  // Chinese (pinyin as written on a Spanish roll)
+  'chen','cheng','fang','hui','jia','jian','jing','lei','lin','ling','mei','min','ming','ning',
+  'peng','qian','shan','tao','wei','xin','yan','yang','ying','yuan','zhen','zhi',
+  // Sub-Saharan and other
+  'aminata','aissatou','fatou','mariama','oumou','abdou','amadou','ibrahima','mamadou','moussa',
+  'ousmane','sekou','babacar','cheikh','lamine','pape','blessing','favour','joy','precious',
+  'chinedu','emeka','ifeanyi','kwame','kofi','olusegun','samba','yaw',
 ]);
 
 /** Words that start a sentence or are simply capitalised in Spanish prose. */
@@ -104,15 +167,43 @@ export function findProbableNames(text: string): string[] {
   for (const m of tokens) {
     const word = m[1]!;
     const lower = word.toLowerCase();
+
+    /*
+     * A known name wins over the classroom stop-list, and the order is the
+     * decision (P17).
+     *
+     * `Abril`, `Rosa`, `Nieves`, `Alma`, `Luna` and `Candela` are girls in Spanish
+     * classrooms *and* ordinary words, and two of them were already in
+     * `NOT_A_NAME` as months and nouns. Whichever set is consulted first decides
+     * which error this makes: a question she did not need, or a child's name in a
+     * payload. Carlos's answer took the first cost explicitly — «se acepta el
+     * coste en falsos positivos: es RGPD de menores».
+     */
+    if (COMMON_NAMES.has(lower)) { found.add(word); continue; }
     if (NOT_A_NAME.has(lower)) continue;
 
-    if (COMMON_NAMES.has(lower)) { found.add(word); continue; }
-
-    // Otherwise only when it is not sentence-initial: mid-sentence capitals in
-    // Spanish are usually proper nouns.
+    /*
+     * Mid-sentence capitals in Spanish are usually proper nouns, **and so is the
+     * first word of a teacher's note** (AGE-01, decision P17).
+     *
+     * That second half was the hole. The rule was «only when it is not
+     * sentence-initial», and a note starts with the child: «Fátima no arranca sin
+     * el primer paso hecho». An unlisted name in that position was not flagged,
+     * so she was never asked, so it left the machine — and the names most likely
+     * to be unlisted were the migrant ones. The list was doing work it could not
+     * be trusted to do.
+     *
+     * So the first candidate token of each **line** is treated as a candidate
+     * whatever its position. A line, not a sentence: «No arranca sola.» opening a
+     * note is a false positive we accept, while flagging every sentence-initial
+     * capital in a paragraph would fire on every «Necesita», «Cuando» and «Hoy»
+     * and teach her to dismiss the question — which is the failure mode this
+     * file's own docblock warns about.
+     */
     const before = text.slice(Math.max(0, m.index! - 2), m.index!);
     const sentenceStart = m.index === 0 || /[.!?¿¡]\s*$/.test(before) || /\n\s*$/.test(before);
-    if (!sentenceStart && /^[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+$/.test(word)) found.add(word);
+    const lineStart = m.index === 0 || /\n\s*$/.test(text.slice(0, m.index!));
+    if ((!sentenceStart || lineStart) && /^[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+$/.test(word)) found.add(word);
   }
   return [...found];
 }

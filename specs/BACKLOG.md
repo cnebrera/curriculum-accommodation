@@ -413,6 +413,37 @@ every moment should have a spec. What it added beyond the seams pass:
    journey sentence → T094). Handover *import* (004 US2) recorded as deliberately
    deferred rather than silently missing.
 
+## G42 · The name list is code, and it should be a list a school can extend
+
+**Open, added 2026-09-04** (review AGE-01, decision P17).
+
+`COMMON_NAMES` in `packages/core/src/redact/names.ts` is the last line between a
+child's real name and a provider, for names that are **not** in the encrypted
+store — another pupil she mentions, a sibling, a child with no name saved, or a
+Linux machine with no keyring where nothing is persisted at all.
+
+It held about sixty traditional Spanish names, and the review found what that cost:
+Sofía (top three in Spain for a decade), Fátima, Mohamed, Aya and Ainhoa were all
+absent, so the bias fell precisely on the migrant pupils over-represented in a PT's
+caseload. It is now several hundred names covering Spanish, Moroccan and Arabic,
+Romanian and Eastern European, Latin American, Chinese and Sub-Saharan given names,
+and the sentence-initial hole is closed (the first candidate token of each line is
+a candidate whatever the list says, which is what makes the list non-load-bearing).
+
+**Two things still wrong with it.** It is assembled from what frequency lists in
+Spain look like rather than from a verified INE extract; and it lives in code, so a
+school whose intake this list does not describe — or a country that is not Spain —
+cannot fix it without a release. `029` makes territory policy a corpus a teacher can
+extend and `033` handles the vehicular language; the name list belongs in the same
+place, with the same «additions only, nothing can be removed» rule the clinical term
+list uses.
+
+**Closure criterion:** the frequent-names list is corpus, extensible per
+installation, additions-only, and the shipped Spanish one has been checked against
+a real frequency source.
+
+---
+
 ## G41 · Nobody owns code signing, and the release path is already wired
 
 **Open, added 2026-09-03** (decision P52, review CRIT-06).

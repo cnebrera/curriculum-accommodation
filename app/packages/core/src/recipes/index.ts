@@ -104,6 +104,76 @@ export function inScope(recipe: Recipe, presentClasses?: readonly string[]): boo
   return recipe.scope.some((c) => presentClasses.includes(c));
 }
 
+/**
+ * What this profile is not telling us yet (FLU-12, decision P15).
+ *
+ * ## The failure it exists to name
+ *
+ * The design is right: an unobserved axis is `null`, not zero, and recipes keyed
+ * on it stay off — guessing a zero silently disables adaptations the learner may
+ * need (hard rule 3). But read from the other side, from a tutor who is not a PT:
+ * he leaves half the interview blank because he genuinely does not know the
+ * answers, few recipes select, the sheet comes back looking almost like the
+ * original, and his conclusion in week one is **«esta herramienta no hace nada»**
+ * rather than «mi perfil está incompleto».
+ *
+ * The diagnosis existed and arrived too late: the report says «revisa si el perfil
+ * tiene ejes sin observar» *after* the run, which is after she has paid.
+ *
+ * ## What is derived, and what is not invented
+ *
+ * Everything here comes from files that already exist. The axis names and what
+ * each level looks like are `instructions/axes.md` — so the «questions that would
+ * help» are the corpus's own descriptions of what to look for, not prose written
+ * in code (Principle I). Which recipes stay off is computed from their own `axes:`
+ * conditions.
+ *
+ * **Only recipes held off *solely* by an unobserved axis are listed.** A recipe
+ * that is off because the axis was observed at a lower level is correctly off, and
+ * saying otherwise would send her to change a profile that is already right.
+ */
+export interface ProfileGap {
+  /** How many adaptations this run will actually apply. */
+  willApply: number;
+  /** Axes with nothing observed, with the corpus's own description of each level. */
+  unobserved: Array<{ axis: Axis; name: string; levels: readonly string[] }>;
+  /** Recipes that stay off only because an axis has not been observed. */
+  disabled: Array<{ recipe: string; axes: Axis[] }>;
+}
+
+export function profileGap(
+  /** Recipes eligible for this document — already filtered by language and scope. */
+  candidates: readonly Recipe[],
+  profile: Profile,
+  /** `parseAxisDefs(instructions/axes.md)`, so every word she reads is corpus. */
+  defs: readonly { key: Axis; name: string; levels: readonly string[] }[],
+  selection: Selection,
+): ProfileGap {
+  const selectedIds = new Set(selection.selected.map((r) => r.id));
+  const blind = AXES.filter((a) => axisLevelOf(profile, a) === null);
+  const blindSet = new Set<Axis>(blind);
+
+  const disabled: ProfileGap['disabled'] = [];
+  for (const r of candidates) {
+    if (selectedIds.has(r.id)) continue;
+    const failing = r.axes.filter((c) => !satisfied(c, profile)).map((c) => c.axis);
+    // Off for some other reason (a conflict, or an axis observed too low) is off
+    // for a reason she cannot fix by observing more.
+    if (failing.length === 0) continue;
+    if (!failing.every((a) => blindSet.has(a))) continue;
+    disabled.push({ recipe: r.id, axes: [...new Set(failing)] });
+  }
+
+  return {
+    willApply: selection.selected.length,
+    unobserved: blind.map((axis) => {
+      const def = defs.find((d) => d.key === axis);
+      return { axis, name: def?.name ?? axis, levels: def?.levels ?? [] };
+    }),
+    disabled,
+  };
+}
+
 export function selectRecipes(
   all: Recipe[], profile: Profile, lang?: string,
   /**

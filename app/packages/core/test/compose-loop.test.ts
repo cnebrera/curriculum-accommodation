@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {
-  composeExercises, explainOutcome, arithmetic,
+  composeExercises, explainOutcome, arithmetic, readObjective,
   type Skill, type ProposedExercise, type Propose,
 } from '../src/index.js';
 
@@ -197,5 +197,93 @@ describe('the level travels with the skill', () => {
 
     expect(out.accepted.map((a) => a.exercise.expression)).toEqual(['47 × 8']);
     expect(out.rejected[0]!.exercise.expression).toBe('1234 × 8');
+  });
+});
+
+
+/**
+ * AGE-03, decision P19 — «restas con llevadas», and the most expensive
+ * contradiction in the project.
+ *
+ * It is how a Spanish primary teacher asks for subtraction with borrowing, and
+ * this repository already knew it: the verifier's own Spanish label for `borrows`
+ * is «restar llevando». But the objective reader sent «llevadas» to `carries`
+ * whatever the operation, and the verifier declares that carrying is not a
+ * property of subtraction — so every proposal came back `unknown`, the loop had no
+ * exit for that, and she paid for up to thirty proposals to be told «no he podido
+ * comprobar los que proponía» with **zero exercises**.
+ */
+describe('«llevadas» means borrowing when the operation is a subtraction', () => {
+  it('reads it as borrows, so the verifier can actually check it', () => {
+    const o = readObjective('Restas con llevadas');
+    expect(o.kind).toBe('skill');
+    if (o.kind !== 'skill') throw new Error('unreachable');
+    expect(o.skill.id).toBe('arith.subtract');
+    expect(o.skill.constraints).toEqual(['borrows']);
+  });
+
+  it('still means carrying in an addition or a multiplication', () => {
+    for (const [text, id] of [['Sumas llevando', 'arith.add'],
+                              ['Multiplicar con llevadas', 'arith.multiply']] as const) {
+      const o = readObjective(text);
+      if (o.kind !== 'skill') throw new Error('unreachable');
+      expect(o.skill.id).toBe(id);
+      expect(o.skill.constraints).toEqual(['carries']);
+    }
+  });
+
+  it('produces exercises now, where it produced none', async () => {
+    const o = readObjective('Restas con llevadas');
+    if (o.kind !== 'skill') throw new Error('unreachable');
+    // 52 − 27 borrows; 58 − 23 does not.
+    const { propose } = scripted([['52 − 27', '81 − 46', '58 − 23']]);
+    const out = await composeExercises(o.skill, arithmetic, propose,
+      { wanted: 2, maxProposals: 10 });
+
+    expect(out.accepted.map((a) => a.exercise.expression)).toEqual(['52 − 27', '81 − 46']);
+    expect(out.budgetExhausted).toBe(false);
+  });
+});
+
+describe('a batch that is entirely unverifiable stops the loop', () => {
+  /** The belt, for a constraint no mapping fix can make checkable. */
+  const impossible: Skill = { id: 'arith.subtract', constraints: ['carries'] };
+
+  it('costs one batch instead of the whole budget', async () => {
+    const { propose, calls } = scripted([
+      ['52 − 27', '81 − 46'], ['33 − 14'], ['45 − 26'], ['77 − 38'],
+    ]);
+    const out = await composeExercises(impossible, arithmetic, propose,
+      { wanted: 10, maxProposals: 30 });
+
+    expect(out.accepted).toHaveLength(0);
+    expect(out.constraintUnverifiable).toBe(true);
+    expect(out.proposalsUsed, 'it kept asking after a whole batch came back unknown').toBe(2);
+    expect(calls, 'the model was asked more than once').toHaveLength(1);
+  });
+
+  it('says what to do about it, and not «try again»', async () => {
+    const { propose } = scripted([['52 − 27', '81 − 46']]);
+    const out = await composeExercises(impossible, arithmetic, propose,
+      { wanted: 10, maxProposals: 30 });
+
+    const said = explainOutcome(out, 10) ?? '';
+    expect(said).toContain('no lo sé comprobar en esta operación');
+    expect(said).toContain('Prueba a decirlo de otra manera');
+    // The old sentence read as a bad day at the model, and she would pay again.
+    expect(said).not.toContain('no he podido comprobar los que proponía');
+  });
+
+  it('does not fire when a batch was all duplicates rather than all unknown', async () => {
+    /*
+     * Nothing verified is not the same as nothing verifiable. A batch of repeats
+     * judges zero exercises, and stopping there would end a run that was fine.
+     */
+    const { propose } = scripted([['47 × 8'], ['47 × 8'], ['68 × 7']]);
+    const out = await composeExercises(carrying, arithmetic, propose,
+      { wanted: 2, maxProposals: 10 });
+
+    expect(out.constraintUnverifiable).toBeUndefined();
+    expect(out.accepted).toHaveLength(2);
   });
 });
