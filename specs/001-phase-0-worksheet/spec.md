@@ -108,9 +108,21 @@ learn. The agent stops, explains what would have to change, and does not proceed
 main journey. It is non-negotiable in behaviour: a tool that silently modifies
 curriculum is worse than no tool.
 
-**Independent Test**: Run the pipeline with a profile carrying `CUR: 2` and an
-exam-type source. The run must stop with an explanation and produce no adapted
-assessment.
+**Independent Test**: Run the pipeline with a request that would change what is
+asked of the learner — «quita el ejercicio 5», «pon opciones en vez de que lo
+explique» — and check the run stops with an explanation and makes no such change.
+Then run the **same** exam for a learner whose profile carries `CUR: 2` with no such
+request, and check it adapts: presentation, access route, response route.
+
+*(Amended 2026-09-04, decision P12 / review FLU-05. The test was «a profile carrying
+`CUR: 2` and an exam-type source → the run MUST stop», which keyed the guard on the
+**profile** rather than on the request — and FR-010 has always said «when a request
+implies». Most of a PT's real caseload is one or two years behind, and those learners
+sit their group's exams with **access** adaptations — larger type, one instruction
+per sentence, more space — which touch no objective. That is the textbook ACNS
+`instructions/guide.md` describes. A tool that refuses to adapt the access of an exam
+because the profile says `CUR: 2` refuses the legal, daily work of its main user in
+her first week.)*
 
 **Acceptance Scenarios**:
 
@@ -120,6 +132,15 @@ assessment.
 2. **Given** an `.assessment` block, **When** adaptation runs, **Then** only
    presentation, access route and response route change; assessed items are
    neither removed nor reduced.
+3. **Given** a profile with a curricular gap and **no** request to change what is
+   asked, **When** adaptation runs, **Then** it adapts and does not stop: the gap is
+   a reason to adapt the route, not a reason to refuse (decision P12).
+4. **Given** a learner whose overlay records a **registered ACS** — objectives
+   already modified by the teaching team, on a psychopedagogical assessment
+   (`017`) — **When** adaptation runs at that modified level, **Then** it proceeds
+   and says so in the report. The decision has been taken by the people whose
+   decision it is, and refusing to act on it leaves the child with nothing
+   (decision P12).
 
 ### Edge Cases
 
