@@ -941,7 +941,21 @@ clave real: ningún diagrama de este proyecto lo ha producido todavía un modelo
   `out/`) y la he vuelto a levantar entera con 2.12 y 2.8 dentro. Si la vuelves a necesitar
   después de un cambio mío, avísame y la reinicio: mientras yo esté tocando el main, una
   instancia en caliente se queda a medias.
-  Y un detalle que me costó dos intentos y volverá a pasar: matar `electron-vite dev` **no**
+  **Y al final la he levantado de otra manera, porque en modo dev no sobrevive a mi
+  trabajo.** `npm run test:e2e` empieza por `npm run build`, que escribe en el mismo `out/`
+  que vigila `electron-vite dev` — y a las 12:18 el dev server se murió por eso, en medio de
+  `027`. Ahora está levantada como **aplicación construida** (`npx electron .` desde `app/`,
+  tras `npm run build`): sin watcher, así que un build posterior no la toca — el proceso ya
+  tiene su JS cargado y nada lo recarga. No hay recarga en caliente, que para enseñarla es
+  lo que se quiere.
+  Un detalle que me costó dos intentos: hay que lanzarla con `npx electron .` y **no** con
+  `npx electron out/main/main.js`. Con la ruta al fichero, Electron no encuentra el
+  `package.json` de la app, `app.getName()` cae a «Electron», `userData` pasa a ser
+  `~/Library/Application Support/Electron` — y la aplicación arranca sin recordar ningún
+  vault, así que te pide elegir carpeta como si fuera la primera vez. **No es un defecto del
+  producto**: la app empaquetada lleva su propio nombre. Es una trampa de cómo se lanza, y la
+  dejo escrita porque el síntoma («no recuerda mi carpeta») parece grave y no lo es.
+  Y otro que ya conocía: matar `electron-vite dev` **no**
   mata el Electron que lanzó. Se queda vivo con el candado de instancia única
   (`requestSingleInstanceLock`, `main.ts:142`), así que el `npm run dev` siguiente arranca,
   dice «start electron app…» y **sale con código 0** sin abrir nada. Hay que matar los dos.
