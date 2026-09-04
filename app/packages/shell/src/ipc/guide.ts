@@ -31,9 +31,12 @@ export function registerGuideIpc(getWindow: () => BrowserWindow | null): void {
    */
   handle('guide:apply', async (
     learnerCode: string, measures: Measure[], document: string, omitted?: string[],
+    kind?: 'acns' | 'acs',
   ) => {
     const result = await applyGuide({
-      learnerCode, measures, document, ...(omitted ? { omitted } : {}),
+      learnerCode, measures, document,
+      ...(omitted ? { omitted } : {}),
+      ...(kind ? { kind } : {}),
     });
     await refreshRecord(learnerCode);
     return result;

@@ -167,6 +167,14 @@ export async function applyGuide(args: {
   measures: readonly Measure[];
   document: string;
   omitted?: readonly string[];
+  /**
+   * What `readGuideJob` worked out this document was (decision P12).
+   *
+   * It was computed, shown on the screen once («esto parece una adaptación
+   * significativa») and **never written down** — so the one fact that unblocks
+   * adapting to a modified level never reached the file the model reads.
+   */
+  kind?: 'acns' | 'acs';
 }): Promise<{ path: string; written: number }> {
   const vault = currentVault();
 
@@ -191,6 +199,7 @@ export async function applyGuide(args: {
     // From the process, never from a model (Principle II).
     on: new Date().toISOString().slice(0, 10),
     ...(args.omitted ? { omitted: args.omitted } : {}),
+    ...(args.kind ? { kind: args.kind } : {}),
   });
 
   await vault.writeRaw(path, appendGuideSection(existing, section.markdown));

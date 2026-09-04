@@ -299,8 +299,22 @@ justamente eso.
       canónico: ya no lo es, así que ahora usa `REG:2`, que es donde queda el hueco.
       7 casos nuevos. **Pendiente de validación pedagógica por una PT real** (ya estaba en
       «fuera de la cola, con dueño humano»).
-- [ ] **2.11** Parada por adaptación significativa: gatillo por lo que la petición cambiaría +
+- [x] **2.11** Parada por adaptación significativa: gatillo por lo que la petición cambiaría +
       ACS registrada desbloquea (P12). Toca adapt.md + enmienda 001 + código del gate.
+      **Hecho 2026-09-04, en dos commits.** No había «código del gate»: la parada es del
+      modelo, instruida por `adapt.md`, y ahí estaba el defecto — decía «si **el perfil** o
+      la petición implican… típicamente un desfase de 2 o más», anclando la negativa en el
+      niño en vez de en lo que se pide. Corregido: el gatillo es lo que la petición
+      cambiaría, con ejemplos concretos («quita el ejercicio 5»), y un `CUR` alto es razón
+      para adaptar la vía **con más cuidado**, no para negarse.
+      Y la ACS registrada desbloquea, con la parte que impide que sea un agujero: seguir a
+      nivel modificado no autoriza a decidir qué objetivos se modifican ni a tocar uno que la
+      ACS no nombre.
+      **El código que faltaba era otro**: `readGuide` calculaba el tipo de documento, la
+      pantalla lo mostraba una vez y el overlay **no lo escribía nunca** — así que el único
+      dato que desbloquea el nivel modificado no llegaba al fichero que lee el modelo. Ahora
+      viaja hasta `adaptations.md`, y `unknown` no se registra como ninguno de los dos.
+      12 casos nuevos; 3 costuras verificadas por mutación.
 - [ ] **2.12** Compose: system propio para el camino de contenido (sin OUTPUT_FORMAT contradictorio)
       + detectar corte por max_tokens (AGE-04/07, decisión implícita en P2: si vamos a construir
       generación nueva, el camino de contenido debe ser fiable).

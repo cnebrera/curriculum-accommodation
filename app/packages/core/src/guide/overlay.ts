@@ -50,6 +50,17 @@ export function guideSection(input: {
   on: string;
   /** What was left out, so the file says it too and not only the screen. */
   omitted?: readonly string[];
+  /**
+   * Which kind of document it is (`017` FR-1513, decision P12).
+   *
+   * `readGuide` has always worked this out — the screen shows «esto parece una
+   * adaptación significativa» — and it **stopped there**: the overlay recorded the
+   * document in her words («el DIAC de marzo») and not what it was. So the one fact
+   * that unblocks adapting to a modified level never reached the file the model
+   * reads, and a learner whose ACS was already approved by his teaching team got
+   * the same refusal as one with no assessment at all.
+   */
+  kind?: 'acns' | 'acs';
 }): OverlayWrite {
   const actionable = input.measures.filter((m) => m.actionable);
   const notOurs = input.measures.filter((m) => !m.actionable);
@@ -71,6 +82,34 @@ export function guideSection(input: {
     'medida pidiera cambiar lo que se evalúa, no se hace y el informe lo dice.',
     '',
   ];
+
+  /*
+   * The one line that unblocks a modified level (decision P12, review FLU-05).
+   *
+   * An ACS means the teaching team has already modified the objectives, on a
+   * psychopedagogical assessment. Adapting to that modified level is then exactly
+   * the right thing — and `adapt.md` says so — but only if the file says which kind
+   * of document this was. It did not: the kind was computed, shown on screen once,
+   * and never written down.
+   *
+   * Written for the model **and** for her, because she is the one who will wonder
+   * why a sheet was adapted to a lower level than the group's.
+   */
+  if (input.kind === 'acs') {
+    lines.push(
+      'Este documento es una **ACS**: los objetivos ya están modificados por el equipo',
+      'docente, a partir de una evaluación psicopedagógica. Adaptar a ese nivel es lo',
+      'correcto, y el informe lo dice. Lo que sigue sin poder hacerse es modificar un',
+      'objetivo que esta ACS no nombre.',
+      '',
+    );
+  } else if (input.kind === 'acns') {
+    lines.push(
+      'Este documento es una **ACNS**: no modifica ningún objetivo. Lo que cambia es',
+      'cómo llega y cómo contesta.',
+      '',
+    );
+  }
 
   if (actionable.length > 0) {
     lines.push('### Medidas', '');

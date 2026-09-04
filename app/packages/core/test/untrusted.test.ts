@@ -810,3 +810,61 @@ describe('FR-517 · an incomplete output is never shown', () => {
   });
 });
 
+
+/**
+ * The significant-adaptation line, and what actually triggers it
+ * (`001` FR-010 / US3 as amended, decision P12 / review FLU-05).
+ *
+ * ## The defect was in the corpus, so this is where it is asserted
+ *
+ * There is no code gate: the stop is the model's, instructed by
+ * `instructions/adapt.md`. And that file said «if **the profile** or the request
+ * implies changing objectives — typically a curricular gap of 2 or more — stop»,
+ * which anchors the refusal on the child rather than on what is being asked.
+ *
+ * Most of a PT's real caseload is one or two years behind, and those learners sit
+ * their group's exams with **access** adaptations — larger type, one instruction per
+ * sentence, more space, answering aloud — which touch no objective at all. That is
+ * the textbook ACNS `instructions/guide.md` describes. So a tool that refuses to
+ * adapt the access of an exam because the profile says `CUR: 2` refuses the legal,
+ * daily work of its main user in her first week.
+ *
+ * And nothing said what happens **after** an ACS is approved: `017` ingests one and
+ * `adapt.md` gives the overlay precedence, but the CUR≥2 stop had no written
+ * exception for the learner whose modified objectives are already decided and on
+ * file — the one case where adapting at a modified level is exactly right.
+ */
+describe('what the corpus says stops a run', () => {
+  const adaptMd = readFileSync(join(repoRoot, 'instructions', 'adapt.md'), 'utf8')
+    .replace(/\s+/g, ' ');
+
+  it('triggers on what the request would change, and says so', () => {
+    expect(adaptMd).toMatch(/what the request would change, never how far behind/i);
+    // The old wording, gone: «if the profile or the request implies».
+    expect(adaptMd).not.toMatch(/If the profile or the request implies/i);
+  });
+
+  it('says a curricular gap is a reason to adapt, not to refuse', () => {
+    expect(adaptMd).toMatch(/El desfase curricular no es el gatillo/);
+    expect(adaptMd).toMatch(/no para negarse/);
+    // Named concretely, because «changes to what is measured» is a platitude and
+    // «quita el ejercicio 5» is a rule.
+    expect(adaptMd).toMatch(/quita el ejercicio 5/);
+  });
+
+  it('says a registered ACS unblocks the modified level', () => {
+    expect(adaptMd).toMatch(/Cuando la ACS ya está decidida/);
+    expect(adaptMd).toMatch(/sigue, y dilo en el informe/i);
+  });
+
+  it('and does not hand over the decision along with it', () => {
+    /*
+     * The line that keeps the exception from being a loophole: proceeding at a
+     * modified level is not permission to decide which objectives are modified,
+     * nor to modify one the ACS does not name, nor to make an exam easier whose
+     * criterion is not modified there.
+     */
+    expect(adaptMd).toMatch(/te autoriza a decidir qué objetivos se modifican/);
+    expect(adaptMd).toMatch(/que la ACS no nombre/);
+  });
+});

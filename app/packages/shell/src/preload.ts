@@ -156,9 +156,17 @@ const api = {
    */
   guide: {
     read: (jobId: string) => invoke('guide:read', jobId),
-    /** The measures **she confirmed**, which may be fewer than the ones read. */
-    apply: (learner: string, measures: unknown[], document: string, omitted?: string[]) =>
-      invoke('guide:apply', learner, measures, document, omitted),
+    /**
+     * The measures **she confirmed**, which may be fewer than the ones read.
+     *
+     * `kind` is what the reading worked out the document was (decision P12): an ACS
+     * means the objectives are already modified by the teaching team, and that is
+     * the fact that unblocks adapting to the modified level. It was computed, shown
+     * once and never written down.
+     */
+    apply: (learner: string, measures: unknown[], document: string,
+            omitted?: string[], kind?: string) =>
+      invoke('guide:apply', learner, measures, document, omitted, kind),
     acns: (learner: string) => invoke('guide:acns', learner),
     ask: (jobId: string, question: string, history?: unknown[]) =>
       invoke('guide:ask', jobId, question, history),

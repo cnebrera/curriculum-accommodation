@@ -286,3 +286,67 @@ describe('an ordinary adaptation says what it is', () => {
     expect(markdown.indexOf('ACNS')).toBeLessThan(markdown.indexOf('one-task-per-page'));
   });
 });
+
+/**
+ * The overlay records which kind of document it was (decision P12, review FLU-05).
+ *
+ * ## Why this one line matters
+ *
+ * `readGuide` has always worked the kind out — the screen renders «esto parece una
+ * adaptación significativa» from it — and it **stopped there**. The overlay recorded
+ * the document in her words («el DIAC de marzo») and not what it was, so the one
+ * fact that tells a later adaptation it may work at a modified level never reached
+ * the file the model reads.
+ *
+ * The consequence, with the old profile-keyed stop: a learner whose ACS had **already
+ * been approved by his teaching team**, on a psychopedagogical assessment, got the
+ * same refusal as one with no assessment at all. The decision had been taken by the
+ * people whose decision it is, and the application would not act on it.
+ */
+describe('the overlay says what kind of document it came from', () => {
+  const measures = [
+    { text: 'Letra grande', source: 'p. 3', actionable: true },
+  ] as never;
+
+  it('names an ACS, and says adapting to that level is right', () => {
+    const { markdown } = guideSection({
+      measures, document: 'la ACS de marzo', on: '2026-03-01', kind: 'acs',
+    });
+    expect(markdown).toContain('**ACS**');
+    expect(markdown).toMatch(/objetivos ya están modificados/);
+    // And the limit stays: it does not authorise modifying an objective the ACS
+    // does not name.
+    expect(markdown).toMatch(/que esta ACS no nombre/);
+  });
+
+  it('names an ACNS, and says what it does and does not touch', () => {
+    const { markdown } = guideSection({
+      measures, document: 'la ACNS del tutor', on: '2026-03-01', kind: 'acns',
+    });
+    expect(markdown).toContain('**ACNS**');
+    expect(markdown).toMatch(/no modifica ningún objetivo/);
+  });
+
+  it('says neither when the reading could not tell', () => {
+    /*
+     * `unknown` is a real answer and not a missing one. Recording a document as an
+     * ACS because the classifier was unsure would unblock a modified level on no
+     * evidence — which is the worst direction for this particular field to be
+     * wrong in.
+     */
+    const { markdown } = guideSection({
+      measures, document: 'un documento', on: '2026-03-01',
+    });
+    expect(markdown).not.toContain('**ACS**');
+    expect(markdown).not.toContain('**ACNS**');
+  });
+
+  it('keeps the limit on its authority whatever the kind', () => {
+    for (const kind of ['acs', 'acns', undefined] as const) {
+      const { markdown } = guideSection({
+        measures, document: 'x', on: '2026-03-01', ...(kind ? { kind } : {}),
+      });
+      expect(markdown, `${kind}`).toMatch(/No manda sobre las reglas duras/);
+    }
+  });
+});

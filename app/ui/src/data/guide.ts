@@ -39,8 +39,12 @@ export function useReadGuide() {
 
 /** The measures **she confirmed**, which may be fewer than the ones read. */
 export function useApplyGuide() {
-  return useCommand((learner: string, measures: Measure[], document: string, omitted?: string[]) =>
-    window.rampa.guide.apply(learner, measures, document, omitted) as Promise<{ path: string; written: number }>);
+  return useCommand((
+    learner: string, measures: Measure[], document: string,
+    omitted?: string[], kind?: 'acns' | 'acs',
+  ) =>
+    window.rampa.guide.apply(learner, measures, document, omitted, kind) as
+      Promise<{ path: string; written: number }>);
 }
 
 export function useDraftAcns() {

@@ -623,6 +623,45 @@ cambiar juntas y lo que cuesta no hacerlo.
 
 17 casos nuevos; 2 costuras verificadas por mutación.
 
+### 2.11 · La parada se dispara por la petición — P12 (FLU-05)
+
+**No había «código del gate»**: la parada es del modelo, instruida por
+`instructions/adapt.md`. Y ahí estaba el defecto, escrito: «si **el perfil** o la petición
+implican cambiar objetivos o criterios — típicamente un desfase curricular de 2 o más —
+para». Eso ancla la negativa en el niño en vez de en lo que se pide.
+
+La consecuencia es la que encontró el revisor con lente de PT: la mayor parte de un
+caseload real lleva uno o dos cursos de desfase, y esos alumnos hacen los exámenes de su
+grupo con adaptaciones **de acceso** —letra grande, enunciados de una instrucción, más
+espacio, contestar hablando— que no tocan ni un objetivo. Es la ACNS de libro que describe
+`guide.md`. Una herramienta que se niega a adaptar el acceso de un examen porque el perfil
+dice `CUR: 2` se niega al trabajo legal y diario de su usuaria principal en la primera
+semana.
+
+Ahora el gatillo es lo que la petición cambiaría, con ejemplos concretos («quita el
+ejercicio 5», «pon opciones en vez de que lo explique»), y se dice explícitamente que un
+`CUR` alto es razón para adaptar la vía **con más cuidado** y no para negarse.
+
+**Y la ACS registrada desbloquea.** Nada decía qué pasa *después* de una ACS aprobada:
+`017` la ingiere y `adapt.md` da precedencia al overlay, pero la parada por CUR≥2 no tenía
+excepción escrita para el alumno cuyos objetivos modificados ya están decididos y en
+ficha — el único caso en que adaptar a nivel modificado es exactamente lo correcto. Con la
+parte que impide que sea un agujero: seguir a ese nivel no autoriza a decidir qué objetivos
+se modifican, ni a tocar uno que la ACS no nombre, ni a abaratar un examen cuyo criterio no
+esté modificado ahí.
+
+**El código que faltaba era otro del que decía el ítem.** `readGuide` calculaba el tipo de
+documento —la pantalla renderiza «esto parece una adaptación significativa» con ese mismo
+valor— y **se quedaba ahí**: el overlay guardaba el documento en sus palabras («el DIAC de
+marzo») y no lo que era. Así que el único dato que desbloquea el nivel modificado no
+llegaba al fichero que lee el modelo, y un alumno con su ACS **ya aprobada por su equipo
+docente** recibía la misma negativa que uno sin evaluación ninguna. Ahora viaja hasta
+`adaptations.md`, escrito para el modelo y para ella — y `unknown` no se registra como
+ninguno de los dos, porque registrar una ACS por si acaso desbloquearía un nivel modificado
+sin evidencia, que es la peor dirección para equivocarse en este campo.
+
+12 casos nuevos; 3 costuras verificadas por mutación.
+
 ## Saltados y por qué
 
 _(nada todavía)_
@@ -645,11 +684,11 @@ _(nada todavía)_
 | | |
 |---|---|
 | `npx tsc --noEmit` | verde (línea base) |
-| `npx vitest run` | verde — 1612 casos |
+| `npx vitest run` | verde — 1620 casos |
 | `npm run test:e2e` | verde — 129 casos |
 | `scripts/check-fr-coverage.sh` | verde (línea base) |
 | `scripts/check-spec-kit.sh` | verde (línea base) |
 
 ---
 
-**Lotes 0 y 1 completos; Lote 2 en 9/12.** Quedan 5 ítems de la cola (Lote 2: 3 · Lote 3: 2 abiertos + 11 features por implementar).
+**Lotes 0 y 1 completos; Lote 2 en 10/12.** Quedan 4 ítems de la cola (Lote 2: 2 · Lote 3: 2 abiertos + 11 features por implementar).

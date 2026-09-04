@@ -71,8 +71,18 @@ export function GuideScreen({
   const confirm = async (): Promise<void> => {
     if (!reading) return;
     const measures = reading.measures.filter((m) => chosen.has(m.text));
+    /*
+     * The kind travels with the measures (decision P12). The screen already knew
+     * it — it renders «esto parece una adaptación significativa» from the same
+     * value — and it stopped there, so the overlay never recorded whether the
+     * document was an ACNS or an ACS. That is the one fact that tells a later
+     * adaptation it may work at the modified level.
+     */
     const done = await apply.run(learnerCode, measures, document.trim() || 'la adaptación curricular',
-      reading.omitted);
+      reading.omitted,
+      // `unknown` is a real answer and not a missing one: a document the reading
+      // could not classify must not be recorded as either kind.
+      reading.kind === 'acs' || reading.kind === 'acns' ? reading.kind : undefined);
     if (done) onDone();
   };
 
