@@ -201,7 +201,11 @@ export function useRevise() {
 
 export function useRender() {
   return useCommand((id: string, learner: string) =>
-    window.rampa.job.render(id, learner) as Promise<{ photocopy?: Array<{ message: string }> }>);
+    window.rampa.job.render(id, learner) as Promise<{
+      photocopy?: Array<{ message: string }>;
+      /** Essential figures with no description — a notice, not a refusal (P43). */
+      undescribed?: string[];
+    }>);
 }
 
 export function usePdf() {
@@ -210,9 +214,16 @@ export function usePdf() {
 }
 
 /** The editable export (019 US1). */
+/**
+ * The editable export, and what it is missing (review COD-13, decision P43).
+ *
+ * `undescribed` names the essential figures with no description. It is a notice
+ * rather than a refusal, because the ODT is a **visual** output and the picture is
+ * in it — the same document stops in audio and braille, where it is not.
+ */
 export function useOdt() {
   return useCommand((id: string, learner: string) =>
-    window.rampa.job.odt(id, learner) as Promise<string>);
+    window.rampa.job.odt(id, learner) as Promise<{ path: string; undescribed: string[] }>);
 }
 
 /**

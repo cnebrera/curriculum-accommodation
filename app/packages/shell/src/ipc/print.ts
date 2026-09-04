@@ -66,11 +66,11 @@ export function registerPrintIpc(): void {
 
   handle('job:render', async (jobId: string, learnerCode: string) => {
     const vault = currentVault();
-    const { html, photocopy } = await renderJob(jobId, learnerCode);
+    const { html, photocopy, undescribed } = await renderJob(jobId, learnerCode);
     const htmlPath = resolveInVault(vault.root, `${outputDir(jobId, learnerCode)}/sheet.html`);
     await mkdir(dirname(htmlPath), { recursive: true });
     await writeFile(htmlPath, html, 'utf8');
-    return { htmlPath, photocopy };
+    return { htmlPath, photocopy, undescribed };
   });
 
   /**
@@ -82,11 +82,18 @@ export function registerPrintIpc(): void {
    */
   handle('job:odt', async (jobId: string, learnerCode: string) => {
     const vault = currentVault();
-    const bytes = await renderOdt(jobId, learnerCode);
+    const { bytes, undescribed } = await renderOdt(jobId, learnerCode);
     const path = resolveInVault(vault.root, `${outputDir(jobId, learnerCode)}/sheet.odt`);
     await mkdir(dirname(path), { recursive: true });
     await writeFile(path, bytes);
-    return path;
+    /*
+     * The path **and** what the sheet is missing (review COD-13, decision P43).
+     *
+     * The ODT had no essential-figure check at all while the PDF of the same sheet
+     * threw on it. Under the corrected rule a visual output prints — the picture is
+     * in it — so this is a notice, and returning it is what stops it being silent.
+     */
+    return { path, undescribed };
   });
 
   /**

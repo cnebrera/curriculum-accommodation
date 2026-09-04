@@ -492,6 +492,34 @@ lector del catálogo, los pictogramas del ODT, y el control del override).
 
 tsc limpio · 1582 casos · 123 e2e.
 
+### 2.5 · La figura imprescindible — P43 (COD-13)
+
+La regla estaba escrita de **tres formas que no coincidían**, y el código no cumplía
+ninguna.
+
+`019` FR-1709 decía «una figura sin describir se anuncia como sin describir», para todas —
+y `render/linear.ts` hacía eso, así que un ejercicio cuya respuesta **es** el diagrama
+llegaba a un alumno que no puede verlo, convertido en una frase que le dice que hay un
+dibujo que no va a tener. `instructions/render.md` decía lo contrario en su propia sección
+no visual («blocks the render»). Y el ODT —la salida editable de la misma hoja— **no tenía
+comprobación alguna**, mientras el PDF de esa hoja sí lanzaba: una desviación entre
+modalidades de un mismo documento, que es exactamente lo que el Principio IV prohíbe que
+aparezca «como omisión».
+
+Ahora la regla es la misma en los tres sitios y dice lo que decidiste: **visual imprime,
+no-visual bloquea.** El PDF y el ODT salen —lo que **afloja el PDF a propósito**, porque
+en papel la imagen se ve y negarse a imprimir le quita una hoja utilizable por una
+descripción que solo necesita quien no ve— con aviso en la pantalla de revisión. El audio
+y el braille se paran, nombrando la figura y explicando que en papel sí sale. Y solo para
+figuras **imprescindibles**: una informativa se anuncia y la lectura sigue, porque su
+ausencia es una pérdida y no un agujero donde estaba la respuesta.
+
+En dos commits, spec primero y corpus+código después, que es lo que el gate separa.
+
+3 casos en `linear.test.ts` y 5 en `e2e/essential-figure.spec.ts`, que **pregunta a las
+cuatro salidas del mismo documento** y comprueba los dos comportamientos — que es la
+aserción que importa aquí. 2 costuras verificadas por mutación.
+
 ## Saltados y por qué
 
 _(nada todavía)_
@@ -514,11 +542,11 @@ _(nada todavía)_
 | | |
 |---|---|
 | `npx tsc --noEmit` | verde (línea base) |
-| `npx vitest run` | verde — 1582 casos |
-| `npm run test:e2e` | verde — 123 casos |
+| `npx vitest run` | verde — 1585 casos |
+| `npm run test:e2e` | verde — 128 casos |
 | `scripts/check-fr-coverage.sh` | verde (línea base) |
 | `scripts/check-spec-kit.sh` | verde (línea base) |
 
 ---
 
-**Lotes 0 y 1 completos; Lote 2 en 5/12.** Quedan 9 ítems de la cola (Lote 2: 7 · Lote 3: 2 abiertos + 11 features por implementar).
+**Lotes 0 y 1 completos; Lote 2 en 6/12.** Quedan 8 ítems de la cola (Lote 2: 6 · Lote 3: 2 abiertos + 11 features por implementar).

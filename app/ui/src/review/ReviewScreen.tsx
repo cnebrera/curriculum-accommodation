@@ -42,6 +42,15 @@ export function ReviewScreen({ jobId, learner, recipes, back }: {
   const [signedOff, setSignedOff] = useState(false);
   const [pdfPath, setPdfPath] = useState<string | null>(null);
   const [odtPath, setOdtPath] = useState<string | null>(null);
+  /**
+   * Essential figures with no description (review COD-13, decision P43).
+   *
+   * She is told and the sheet still goes out. «Visual prints, non-visual stops»:
+   * on paper the picture is there, so refusing to print takes a usable sheet away
+   * for a description only a non-visual reader needs — and the same document
+   * refuses in audio and braille, where the picture genuinely is not there.
+   */
+  const [undescribed, setUndescribed] = useState<string[]>([]);
   const [photocopy, setPhotocopy] = useState<Array<{ message: string }>>([]);
   const [corrections, setCorrections] = useState<Array<{ text: string; scope: 'learner' | 'practice' | 'corpus' }>>([]);
   const [revision, setRevision] = useState(1);
@@ -112,6 +121,7 @@ export function ReviewScreen({ jobId, learner, recipes, back }: {
     const r = await renderJob.run(jobId, learner);
     if (!r) return;
     setPhotocopy(r.photocopy ?? []);
+    setUndescribed(r.undescribed ?? []);
     const path = await pdf.run(jobId, learner);
     if (path !== undefined) setPdfPath(path);
   };
@@ -161,6 +171,21 @@ export function ReviewScreen({ jobId, learner, recipes, back }: {
       {reportData
         ? <ReportView {...reportData} />
         : <Callout intent="info">Cargando el informe…</Callout>}
+
+      {/*
+        Said, not refused (decision P43). The sheet prints; audio and braille of the
+        same document do not, and that is where the description is load-bearing.
+      */}
+      {undescribed.length ? (
+        <Callout intent="decide" title="Una figura imprescindible no tiene descripción">
+          <ul>{undescribed.map((u, i) => <li key={i}>{u}</li>)}</ul>
+          <p className="small" style={{ margin: 0 }}>
+            En papel sale igual: la imagen se ve. Pero para escuchar o para braille
+            no puedo darte esta hoja hasta que la describas, porque ahí el dibujo no
+            está y el ejercicio se queda sin respuesta dentro.
+          </p>
+        </Callout>
+      ) : null}
 
       {photocopy.length ? (
         <Callout intent="decide" title="En fotocopia esto se pierde">
@@ -222,7 +247,11 @@ export function ReviewScreen({ jobId, learner, recipes, back }: {
           is 95% right.
         */}
         <button className="btn" disabled={odt.busy} aria-busy={odt.busy}
-                onClick={() => void odt.run(jobId, learner).then((p) => { if (p) setOdtPath(p); })}>
+                onClick={() => void odt.run(jobId, learner).then((r) => {
+                  if (!r) return;
+                  setOdtPath(r.path);
+                  setUndescribed(r.undescribed);
+                })}>
           Descargar para editar
         </button>
         {/*

@@ -34,8 +34,16 @@ out worse than the plain one. Nothing may carry meaning by colour alone.
 - Decorative figures are dropped.
 - Informative figures become their short description.
 - Essential figures become their long description. **An essential figure with no
-  long description blocks the render** — an exercise the learner cannot possibly
-  answer is worse than no sheet at all.
+  long description stops this rendering** and says which figure — an exercise the
+  learner cannot possibly answer is worse than no sheet at all.
+- An **informative** figure with no description is announced as undescribed and
+  the rendering continues: it adds something, and its absence is a loss rather
+  than a hole where the answer was.
+
+The rule in one line: **visual prints, non-visual stops.** On paper the picture is
+there, so the PDF and the editable export go out. In audio and in braille it is
+not, and an exercise about a diagram nobody described is an exercise with no
+answer in it (`019` FR-1709, corrected 2026-09-04 with this file).
 - Formulae are voiced from their notation, not read as symbols.
 - In audio, the item number is announced before each exercise and there is a
   pause after the question.

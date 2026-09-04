@@ -1,6 +1,6 @@
 import {
   renderHTML, renderODT, renderLinear, renderBrailleReady, parseAudioCorpus,
-  parseIR, checkOutput, isSignedOff, RampaError, parsePicto,
+  parseIR, checkOutput, isSignedOff, RampaError, parsePicto, checkEssentialFigures,
 } from '@rampa/core';
 import { resolveDocument, whyNoDocument } from '@rampa/core';
 import { currentVault } from '../ipc/vault.js';
@@ -40,7 +40,9 @@ import {
  * produced with no sign-off having happened (007 FR-509). One reader of one
  * truth.
  */
-export async function renderOdt(jobId: string, learnerCode: string): Promise<Uint8Array> {
+export async function renderOdt(
+  jobId: string, learnerCode: string,
+): Promise<{ bytes: Uint8Array; undescribed: string[] }> {
   const vault = currentVault();
   // `021` T008: composed material has these modalities too. `019`'s promise was «one
   // document, N renderings», and a rendering that only works downstream of an adaptation
@@ -79,11 +81,23 @@ export async function renderOdt(jobId: string, learnerCode: string): Promise<Uin
   const pictogramImages = ids.length > 0 ? await pictogramImagesFor(ids) : undefined;
   const pictogramCredits = ids.length > 0 ? await pictogramCreditsFor() : undefined;
 
-  return renderODT(doc, {
-    signedOff: isSignedOff(doc),
-    ...(pictogramImages ? { pictogramImages } : {}),
-    ...(pictogramCredits ? { pictogramCredits } : {}),
-  });
+  return {
+    bytes: renderODT(doc, {
+      signedOff: isSignedOff(doc),
+      ...(pictogramImages ? { pictogramImages } : {}),
+      ...(pictogramCredits ? { pictogramCredits } : {}),
+    }),
+    /*
+     * The check this output did not have (review COD-13, decision P43).
+     *
+     * `renderOdt` never called `checkEssentialFigures` while the PDF of the same
+     * sheet threw on it — a deviation between two modalities of one document,
+     * which is what Principle IV forbids appearing «as an omission». Under the
+     * corrected rule it is a **notice** and not a block, because the ODT is a
+     * visual output and the picture is in it. But it is said, which it was not.
+     */
+    undescribed: checkEssentialFigures(doc),
+  };
 }
 
 /**
@@ -108,6 +122,27 @@ async function linearFor(jobId: string, learnerCode: string) {
   if (found.of === 'none') throw new RampaError('vault-unreadable', whyNoDocument(found));
   const raw = (await vault.readRaw(found.path))!;
   const doc = parseIR(raw);
+
+  /*
+   * And here it **stops** (`019` FR-1709 as amended, decision P43).
+   *
+   * `render/linear.ts` turned an undescribed figure into «hay una imagen sin
+   * describir» and carried on — so an exercise whose answer *is* the diagram
+   * reached a learner who cannot see it, as a sentence telling him there is a
+   * picture he will not get. `instructions/render.md` said «blocks the render» in
+   * its own non-visual section all along, and the code did the opposite.
+   *
+   * Only for **essential** figures: an informative one is still announced and the
+   * rendering continues, because its absence is a loss rather than a hole where
+   * the answer was.
+   */
+  const undescribed = checkEssentialFigures(doc);
+  if (undescribed.length) {
+    throw new RampaError('render-undescribed',
+      `${undescribed.join(' ')} Sin esa descripción, en audio o en braille el `
+      + 'ejercicio no tiene respuesta dentro. En papel sí sale: la imagen se ve.',
+      undescribed);
+  }
 
   const corpus = parseAudioCorpus(await loadInstruction('audio'));
   const signedOff = isSignedOff(doc);

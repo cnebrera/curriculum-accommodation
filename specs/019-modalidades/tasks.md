@@ -46,6 +46,16 @@
 - [x] T012 An audio-ready rendering with an explicit reading order (FR-1708) *(done: `packages/core/src/render/linear.ts`. `data-order` where a recipe reordered a page — whoever reordered it already knows the order they meant — and document order otherwise, stably, which is almost everything.)*
 - [x] T013 A figure spoken by its description; an undescribed one **announced as
       undescribed** rather than skipped (FR-1709) *(done. A described figure **is** its description, not «imagen» plus it; an undescribed one is announced as undescribed rather than skipped. And a pictogram is spoken as its word, which is what `018` FR-1614's text alternative exists for.)*
+      **Amended 2026-09-04 (review COD-13, decision P43): announcing was right for an
+      informative figure and wrong for an essential one.** «Hay una imagen sin
+      describir» in place of the diagram the answer depends on hands a learner who
+      cannot see it a sentence about a picture he will not get — and
+      `instructions/render.md` said «blocks the render» in its own non-visual section
+      all along, so the corpus and this task contradicted each other. Now: informative
+      is announced and the rendering continues; **essential stops** the audio and the
+      braille, naming the figure and saying that the printed sheet is fine. The stop
+      lives in `jobs/export.ts`; `e2e/essential-figure.spec.ts` asks all four outputs of
+      one document and asserts the two behaviours.
 - [x] T014 An answer space announced (FR-1710) — silence where the page has a box
       is a missing question *(done, and the sentence is corpus: «Aquí hay un espacio para contestar», from `instructions/audio.md`.)*
 - [x] T015 The draft mark **heard first** (FR-1711). A draft that only announces
@@ -102,7 +112,7 @@ at is a requirement nobody is keeping.**
 
 | | Where it is satisfied |
 |---|---|
-| FR-1702 | **Satisfied by absence.** No modality-specific adaptation path exists: the ODT, the audio-ready and the braille-ready renderings all take the same adapted IR, and `renderLinear` serves the last two. SC-1707 is the same claim — the IR needed no modality-specific field |
+| FR-1702 | **Satisfied by absence.** No modality-specific adaptation path exists: the ODT, the audio-ready and the braille-ready renderings all take the same adapted IR, and `renderLinear` serves the last two. SC-1707 is the same claim — the IR needed no modality-specific field. **Two things were false by omission rather than by design, and are fixed:** the ODT dropped the pictograms entirely (review COD-24 — no reference to `data-picto`, no image, no attribution, no marked gap, and no word about it) and it had no essential-figure check while the PDF of the same sheet threw on one (COD-13). One document, N outputs — for real since 2026-09-04 |
 | FR-1703 | Each modality is its own action, so one failing leaves the others. And within a modality, what cannot be produced **degrades with the reason named** rather than failing: an unlinearisable block is announced, a missing pictogram image is a named gap |
 | FR-1704 | T007 · `odt.test.ts` opens the produced file and checks its structure. SC-1702 — Word and Google Docs specifically — is recorded as needing a person with those programs |
 | FR-1705 | **Satisfied by absence, and checked.** The ODT is hand-written XML in a store-only ZIP built on `node:zlib`; nothing shells out. `documents.test.ts` asserts no compilation step and no native build |

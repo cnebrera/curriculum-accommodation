@@ -270,3 +270,55 @@ describe('the spatial test in isolation', () => {
     }
   });
 });
+
+/**
+ * «Visual prints, non-visual stops» (`019` FR-1709 as amended, decision P43).
+ *
+ * ## Three statements of one rule, none of which agreed
+ *
+ * `019` FR-1709 said an undescribed figure «MUST be announced as undescribed», for
+ * all of them, and `render/linear.ts` did exactly that — so an exercise whose answer
+ * **is** the diagram reached a learner who cannot see it, as a sentence telling him
+ * there is a picture he will not get.
+ *
+ * `instructions/render.md` said the opposite in its own non-visual section: «an
+ * essential figure with no long description blocks the render».
+ *
+ * And the code did neither for the ODT, which had no check at all while the PDF of
+ * the same sheet threw on it — a deviation between two modalities of one document,
+ * which is what Principle IV forbids appearing as an omission.
+ *
+ * The rule is now the same in all three: on paper the picture is there, so the PDF
+ * and the ODT go out (with a notice); in audio and braille it is not, so the run
+ * stops. **The stop lives in `jobs/export.ts`**, which reaches the vault — so what
+ * is asserted here is the half this file can see: an informative figure is still
+ * announced, and the announcement is not a substitute for a description.
+ */
+describe('an undescribed figure, in a linear rendering', () => {
+  const essential = (role: string) => sheet([
+    `::: {#f1 .figure data-role="${role}"}`, '(un diagrama)', ':::',
+  ]);
+
+  it('is announced when it is informative, and the reading continues', () => {
+    const out = audio(essential('informative'));
+    expect(out.text).toMatch(/sin describir/);
+    // Announced, not skipped: a silent omission is a learner finishing an exercise
+    // of eleven questions believing it had ten.
+    expect(out.announced.map((a) => a.id)).toContain('f1');
+  });
+
+  it('is announced for the transcriber too, in his words', () => {
+    const out = renderLinear(essential('informative'), { ...opts, modality: 'braille' });
+    expect(out.text).toMatch(/Para el transcriptor/);
+  });
+
+  it('and a described figure is read rather than announced', () => {
+    const described = sheet([
+      '::: {#f1 .figure data-role="essential" data-description="Dos vasos con agua"}',
+      '(un diagrama)', ':::',
+    ]);
+    const out = audio(described);
+    expect(out.text).not.toMatch(/sin describir/);
+    expect(out.announced.map((a) => a.id)).not.toContain('f1');
+  });
+});

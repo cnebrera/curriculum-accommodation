@@ -54,11 +54,20 @@ export async function renderJob(jobId: string, learnerCode: string) {
    */
   const signedOff = isSignedOff(doc);
 
+  /*
+   * An essential figure with no description **no longer stops a printed sheet**
+   * (decision P43, review COD-13). Deliberate loosening, and worth stating.
+   *
+   * The rule the corpus and `019` FR-1709 now both carry is «visual prints,
+   * non-visual stops»: on paper the picture is *there*, so the exercise is
+   * answerable and refusing to print it takes a usable sheet away for a
+   * description that only a non-visual reader needs. Where it is genuinely
+   * missing — audio, braille — the run stops, in `jobs/export.ts`.
+   *
+   * She is still told, on the review screen, beside the photocopy warnings: the
+   * sheet is fine to hand out and the description is still worth writing.
+   */
   const undescribed = checkEssentialFigures(doc);
-  if (undescribed.length) {
-    // Emitting an exercise the learner cannot possibly answer is worse than no sheet.
-    throw new RampaError('render-undescribed', undescribed.join(' '), undescribed);
-  }
 
   /*
    * Whose presentation, and whose facts to keep off the page (`021` T005).
@@ -129,7 +138,7 @@ export async function renderJob(jobId: string, learnerCode: string) {
   const check = checkOutput(html, codes, [...(await knownNames()).values()], facts);
   if (!check.ok) throw new RampaError('render-learner-data', check.findings.join(' '), check.findings);
 
-  return { html, photocopy: checkPhotocopy(html) };
+  return { html, photocopy: checkPhotocopy(html), undescribed };
 }
 
 /**

@@ -225,8 +225,19 @@ justamente eso.
       cerrado esconde, y la de «tres frases de la excepción» se mide sobre la excepción en vez de
       como resta —la resta funcionaba mientras el callout fuese la única diferencia entre los dos
       estados. 20 casos nuevos; 5 costuras verificadas por mutación.
-- [ ] **2.5** Figura esencial: regla unificada «visual imprime, no-visual bloquea» — código de
+- [x] **2.5** Figura esencial: regla unificada «visual imprime, no-visual bloquea» — código de
       print/export + render.md + 019 (P43).
+      **Hecho 2026-09-04, en dos commits** (spec primero, corpus+código después). La regla
+      estaba escrita de tres formas que no coincidían: `019` FR-1709 decía «anúnciala» para
+      todas, `render.md` decía «bloquea» en su sección no visual, y el código no hacía ninguna
+      de las dos para el ODT —que no tenía comprobación alguna— mientras el PDF de la misma
+      hoja sí lanzaba. Ahora: el PDF y el ODT **salen** (aflojando el PDF a propósito: la
+      imagen se ve en papel) con aviso en la pantalla de revisión, y el audio y el braille
+      **se paran** nombrando la figura y diciendo que en papel sí sale. Solo para figuras
+      **imprescindibles**: una informativa se anuncia y sigue.
+      3 casos nuevos en `linear.test.ts` y `e2e/essential-figure.spec.ts` (5), que pregunta a
+      **las cuatro salidas del mismo documento** y comprueba los dos comportamientos.
+      2 costuras verificadas por mutación.
 - [ ] **2.6** Traspaso honesto: «apuntado en el perfil» sin fuerza inventada + fechas reales de
       anotación (P44). Reescribir el test que consagraba el 'observed'.
 - [x] **2.7** Plan de borrado muestra QUÉ sobrevive y por qué (P45).
