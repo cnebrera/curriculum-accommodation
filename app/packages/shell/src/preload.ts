@@ -168,6 +168,13 @@ const api = {
             omitted?: string[], kind?: string) =>
       invoke('guide:apply', learner, measures, document, omitted, kind),
     acns: (learner: string) => invoke('guide:acns', learner),
+    /** The draft as a document: saved, printable, signable (FR-1516, P46). */
+    acnsSave: (learner: string) => invoke('guide:acnsSave', learner),
+    acnsRead: (learner: string) => invoke('guide:acnsRead', learner),
+    acnsHtml: (learner: string) => invoke('guide:acnsHtml', learner),
+    acnsPdf: (learner: string) => invoke('guide:acnsPdf', learner),
+    acnsSignOff: (learner: string, role: string) =>
+      invoke('guide:acnsSignOff', learner, role),
     ask: (jobId: string, question: string, history?: unknown[]) =>
       invoke('guide:ask', jobId, question, history),
     acs: (learner: string, evaluationRecorded: boolean, decided: string) =>

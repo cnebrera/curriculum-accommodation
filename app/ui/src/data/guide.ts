@@ -1,4 +1,4 @@
-import { useCommand } from './async.js';
+import { useAsync, useCommand, type Loadable } from './async.js';
 
 /**
  * The adaptación curricular, from the renderer (017).
@@ -49,6 +49,48 @@ export function useApplyGuide() {
 
 export function useDraftAcns() {
   return useCommand((learner: string) => window.rampa.guide.acns(learner) as Promise<AcnsDraft>);
+}
+
+/**
+ * The ACNS as a document (FR-1516, decision P46).
+ *
+ * `useDraftAcns` above stays what it was — a **preview that writes nothing**, so the
+ * gaps and the sources can be read before she decides to keep it. These four are the
+ * document: saved, read back, printed, signed.
+ */
+export interface SavedAcns {
+  path: string;
+  markdown: string;
+  missing: string[];
+  sources: string[];
+  /** Set when a **signed** one was moved aside rather than overwritten. */
+  kept?: string;
+}
+
+export function useSaveAcns() {
+  return useCommand((learner: string) =>
+    window.rampa.guide.acnsSave(learner) as Promise<SavedAcns>);
+}
+
+/** What is in her folder right now, or `null`. Reloadable, because signing changes it. */
+export function useStoredAcns(learner: string): Loadable<{ markdown: string; signed: boolean } | null> {
+  return useAsync(
+    () => window.rampa.guide.acnsRead(learner) as Promise<{ markdown: string; signed: boolean } | null>,
+    [learner]);
+}
+
+export function useAcnsHtml() {
+  return useCommand((learner: string) => window.rampa.guide.acnsHtml(learner) as Promise<string>);
+}
+
+export function useAcnsPdf() {
+  return useCommand((learner: string) => window.rampa.guide.acnsPdf(learner) as Promise<string>);
+}
+
+/** The signature, and the only thing that takes the draft mark off. */
+export function useSignOffAcns() {
+  return useCommand((learner: string, role: string) =>
+    window.rampa.guide.acnsSignOff(learner, role) as Promise<{ signed: true; date: string }>);
 }
 
 export interface Turn { question: string; answer: string }

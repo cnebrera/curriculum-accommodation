@@ -4,8 +4,10 @@ import { Callout } from '../components/Callout.js';
 import { InjectionNotice } from '../components/InjectionNotice.js';
 import {
   useReadGuide, useApplyGuide, useDraftAcns, useAskGuide, useHelpWithAcs,
+  useSaveAcns, useStoredAcns, useAcnsHtml, useAcnsPdf, useSignOffAcns,
   type GuideRead, type Measure, type Turn,
 } from '../data/guide.js';
+import { DocumentViewer } from '../viewer/DocumentViewer.js';
 
 /**
  * The adaptación curricular (017 T012, T014-T018, T023-T026).
@@ -262,7 +264,14 @@ export function GuideScreen({
       ) : null}
 
       <Section title="¿De qué documento es?">
-        <Field htmlFor="doc" help="Para que su fichero de adaptaciones diga de dónde salió esto.">
+        {/*
+          `label` was missing here until 2026-09-04: an input with a placeholder, a
+          section title above it and **no accessible name**. Found while writing the e2e
+          for the signature field below, which had the same hole for the same reason —
+          `Field`'s label is optional, so forgetting it typechecks and looks right.
+        */}
+        <Field label="De qué documento es" htmlFor="doc"
+               help="Para que su fichero de adaptaciones diga de dónde salió esto.">
           <input className="input" id="doc" type="text" value={document}
                  placeholder="Por ejemplo: el DIAC de marzo, o la ACNS del tutor"
                  onChange={(e) => setDocument(e.target.value)} />
@@ -333,9 +342,134 @@ export function AcnsDraftScreen({ learnerCode, learnerName, onBack }: {
               </ul>
             </Section>
           ) : null}
+
+          <AcnsDocumentSection learnerCode={learnerCode} />
+        </>
+      ) : (
+        /* One already in her folder from another day: reachable without redrafting. */
+        <AcnsDocumentSection learnerCode={learnerCode} />
+      )}
+    </Page>
+  );
+}
+
+/**
+ * The document, once it exists: saved, printed, signed (FR-1516, decision P46).
+ *
+ * ## The gap this closes
+ *
+ * The draft was a string on a screen. Nothing kept it, nothing printed it, and the
+ * mark FR-1516 calls «removable only by sign-off» had no signature that could remove
+ * it — so what actually happened is that she retyped it into Séneca and the mark was
+ * lost in the copy-paste, with no review having happened anywhere.
+ *
+ * ## Why saving is a separate press
+ *
+ * «Hacer el borrador» writes nothing (Principle VIII): she reads the gaps and the
+ * sources and *then* decides. A preview that saved would put a document in her folder
+ * for having looked at one.
+ */
+function AcnsDocumentSection({ learnerCode }: { learnerCode: string }) {
+  const stored = useStoredAcns(learnerCode);
+  const save = useSaveAcns();
+  const html = useAcnsHtml();
+  const pdf = useAcnsPdf();
+  const sign = useSignOffAcns();
+  const [showing, setShowing] = useState<string | null>(null);
+  const [role, setRole] = useState('');
+  const [saved, setSaved] = useState<{ path: string; kept?: string } | null>(null);
+  const [pdfPath, setPdfPath] = useState<string | null>(null);
+
+  if (showing !== null) {
+    return (
+      <DocumentViewer html={showing} title="La ACNS, como se imprime"
+                      onClose={() => setShowing(null)} />
+    );
+  }
+
+  const exists = stored.state === 'ready' && stored.value !== null;
+  const signed = stored.state === 'ready' && stored.value?.signed === true;
+  const problem = save.error ?? html.error ?? pdf.error ?? sign.error;
+
+  const doSave = async (): Promise<void> => {
+    const r = await save.run(learnerCode);
+    if (!r) return;
+    setSaved({ path: r.path, ...(r.kept ? { kept: r.kept } : {}) });
+    stored.reload();
+  };
+
+  return (
+    <Section
+      title="Guardarla, imprimirla y firmarla"
+      lede="Es un documento como cualquier otro: mientras no la firmes lleva la marca de borrador, y la marca sólo se va cuando la firmas.">
+
+      {problem ? <Callout intent="danger">{problem.message}</Callout> : null}
+
+      <div className="row gap2" style={{ flexWrap: 'wrap' }}>
+        <button className="btn" disabled={save.busy} aria-busy={save.busy}
+                onClick={() => void doSave()}>
+          {exists ? 'Guardarla otra vez' : 'Guardarla en mi carpeta'}
+        </button>
+        {exists ? (
+          <>
+            <button className="btn" disabled={html.busy}
+                    onClick={() => void html.run(learnerCode).then((h) => h && setShowing(h))}>
+              Verla como se imprime
+            </button>
+            <button className="btn" disabled={pdf.busy}
+                    onClick={() => void pdf.run(learnerCode).then((p) => p && setPdfPath(p))}>
+              Guardarla en PDF
+            </button>
+          </>
+        ) : null}
+      </div>
+
+      {saved ? (
+        <p className="field-help">Está en <code>{saved.path}</code>.</p>
+      ) : null}
+      {saved?.kept ? (
+        /*
+          A signed one is never overwritten. Said out loud, because the alternative is
+          her believing the signed version is gone.
+        */
+        <Callout intent="info">
+          La que ya estaba firmada no la he tocado: la he guardado en{' '}
+          <code>{saved.kept}</code>.
+        </Callout>
+      ) : null}
+      {pdfPath ? <p className="field-help">El PDF está en <code>{pdfPath}</code>.</p> : null}
+
+      {signed ? (
+        <Callout intent="info" title="Firmada">
+          Ya no lleva la marca de borrador. Lo que sigue faltando es llevarla a Séneca:
+          el registro no es este fichero.
+        </Callout>
+      ) : exists ? (
+        <>
+          <Field label="Quién la firma" htmlFor="acns-role"
+                 help="Una ACNS la coordina el tutor o la tutora, y quién la ha revisado es parte del documento.">
+            <input className="input" id="acns-role" type="text" value={role}
+                   placeholder="Por ejemplo: la tutora, o el equipo docente"
+                   onChange={(e) => setRole(e.target.value)} />
+          </Field>
+          {/*
+            Plain, not primary. `013` FR-1105: one primary control per screen, and this
+            page's primary is «Hacer el borrador» in its own action bar. Emphasis
+            everywhere is emphasis nowhere — the same correction `023` T024 had to make.
+          */}
+          <button className="btn" disabled={sign.busy || !role.trim()}
+                  aria-busy={sign.busy}
+                  onClick={() => void sign.run(learnerCode, role.trim()).then((r) => {
+                    if (r) stored.reload();
+                  })}>
+            Firmarla y quitarle la marca
+          </button>
+          <p className="field-help">
+            Firmar dice que la has leído. No la presenta: eso sigue siendo cosa tuya, en Séneca.
+          </p>
         </>
       ) : null}
-    </Page>
+    </Section>
   );
 }
 

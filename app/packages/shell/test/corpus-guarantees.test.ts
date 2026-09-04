@@ -215,9 +215,20 @@ describe('the guide has no ingest path of its own', () => {
 
     // No dialog, no file read, no second ingest.
     expect(src).not.toMatch(/showOpenDialog|readFile|readdir|runIngest|ingest:/);
-    // Five handlers, all of them about a job that already exists.
+    /*
+     * The handlers, enumerated so a new one is a decision.
+     *
+     * Five became ten on 2026-09-04, and all five new ones are the ACNS becoming a
+     * document (FR-1516, decision P46): saved, read back, rendered, printed, signed.
+     * None of them reads a source file — `acnsPdf` **writes** a PDF, which is what
+     * `ipc/print.ts` already does for a sheet, and the claim this test defends is that
+     * a *guide* never arrives through here.
+     */
     expect([...src.matchAll(/handle\('guide:(\w+)'/g)].map((m) => m[1]).sort())
-      .toEqual(['acns', 'acs', 'apply', 'ask', 'read']);
+      .toEqual([
+        'acns', 'acnsHtml', 'acnsPdf', 'acnsRead', 'acnsSave', 'acnsSignOff',
+        'acs', 'apply', 'ask', 'read',
+      ]);
   });
 
   it('refuses a guide whose extraction she has not confirmed', async () => {

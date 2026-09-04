@@ -1,10 +1,16 @@
 import { type BrowserWindow } from 'electron';
 import { refreshRecord } from './record.js';
 import { handle } from './wrap.js';
+import { writeFile, mkdir } from 'node:fs/promises';
+import { dirname } from 'node:path';
 import {
   readGuideJob, applyGuide, draftAcnsJob, askAboutGuide, helpWithAcs,
+  saveAcnsDraft, readAcns, signOffAcns,
 } from '../jobs/guide.js';
-import type { Measure } from '@rampa/core';
+import { currentVault } from './vault.js';
+import { renderPdf } from '../jobs/print.js';
+import { learnerAcnsPdf, renderAcnsHTML, resolveInVault, RampaError,
+         type Measure } from '@rampa/core';
 
 /**
  * Wiring, and only wiring (017 T013, `013` FR-1111).
@@ -42,7 +48,53 @@ export function registerGuideIpc(getWindow: () => BrowserWindow | null): void {
     return result;
   });
 
+  /**
+   * The draft, on screen only. Kept because it writes nothing.
+   *
+   * `020`'s screen shows the gaps and the sources before she decides to keep it, and a
+   * preview that saved would put a document in her vault for having looked.
+   */
   handle('guide:acns', async (learnerCode: string) => draftAcnsJob(learnerCode));
+
+  /** The same draft, as a document in the vault (FR-1516, P46). */
+  handle('guide:acnsSave', async (learnerCode: string) => saveAcnsDraft(learnerCode));
+
+  handle('guide:acnsRead', async (learnerCode: string) => readAcns(learnerCode));
+
+  /**
+   * The rendered page — the mark comes from the document, and there is no parameter
+   * for it. See `renderAcnsHTML`: a `signedOff` argument is exactly how an unmarked
+   * sheet was once producible with no sign-off at all.
+   */
+  handle('guide:acnsHtml', async (learnerCode: string) => {
+    const found = await readAcns(learnerCode);
+    if (!found) {
+      throw new RampaError('vault-unreadable',
+        'Todavía no hay ACNS guardada para este alumno. Haz el borrador primero.');
+    }
+    return renderAcnsHTML(found.markdown);
+  });
+
+  handle('guide:acnsPdf', async (learnerCode: string) => {
+    const vault = currentVault();
+    const found = await readAcns(learnerCode);
+    if (!found) {
+      throw new RampaError('vault-unreadable',
+        'Todavía no hay ACNS guardada para este alumno. Haz el borrador primero.');
+    }
+    const pdf = await renderPdf(renderAcnsHTML(found.markdown));
+    const path = resolveInVault(vault.root, learnerAcnsPdf(learnerCode));
+    await mkdir(dirname(path), { recursive: true });
+    await writeFile(path, pdf);
+    return path;
+  });
+
+  /**
+   * The signature (FR-1516). One document, one signature, and the role recorded —
+   * an ACNS is coordinated by the tutor, and who signed it is part of the document.
+   */
+  handle('guide:acnsSignOff', async (learnerCode: string, role: string) =>
+    signOffAcns(learnerCode, role));
 
   handle('guide:ask', async (
     jobId: string, question: string,

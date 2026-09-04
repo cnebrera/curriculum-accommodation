@@ -1,5 +1,7 @@
 import {
   jobIR, learnerOverlay, parseIR, annotateInjection, checkBounds, isVerified,
+  learnerAcns, learnerAcnsRevision, learnerDir, acnsDocument, acnsIsSigned, signAcns,
+  nextAcnsRevision,
   readGuide, guideSection, appendGuideSection, draftAcns, requireRecordedWork,
   requireEvaluation, checkDeclines, parseGuideCorpus, parseAcsCorpus,
   recordFor, loadLearner, findYear, logger, RampaError,
@@ -245,6 +247,84 @@ export async function draftAcnsJob(learnerCode: string): Promise<{
     recipesByJob,
     on: new Date().toISOString().slice(0, 10),
   });
+}
+
+/**
+ * The draft, in the vault, where a document lives (FR-1516, decision P46).
+ *
+ * ## What this closes
+ *
+ * `draftAcnsJob` returned markdown and nothing kept it. The screen showed it as plain
+ * text, there was no print path, and the sign-off handler resolves documents by
+ * (job × learner) — so the mark FR-1516 says is «removable only by sign-off» had no
+ * signature that could remove it, and the real flow was her retyping the text into
+ * Séneca with the mark lost in the copy-paste.
+ *
+ * ## A signed one is moved aside, never overwritten
+ *
+ * She will press «volver a hacerlo»: the term moves on and the draft is assembled from
+ * work that has grown. Overwriting a signed ACNS would destroy the only record that
+ * anybody reviewed it, so the signed file is kept as `acns.r<n>.md` and the new draft
+ * takes the plain name. An **unsigned** one is just replaced — there is nothing in it
+ * to lose that the record does not still hold.
+ */
+export async function saveAcnsDraft(learnerCode: string): Promise<{
+  path: string; markdown: string; missing: string[]; sources: string[]; kept?: string;
+}> {
+  const vault = currentVault();
+  const draft = await draftAcnsJob(learnerCode);
+  const path = learnerAcns(learnerCode);
+
+  let kept: string | undefined;
+  const existing = await vault.readRaw(path);
+  if (existing !== null && acnsIsSigned(existing)) {
+    kept = learnerAcnsRevision(
+      learnerCode, nextAcnsRevision(await vault.list(learnerDir(learnerCode))));
+    await vault.writeRaw(kept, existing);
+  }
+
+  const document = acnsDocument(
+    draft.markdown, learnerCode, new Date().toISOString().slice(0, 10));
+  await vault.writeRaw(path, document);
+  logger.info('acns.saved', { missing: draft.missing.length, kept: kept !== undefined });
+  // `document` and not `draft.markdown`: what she prints and what she copies must be
+  // the file, front matter and mark included, not the body it was built from.
+  return {
+    path, markdown: document, missing: draft.missing, sources: draft.sources,
+    ...(kept ? { kept } : {}),
+  };
+}
+
+/** What is in the vault, or `null`. Reading is not producing. */
+export async function readAcns(learnerCode: string): Promise<
+  { markdown: string; signed: boolean } | null
+> {
+  const raw = await currentVault().readRaw(learnerAcns(learnerCode));
+  return raw === null ? null : { markdown: raw, signed: acnsIsSigned(raw) };
+}
+
+/**
+ * The signature, and the only thing that takes the mark off (FR-1516).
+ *
+ * Deliberately **not** routed through `job:signOff`: that one resolves a document by
+ * (job × learner) and an ACNS is neither. What is shared is the thing that matters —
+ * `signAcns` writes the same `review.signed_off` block, and every renderer derives its
+ * banner from it through `draftMark`. One fact, one reader, two documents.
+ */
+export async function signOffAcns(learnerCode: string, role: string): Promise<
+  { signed: true; date: string }
+> {
+  const vault = currentVault();
+  const path = learnerAcns(learnerCode);
+  const raw = await vault.readRaw(path);
+  if (raw === null) {
+    throw new RampaError('vault-unreadable',
+      'Todavía no hay ACNS guardada para este alumno. Haz el borrador primero.');
+  }
+  const date = new Date().toISOString().slice(0, 10);
+  await vault.writeRaw(path, signAcns(raw, role, date));
+  logger.info('acns.signed', { learner: learnerCode });
+  return { signed: true, date };
 }
 
 /**

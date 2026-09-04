@@ -4,6 +4,7 @@ import { parsePicto } from '../pictograms/apply.js';
 import { createRenderer, learnerFacing } from '../ir/parse.js';
 import type { IRDocument, Block } from '../ir/types.js';
 import { ANSWER_KEY_HEADING } from '../compose/sheet.js';
+import { parseFrontMatter } from '../vault/parse.js';
 
 /**
  * IR → HTML.
@@ -294,6 +295,61 @@ export function renderAnswerKeyHTML(markdown: string): string {
     '</style></head><body>',
     `<p class="key-warn">${ANSWER_KEY_HEADING}</p>`,
     body,
+    '</body></html>',
+  ].join('\n');
+}
+
+/**
+ * The ACNS, as a page she can print (017 FR-1516, decision P46).
+ *
+ * ## Why not `renderHTML`
+ *
+ * Same argument as the answer key, for the opposite reason: `renderHTML` renders a
+ * **learner's** document — her presentation, her axes, her pictograms, the
+ * undescribed-figure check. An ACNS is a document for adults, going to Séneca. Running
+ * it through the learner renderer would apply a child's accommodations to an
+ * administrative form, and put it one wrong call away from looking like a worksheet.
+ *
+ * ## The mark, and where it comes from
+ *
+ * The banner and the watermark come from `draftMark`, which reads the **document's**
+ * front matter. There is no `signedOff` parameter and there must not be: that exact
+ * parameter is how `job:render` could once produce an unmarked sheet with no sign-off
+ * having happened (007 FR-509). The watermark matters more here than anywhere: an
+ * unsigned ACNS reaches Séneca by being read off paper, and page two of a stapled
+ * draft carries nothing otherwise.
+ *
+ * The front matter is not printed — it is machinery, and «kind: acns» on a page bound
+ * for a tutor's desk is noise.
+ */
+export function renderAcnsHTML(raw: string): string {
+  const { data, body: markdown } = parseFrontMatter(raw);
+  const mark = draftMark({ frontMatter: data });
+  const md = createRenderer();
+  return [
+    '<!doctype html>',
+    '<html lang="es"><head><meta charset="utf-8">',
+    `<title>${mark ? 'BORRADOR de ACNS' : 'ACNS'}</title>`,
+    '<style>',
+    'body{font:16px/1.5 system-ui,sans-serif;max-width:40em;margin:2rem auto;padding:0 1rem}',
+    'blockquote{border-left:4px solid #8a2f2c;margin:1.2rem 0;padding:.2rem 0 .2rem 1rem;',
+    'color:#4a3a39}',
+    'h1{font-size:1.5rem;line-height:1.25}h2{font-size:1.15rem;margin-top:2rem}',
+    'table{border-collapse:collapse}td,th{border:1px solid #ccc;padding:.3rem .6rem}',
+    // Both only when there is a mark: a signed page carrying the rule for a banner it
+    // does not have is dead weight in a document that goes to somebody's desk — and it
+    // makes «is this page marked?» unanswerable by looking at it.
+    mark === null ? '' : '.draft-banner{background:#8a2f2c;color:#fff;padding:.7em 1.2em;'
+      + 'font-weight:700;font-size:.9rem;letter-spacing:.04em;text-align:center;'
+      + 'margin:0 0 1.5rem}',
+    mark === null ? '' : `@media print{main::before{content:"${mark.watermark}";
+      position:fixed;top:45%;left:0;right:0;text-align:center;font-size:3rem;
+      color:rgba(138,47,44,.13);transform:rotate(-24deg);pointer-events:none;z-index:-1}}`,
+    '</style></head><body>',
+    mark === null ? '' : `<p class="draft-banner">${esc(mark.banner)}</p>`,
+    '<main>',
+    md.render(markdown),
+    '</main>',
     '</body></html>',
   ].join('\n');
 }

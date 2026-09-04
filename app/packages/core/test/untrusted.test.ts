@@ -494,10 +494,44 @@ describe('FR-509 · only sign-off removes the draft mark', () => {
      * The test failed on the count before it failed on anything else, which is
      * the right order: a new file in this list should be a decision, and now it
      * has been one.
+     *
+     * **A sixth and a seventh arrived on 2026-09-04, and they are the ACNS** (decision
+     * P46, review COD-22). `jobs/guide.ts` signs it and `ipc/guide.ts` exposes that;
+     * so this is a genuine second *caller*, and the list is doing its job by making it
+     * say why.
+     *
+     * Why not route it through `job:signOff`: that handler signs whatever
+     * `resolveDocument` returns, and `resolveDocument` answers «which document is *the
+     * document* of a job». An ACNS is not a job and is not material — teaching the
+     * resolver to return one would mean an administrative document pretending to be a
+     * sheet prepared for a child, and it would then be printable as one.
+     *
+     * What is **not** duplicated is the mechanism. `stampSignedOff` in core writes the
+     * block, both callers use it, and every renderer still reads it through
+     * `isSignedOff` / `draftMark`. Two callers of one writer, not two writers — which
+     * is the property FR-509 actually needs, and it is asserted below.
      */
     expect(writers.sort()).toEqual([
-      'ipc/signoff.ts', 'jobs/export.ts', 'jobs/print.ts', 'main.ts', 'preload.ts',
+      'ipc/guide.ts', 'ipc/signoff.ts', 'jobs/export.ts', 'jobs/guide.ts',
+      'jobs/print.ts', 'main.ts', 'preload.ts',
     ]);
+  });
+
+  /**
+   * And the block itself has one author (P46).
+   *
+   * The list above allows more than one caller; this allows only one *writer*. A second
+   * hand-built `signed_off: true` anywhere would be a second spelling of the one key
+   * `isSignedOff` reads — and a drifted key means the draft mark silently never
+   * appears, which fails open on the requirement this whole section is about.
+   */
+  it('has exactly one author of the signature block', () => {
+    const authors: string[] = [];
+    for (const f of [...walk(coreSrc), ...walk(shellSrc)]) {
+      const code = stripComments(readFileSync(f, 'utf8'));
+      if (/signed_off:\s*true/.test(code)) authors.push(f.replace(repoRoot + '/', ''));
+    }
+    expect(authors).toEqual(['app/packages/core/src/vault/signature.ts']);
   });
 
   it('never lets the caller assert that a document is signed', () => {

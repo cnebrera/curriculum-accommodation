@@ -49,6 +49,42 @@ export const learnerProfile = (code: string) => join(learnerDir(code), 'profile.
 export const learnerNotes = (code: string) => join(learnerDir(code), 'notes.md');
 export const learnerOverlay = (code: string) => join(learnerDir(code), 'adaptations.md');
 /**
+ * The ACNS document (P46, review COD-22).
+ *
+ * Beside his profile and his overlay rather than under `material/`, because it is not
+ * material: nobody hands an ACNS to a child, and a document in `material/` shows up in
+ * his record as something that was prepared for him. And it is inside `profiles/<code>/`
+ * on purpose — that directory is walked by the erasure (`executeForget`), so the
+ * document is forgettable by construction rather than by somebody remembering to add it
+ * to a list.
+ */
+export const learnerAcns = (code: string) => join(learnerDir(code), 'acns.md');
+/**
+ * A signed ACNS is never overwritten (Principle VII).
+ *
+ * «Volver a hacerlo» on a signed document would destroy the only record that a review
+ * happened — and she may well press it, because a term moves on and the draft is
+ * assembled from work that has grown since. So the signed one is kept beside it, the
+ * same shape `adapted.r<n>.md` already uses for the same reason.
+ */
+export const learnerAcnsRevision = (code: string, n: number) =>
+  join(learnerDir(code), `acns.r${n}.md`);
+/**
+ * And its printed copy **beside it**, not under `output/`.
+ *
+ * Every other rendering lives in `output/<job>/<code>/`, and that is where this one
+ * was first written — `output/acns/<code>/acns.pdf`. It survived an erasure. The plan
+ * deletes `output/<job>/<code>` for each job found in `material/`, and «acns» is not a
+ * job, so the directory was reached by nothing; `verifyForgotten` did not see it either
+ * because it greps file **contents** and the code was only in the path.
+ *
+ * Here it is inside the directory the erasure deletes wholesale. That is the same
+ * argument as the document itself: covered by construction, rather than by somebody
+ * remembering to add a line to a list — which is exactly how `handover/` came to
+ * survive an erasure until the last review.
+ */
+export const learnerAcnsPdf = (code: string) => join(learnerDir(code), 'acns.pdf');
+/**
  * A job is one piece of material, ingested and verified once. Adaptation is per
  * (job × learner) and the paths say so (T092b, data-model corrected 2026-08-28).
  *

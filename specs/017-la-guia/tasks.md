@@ -101,6 +101,23 @@ provider** — no key in the suite, on purpose.)*
 - [x] T022 [US2] The draft carries the mark, states **Séneca is the record**, and
       names the role that must sign it — the **tutor** coordinates an ACNS, and
       Rampa must not imply the PT authored it (FR-1502, FR-1504, FR-1516) *(done, and above the content where it cannot be scrolled past. The **tutor** coordinates an ACNS, so the draft says «Rampa no la ha escrito: ha ordenado lo que ya había hecho» — the failure being avoided is a document that looks complete enough to file.)*
+      **Corrección 2026-09-04 (COD-22, decisión P46).** El tick era medio tick. FR-1516 dice
+      que la marca es «removable only by sign-off» y **no existía firma que pudiera quitarla**:
+      `draftAcnsJob` devolvía markdown, la pantalla lo volcaba como texto plano en un `div`
+      (sin renderizar el Markdown), nada lo guardaba y `job:signOff` firma lo que resuelve
+      `resolveDocument` — por (trabajo × alumno), y una ACNS no es ninguno de los dos. La mitad
+      conservadora era cierta (la marca no se iba nunca) y **eso no es seguro**: una marca que
+      no se puede quitar es una marca que se sortea, y aquí sortearla significa que el flujo
+      real era copiarla a mano a Séneca, perdiendo la marca en el copy-paste sin que nadie
+      hubiera revisado nada.
+      Ahora es un documento: se guarda en `profiles/<code>/acns.md` con la marca **en el
+      fichero** (que es lo que ella copia, al contrario que un `ir.md`, que nadie reparte), se
+      renderiza e imprime con su banner y su marca de agua por página, y la firma es lo único
+      que la quita — `stampSignedOff` en el núcleo, un solo autor del bloque, y todos los
+      renderizadores lo leen por `draftMark`. Una firmada nunca se sobreescribe: pasa a
+      `acns.r<n>.md`. Y el PDF vive **dentro** de `profiles/<code>/`, no en `output/acns/`,
+      porque allí sobrevivía a un borrado. 30 casos nuevos (24 unitarios + 6 e2e); 8 costuras
+      verificadas por mutación.
 
 ---
 
@@ -190,4 +207,5 @@ at is a requirement nobody is keeping.**
 | FR-1506 | T013 · `readGuideJob` refuses an unverified extraction, and `corpus-guarantees.test.ts` asserts the reading half of the job contains **no write at all** |
 | FR-1507 | T001/T002 · the clinical filter, in code, over a synthetic DIAC. And the sentence naming an omission does not *contain* the omission |
 | FR-1513 | T019 · `draftAcns` assembles from `014`'s record and the overlay. A section it cannot source is **named**, never interpolated — including one the corpus adds that the code does not know |
+| FR-1516 | T022 · and the correction under it. The mark is in the stored document, the renderer derives its banner from the front matter (no `signedOff` parameter, 007 FR-509), and `stampSignedOff` is the single author of the block that removes it. **This row was missing**: COD-22 found the requirement counted as covered because its id appeared in a task, with nothing said about the half that did not exist |
 | FR-1518 | T023 · the guide goes through `007`'s injection and hidden-text detectors, and the refusals are code over the answer rather than prompt text — because a prompt shares its context window with the document |

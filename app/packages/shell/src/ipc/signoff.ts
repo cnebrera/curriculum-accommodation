@@ -1,4 +1,4 @@
-import { resolveDocument, RampaError, whyNoDocument } from '@rampa/core';
+import { resolveDocument, RampaError, whyNoDocument, stampSignedOff } from '@rampa/core';
 import { currentVault } from './vault.js';
 import { handle } from './wrap.js';
 import { refreshRecord } from './record.js';
@@ -41,13 +41,11 @@ export function registerSignoffIpc(): void {
     const path = found.path;
     const raw = (await vault.readRaw(path)) ?? '';
     const stamp = new Date().toISOString().slice(0, 10);
-    // Quoted, for the same reason the journal's is: unquoted, YAML hands back a
-    // `Date`, and the next thing to validate this block would drop it.
-    const block = `review:\n  signed_off: true\n  by: "${role.replace(/"/g, '')}"\n  date: "${stamp}"\n`;
-    const updated = /^---\r?\n/.test(raw)
-      ? raw.replace(/^---\r?\n/, `---\n${block}`)
-      : `---\n${block}---\n\n${raw}`;
-    await vault.writeRaw(path, updated);
+    // One writer of the block, in core (`stampSignedOff`). It was inline here until the
+    // ACNS became signable too (P46) — and two spellings of `review.signed_off` is one
+    // spelling that drifts, with `isSignedOff` the single reader that decides whether a
+    // document announces itself as unreviewed. That drift fails open.
+    await vault.writeRaw(path, stampSignedOff(raw, role, stamp));
     // A sign-off is one of FR-1215's three events: the record says «sin firmar»
     // beside this sheet and must stop.
     await refreshRecord(learnerCode);

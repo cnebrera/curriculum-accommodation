@@ -1,4 +1,4 @@
-import { isGenerated, isSignedOff, type IRDocument } from '../ir/types.js';
+import { isGenerated, isSignedOff, type HasFrontMatter } from '../ir/types.js';
 
 /**
  * The draft mark (Principle VII, 002 T016).
@@ -32,10 +32,26 @@ export interface DraftMark {
   watermark: string;
 }
 
-export function draftMark(doc: IRDocument, signedOff?: boolean): DraftMark | null {
+export function draftMark(doc: HasFrontMatter, signedOff?: boolean): DraftMark | null {
   // Signed off is signed off, in both directions: she has read it and said so,
   // and a mark she cannot remove is a mark she works around.
   if (signedOff === true || isSignedOff(doc)) return null;
+
+  /*
+   * The ACNS says something else again (P46, review COD-22).
+   *
+   * Not «no entregar al alumnado» — nobody was ever going to hand an ACNS to a
+   * child. What must not happen to this one is being **filed**: the record is Séneca,
+   * and the way an unreviewed draft gets there is a copy-paste out of the printed
+   * page. So the mark names that, and it is the only banner in Rampa that talks about
+   * where a document must not go rather than to whom.
+   */
+  if (doc.frontMatter['kind'] === 'acns') {
+    return {
+      banner: 'BORRADOR de ACNS — sin firmar · no lo lleves a Séneca todavía',
+      watermark: 'BORRADOR DE ACNS — SIN FIRMAR',
+    };
+  }
 
   if (isGenerated(doc)) {
     return {

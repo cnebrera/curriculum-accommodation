@@ -1,3 +1,4 @@
+import { acnsHeader } from './acns-document.js';
 import type { RecordEntry } from '../record/entry.js';
 import type { AcnsSection } from './corpus.js';
 import { hasGuideMeasures } from './overlay.js';
@@ -101,21 +102,14 @@ export function draftAcns(input: AcnsInput): AcnsDraft {
    * (FR-1504). Both facts go above the content, where they cannot be scrolled past.
    */
   md.push(
-    '# BORRADOR de adaptación curricular NO significativa (ACNS)',
-    '',
-    '> **Esto no está presentado.** El registro es **Séneca**: esto es material para',
-    '> llevar allí. Mientras no lo firmes, sigue siendo un borrador.',
-    '>',
-    '> **La ACNS la coordina el tutor o la tutora**, y la propuesta curricular la',
-    '> completa el profesorado del área. Rampa no la ha escrito: ha ordenado lo que ya',
-    '> había hecho para este alumno.',
+    ...acnsHeader(false),
     '',
     `Alumno: **${input.learnerCode}**`
     + `${input.year ? ` · Curso: ${input.year}` : ''}`
     + `${input.stage ? ` · Etapa: ${input.stage}` : ''}`
     + `${input.subject ? ` · Área: ${input.subject}` : ''}`,
     '',
-    `Borrador generado el ${input.on}, a partir de ${input.record.length} `
+    `Ordenado por Rampa el ${input.on}, a partir de ${input.record.length} `
     + `${input.record.length === 1 ? 'trabajo registrado' : 'trabajos registrados'}.`,
     '',
   );

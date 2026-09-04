@@ -36,7 +36,18 @@ export interface IRDocument {
   notices: Notice[];
 }
 
-export const isVerified = (d: IRDocument): boolean =>
+/**
+ * Anything with front matter, which is all these three predicates ever read.
+ *
+ * Widened on 2026-09-04 for the ACNS document (P46): it is a document with front
+ * matter and no IR blocks, and it needs the same answer to «is this signed?» as a
+ * worksheet. The alternative was a second `isSignedOff` reading the same key from the
+ * same block — two implementations of the one fact that stands between an unreviewed
+ * document and a child's hands.
+ */
+export type HasFrontMatter = { frontMatter: Record<string, unknown> };
+
+export const isVerified = (d: HasFrontMatter): boolean =>
   (d.frontMatter['extraction'] as Record<string, unknown> | undefined)?.['verified'] === true;
 
 /**
@@ -51,7 +62,7 @@ export const isVerified = (d: IRDocument): boolean =>
  * The old spelling is still accepted, because a vault written before this change has
  * documents in it and a teacher's material must not stop being recognised.
  */
-export const isGenerated = (d: IRDocument): boolean =>
+export const isGenerated = (d: HasFrontMatter): boolean =>
   d.frontMatter['generated'] === true
   || d.frontMatter['kind'] === 'generated'
   || d.frontMatter['source'] === 'composed';
@@ -65,7 +76,7 @@ export const isGenerated = (d: IRDocument): boolean =>
  * without sign-off having happened at all, while `signoff.ts` carried a comment
  * asserting the opposite.
  */
-export const isSignedOff = (d: IRDocument): boolean => {
+export const isSignedOff = (d: HasFrontMatter): boolean => {
   const review = d.frontMatter['review'];
   if (review && typeof review === 'object') {
     return (review as Record<string, unknown>)['signed_off'] === true;

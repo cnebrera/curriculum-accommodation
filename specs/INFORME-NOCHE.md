@@ -715,14 +715,84 @@ llamada y el lector de `chunk.truncated`.
 
 _(nada todavía)_
 
+### 2.8 · La ACNS ya es un documento, y la firma es lo único que le quita la marca
+
+**Commit:** `la ACNS es un documento: se guarda, se imprime y la firma la desmarca`
+**Hallazgo:** COD-22 (🟠 media) · **Decisión:** P46
+
+FR-1516 dice que el borrador «MUST carry the draft mark, removable only by sign-off». Lo
+que había: un encabezado dentro de una cadena, volcado en un `div` **sin renderizar el
+Markdown**. Nada lo guardaba, no había impresión, y `job:signOff` firma lo que resuelve
+`resolveDocument` — por (trabajo × alumno) — así que una ACNS no era resoluble y **no
+existía firma capaz de quitar la marca**.
+
+Lo que me parece que hay que decir de este hallazgo es que su mitad «conservadora» no
+era la segura. Una marca que no se puede quitar es una marca que se sortea, y sortearla
+aquí es exactamente lo que pasaba: el flujo real era copiar el texto a mano a Séneca, con
+la marca perdida en el copy-paste y sin que nadie hubiera revisado nada. La dirección
+prudente producía el peor resultado posible.
+
+**Ahora es un documento.** `profiles/<code>/acns.md`, con front matter `kind: acns` —
+deliberadamente **no** `generated: true`, que es lo que decide si algo es material
+compuesto y ofrecería una ACNS para imprimirla como una hoja de un niño.
+
+**La marca va en el cuerpo, y eso es distinto de una hoja.** En una ficha el banner es
+cosa del renderizador y `ir.md` no lo lleva, porque nadie reparte `ir.md`. Aquí **el
+fichero es lo que viaja**: es el que ella abre y del que copia. Una marca añadida al
+imprimir estaría ausente del único artefacto que llega a Séneca.
+
+**Y la firma es lo único que la quita.** `signAcns` cambia el encabezado y borra el
+bloque «Sin firmar», y deja en pie lo que la firma no cambia — «el registro es Séneca» y
+«la coordina el tutor» siguen siendo verdad con firma o sin ella, porque Rampa no puede
+presentar nada. Si el fichero ya no tiene la marca (lo ha editado a mano en Obsidian y
+se la ha llevado) **se niega** en vez de estampar una firma sobre algo cuyo estado no
+puede establecer: la dirección de `resolveInVault`, negarse antes que sanear.
+
+**Una firmada no se sobreescribe nunca.** Va a pulsar «guardarla otra vez» — el
+trimestre avanza y el borrador se arma con trabajo que ha crecido — y machacarla
+destruiría el único registro de que alguien la revisó. Pasa a `acns.r<n>.md`.
+
+**Dos cosas que encontró de paso, y las dos son del tipo que este proyecto ya conoce:**
+
+- **El PDF sobrevivía a un borrado.** Lo escribí primero en `output/acns/<code>/acns.pdf`
+  siguiendo «los renderizados van en `output/`». `planForget` borra
+  `output/<job>/<code>` por cada trabajo de `material/`, y «acns» no es un trabajo, así
+  que nada llegaba a ese directorio; y `verifyForgotten` busca el código **dentro** de
+  los ficheros, así que un código que sólo está en la ruta le es invisible. La
+  adaptación curricular de un niño, impresa, quedándose en su carpeta después de
+  «bórralo todo». Ahora vive dentro de `profiles/<code>/`, que el borrado elimina
+  entero — cubierto por construcción y no por acordarse, que es exactamente cómo
+  `handover/` llegó a sobrevivir un borrado hasta la revisión pasada.
+- **Un campo sin etiqueta accesible**, «¿De qué documento es?», en la misma pantalla.
+  Lo encontré porque el `getByLabel` de mi propio e2e no encontraba el campo de la firma
+  — que tenía el mismo agujero por el mismo motivo: el `label` de `Field` es opcional,
+  así que olvidarlo compila y se ve bien. Los dos etiquetados.
+
+**Y una costura que reforcé en vez de duplicar.** El guardián de FR-509 enumera los
+ficheros que pueden firmar, y mi cambio lo puso en rojo — que es la conversación que esa
+lista existe para forzar. No lo he metido por `job:signOff` (haría que un documento
+administrativo se hiciera pasar por una hoja preparada para un niño, y entonces sería
+imprimible como tal), pero sí he sacado el bloque de la firma a `stampSignedOff` en el
+núcleo: **un solo autor** de `signed_off: true`, dos llamadores, y un test nuevo que lo
+comprueba sobre todo el código. Dos ortografías de esa clave serían una que se desvía, y
+lo que depende de ella es si un documento anuncia que nadie lo ha revisado — se
+desviaría **abriendo** la puerta.
+
+30 casos nuevos (24 unitarios + 6 e2e que pulsan los botones, porque el defecto era el
+cableado y ningún test unitario puede fallar por eso); 8 costuras verificadas por
+mutación.
+
 ## Notas de proceso
 
-- **e2e no re-ejecutado en 2.12.** Me pediste dejar una instancia levantada para enseñarla, y
-  `npm run test:e2e` empieza por `npm run build`, que escribe en el mismo `out/` que está
-  usando el `electron-vite dev` de esa instancia: podría reiniciarte la aplicación en mitad de
-  la demo. 2.12 no toca UI ni pantallas (proveedores y el job de compose, todo en el proceso
-  principal), así que lo he dejado para cuando la instancia esté libre. Queda dicho aquí en
-  vez de darlo por verde.
+- **La instancia que me pediste, y por qué la he reiniciado.** La levanté con `npm run dev`
+  y la estuviste usando. El problema: `electron-vite dev` recarga el *renderer* en caliente
+  pero **no** reconstruye el proceso principal, así que en cuanto empecé 2.8 tu ventana tenía
+  la pantalla nueva llamando a canales IPC que aún no existían en el main — botones que dan
+  error. La paré para correr el e2e (que empieza por `npm run build` y escribe en el mismo
+  `out/`) y la he vuelto a levantar entera con 2.12 y 2.8 dentro. Si la vuelves a necesitar
+  después de un cambio mío, avísame y la reinicio: mientras yo esté tocando el main, una
+  instancia en caliente se queda a medias.
+- **e2e de 2.12: sí ejecutado**, en la vuelta completa de 2.8 (135 casos verdes).
 - **`.agents/skills/` apareció sin pedirlo** (10 ficheros, espejos de `.claude/skills/` para
   otros agentes). No los he comiteado: no son de ningún ítem de la cola y meterlos con 2.12
   sería mezclar. Están sin trackear, decides tú.
@@ -745,13 +815,13 @@ _(nada todavía)_
 | | |
 |---|---|
 | `npx tsc --noEmit` | verde (línea base) |
-| `npx vitest run` | verde — 1.635 casos |
-| `npm run test:e2e` | verde — 129 casos, en 2.11. **No re-ejecutado en 2.12**: ver abajo |
+| `npx vitest run` | verde — 1.662 casos |
+| `npm run test:e2e` | verde — 135 casos |
 | `scripts/check-fr-coverage.sh` | verde (línea base) |
 | `scripts/check-spec-kit.sh` | verde (línea base) |
 
 ---
 
-**Lotes 0 y 1 completos; Lote 2 en 11/12.** Queda **2.8** (borrador de ACNS: guardar en el
-vault, imprimir con marca, firmar — P46) para cerrar el Lote 2, y el Lote 3 entero: 3.10
-(`020` US2-US4), 3.13 (notas de BACKLOG) y las 11 features con plan y tasks escritos.
+**Lotes 0, 1 y 2 completos (5/5 · 17/17 · 12/12).** Queda el Lote 3: **3.10** (`020`
+US2-US4), **3.13** (notas de BACKLOG) y las **11 features** con plan y tasks ya escritos, por
+`/speckit-implement` en el orden 027→022→026→031→032→028→035→033→029→030→034.

@@ -262,7 +262,22 @@ justamente eso.
       borrado no alcanza; esto son ficheros que se quedan por una razón comprobable).
       **Cuentas, nunca códigos**, y el e2e comprueba que no aparece el código de ningún otro
       alumno. Costura verificada por mutación.
-- [ ] **2.8** Borrador de ACNS: guardar en vault, imprimir con marca, firmar (P46).
+- [x] **2.8** Borrador de ACNS: guardar en vault, imprimir con marca, firmar (P46).
+      **Hecho 2026-09-04.** FR-1516 prometía una marca «que sólo quita la firma» y no había
+      firma que pudiera quitarla: el borrador era una cadena en pantalla (sin renderizar
+      siquiera el Markdown), nada lo guardaba, y `job:signOff` firma lo que resuelve
+      `resolveDocument` — por (trabajo × alumno), y una ACNS no es ninguno. La mitad
+      conservadora («la marca no se va nunca») **no es la segura**: una marca que no se puede
+      quitar se sortea, y sortearla aquí era copiarla a mano a Séneca perdiendo la marca sin
+      que nadie hubiera revisado nada.
+      Ahora es un documento: `profiles/<code>/acns.md` con la marca **en el fichero** — que es
+      lo que ella copia — su banner y su marca de agua por página al imprimir, y la firma como
+      lo único que la retira. Una firmada pasa a `acns.r<n>.md` en vez de perderse.
+      **Y encontró dos cosas de paso:** el PDF, escrito primero en `output/acns/<code>/`,
+      sobrevivía a un borrado (el plan borra `output/<job>/<code>` por cada trabajo de
+      `material/`, y «acns» no es un trabajo) — ahora vive dentro de `profiles/<code>/`; y el
+      campo «¿De qué documento es?» de la pantalla de la guía no tenía etiqueta accesible.
+      30 casos nuevos (24 unitarios + 6 e2e); 8 costuras verificadas por mutación.
 - [x] **2.9** Lematización determinista mínima para pictogramas (P20).
       **Hecho 2026-09-04.** `lemmaCandidates` en core: plurales (`-s`, `-es`, `-ces`→`-z`) y
       **las dos formas verbales que aparecen en una hoja** —imperativo de 2ª y presente de
