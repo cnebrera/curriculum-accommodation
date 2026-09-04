@@ -201,7 +201,17 @@ justamente eso.
       print/export + render.md + 019 (P43).
 - [ ] **2.6** Traspaso honesto: «apuntado en el perfil» sin fuerza inventada + fechas reales de
       anotación (P44). Reescribir el test que consagraba el 'observed'.
-- [ ] **2.7** Plan de borrado muestra QUÉ sobrevive y por qué (P45).
+- [x] **2.7** Plan de borrado muestra QUÉ sobrevive y por qué (P45).
+      **Hecho 2026-09-04.** `planForget` devolvía `sharedKept` con exactamente lo que pide
+      FR-1211 desde `014`, y la interfaz `Plan` de la pantalla **omitía el campo**, así que
+      ningún JSX podía renderizarlo: lo que le llegaba era la frase agregada de `survives`
+      («N materiales se quedan…»). El cuánto, nunca el cuál — la mitad de un requisito
+      viviendo solo en el tipo del proceso main, que es el defecto que el propio docblock de
+      esa pantalla denuncia sobre su pasado. Ahora los lista por material y con el motivo,
+      en su propio bloque (no dentro de «esto no se retira», que es sobre cosas que el
+      borrado no alcanza; esto son ficheros que se quedan por una razón comprobable).
+      **Cuentas, nunca códigos**, y el e2e comprueba que no aparece el código de ningún otro
+      alumno. Costura verificada por mutación.
 - [ ] **2.8** Borrador de ACNS: guardar en vault, imprimir con marca, firmar (P46).
 - [ ] **2.9** Lematización determinista mínima para pictogramas (P20).
 - [ ] **2.10** Recetas mono-eje nuevas: DEC solo, PER-A, ATE solo, LIN solo (P1). Corpus; validar

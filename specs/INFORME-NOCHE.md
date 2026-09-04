@@ -413,6 +413,26 @@ escribiendo el fichero de verdad en una instalación sin clave.
 
 3 e2e nuevos; costura verificada por mutación.
 
+### 2.7 · El plan de borrado dice qué sobrevive y por qué — P45 (COD-20)
+
+`planForget` devolvía `sharedKept: Array<{ job, alsoUsedBy }>` desde `014` —exactamente lo
+que pide FR-1211— y la interfaz `Plan` de `ForgetLearner` **omitía el campo**, así que
+ningún JSX podía renderizarlo. Lo que le llegaba era la frase agregada inyectada en
+`survives`: «N materiales se quedan…». El **cuánto**, nunca el **cuál**: la mitad de un
+requisito viviendo solo en el tipo del proceso main — que es exactamente el defecto que el
+docblock de esa misma pantalla denuncia sobre su propio pasado.
+
+Ahora los lista por material y con el motivo, en su propio bloque y no dentro de «esto no
+se retira»: ese callout es sobre cosas que el borrado **no alcanza**, y esto son ficheros
+que se quedan por una razón que ella puede comprobar —otro alumno suyo los sigue usando— y
+donde la acción posible es distinta.
+
+**Cuentas, nunca códigos.** Nombrar a otro niño dentro de un diálogo sobre borrar a este es
+una exposición que no compra nada, y el e2e comprueba que no aparece el código de ningún
+otro alumno en la pantalla.
+
+Costura verificada por mutación.
+
 ## Saltados y por qué
 
 _(nada todavía)_
@@ -436,10 +456,10 @@ _(nada todavía)_
 |---|---|
 | `npx tsc --noEmit` | verde (línea base) |
 | `npx vitest run` | verde — 1560 casos |
-| `npm run test:e2e` | verde — 122 casos |
+| `npm run test:e2e` | verde — 123 casos |
 | `scripts/check-fr-coverage.sh` | verde (línea base) |
 | `scripts/check-spec-kit.sh` | verde (línea base) |
 
 ---
 
-**Lotes 0 y 1 completos; Lote 2 en 3/12.** Quedan 11 ítems de la cola (Lote 2: 9 · Lote 3: 2 abiertos + 11 features por implementar).
+**Lotes 0 y 1 completos; Lote 2 en 4/12.** Quedan 10 ítems de la cola (Lote 2: 8 · Lote 3: 2 abiertos + 11 features por implementar).

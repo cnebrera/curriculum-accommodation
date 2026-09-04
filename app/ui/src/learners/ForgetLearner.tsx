@@ -37,6 +37,22 @@ interface Plan {
    * the most personal datum in the system.
    */
   entries: Array<{ of: 'name' | 'roster'; where: string }>;
+  /**
+   * Which shared material survives, and how many other learners are the reason
+   * (`014` FR-1211, review COD-20, decision P45).
+   *
+   * `planForget` has returned this since `014` — `Array<{ job, alsoUsedBy }>`,
+   * exactly what the requirement asks for — and **this interface omitted it**, so
+   * no JSX could render it. What reached her was the aggregate sentence injected
+   * into `survives`: «N materiales se quedan…». The *how many*, never the *which*.
+   * Half a requirement living only in the type of the main process, which is the
+   * same shape this screen's own docblock denounces about its past.
+   *
+   * **Counts, not codes.** Naming another child inside a dialogue about erasing
+   * this one is exposure that buys nothing, and she can see who from their own
+   * records.
+   */
+  sharedKept: Array<{ job: string; alsoUsedBy: number }>;
   survives: string[];
   outOfReach: string[];
 }
@@ -153,6 +169,38 @@ export function ForgetLearner({ code, name, onDone }: {
           </>
         ) : null}
       </div>
+
+      {/*
+        FR-1211 · **which** shared material stays, and why (decision P45).
+
+        Its own block rather than a line inside «esto no se retira»: that callout is
+        about things erasure cannot reach at all, and these are files that stay for
+        a reason she can check — another child of hers is still using them. The
+        distinction matters because the action is different: nothing to do here,
+        versus «erase that child too and this goes».
+      */}
+      {plan.sharedKept.length ? (
+        <div className="card stack gap2">
+          <span className="small">
+            <strong>
+              {plan.sharedKept.length === 1
+                ? 'Un material se queda, y por qué'
+                : `${plan.sharedKept.length} materiales se quedan, y por qué`}
+            </strong>
+          </span>
+          <ul className="stack gap1" style={{ margin: 0, paddingLeft: '1.4em' }}>
+            {plan.sharedKept.map((k) => (
+              <li key={k.job} className="small">
+                <code>{k.job}</code>{' — '}
+                {k.alsoUsedBy === 1
+                  ? 'lo usa otro alumno tuyo'
+                  : `lo usan otros ${k.alsoUsedBy} alumnos tuyos`}.
+                {' '}Lo de {label} sí se borra.
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
 
       {/* FR-218 · what does not come back. */}
       <Callout intent="decide" title="Esto no se retira">

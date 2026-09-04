@@ -2,6 +2,7 @@ import { test, expect, _electron as electron, type Page, type ElectronApplicatio
 import { mkdtemp, mkdir, readdir, readFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { intoNamedLearner, learnerRail } from './nav.js';
 
 /**
  * Removing a learner, in the real application (003 US4, FR-215/216/217/218/220).
@@ -214,6 +215,63 @@ test.describe('erasure', () => {
     for (const f of files) {
       expect(f.text, `${f.path} holds a name`).not.toMatch(/Luc[íi]a/i);
     }
+    await app.close();
+  });
+
+  /**
+   * FR-1211 · **which** shared material survives, not just how many (review
+   * COD-20, decision P45).
+   *
+   * `planForget` has returned `sharedKept: Array<{ job, alsoUsedBy }>` since `014`
+   * — exactly what the requirement asks — and the screen's own `Plan` interface
+   * omitted the field, so no JSX could render it. What reached her was the
+   * aggregate sentence injected into `survives`: «N materiales se quedan…». The
+   * *how many*, never the *which*. Half a requirement living only in the type of
+   * the main process, which is the shape this screen's docblock denounces about
+   * its own past.
+   */
+  test('names the shared material that stays, and why, before she confirms', async () => {
+    const { app, page, vault } = await launch();
+    const { gone } = await seedTwo(page);
+
+    /*
+     * The other tests in this file drive the IPC directly; this one is about a
+     * screen, so it needs the application past onboarding. A key that is not a
+     * key: `providers:save` does not validate, so nothing leaves the machine.
+     */
+    await page.evaluate(() => window.rampa.providers.save('anthropic', 'sk-ant-e2e-not-a-real-key'));
+    await page.reload();
+    await page.waitForLoadState('domcontentloaded');
+    await page.getByRole('navigation', { name: /Secciones/ }).waitFor({ timeout: 15000 });
+
+    // By name: `gone` is the learner this spec erases, and the caseload is not in
+    // the order `seedTwo` created them in.
+    await intoNamedLearner(page, 'Lucía');
+    await learnerRail(page).getByRole('button', { name: 'Borrar todo lo suyo', exact: true }).click();
+    await page.getByRole('button', { name: 'Ver qué se borraría' }).click();
+
+    // The plan is a read of the whole vault, so wait for it rather than for a
+    // duration — the screen changes title when it arrives.
+    await page.getByRole('heading', { name: /Esto es lo que se borra de/ })
+      .waitFor({ timeout: 15000 });
+
+    const body = await page.locator('.main').innerText();
+    // The job by name, and the reason — not just a count.
+    expect(body).toContain('job-compartido');
+    expect(body).toMatch(/lo usa otro alumno tuyo|lo usan otros \d+ alumnos tuyos/);
+
+    /*
+     * And counts, never codes. Naming another child inside a dialogue about
+     * erasing this one is exposure that buys nothing — `planForget` returns
+     * `alsoUsedBy` as a number for exactly this reason, and the screen must not
+     * undo it.
+     */
+    const other = await page.evaluate(() => window.rampa.learners.list()) as string[];
+    for (const code of other.filter((c) => c !== gone)) {
+      expect(body, `${code} is named in an erasure dialogue about somebody else`)
+        .not.toContain(code);
+    }
+
     await app.close();
   });
 
