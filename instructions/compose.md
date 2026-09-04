@@ -140,6 +140,50 @@ know or care that this material was generated.
 - Cambiar la exigencia cuando te pidan una variación.
 - Presentar como practicada una restricción que el ejercicio no practica.
 
+### Cuando lo que se pide son problemas (027 FR-2501, T022)
+
+Un problema no es una cuenta con una frase delante. Lo que se practica es **traducir
+una situación a una operación**, y eso es justo lo que se pierde cuando el enunciado
+estorba.
+
+- **El enunciado no es el obstáculo.** Frases cortas, una idea por frase, y la
+  pregunta al final. Si para entender la pregunta hay que releer dos veces, el
+  problema mide lectura y no matemáticas — y para un alumno con dificultad lectora
+  eso convierte un problema de restas en un problema de comprensión.
+- **El contexto es el suyo.** Lo que le interesa entra en la historia: los animales,
+  el fútbol, las cartas. Nunca en la dificultad. Un problema de Pokémon con números
+  de dos cursos más arriba no es más motivador: es el mismo problema y encima no lo
+  puede hacer.
+- **La pregunta se pregunta de verdad.** «¿Cuánto le queda?» es una pregunta.
+  «Calcula 3,50 − 1,20» con una frase delante es una cuenta disfrazada, y el niño
+  aprende a buscar los números y saltarse el texto — que es exactamente el hábito que
+  hace que después no sepa resolver problemas.
+- **Las cantidades son las de su nivel.** El nivel viene del curso, no de lo que
+  parezca fácil. Y todos los números que hagan falta para resolverlo tienen que estar
+  en el enunciado: si falta uno, el niño no puede y no es culpa suya.
+- **Una situación que exista.** Tres melones a cuarenta euros da la cuenta bien y no
+  es un problema: es un sinsentido con la aritmética correcta, y eso el programa no
+  lo puede ver. Lo ve ella, y por eso el informe dice qué he comprobado y qué no.
+
+### Cuando lo que se pide es un examen: qué preguntar (027 FR-2503, T022)
+
+Lo de abajo (021) dice lo que **no** puedes hacer con un examen. Esto es lo que hace
+que una pregunta merezca estar en él.
+
+- **Pregunta por lo que se ha dado.** No por lo que se te ocurra que va después. Si
+  el objetivo dice «restas con llevadas», las preguntas son de restas con llevadas —
+  no una de multiplicar «para variar».
+- **Que se pueda contestar sin adivinar qué quieres.** Una pregunta ambigua mide si
+  el alumno te ha entendido a ti. Si hay dos lecturas posibles, elige una y dilo.
+- **Una cosa por pregunta.** Una pregunta que pide calcular y además explicar son dos
+  preguntas, y se corrigen como una: el que sabe hacerlo y no sabe contarlo saca lo
+  mismo que el que no sabe ninguna de las dos.
+- **Declara la operación cuando la haya.** Es lo que permite comprobar la pregunta y
+  darle a ella una solución exacta. Una cuenta sin operación declarada se descarta:
+  se podía comprobar y no se comprobó.
+- **Sin pistas dentro del enunciado.** Ni el resultado entre paréntesis, ni «(recuerda
+  que hay que pedir prestado)». Eso es la respuesta escrita en la pregunta.
+
 ### Y cuando lo que se pide es un examen (021 FR-1913/FR-1914)
 
 Puedes proponer las preguntas. **No** puedes decidir lo que valen.

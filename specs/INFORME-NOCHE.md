@@ -782,6 +782,85 @@ desviaría **abriendo** la puerta.
 cableado y ningún test unitario puede fallar por eso); 8 costuras verificadas por
 mutación.
 
+### 3.1 · `027` implementada — el examen y los problemas dejan de ser un escaparate
+
+**Commits:** `027 · el núcleo determinista…` y `027 · el tipo elige el pipeline…`
+**Decisión:** P2 («construir la generación ya, no atenuar las puertas»)
+
+Dos de los cuatro tipos de material se ofrecían en pantalla, se cobraban y **no se
+podían producir**: el pipeline sólo sabía hacer listas de operaciones y texto de
+estudio, y la nota de discrepancia saltaba siempre como una disculpa automática. 25 de
+las 27 tareas hechas; las dos que quedan necesitan una persona.
+
+**Las cantidades salen del enunciado que lee el niño.** La implementación barata pide
+al modelo que declare sus cantidades y las verifica — que es verificar al mentiroso con
+su propia declaración: uno que se equivoca en la cuenta puede declarar cantidades
+coherentes con su resultado equivocado y pasar todas las pruebas. Así que
+`extractQuantities` las saca del texto, la operación se admite **sólo si todos** sus
+operandos están ahí, y la respuesta la calcula el verificador aritmético de `002`. Se
+rechaza, nunca se repara: un enunciado reescrito por código no es la historia de nadie.
+
+Lo que esto **no** verifica está dicho en voz alta: que la historia implique la
+operación. «Tres melones a 40 €» cuadra perfectamente. Lo tapan capas, no un truco: la
+operación tiene que ser la que ella pidió, el informe dice qué se comprobó, la marca de
+borrador se queda, y SC-2505 pone a una PT delante. Verificar pedagogía de forma
+determinista no está en oferta, y fingir que sí es el fallo que este proyecto existe
+para evitar.
+
+**El examen es un examen.** Su propio formato de bloques, preguntas numeradas, hueco
+para contestar, y **cero respuestas en ninguna modalidad** — asertado sobre la salida
+renderizada (HTML, ODT, lineal) y no sobre el IR, porque el IR ya no las escribía desde
+`002` y lo nuevo son tres renderizadores y una capa de apoyo. Las preguntas que nada
+puede comprobar se llevan **declaradas**, por ítem, en la página y junto a la marca:
+una hoja que dice «hay preguntas sin comprobar» le enseña a desconfiar de las diez, y
+entonces no revisa ninguna.
+
+**Y un examen de otro curso para antes de gastar.** Componerlo por debajo de su curso
+no cambia CÓMO se evalúa: cambia QUÉ se evalúa, y eso lo decide el equipo docente sobre
+una evaluación psicopedagógica. Una ACS registrada es lo único que lo desbloquea — ni
+una ACNS, ni una medida que *mencione* una ACS, que es el caso que encontró una
+mutación. El gate **no recibe el perfil**, que es la única garantía que vale: un CUR
+alto es razón para componer con más cuidado, nunca para negarse.
+
+**Tres defectos encontrados de paso, ninguno del alcance:**
+
+- **La pregunta de «cuántos» no se mostraba nunca, para ningún tipo.**
+  `corpus:materialKinds` no enviaba el bloque `quantity` por el IPC. El corpus lo
+  declara, el parser lo lee, el tipo lo tipa, la pantalla lo lee — y llegaba
+  `undefined` siempre, así que `countsSomething` era **siempre falso**. `perObjective`
+  no llegaba nunca y toda composición usaba el default del corpus: **«examen, 10
+  preguntas» no era algo que ella pudiera pedir**. Doceava vez de un campo escrito,
+  parseado, tipado y leído por nadie (G36) — y la peor colocada hasta ahora, porque es
+  justo el requisito del que cuelga FR-2505. Lo encontró un e2e que afirmaba que la
+  etiqueta cambia con el tipo y no encontró el campo.
+- **«Ojo: 4, 5 no las ha comprobado nadie»** empieza diciendo *cuatro coma cinco*. En la
+  única hoja cuyo trabajo es que se le crea sobre qué se comprobó. Ahora «la 4 y la 5».
+- **La hoja de problemas no tenía sitio para hacerlos.** Tres historias apiladas arriba
+  y dos tercios de folio en blanco debajo. El hueco para contestar era sólo del examen
+  porque eso decía la tarea; mirar la página es lo que demostró que la decisión estaba
+  mal.
+
+Los tres los encontró **mirar la página impresa** — construida con un fixture, exportada
+a ODT y convertida con LibreOffice, sin proveedor. Lo que **no** he mirado: el HTML en
+pantalla a 480px y en `xlarge`. Rasterizarlo necesita un navegador que el Playwright de
+esta máquina no ha descargado, y `npm run shots` fotografía la aplicación, que no puede
+componer sin proveedor. Queda dicho como hueco, no dado por cubierto.
+
+**Dos desviaciones de plan.md, argumentadas y no coladas:** no hay clases `problem` ni
+`question` en el IR. `BlockClass` es cerrado y las recetas seleccionan sobre él, así que
+una clase a la que nada apunta dejaría cada hoja de problemas y cada examen compuesto
+**fuera del alcance de toda receta** — adaptarlos no aplicaría nada, que es este mismo
+defecto una capa más abajo. Un problema es un `exercise`; una pregunta de examen es un
+`assessment`, la clase a la que `exam-access-not-difficulty` ya apunta.
+
+66 casos nuevos y 5 e2e; 13 costuras verificadas por mutación — una de ellas encontró
+que una aserción mía la satisfacía una regla de CSS, y otra que mi patrón de la ACS
+habría desbloqueado el gate con una ACNS que la mencionara.
+
+**Lo que queda de `027`, en manos de una persona:** T025 (correr el paseo con clave real
+— cuesta dinero) y T026 (SC-2505: que una PT diga si pondría ese examen delante de su
+grupo con su nombre encima).
+
 ## Notas de proceso
 
 - **La instancia que me pediste, y por qué la he reiniciado.** La levanté con `npm run dev`
@@ -819,13 +898,13 @@ mutación.
 | | |
 |---|---|
 | `npx tsc --noEmit` | verde (línea base) |
-| `npx vitest run` | verde — 1.662 casos |
-| `npm run test:e2e` | verde — 135 casos |
+| `npx vitest run` | verde — 1.766 casos |
+| `npm run test:e2e` | verde — 140 casos |
 | `scripts/check-fr-coverage.sh` | verde (línea base) |
 | `scripts/check-spec-kit.sh` | verde (línea base) |
 
 ---
 
-**Lotes 0, 1 y 2 completos (5/5 · 17/17 · 12/12).** Queda el Lote 3: **3.10** (`020`
-US2-US4), **3.13** (notas de BACKLOG) y las **11 features** con plan y tasks ya escritos, por
-`/speckit-implement` en el orden 027→022→026→031→032→028→035→033→029→030→034.
+**Lotes 0, 1 y 2 completos (5/5 · 17/17 · 12/12); Lote 3 con `027` implementada.** Quedan
+**3.10** (`020` US2-US4), **3.13** (notas de BACKLOG) y **10 features** por
+`/speckit-implement` en el orden 022→026→031→032→028→035→033→029→030→034.

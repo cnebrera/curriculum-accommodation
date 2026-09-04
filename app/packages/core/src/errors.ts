@@ -36,6 +36,19 @@ export type ErrorKind =
   | 'compose-needs-anchor'   // content, which needs something true to rest on
   | 'guide-no-work'          // an ACNS drafted from nothing is a form filled in by a model
   | 'guide-no-evaluation'    // an ACS with no evaluación psicopedagógica is procedurally void
+  /**
+   * Composing an exam for a course that is not his (`027` FR-2509, decision P12).
+   *
+   * Its own kind rather than `compose-no-objective`, because it is not a missing input:
+   * the request is complete and understood, and what it asks for is a decision that
+   * belongs to the teaching team on a psychopedagogical assessment. The sentence has to
+   * say that, and the way to get her past it is a registered ACS — so «falta un dato»
+   * would send her to fix the wrong thing.
+   *
+   * Keyed on the **request**, never on the profile: a high CUR is a reason to compose
+   * more carefully, never a reason to refuse (P12, and 2.11's correction to `adapt.md`).
+   */
+  | 'compose-exam-other-course'
   | 'pictogram-not-accepted'  // a fetch attempted before she accepted the licence (023 FR-2104)
   | 'pictogram-in-progress'  // a second whole-set download while one is running (024 FR-2118)
   | 'pictogram-language'     // her publisher has no pictograms in this language

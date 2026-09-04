@@ -245,6 +245,13 @@ function unverifiedObjectives(
   return [...out];
 }
 
+/** «la 4», «la 4 y la 5», «la 4, la 5 y la 7» — a list a person reads out loud. */
+const spanishList = (numbers: readonly number[]): string => {
+  const parts = numbers.map((n) => `la ${n}`);
+  if (parts.length <= 1) return parts.join('');
+  return `${parts.slice(0, -1).join(', ')} y ${parts[parts.length - 1]}`;
+};
+
 /** How many items a group has, whichever shape it is. */
 const countOf = (g: SheetGroup): number =>
   g.of === 'problems' ? g.problems.length
@@ -345,6 +352,17 @@ export function buildSheet(input: SheetInput): ComposedSheet {
     });
   }
 
+  /*
+   * Where the page's own notices end and the work begins.
+   *
+   * Remembered rather than assumed, because the unverified-items note has to go **here**
+   * — beside the draft mark, before the first question — and it cannot be written yet:
+   * which items nobody checked is only known once the groups have been walked. Appending
+   * it at the end put it under the last question, where she reads it after using the
+   * sheet. Caught by asserting its position rather than its presence.
+   */
+  const headEnds = blocks.length;
+
   for (const [g, group] of input.groups.entries()) {
     if (countOf(group) === 0) continue;
 
@@ -388,7 +406,23 @@ export function buildSheet(input: SheetInput): ComposedSheet {
            * operation, and that difference needs no new class to express.
            */
           classes: ['exercise'],
-          attrs: at(item.answer === undefined),
+          attrs: {
+            ...at(item.answer === undefined),
+            /*
+             * **Somewhere to work it out** — decided by printing the page (T024).
+             *
+             * This was exam-only, because that is what the task said. Then the problems
+             * page came out of LibreOffice with three stories crammed at the top and
+             * two thirds of an empty sheet underneath: a word problem is a page a child
+             * writes the operation on, and one with no room for it sends him to a
+             * notebook and back, which is the transition that loses him.
+             *
+             * The attribute, not the class, for the reason the exam gives: an
+             * **ingested** problems sheet already has its own space on the page it was
+             * photographed from.
+             */
+            'data-answer-space': '1',
+          },
           content: `${n}. ${item.statement}`,
         });
         listing.push({
@@ -488,6 +522,45 @@ export function buildSheet(input: SheetInput): ComposedSheet {
     }
   }
 
+  /*
+   * Which items nobody checked, **on the page, beside the draft mark** (`027` FR-2504).
+   *
+   * Per item and not per sheet. «Hay preguntas sin comprobar» teaches her to distrust
+   * all ten, and a teacher who distrusts all ten checks none of them — so it names the
+   * numbers, and the ones it does not name are the ones the arithmetic verifier stands
+   * behind.
+   *
+   * A `note` block, which prints. The draft banner is the first thing on the page and
+   * this is the next; `report-notes` would have been the model's channel to her, which
+   * never reaches paper — and paper is where this matters, because whoever picks up a
+   * generated exam next did not see the screen she saw.
+   */
+  const declared = key.filter((e) => !isComputed(e)).map((e) => e.number);
+  if (declared.length > 0) {
+    blocks.splice(headEnds, 0, {
+      id: 'unverified-items',
+      classes: ['note'],
+      attrs: {},
+      /*
+       * «la 4 y la 5», not «4, 5» — found by printing the page (T024).
+       *
+       * A comma-separated list of bare digits reads as a **number** in Spanish: «Ojo:
+       * 4, 5 no las ha comprobado nadie» starts by saying four point five. It looked
+       * like a bug on the page, on the sheet whose whole job is to be trusted about
+       * which items were checked.
+       *
+       * «la» rather than «la pregunta» or «el problema»: it reads naturally for both
+       * shapes, and a noun here would be this function knowing which kind it is building
+       * — which is exactly what `SheetGroup` exists to keep out of it.
+       */
+      content: `Ojo: ${spanishList(declared)} no `
+        + `${declared.length === 1 ? 'la' : 'las'} ha comprobado nadie. `
+        + 'Las demás sí: las cuentas las he calculado yo.',
+      line: 0,
+      notices: [],
+    });
+  }
+
   if (input.notes && input.notes.length > 0) {
     push({
       id: 'report-notes',
@@ -496,6 +569,15 @@ export function buildSheet(input: SheetInput): ComposedSheet {
       content: input.notes.join('\n'),
     });
   }
+
+  /*
+   * `line` assigned once, at the end, over the final order.
+   *
+   * It was assigned as blocks were pushed, which is fine until one is spliced in — and
+   * then a notice against a later block points at the wrong place. A synthetic line
+   * number whose only job is to locate a notice must at least be monotonic.
+   */
+  blocks.forEach((b, i) => { b.line = 1 + i * 3; });
 
   const unverified = unverifiedObjectives(input.groups, key);
 

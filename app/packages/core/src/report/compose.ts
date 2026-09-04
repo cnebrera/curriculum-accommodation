@@ -1,8 +1,9 @@
-import type { ComposeOutcome } from '../compose/loop.js';
+import type { ComposeOutcome, Proposal } from '../compose/loop.js';
 import { explainOutcome } from '../compose/loop.js';
 import { explainLevel, type Leveled } from '../compose/level.js';
 import type { ExerciseLine } from '../compose/sheet.js';
 import { UNVERIFIABLE_ES } from '../compose/unverifiable.js';
+import { formatCost } from '../cost/index.js';
 
 /**
  * The composition report (002 T015, FR-107).
@@ -35,7 +36,12 @@ export interface ComposeReportInput {
   /** Her objectives, levelled — the source of the level lines. */
   leveled: readonly Leveled[];
   /** Per objective, what the loop actually managed. */
-  outcomes: ReadonlyArray<{ objective: string; wanted: number; outcome: ComposeOutcome }>;
+  /*
+   * On `Proposal` since `027`: the three pipelines produce three shapes and the report
+   * reads only the verdicts. Naming `ProposedExercise` here would make the report the
+   * one thing that cannot describe a composed exam.
+   */
+  outcomes: ReadonlyArray<{ objective: string; wanted: number; outcome: ComposeOutcome<Proposal> }>;
   /**
    * Every exercise on the sheet, checked or not — not the answer key.
    *
@@ -61,6 +67,31 @@ export interface ComposeReportInput {
   criteria?: readonly string[];
   /** Her label for a course id, so the report speaks her language. */
   yearLabel?: (id: string) => string;
+  /**
+   * What kind of material this is, **in her words** (`027` T021, US3 acceptance 2).
+   *
+   * The label from `material-kinds.md`, passed in. Not a `KIND_ES` map here: that would
+   * be a second copy of the corpus's own `label`, which is the defect this project has
+   * found more than any other and which drifts the day a PT rewords one (`021` T020's
+   * lesson, cited in this task).
+   */
+  kindLabel?: string;
+  /**
+   * True when what came out is not the kind she asked for (FR-2506).
+   *
+   * The sentence itself is the caller's — it names both kinds and it is already written
+   * where the notes are built. What the report needs is to know **not** to claim the
+   * kind in its own heading.
+   */
+  kindMismatch?: boolean;
+  /**
+   * What this cost, in cents, or `null` for «no lo sé».
+   *
+   * `null` is a real answer: a service whose model has no published price reports no
+   * cost, and a report that printed «0 céntimos» for it would be lying about the one
+   * number she can check against her card.
+   */
+  costCents?: number | null;
 }
 
 export interface ComposeReport {
@@ -120,7 +151,26 @@ export function buildComposeReport(input: ComposeReportInput): ComposeReport {
   const md: string[] = [
     `# ${input.title}`,
     '',
-    `Material generado el ${input.composedOn}.`,
+    /*
+     * What it is and what it cost, on the first line (`027` T021).
+     *
+     * The kind because a report that never says whether this is an exam or a worksheet
+     * cannot be read six months later beside the material — and because for two of the
+     * four kinds it is the only place the distinction is written in her words.
+     *
+     * Not claimed when the request and the output disagreed: the mismatch note says both
+     * kinds and this heading would state one of them as fact.
+     */
+    `Material generado el ${input.composedOn}${
+      input.kindLabel && !input.kindMismatch ? ` · ${input.kindLabel}` : ''}.${
+      input.costCents === undefined ? ''
+        : input.costCents === null
+          /*
+           * «No lo sé», and it says why. A running total that silently skips the calls
+           * it could not price is not a running total.
+           */
+          ? ' No sé lo que ha costado: tu servicio no publica el precio de su modelo.'
+          : ` Ha costado ${formatCost(input.costCents)}.`}`,
     '',
     /*
      * First, and in these words. It is the sentence most likely to be softened

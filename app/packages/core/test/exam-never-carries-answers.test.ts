@@ -121,8 +121,14 @@ describe('the exam a child sits', () => {
     expect((html.match(/<div class="answer-space">/g) ?? []).length).toBe(3);
     expect(html).toContain('Respuesta:');
 
+    /*
+     * One ruled paragraph per question, not two — a five-question exam with two ran onto
+     * a second page whose only content was a stray rule, and a ten-question one would
+     * have been four pages of air. Found by printing it (T024), which is why the count
+     * is asserted rather than «at least one».
+     */
     const odt = renderings(exam)[1]![1];
-    expect((odt.match(/RespuestaLinea/g) ?? []).length).toBeGreaterThanOrEqual(6);
+    expect((odt.match(/text:style-name="RespuestaLinea"/g) ?? []).length).toBe(3);
     expect(odt).toContain('>Respuesta:<');
   });
 
@@ -144,6 +150,61 @@ describe('the exam a child sits', () => {
   it('records the objective as unverified in the front matter, not only per block', () => {
     expect(exam.doc.frontMatter['unverified_objectives']).toEqual([OBJECTIVE]);
   });
+
+  /**
+   * On the page, beside the draft mark, **naming the numbers** (FR-2504).
+   *
+   * Per item because a sheet that says «hay preguntas sin comprobar» teaches her to
+   * distrust all ten — and a teacher who distrusts all ten checks none of them. It also
+   * has to be printed: whoever picks this up next did not see the screen she saw.
+   */
+  it('names on the page which items nobody checked, and only those', () => {
+    for (const [modality, out] of renderings(exam)) {
+      /*
+       * «la 3», not «3» — and with several, «la 4 y la 5» rather than «4, 5», which in
+       * Spanish reads as four point five. Found by printing the page.
+       */
+      expect(out, `the ${modality} does not say which items are unchecked`)
+        .toContain('Ojo: la 3 no la ha comprobado nadie');
+    }
+    // Right after the draft banner and before the questions, not at the foot of the page.
+    const html = renderings(exam)[0]![1];
+    expect(html.indexOf('no la ha comprobado nadie')).toBeLessThan(html.indexOf('305'));
+  });
+
+  it('lists several in Spanish, not as a decimal number', () => {
+    // «Ojo: 4, 5 no las ha comprobado nadie» opens by saying four point five. On the one
+    // sheet whose job is to be trusted about which items were checked.
+    const two = buildSheet({
+      title: 'Prueba', lang: 'es', materialKind: 'exam', objectives: [OBJECTIVE],
+      composedOn: '2026-09-04',
+      groups: [{
+        of: 'questions', objective: OBJECTIVE, instruction: 'Contesta.',
+        questions: [
+          { text: 'Calcula: 305 − 148', expression: '305 - 148', answer: '157' },
+          { text: 'Explica cómo.' },
+          { text: 'Inventa una.' },
+        ],
+      }],
+    });
+    const html = renderHTML(two.doc, { presentation: presentationFor({}) });
+    expect(html).toContain('Ojo: la 2 y la 3 no las ha comprobado nadie');
+    expect(html).not.toContain('Ojo: 2, 3');
+  });
+
+  it('and says nothing at all when everything was checked', () => {
+    const clean = buildSheet({
+      title: 'Prueba', lang: 'es', materialKind: 'exam', objectives: [OBJECTIVE],
+      composedOn: '2026-09-04',
+      groups: [{
+        of: 'questions', objective: OBJECTIVE, instruction: 'Contesta.',
+        questions: [{ text: 'Calcula: 305 − 148', expression: '305 - 148', answer: '157' }],
+      }],
+    });
+    expect(renderHTML(clean.doc, { presentation: presentationFor({}) }))
+      .not.toContain('no la ha comprobado nadie');
+    expect(clean.doc.frontMatter['unverified_objectives']).toBeUndefined();
+  });
 });
 
 describe('the problem statements', () => {
@@ -155,6 +216,14 @@ describe('the problem statements', () => {
       // answer in the other document — printed under the statement it is a solved problem.
       expect(out, `the operation reached the ${modality}`).not.toMatch(/3,50\s*-\s*1,20/);
     }
+  });
+
+  it('and give him somewhere to work them out', () => {
+    // Decided by printing the page (T024): three stories crammed at the top of an empty
+    // sheet is a page that sends him to a notebook and back, and that transition is
+    // where he is lost.
+    const html = renderings(problems)[0]![1];
+    expect((html.match(/<div class="answer-space">/g) ?? []).length).toBe(1);
   });
 
   it('but keep the statement, quantities included, because he needs them', () => {

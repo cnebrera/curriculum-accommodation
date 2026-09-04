@@ -128,3 +128,52 @@ describe('which objective each exercise serves', () => {
     expect(r.markdown).toContain('No hay ningún ejercicio en la hoja');
   });
 });
+
+/**
+ * The report says what it is and what it cost (027 T021, US3 acceptance 2).
+ *
+ * The kind matters most six months later, beside the material, when «¿esto era el examen
+ * o la ficha?» is a question only this file can answer — and for two of the four kinds
+ * this is the only place it is written in her words at all.
+ */
+describe('what it is, and what it cost', () => {
+  const base = {
+    title: 'Prueba del tema 4', composedOn: '2026-09-04',
+    leveled: [], outcomes: [], listing: [],
+  };
+
+  it('names the kind, in the corpus label she was shown', () => {
+    const r = buildComposeReport({ ...base, kindLabel: 'Un examen o una prueba' });
+    expect(r.markdown).toContain('Un examen o una prueba');
+  });
+
+  it('does not claim the kind when the request and the output disagreed', () => {
+    // The mismatch note names both kinds and is where a disagreement belongs. A heading
+    // stating one of them as fact would contradict the note three lines below it.
+    const r = buildComposeReport({
+      ...base, kindLabel: 'Un examen o una prueba', kindMismatch: true,
+    });
+    expect(r.markdown).not.toContain('Un examen o una prueba');
+  });
+
+  it('says what it cost, in céntimos and not in tokens', () => {
+    expect(buildComposeReport({ ...base, costCents: 3 }).markdown).toContain('3 céntimos');
+  });
+
+  /**
+   * `null` is «no lo sé», and it says why.
+   *
+   * A service whose model has no published price reports no cost. Printing «0 céntimos»
+   * would be lying about the one number she can check against her card, and silence
+   * would leave her to assume it was free.
+   */
+  it('and says it does not know when the service publishes no price', () => {
+    const r = buildComposeReport({ ...base, costCents: null });
+    expect(r.markdown).toContain('No sé lo que ha costado');
+    expect(r.markdown).not.toContain('0 céntimo');
+  });
+
+  it('says nothing about cost when nobody passed one', () => {
+    expect(buildComposeReport(base).markdown).not.toMatch(/costado|céntimo/);
+  });
+});

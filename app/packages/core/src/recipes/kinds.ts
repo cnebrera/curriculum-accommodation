@@ -66,6 +66,20 @@ export interface MaterialKind {
     before?: string;
     /** Printed on the document itself. */
     onDocument: string[];
+    /**
+     * The refusal when the request would compose this kind **below his course**
+     * (`027` FR-2509, decision P12).
+     *
+     * Corpus and not code, because it is the sentence a teacher reads when Rampa says
+     * no — and the argument in it («lo decide el equipo docente con una evaluación
+     * psicopedagógica») is a judgement about Spanish special education that a PT must be
+     * able to correct. The **gate** is code: which request is below which course is
+     * arithmetic over the education corpus.
+     *
+     * Present only for `exam`. For the other three the answer is not a refusal:
+     * composing support material at a lower level is exactly what they are for.
+     */
+    belowLevel?: string;
   };
   /** Sent to the model verbatim, alongside the hard rules, which outrank it. */
   rule: string;
@@ -109,13 +123,20 @@ function parseQuantity(v: unknown): MaterialKind['quantity'] {
  * rule that lives only in a prompt shares its context window with a document that may
  * contradict it (`007`).
  */
-function parseComposing(v: unknown): { before?: string; onDocument: string[] } | undefined {
+function parseComposing(
+  v: unknown,
+): { before?: string; onDocument: string[]; belowLevel?: string } | undefined {
   if (!v || typeof v !== 'object') return undefined;
   const e = v as Record<string, unknown>;
   const onDocument = list(e['on_document']);
   const before = str(e['before']);
-  if (onDocument.length === 0 && !before) return undefined;
-  return { onDocument, ...(before ? { before } : {}) };
+  const belowLevel = str(e['below_level']);
+  if (onDocument.length === 0 && !before && !belowLevel) return undefined;
+  return {
+    onDocument,
+    ...(before ? { before } : {}),
+    ...(belowLevel ? { belowLevel } : {}),
+  };
 }
 
 const str = (v: unknown): string => (typeof v === 'string' ? v.trim() : '');

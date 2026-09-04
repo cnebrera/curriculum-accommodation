@@ -168,9 +168,19 @@ function renderBlock(b: Block, images?: ReadonlyMap<string, ImageBytes>): string
  */
 function answerSpace(b: Block): string[] {
   if (!b.attrs['data-answer-space']) return [];
+  /*
+   * **One line, not two** — and this is what printing the page taught (T024).
+   *
+   * Two ruled paragraphs with their own margins came to about two and a half
+   * centimetres per question, so a five-question exam ran onto a second page whose only
+   * content was a stray rule. A ten-question exam would have been four pages of mostly
+   * air, and the child who most needs one page gets four.
+   *
+   * The line is tall (`fo:margin-top`) rather than doubled: the same room to write, in
+   * one paragraph that cannot be split from the question above it.
+   */
   return [
     '<text:p text:style-name="RespuestaEtiqueta">Respuesta:</text:p>',
-    '<text:p text:style-name="RespuestaLinea"/>',
     '<text:p text:style-name="RespuestaLinea"/>',
   ];
 }
@@ -202,12 +212,16 @@ const STYLES_XML = `<?xml version="1.0" encoding="UTF-8"?>
    <style:paragraph-properties fo:margin-top="0.5cm" fo:keep-together="always"/>
   </style:style>
   <style:style style:name="RespuestaEtiqueta" style:family="paragraph" style:parent-style-name="Cuerpo">
-   <style:paragraph-properties fo:margin-top="0.3cm" fo:margin-bottom="0.1cm"/>
+   <style:paragraph-properties fo:margin-top="0.2cm" fo:margin-bottom="0cm"
+     fo:keep-with-next="always"/>
    <style:text-properties fo:font-size="10pt"/>
   </style:style>
+  <!-- keep-with-next on the label and keep-together here: a question and the space to
+       answer it must not be separated by a page break. The first version had neither, and
+       a five-question exam left a rule alone at the top of page two. -->
   <style:style style:name="RespuestaLinea" style:family="paragraph" style:parent-style-name="Cuerpo">
-   <style:paragraph-properties fo:margin-bottom="0.5cm" fo:padding-bottom="0.1cm"
-     fo:border-bottom="0.02cm solid #000000"/>
+   <style:paragraph-properties fo:margin-top="0.9cm" fo:margin-bottom="0.45cm"
+     fo:keep-together="always" fo:border-bottom="0.02cm solid #000000"/>
   </style:style>
   <style:style style:name="Apoyo" style:family="paragraph" style:parent-style-name="Cuerpo">
    <style:paragraph-properties fo:margin-left="0.6cm"/>

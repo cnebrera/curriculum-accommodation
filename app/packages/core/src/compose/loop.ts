@@ -1,6 +1,34 @@
 import { verify, type ProposedExercise, type Skill, type SkillVerdict, type Verifier } from './verify/types.js';
 
 /**
+ * Anything the loop can carry (`027` T009).
+ *
+ * Generic over the proposal, and the reason is the whole point of `027`: a word problem
+ * and an exam question ride **this** loop rather than getting one of their own, so they
+ * inherit the budget, the dedupe, reject-don't-repair and the 100%-unknown cut for free.
+ * A second loop would be a second place for those four to drift.
+ *
+ * `expression` is optional here and required on `ProposedExercise`: a non-computable ask
+ * has none, and the judge answers `unknown` for it rather than the loop guessing.
+ */
+export interface Proposal {
+  expression?: string;
+  /** What the model said the answer is. Never trusted; only compared. */
+  statedAnswer?: string;
+}
+
+/**
+ * How a proposal is judged. `verify` for exercises; the problems path passes its own.
+ *
+ * A parameter rather than a second loop, and not a method on `Verifier` either: the
+ * extra checks a problem needs are about **the statement**, which is not a thing a
+ * skill verifier knows about. `Verifier` answers «does this exercise the skill»; this
+ * answers «is this proposal acceptable at all».
+ */
+export type Judge<T extends Proposal = ProposedExercise> =
+  (verifier: Verifier, skill: Skill, proposal: T) => SkillVerdict;
+
+/**
  * The compose loop: the model proposes, **code decides** (002 T011, ADR 0007).
  *
  * Same shape as the ingest loop and for the same reason: the model does one
@@ -40,20 +68,20 @@ export interface ComposeBudget {
   maxProposals: number;
 }
 
-export interface Accepted {
-  exercise: ProposedExercise;
+export interface Accepted<T extends Proposal = ProposedExercise> {
+  exercise: T;
   /** Computed here, never taken from the model. */
   answer: string;
 }
 
-export interface Rejected {
-  exercise: ProposedExercise;
+export interface Rejected<T extends Proposal = ProposedExercise> {
+  exercise: T;
   verdict: SkillVerdict;
 }
 
-export interface ComposeOutcome {
-  accepted: Accepted[];
-  rejected: Rejected[];
+export interface ComposeOutcome<T extends Proposal = ProposedExercise> {
+  accepted: Accepted<T>[];
+  rejected: Rejected<T>[];
   /** True when the budget ran out before the sheet was full. Never silent. */
   budgetExhausted: boolean;
   proposalsUsed: number;
@@ -69,25 +97,33 @@ export interface ComposeOutcome {
 }
 
 /** Ask the model for more. Returns however many it returned, possibly none. */
-export type Propose = (
+export type Propose<T extends Proposal = ProposedExercise> = (
   skill: Skill,
   /** What has already been accepted, so it does not repeat them. */
-  soFar: readonly ProposedExercise[],
+  soFar: readonly T[],
   /** How many more are wanted. Advisory: the loop counts, not the model. */
   wanted: number,
-) => Promise<readonly ProposedExercise[]>;
+) => Promise<readonly T[]>;
 
 /**
  * Fill a sheet, or return less and say why.
  */
-export async function composeExercises(
+export async function composeExercises<T extends Proposal = ProposedExercise>(
   skill: Skill,
   verifier: Verifier,
-  propose: Propose,
+  propose: Propose<T>,
   budget: ComposeBudget,
-): Promise<ComposeOutcome> {
-  const accepted: Accepted[] = [];
-  const rejected: Rejected[] = [];
+  /**
+   * How to judge one proposal. Defaults to `verify`, which is the skill path.
+   *
+   * Last and optional so every existing call site is unchanged — this loop is the one
+   * piece of `002` that everything downstream trusts, and a required parameter here
+   * would have meant touching five call sites to add a kind.
+   */
+  judge: Judge<T> = verify as unknown as Judge<T>,
+): Promise<ComposeOutcome<T>> {
+  const accepted: Accepted<T>[] = [];
+  const rejected: Rejected<T>[] = [];
   /*
    * Deduplicated on the expression, normalised.
    *
@@ -135,11 +171,18 @@ export async function composeExercises(
       if (used >= budget.maxProposals) break;
       used += 1;
 
-      const key = norm(exercise.expression);
+      /*
+       * Deduplicated on the expression — and a proposal with none deduplicates to one.
+       *
+       * That is the useful behaviour rather than a gap: a batch of non-computable asks
+       * collapses to a single judged item, comes back `unknown`, and the cut below stops
+       * the loop after one batch instead of after the whole budget.
+       */
+      const key = norm(exercise.expression ?? '');
       if (seen.has(key)) continue;
       seen.add(key);
 
-      const verdict = verify(verifier, skill, exercise);
+      const verdict = judge(verifier, skill, exercise);
       judged += 1;
       if (verdict.ok) accepted.push({ exercise, answer: verdict.answer });
       else {
@@ -181,7 +224,7 @@ export async function composeExercises(
  * complaint and «los que proponía no llevaban» is something she can act on — she
  * can rephrase the objective, or accept eight.
  */
-export function explainOutcome(o: ComposeOutcome, wanted: number): string | null {
+export function explainOutcome(o: ComposeOutcome<Proposal>, wanted: number): string | null {
   if (!o.budgetExhausted) return null;
 
   /*

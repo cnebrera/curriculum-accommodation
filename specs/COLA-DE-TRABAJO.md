@@ -353,8 +353,26 @@ tasks.md** (026–035 y también 022, que carecía de ellos). Cobertura FR verif
 contabilizados; cero tareas marcadas. **Todo listo para `/speckit-implement <feature>`.** 020 US2–US4
 sigue siendo el único ítem del lote sin tasks propios (sus tareas viven en specs/020/tasks.md, abiertas).
 
-- [x] **3.1 · Spec ESCRITA → `027-examenes-y-problemas`** (P2). Falta: clarify → plan → tasks → implement. Formato de salida
-      propio, verificación adecuada por tipo, el tipo elegido gobierna lo producido de verdad.
+- [x] **3.1 · `027-examenes-y-problemas` IMPLEMENTADA** (P2). Formato de salida propio,
+      verificación adecuada por tipo, el tipo elegido gobierna lo producido de verdad.
+      **Hecho 2026-09-04, dos commits.** 25 de 27 tareas; las dos abiertas necesitan una
+      persona (una clave real y una PT), y están dichas como pendientes en vez de dobladas
+      dentro de otra.
+      Las cantidades de un problema salen **del enunciado que lee el niño**, no de lo que
+      declara el modelo: verificar su declaración aparte es verificar al mentiroso con su
+      propia declaración. El examen tiene su propio formato, su hueco para contestar y
+      cero respuestas en ninguna modalidad; las preguntas que nadie puede comprobar se
+      **declaran** por ítem, en la página, junto a la marca de borrador. Y un examen por
+      debajo de su curso **para antes de gastar**: eso cambia QUÉ se evalúa, lo decide el
+      equipo docente, y una ACS registrada es lo único que lo desbloquea.
+      **Tres defectos encontrados de paso**, ninguno del alcance: (1) el bloque `quantity`
+      no cruzaba el IPC, así que **la pregunta de cuántos no se mostraba nunca, para
+      ningún tipo** — «examen, 10 preguntas» no era algo que ella pudiera pedir (G36, doceava
+      vez); (2) «Ojo: 4, 5 no las ha comprobado nadie» empieza diciendo *cuatro coma
+      cinco*; (3) la hoja de problemas salía con las historias apiladas arriba y **sin
+      sitio para hacerlas**. Los tres los encontró mirar la página impresa, y los tres
+      están arreglados.
+      66 casos nuevos + 5 e2e; 13 costuras verificadas por mutación.
 - [x] **3.2 · 022 con plan + tasks ESCRITOS** (P21). Falta solo: implement.
 - [x] **3.3 · Spec ESCRITA → `026-la-conversacion`** (P24). Falta: clarify → plan → tasks → implement.
 - [x] **3.4 · Spec ESCRITA → `028-material-de-estructura`** (P4). Falta: clarify → plan → tasks → implement.

@@ -247,6 +247,13 @@ export const es = {
     'guide-no-work': 'Todavía no he adaptado nada para este alumno, así que no tengo con qué redactar la ACNS. Adapta algo primero y vuelve.',
     'guide-no-evaluation': 'Sin evaluación psicopedagógica una adaptación significativa no puede seguir adelante: es nula de procedimiento. Si existe y no lo he visto, dímelo.',
     /*
+     * Deliberately short here (`027` FR-2509). The sentence that carries the argument
+     * lives in `instructions/material-kinds.md` — a PT has to be able to correct it —
+     * and the job throws it as the message, so this catch-all is only reached if that
+     * corpus file is missing.
+     */
+    'compose-exam-other-course': 'Un examen de otro curso evalúa otras cosas, y eso lo decide el equipo docente. Tráeme la ACS y lo compongo a ese nivel.',
+    /*
      * `pictogram-language` has **no** entry here, deliberately.
      *
      * Its message names the publisher and the language — «ARASAAC no tiene

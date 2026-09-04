@@ -39,6 +39,8 @@ export * from './compose/budget.js';
 export * from './compose/loop.js';
 export * from './compose/proposals.js';
 export * from './compose/problems.js';
+export * from './compose/exam-gate.js';
+export * from './compose/kind.js';
 export * from './compose/anchor.js';
 export * from './compose/level.js';
 export * from './compose/sheet.js';

@@ -1,4 +1,6 @@
 import { describe, it, expect } from 'vitest';
+import { readFileSync } from 'node:fs';
+import { join, dirname } from 'node:path';
 import {
   buildSheet, renderAnswerKey, ANSWER_KEY_HEADING, parseIR, renderHTML, renderLinear,
   presentationFor,
@@ -128,5 +130,82 @@ describe('every rendering of the key says it is not to be handed out', () => {
     // The two must not be confusable at a glance: the key names itself in its title.
     expect(key.split('\n')[0]!.toLowerCase()).toContain('soluciones');
     expect(sheet.markdown.toLowerCase()).not.toContain('soluciones');
+  });
+});
+
+/**
+ * The key is the **job's**, and no learner-facing path reads it (027 T015, FR-2512).
+ *
+ * `021` made the key printable, which is useful and is exactly what makes this
+ * load-bearing. `027` adds two kinds whose keys carry more — an exam key holds drafted
+ * answers for the questions arithmetic could not check — so the absence has to be
+ * asserted again, and asserted as an absence over the source rather than through one
+ * path.
+ *
+ * The failure mode is not subtle: `jobAnswers` reaching `resolveDocument`, an export or
+ * a linear rendering means a page of answers rendered as a learner's document. It looks
+ * exactly like a worksheet.
+ */
+describe('the key belongs to the job and to her, structurally', () => {
+  const root = join(dirname(new URL(import.meta.url).pathname), '..', '..', '..', '..');
+  const read = (...parts: string[]): string =>
+    readFileSync(join(root, 'app', ...parts), 'utf8');
+
+  it('one file for the key, and no sibling per kind', () => {
+    // `material/<job>/answers.md`, which already existed. A second file for the exam key
+    // would be the two-copies defect with a sharper blast radius: one composition, one
+    // key, N presentations (Principle IV).
+    const paths = read('packages', 'core', 'src', 'vault', 'paths.ts');
+    expect((paths.match(/answers\.md/g) ?? []).length).toBe(1);
+  });
+
+  it('and no path that renders a learner document reads it', () => {
+    // The five that turn a document into something a child receives. `resolveDocument`
+    // is on the list because it is what decides «which document is the document» — the
+    // one place a wrong answer would make the key printable.
+    for (const file of [
+      ['packages', 'core', 'src', 'vault', 'document.ts'],
+      ['packages', 'shell', 'src', 'jobs', 'print.ts'],
+      ['packages', 'shell', 'src', 'jobs', 'export.ts'],
+      ['packages', 'shell', 'src', 'jobs', 'adapt.ts'],
+      ['packages', 'core', 'src', 'render', 'linear.ts'],
+    ]) {
+      const code = read(...file).replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/[^\n]*/g, '');
+      expect(code, `${file.join('/')} reads the answer key`).not.toContain('jobAnswers');
+    }
+  });
+
+  it('the only readers are hers, enumerated so a fifth is a decision', () => {
+    /*
+     * Four, and each one legitimately **her** side of the document:
+     *
+     * - `jobs/compose.ts` writes it and returns its path.
+     * - `ipc/print.ts` serves `job:answerKeyHtml` — her copy, rendered.
+     * - `ipc/compose.ts` serves `job:composeDocs` — the review screen showing it to her.
+     * - `record/scan.ts` records that it **exists**, so her record can offer it.
+     *
+     * A fifth appearing here is either a new surface for her — fine, and it should be
+     * argued in this comment — or a page of answers rendered as a learner's document,
+     * which looks exactly like a worksheet.
+     */
+    const readers: string[] = [];
+    for (const file of [
+      ['packages', 'shell', 'src', 'jobs', 'compose.ts'],
+      ['packages', 'shell', 'src', 'ipc', 'print.ts'],
+      ['packages', 'shell', 'src', 'ipc', 'compose.ts'],
+      ['packages', 'core', 'src', 'record', 'scan.ts'],
+      ['packages', 'shell', 'src', 'jobs', 'print.ts'],
+      ['packages', 'shell', 'src', 'jobs', 'export.ts'],
+      ['packages', 'shell', 'src', 'jobs', 'adapt.ts'],
+      ['packages', 'core', 'src', 'vault', 'document.ts'],
+      ['packages', 'core', 'src', 'render', 'linear.ts'],
+      ['packages', 'core', 'src', 'render', 'html.ts'],
+      ['packages', 'core', 'src', 'render', 'odt.ts'],
+    ]) {
+      if (read(...file).includes('jobAnswers')) readers.push(file.slice(-2).join('/'));
+    }
+    expect(readers.sort()).toEqual([
+      'ipc/compose.ts', 'ipc/print.ts', 'jobs/compose.ts', 'record/scan.ts',
+    ]);
   });
 });

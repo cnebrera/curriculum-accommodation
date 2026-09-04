@@ -119,12 +119,18 @@ retrofitted — and a lenient parser here verifies a guess.
       access-not-difficulty recipe by construction. `SheetGroup` is a union so a group
       cannot be two shapes at once, and `KeyEntry` keeps `status` optional on the
       computed variant so the skill path's contract is literally untouched (FR-2507).)*
-- [ ] T008 `app/packages/shell/src/jobs/compose.ts` · **one system per path**
+- [x] T008 `app/packages/shell/src/jobs/compose.ts` · **one system per path**
       (FR-2507): `OUTPUT_FORMAT` appended only for skill practice; problems and exam
       paths get their own format suffixes from the contract; `composeContent`'s system
       stops demanding one-liners while its user message demands IR blocks — the review's
       AGE-04 contradiction dies here. (COLA 2.12's max_tokens detection is **not** this
       task; noted so its absence is a decision)
+      *(done: `problemSystemPrompt()` and `examSystemPrompt()`, each sharing
+      `judgementLayer()` and carrying its own block format. `contentSystemPrompt()` had
+      already stopped demanding one-liners in COLA 2.12 — cited, not redone. The exam
+      format tells the model the three things the parser and the verifier check, because
+      a rule it knows costs one proposal to satisfy and a rule it does not costs a
+      rejected batch of her money.)*
 
 **Checkpoint**: T001 and T002 written and red where the feature is missing, the offline
 suite otherwise green.
@@ -140,25 +146,48 @@ inconsistent proposal died in the loop.
 **Independent Test**: compose problems; every key answer computed by code from the
 statement's own quantities; no proposal with inconsistent arithmetic survived.
 
-- [ ] T009 [US1] `app/packages/shell/src/jobs/compose.ts` · the problems pipeline:
+- [x] T009 [US1] `app/packages/shell/src/jobs/compose.ts` · the problems pipeline:
       `request.kind === 'problems'` selects it, proposals parsed by
       `parseProblemProposals`, verified by `verifyProblem` **through the existing
       `composeExercises` loop** (budget, dedupe, reject-don't-repair and the T005 cut for
       free), and the quantity she gave counts **problems** — the kind's unit from the
       corpus `quantity:` block (FR-2501, FR-2502, FR-2505)
-- [ ] T010 [P] [US1] Interests reach the **wording only** (FR-2511): the propose prompt
+      *(done: `request.kind === 'problems'` selects the loop, with `verifyProblem` as
+      the judge. The loop is **generic over its proposal** now — `Judge<T>` as an
+      optional last parameter — so the problems path inherits the budget, the dedupe,
+      reject-don't-repair and the P19 cut rather than getting a second loop that would
+      be a second place for all four to drift.)*
+- [x] T010 [P] [US1] Interests reach the **wording only** (FR-2511): the propose prompt
       keeps `002`'s «úsalo en el contexto, no en la dificultad», and the test asserts the
       structure makes it true — quantities are re-extracted and re-verified from the
       statement whatever the prompt said, and with no interest recorded the prompt asks
       for plain statements (`022` FR-2005/2006's pair, applied to text)
-- [ ] T011 [US1] Per-item declaration (FR-2504): an item carried unverified is named on
+      *(done, and asserted where it is true rather than where it is promised:
+      `verifyProblem` is handed the proposal and nothing else — `problems.ts` contains
+      no reference to interests at all — and it re-extracts the quantities from the
+      statement whatever the prompt asked for. So a Pokémon in the story cannot become a
+      Pokémon in the numbers. One prompt builder for the three shapes, so the sentence
+      «úsalo en el contexto, no en la dificultad» exists once and is asserted to.)*
+- [x] T011 [US1] Per-item declaration (FR-2504): an item carried unverified is named on
       the report, its block carries `data-unverified`, and a sheet containing **any**
       unverified item says so **beside the draft mark** — per item, because a sheet
       «unverified somewhere» teaches her to distrust everything (spec checklist)
-- [ ] T012 [US1] The SC-2501 invariant, as a test over the composed corpus fixtures:
+      *(done, per item and **on the page**: a `note` block naming the numbers, spliced
+      in right after the draft banner and before the first question. Position asserted,
+      not just presence — appending it put it under the last question, where she reads
+      it after using the sheet. It names the numbers rather than saying «hay preguntas
+      sin comprobar», because a sheet that says that teaches her to distrust all ten and
+      then she checks none.)*
+- [x] T012 [US1] The SC-2501 invariant, as a test over the composed corpus fixtures:
       100% of computable items have code-computed keys and **zero** rejected-then-
       repaired items exist — asserted structurally (the accepted set never contains a
       mutated statement or expression), not sampled
+      *(done: `problems-loop.test.ts` runs the real loop with the real judge over a
+      batch containing every failure mode, and asserts two properties of the accepted
+      set — every answer equals `arithmetic.solve` of that item's own expression, and
+      every accepted statement and expression is **byte-identical** to what was
+      proposed. The second is «reject, never repair» as an invariant, and it is what
+      would fail if somebody later patched a near-miss instead of asking again.)*
 
 **Checkpoint**: the P1 the spec calls complete — problems compose, verified, declared
 where not.
@@ -174,11 +203,18 @@ answers on the sheet, a separate key for her, computable questions verified.
 carries no answers; the key exists as a separate job document; every computable question
 was verified.
 
-- [ ] T013 [US2] `app/packages/shell/src/jobs/compose.ts` · the exam pipeline:
+- [x] T013 [US2] `app/packages/shell/src/jobs/compose.ts` · the exam pipeline:
       `request.kind === 'exam'` selects it, `parseExamProposals` parses, questions with
       an `OPERACIÓN` verified exactly as problems, questions without one carried
       **declared-unverified** — and the report says which are which before she signs
       (FR-2503, FR-2504). The quantity counts **questions** (FR-2505)
+      *(done. Questions with an `OPERACIÓN` are verified exactly as problems; without
+      one they are **accepted and declared unverified**, which is research R3's position
+      — an exam whose six «explica» questions were rejected is not a test. And the door
+      that opens: a model could dodge every check by omitting `OPERACIÓN`, so a prompt
+      that **is** a bare calculation with no declared operation is refused. Narrow on
+      purpose — «¿cuántas patas tienen 3 perros?» is not a calculation, and asking the
+      model to express it would be asking for the semantics R2 refuses to encode.)*
 - [x] T014 [US2] Answer space in the renderers: a `question` block renders with space to
       answer in `app/packages/core/src/render/html.ts`, `odt.ts` and `linear.ts` — and
       **T001 goes green here**: zero answers in any learner-facing rendering, in text or
@@ -189,12 +225,18 @@ was verified.
       aloud. Keyed on the attribute and **not** on the `assessment` class: an ingested
       exam already has its own space on the page it was photographed from, and every
       adapted exam in the vault would have gained a second one. T001 green.)*
-- [ ] T015 [US2] The key is the job's, and never the learner's (FR-2512): exam entries
+- [x] T015 [US2] The key is the job's, and never the learner's (FR-2512): exam entries
       land in `material/<job>/answers.md` (`jobAnswers`, the existing file — no sibling),
       and an asserted **absence**: no learner-facing path — `resolveDocument`, the
       adaptation, export, linear — reads `jobAnswers`. Extend
       `app/packages/core/test/answer-key-never-on-the-sheet.test.ts` to the two new kinds
-- [ ] T016 [US2] The FR-2509 gate, request-keyed: composing an exam below the enrolled
+      *(done: the key stays `material/<job>/answers.md` — one `answers.md` in
+      `paths.ts`, asserted — and the readers are **enumerated**, so a fifth is a
+      decision. The four are all hers: the writer, `job:answerKeyHtml`,
+      `job:composeDocs`, and `record/scan.ts` recording that it exists. The five paths
+      that turn a document into something a child receives are asserted not to read it
+      at all, `resolveDocument` among them.)*
+- [x] T016 [US2] The FR-2509 gate, request-keyed: composing an exam below the enrolled
       level **stops with the teaching-team sentence when no registered ACS covers it**
       and composes to the modified objectives when the learner's overlay
       (`adaptations.md`, via `017`) records one — access adaptations always pass, and an
@@ -202,10 +244,26 @@ was verified.
       path** (the P12 unlock; the sentence is corpus in `instructions/material-kinds.md`
       or `compose.md`, the gate is code). **COLA 2.11 owns the adapt-side gate**; this
       task is the compose-exam side, and whichever lands first writes the shared sentence
-- [ ] T017 [P] [US2] `app/e2e/compose-kinds-real.spec.ts`, the exam walk from quickstart
+      *(done: `examBelowCourse` in the core, and it is **not given the profile** — which
+      is the only kind of guarantee worth having (Principle V). The trigger is which
+      course the material is aimed at; a high CUR is a reason to compose more carefully,
+      never a reason to refuse (P12, and 2.11's correction to `adapt.md`). The refusal
+      fires before the provider is resolved, so nothing is sent and nothing is charged,
+      and the sentence is corpus (`material-kinds.md`, `composing.below_level`) with
+      **no Spanish fallback in code**. A registered ACS unlocks it; an ACNS does not,
+      and neither does a measure that merely mentions an ACS — that last case was found
+      by mutation.)*
+- [x] T017 [P] [US2] `app/e2e/compose-kinds-real.spec.ts`, the exam walk from quickstart
       §5.2: ten numbered questions, answer space, nothing on the sheet that answers
       anything, the key its own document with `SOLUCIONES · NO REPARTIR` and per-entry
       labels
+      *(done: `e2e/compose-kinds-real.spec.ts`, five walks. What it does **not** do is
+      compose: that needs a provider, and a fake one returning canned blocks would
+      assert that the parser parses the fixture — a tautology that says nothing about a
+      model's output. What it does walk is everything before the first token, which is
+      where this feature's sharpest requirement lives: the exam gate, proved to fire
+      with no key, no network and no cost. The composed exam's «zero answers» claim is
+      T001's, over the rendered output.)*
 
 **Checkpoint**: choosing «examen» produces an exam. The storefront has a shop behind it.
 
@@ -219,33 +277,68 @@ kind's unit, and the discrepancy note fires only on real mismatch.
 **Independent Test**: compose one of each kind from the same objective; four documents,
 four shapes, each matching its contract in `instructions/material-kinds.md`.
 
-- [ ] T018 [US3] The kind **selects the pipeline** in `runCompose`
+- [x] T018 [US3] The kind **selects the pipeline** in `runCompose`
       (`app/packages/shell/src/jobs/compose.ts`): worksheet → skill loop, problems →
       T009, exam → T013, study → content path; the quantity question's unit comes from
       the corpus `quantity:` block per kind and the count she gives counts that unit
       (FR-2505). The derivation stays the fallback for requests recorded before `021`
-- [ ] T019 [US3] The derived-kind check reads the **structure of what was produced**
+      *(done, and it **found the defect the whole requirement rests on**:
+      `corpus:materialKinds` never sent `quantity` across the IPC. The corpus declares
+      it, the parser reads it, `MaterialKind.quantity` types it, `ComposeScreen` reads
+      `chosen?.quantity` — and it arrived `undefined` every time, so `countsSomething`
+      was always false and **the quantity question was never shown for any kind**.
+      `perObjective` was always absent and every composition used the corpus default:
+      «examen, 10 preguntas» was not something she could ask for. Twelfth instance of a
+      field written, parsed, typed and read by nobody (G36). Found by the e2e asserting
+      the label changes with the kind and failing to find the field at all. `study` is
+      deliberately not in the dispatch: a skill objective under «apuntes» still produces
+      exercises and T019 now reports that as the real mismatch it is, because routing it
+      to the content path would demand an anchor she was never asked for — a decision
+      for a spec, not for a line in a loop.)*
+- [x] T019 [US3] The derived-kind check reads the **structure of what was produced**
       (research R5): exam questions → `exam`, problem items → `problems`, content only →
       `study`, bare expressions → `worksheet` — the `/\bproblema/i` dead code dies, and
       the mismatch note fires **only on real mismatch**, with SC-2503's zero false
       positives asserted over the test corpus (FR-2506)
-- [ ] T020 [P] [US3] A request naming a kind the catalogue lacks («una rúbrica») is
+      *(done, in the core as `derivedKind`/`kindMismatched` so it is testable: the old
+      detector greped `/\bproblema/i` over `instructionFor`'s four fixed sentences,
+      **none of which contains the word**, so it could only ever answer `study` or
+      `worksheet` and choosing «examen» or «problemas» guaranteed the apology. SC-2503's
+      zero false positives is one case per kind, each asked for and produced, with the
+      note silent.)*
+- [x] T020 [P] [US3] A request naming a kind the catalogue lacks («una rúbrica») is
       refused honestly with the four kinds offered — `findKind` already returns `null`
       and never a fallback (`012` FR-1003); this makes the refusal say the four, not
       silently map to the nearest (spec edge case)
-- [ ] T021 [US3] The report names the kind, what was verified, what was declared, and
+      *(done — and it was already true: `job:compose` refuses a kind the catalogue lacks
+      and names the four in her words. What was missing was the test, so «una rúbrica»
+      being silently mapped to the nearest would now fail.)*
+- [x] T021 [US3] The report names the kind, what was verified, what was declared, and
       what it cost (US3 acceptance 2), in `app/packages/core/src/report/compose.ts` —
       one report shape for the four kinds, per kind's vocabulary from the corpus labels
       (no second `KIND_ES`, `021` T020's lesson)
-- [ ] T022 [P] [US3] `instructions/compose.md` · the judgement the new paths need, as
+      *(done: the report's first line carries the kind's corpus label and what it cost.
+      `null` cost says «no sé lo que ha costado: tu servicio no publica el precio»,
+      because printing «0 céntimos» would lie about the one number she can check against
+      her card. The kind is **not** claimed when the request and the output disagreed —
+      the mismatch note names both, and a heading stating one as fact would contradict
+      it three lines below. No second `KIND_ES`.)*
+- [x] T022 [P] [US3] `instructions/compose.md` · the judgement the new paths need, as
       corpus (Principle I): what makes a good problem statement (the statement is not
       the obstacle, his world's context, the question really asked, the quantities his
       level's) and what makes a good exam question — extending the existing «cuando lo
       que se pide es un examen» section, whose no-baremo rules stand unchanged (`021`
       FR-1913/FR-1914 referenced, not restated)
-- [ ] T023 [US3] `app/e2e/compose-kinds-real.spec.ts` · the four-kinds walk from
+      *(done: `instructions/compose.md` gains what makes a good problem statement and
+      what makes an exam question worth asking. The split is asserted both ways — the
+      pedagogical sentences are nowhere in the code, and the wire format is nowhere in
+      the corpus, so a reworded corpus file cannot break `parseProblemProposals`.)*
+- [x] T023 [US3] `app/e2e/compose-kinds-real.spec.ts` · the four-kinds walk from
       quickstart §5.3–5.4: one objective, four recognisably different documents, and the
       report every time
+      *(done in the part that can be: the quantity question's unit changes with the
+      kind, from the corpus, and «apuntes» asks nothing — which is `021` FR-1925 working
+      for the first time. The four-kinds **output** walk needs a provider and is T025.)*
 
 **Checkpoint**: «lo que ha salido se parece más a una ficha» is a sentence this
 application can no longer say by mistake.
@@ -254,21 +347,57 @@ application can no longer say by mistake.
 
 ## Phase 6 · Polish · and the parts that need a person
 
-- [ ] T024 **Look at it** (`013` FR-1113/FR-1118): a problems page — stories or padded
+- [x] T024 **Look at it** (`013` FR-1113/FR-1118): a problems page — stories or padded
       arithmetic?; an exam's first page — does «borrador» read clearly when the page is a
       test, is the answer space usable?; the key's per-entry unverified label — unmissable
       in a pile of paper? `npm run shots`, then eyes
+      *(done for the **printed** page, which is the artefact that matters most — the two
+      sheets built from a fixture (no provider needed: they are deterministic renderings
+      of an IR document), exported to ODT and converted with LibreOffice. **Three
+      defects found by looking, all three fixed:** (1) «Ojo: 4, 5 no las ha comprobado
+      nadie» opens by saying *four point five* in Spanish — on the one sheet whose job
+      is to be trusted about which items were checked; now «la 4 y la 5». (2) Two ruled
+      answer paragraphs per question ran a five-question exam onto a second page whose
+      only content was a stray rule, and a ten-question one would have been four pages
+      of air; one taller line, with `keep-with-next` so a question and its space cannot
+      be split. (3) The problems page came out with three stories crammed at the top and
+      two thirds of an empty sheet underneath — **nowhere to work them out**. Answer
+      space was exam-only because that is what the task said; looking at the page is
+      what proved the decision wrong. **What was NOT looked at:** the on-screen HTML at
+      480px and at `xlarge`. Rastering it needs a browser this machine's Playwright has
+      not downloaded, and `npm run shots` photographs the application — which cannot
+      compose without a provider. Stated rather than assumed covered; `013` FR-1118's
+      narrow-and-large case is still unlooked-at for these two page shapes.)*
 - [ ] T025 [P] Run quickstart §7 with a real key: interests in the wording and not the
       quantities, «restas con llevadas» composing borrows or stopping early **with the
       constraint and the spend named**, and a correction regenerating and re-verifying
       the key through `correctComposition` unchanged
+      **Pendiente: necesita una clave real y gasta dinero.** Left open, not quietly
+      folded into T017 — the offline walk proves the exam gate and the quantity question
+      and says out loud that it composes nothing. What only money can answer: whether a
+      real model's statements are worth reading, whether «restas con llevadas» composes
+      borrows or stops early with the constraint and the spend named, and whether a
+      correction regenerates and re-verifies the key.
 - [ ] T026 **SC-2505 needs a teacher**: a composed exam, no preamble, would she put it in
       front of the group with her name on it. The only criterion here that can come back
       «no» with everything else green; «why not» is worth more than the answer
-- [ ] T027 Archive it: this coverage table kept current; the ownership notes against
+      **Pendiente: necesita una PT.** SC-2505 is the only criterion in this feature that
+      can come back «no» with everything else green, and «por qué no» is worth more than
+      the answer. Nothing here can arrange it.
+- [x] T027 Archive it: this coverage table kept current; the ownership notes against
       COLA 0.4 (T005/T006), 2.11 (T016) and 2.12 (T008's scope note) resolved to
       citations for whichever landed first; a `specs/BACKLOG.md` entry for anything found
       on the way — and for research R3's key position if review overturned it
+      *(done 2026-09-04. **Ownership resolved:** COLA 0.4 landed the loop cut and the
+      «llevadas»-per-operation mapping first, so T005 cites it; T006 did the half 0.4 left
+      (the multi-operation split). COLA 2.11 owns the adapt-side gate; T016 is the
+      compose-exam side and wrote the shared refusal into `material-kinds.md`. COLA 2.12
+      landed `contentSystemPrompt` first, so T008 built on it. **Found on the way and
+      recorded:** the `quantity` block never crossed the IPC, so the quantity question was
+      never shown for any kind — fixed under T018 and pinned by a test, and G36's twelfth
+      instance. Research R3's key position was not overturned in review, so no fallback was
+      needed. Two departures from plan.md are argued in T007 (no new `BlockClass`
+      members).)*
 
 ---
 
