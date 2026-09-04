@@ -246,7 +246,7 @@ describe('the four rungs, and the one that still refuses (FR-2215, FR-2216)', ()
       ['perro', ['9']],               // the set is sure
       ['maria', ['7']],               // a name the set happens to have
     ])]]),
-    images: new Set(['1', '2', '3', '7', '9']),
+    images: new Set(['1', '2', '3', '7', '9']), from: new Map(), popularity: new Map(),
   };
   const chosen = forLanguage(choose(emptyVocabulary(), 'es', 'casa', '2'), 'es');
 

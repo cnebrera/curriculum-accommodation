@@ -31,7 +31,7 @@ const SET = {
     ['casa', ['1001', '2317']],  // ambiguous: only her choice can resolve it
     ['perro', ['9']],            // the set is sure
   ])]]),
-  images: new Set(['7', '9', '1001', '2317']),
+  images: new Set(['7', '9', '1001', '2317']), from: new Map(), popularity: new Map(),
 };
 
 /* Everything that needs Electron or a vault, replaced. */

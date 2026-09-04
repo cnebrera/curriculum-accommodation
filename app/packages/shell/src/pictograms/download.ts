@@ -241,7 +241,14 @@ export async function fetchWholeSet(args: WholeSetArgs): Promise<WholeSetResult>
    * a named gap (FR-1616), which is exactly the right state for "downloading". The
    * other order would leave images nothing can find.
    */
-  entries = mergeSet(entries, index);
+  /*
+   * The publisher's id travels with the entries (`023` FR-2116, decision P40).
+   *
+   * Without it a set she built from two sources was attributed to whichever one
+   * the render happened to know about, and the sheet printed a credit that was
+   * false — worse, legally, than printing none.
+   */
+  entries = mergeSet(entries, index, args.publisher.id);
   await writeAtomic(metadataPath, `${JSON.stringify(entries, null, 2)}\n`, runId);
 
   /*

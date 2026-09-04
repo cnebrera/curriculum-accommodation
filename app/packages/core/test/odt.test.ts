@@ -166,6 +166,87 @@ describe('nothing of hers leaves in the metadata', () => {
   });
 });
 
+/**
+ * The pictograms reach the ODT too (review COD-24, decision P47).
+ *
+ * They did not. This file contained not one reference to `data-picto`, an image or
+ * an attribution, so a sheet **with** pictograms exported to ODT came out without
+ * them, with no marked gap and **without saying anything** — a silent loss of a
+ * support she had turned on, in the modality that exists so she can retouch and
+ * reprint. `019` FR-1702 claims «the same adapted IR» in every modality and its
+ * coverage table called it «satisfied by absence»; here the absence was the defect.
+ */
+describe('a pictogram survives the export', () => {
+  const PNG = 'data:image/png;base64,iVBORw0KGgo=';
+  const withPicto = doc('::: {#b1 .instruction data-picto="casa=1001@arasaac"}\nRodea la casa.\n:::\n');
+  const images = new Map([['1001', PNG]]);
+  const credits = new Map([['arasaac', {
+    author: 'Sergio Palao', source: 'ARASAAC · Gobierno de Aragón', licence: 'CC BY-NC-SA',
+  }]]);
+
+  /**
+   * The local-header filenames, read back out of the ZIP we wrote.
+   *
+   * By walking the headers rather than by pattern-matching the bytes: a regex over
+   * a deflate stream matches whatever the compressor happened to emit, which is
+   * how the first version of this helper «found» an entry called `mimetypePK`.
+   */
+  const parts = (bytes: Uint8Array): string[] => {
+    const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+    const names: string[] = [];
+    let at = 0;
+    while (at + 30 <= bytes.length && view.getUint32(at, true) === 0x04034b50) {
+      const compressed = view.getUint32(at + 18, true);
+      const nameLen = view.getUint16(at + 26, true);
+      const extraLen = view.getUint16(at + 28, true);
+      names.push(new TextDecoder().decode(bytes.subarray(at + 30, at + 30 + nameLen)));
+      at += 30 + nameLen + extraLen + compressed;
+    }
+    return names;
+  };
+
+  it('writes the image into the package and declares it in the manifest', () => {
+    const odt = renderODT(withPicto, { pictogramImages: images, pictogramCredits: credits });
+    expect(parts(odt), 'the picture is not in the package').toContain('Pictures/1001.png');
+
+    const xml = text(odt);
+    expect(xml).toContain('Pictures/1001.png');
+    // Declared, because a part missing from the manifest is one a word processor
+    // may silently drop — the same silent loss in a new place.
+    expect(xml).toMatch(/manifest:full-path="Pictures\/1001\.png"/);
+    expect(xml).toMatch(/manifest:media-type="image\/png"/);
+  });
+
+  it('keeps the word beside the picture, because a photocopy loses colour', () => {
+    const xml = text(renderODT(withPicto, { pictogramImages: images, pictogramCredits: credits }));
+    expect(xml).toContain('<draw:image');
+    expect(xml).toContain('casa');
+    // And the alternative text, so a screen reader gets something too.
+    expect(xml).toContain('pictograma de «casa»');
+  });
+
+  it('carries the attribution, which reached the PDF and not this', () => {
+    const xml = text(renderODT(withPicto, { pictogramImages: images, pictogramCredits: credits }));
+    expect(xml).toContain('Sergio Palao');
+    expect(xml).toContain('CC BY-NC-SA');
+  });
+
+  it('names the gap when the image is missing, rather than dropping it', () => {
+    // `018` FR-1616: a moved set degrades the sheet, it does not fail the export.
+    const xml = text(renderODT(withPicto, { pictogramImages: new Map(), pictogramCredits: credits }));
+    expect(xml).toContain('falta el dibujo');
+    expect(xml).toContain('1001');
+    // The credit stays, because the document still claims a pictogram.
+    expect(xml).toContain('Sergio Palao');
+  });
+
+  it('adds nothing to a document with no pictogram', () => {
+    const odt = renderODT(SHEET, { pictogramImages: images, pictogramCredits: credits });
+    expect(parts(odt).filter((p) => p.startsWith('Pictures/'))).toEqual([]);
+    expect(text(odt)).not.toContain('Sergio Palao');
+  });
+});
+
 describe('LibreOffice opens it', () => {
   /**
    * The only assertion in this file that could catch a malformed container.

@@ -433,6 +433,65 @@ otro alumno en la pantalla.
 
 Costura verificada por mutación.
 
+### 2.4 · Pictogramas: cuatro defectos, y uno de ellos legal — P40, P41, P47, P48
+
+**(a) La atribución era falsa (P40, COD-08).** `attributionFor(doc, attribution =
+ARASAAC_ATTRIBUTION)` aceptaba una atribución alternativa y **los dos únicos call sites la
+llamaban sin segundo argumento**: el parámetro estaba muerto y la constante era lo único
+que se imprimía jamás. Una docente con un juego que no es ARASAAC —el caso que `018`
+FR-1604 existe para soportar, una carpeta con su propio LICENSE que `readSet` lee, le
+muestra y **nunca pasaba al render**— imprimía en cada hoja «Autor pictogramas: Sergio
+Palao · Origen: ARASAAC · Licencia: CC BY-NC-SA». Una atribución **falsa**, que es
+legalmente peor que omitirla. Y lo único que ejercitaba el parámetro era el test unitario
+que «demostraba» que funcionaba.
+
+Ahora `data-picto` lleva `word=id@publisher`, la línea se **deriva** de las fuentes que el
+documento realmente usó (varias fuentes → varias líneas, que es FR-2116), y
+`attributionFor` **no tiene default**: un parámetro requerido no se le olvida a nadie. Una
+fuente que no sabemos describir se dice —«pictogramas del juego que tienes puesto, la
+licencia es la de su LICENSE»— en vez de inventarle un crédito. Esa rama es la que el
+código viejo no podía tener.
+
+**(b) La popularidad no se persistía (P41, COD-09).** `readIndex` la calculaba,
+`planWholeSet` ordenaba la descarga con ella, y `mergeSet` **la tiraba** al escribir el
+catálogo. Así que «los candidatos, del más usado al menos» no podía ser verdad, con T017
+marcado como «popularity-ordered» y comentarios en `bring.ts` y en `ChooseWord.tsx`
+afirmando un orden que ningún código producía. Se persiste, y el orden lo hace
+`mostUsedFirst` en core — **porque la primera versión del arreglo estaba en el shell,
+donde nada offline lo veía, y sobrevivió a que lo borrase con la suite entera en verde.**
+El mismo defecto que estaba arreglando, llegando dentro del arreglo.
+
+**(c) El ODT perdía los pictogramas en silencio (P47, COD-24).** `render/odt.ts` no tenía
+ni una referencia a `data-picto`, ni a una imagen, ni a la atribución: una hoja **con**
+pictogramas exportada a ODT salía sin ellos, sin hueco marcado y sin decir nada — en la
+modalidad que existe precisamente para que ella retoque y reimprima. `019` FR-1702 reclama
+«el mismo IR adaptado» en todas las modalidades y su tabla lo llamaba «satisfied by
+absence»; aquí la ausencia era el defecto. Ahora `Pictures/` con su entrada de manifest por
+imagen (una parte sin declarar es una parte que un procesador de textos puede tirar), la
+palabra al lado de cada dibujo, y la misma atribución que el PDF.
+
+**(d) El override por niño no tenía pantalla (P48, COD-25).** Es el primer peldaño de la
+precedencia de `match.ts` y la excepción que `024` FR-2215 mantiene a propósito, y estaba
+«carried rather than surfaced»: `ProfileEditor` lo aparcaba en `_pictoOverrides` sin ningún
+control, y `ChooseWord` escribe solo en el vocabulario global. Un MUST de `018`
+satisfacible **solo editando YAML a mano** — y G30, que decía literalmente «the override is
+a field only a developer can set», se cerró «by 024», que construyó el selector del
+vocabulario y no este. Control plegado en la página del alumno, ofrecido solo cuando hay
+juego instalado: sin dibujos no hay a qué apuntar una palabra, y FR-2303 quiere **una**
+forma de arreglar eso, no dos.
+
+**Dos tests que tuve que enmendar, y por qué.** La cota de «menos de seis frases» de `025`
+se mide ahora excluyendo lo que un `<details>` **cerrado** esconde: la cota existe porque
+«la página que ve cada dos días es corta», y un desplegable cerrado no está en esa página.
+Y la de «la excepción añade tres frases» se mide sobre la excepción en vez de como resta
+entre los dos estados — la resta funcionaba mientras el callout del juego ausente fuese la
+única diferencia entre ellos, y ya no lo es.
+
+20 casos nuevos; 5 costuras verificadas por mutación (el default de ARASAAC, el orden, el
+lector del catálogo, los pictogramas del ODT, y el control del override).
+
+tsc limpio · 1582 casos · 123 e2e.
+
 ## Saltados y por qué
 
 _(nada todavía)_
@@ -455,11 +514,11 @@ _(nada todavía)_
 | | |
 |---|---|
 | `npx tsc --noEmit` | verde (línea base) |
-| `npx vitest run` | verde — 1560 casos |
+| `npx vitest run` | verde — 1582 casos |
 | `npm run test:e2e` | verde — 123 casos |
 | `scripts/check-fr-coverage.sh` | verde (línea base) |
 | `scripts/check-spec-kit.sh` | verde (línea base) |
 
 ---
 
-**Lotes 0 y 1 completos; Lote 2 en 4/12.** Quedan 10 ítems de la cola (Lote 2: 8 · Lote 3: 2 abiertos + 11 features por implementar).
+**Lotes 0 y 1 completos; Lote 2 en 5/12.** Quedan 9 ítems de la cola (Lote 2: 7 · Lote 3: 2 abiertos + 11 features por implementar).

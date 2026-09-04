@@ -8,7 +8,7 @@ import { knownNames } from '../ipc/names.js';
 import { writeFile, mkdir } from 'node:fs/promises';
 import { dirname } from 'node:path';
 import { resolveInVault } from '@rampa/core';
-import { pictogramImagesFor } from '../pictograms/access.js';
+import { pictogramImagesFor, pictogramCredits as pictogramCreditsFor } from '../pictograms/access.js';
 
 /**
  * HTML and PDF are produced by the application itself (006 FR-425): nothing for
@@ -90,9 +90,17 @@ export async function renderJob(jobId: string, learnerCode: string) {
   const ids = [...new Set(doc.blocks.flatMap((b) => parsePicto(b.attrs['data-picto']).map((p) => p.id)))];
   const pictogramImages = ids.length > 0 ? await pictogramImagesFor(ids) : undefined;
 
+  /*
+   * And what each source requires (review COD-08, decision P40). Which sources
+   * apply is derived from the document; this is only what each one says about
+   * itself, read from the publisher catalogue and from her set's own LICENSE.
+   */
+  const pictogramCredits = ids.length > 0 ? await pictogramCreditsFor() : undefined;
+
   const html = renderHTML(doc, {
     presentation: presentationFor(levels), signedOff,
     ...(pictogramImages ? { pictogramImages } : {}),
+    ...(pictogramCredits ? { pictogramCredits } : {}),
   });
 
   /*

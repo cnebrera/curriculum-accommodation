@@ -1,12 +1,15 @@
 import {
   renderHTML, renderODT, renderLinear, renderBrailleReady, parseAudioCorpus,
-  parseIR, checkOutput, isSignedOff, RampaError,
+  parseIR, checkOutput, isSignedOff, RampaError, parsePicto,
 } from '@rampa/core';
 import { resolveDocument, whyNoDocument } from '@rampa/core';
 import { currentVault } from '../ipc/vault.js';
 import { knownNames } from '../ipc/names.js';
 import { loadLearner } from '@rampa/core';
 import { loadInstruction } from '../corpus/index.js';
+import {
+  pictogramImagesFor, pictogramCredits as pictogramCreditsFor,
+} from '../pictograms/access.js';
 
 /**
  * Exports that are not printed (019).
@@ -60,7 +63,27 @@ export async function renderOdt(jobId: string, learnerCode: string): Promise<Uin
     await learnerFacts(learnerCode));
   if (!check.ok) throw new RampaError('render-learner-data', check.findings.join(' '), check.findings);
 
-  return renderODT(doc, { signedOff: isSignedOff(doc) });
+  /*
+   * The pictograms and their credit travel to the ODT too (review COD-24, P47).
+   *
+   * They did not. `render/odt.ts` contained not one reference to `data-picto`, an
+   * image or an attribution, so a sheet **with** pictograms exported to ODT came
+   * out without them, with no marked gap and **without saying anything** — a
+   * silent loss of a support she had turned on, in the modality that exists so she
+   * can retouch and reprint. `019` FR-1702 claims «the same adapted IR» in every
+   * modality and its coverage table called it «satisfied by absence»; here the
+   * absence was the defect.
+   */
+  const ids = [...new Set(doc.blocks.flatMap(
+    (b) => parsePicto(b.attrs['data-picto']).map((pp: { id: string }) => pp.id)))];
+  const pictogramImages = ids.length > 0 ? await pictogramImagesFor(ids) : undefined;
+  const pictogramCredits = ids.length > 0 ? await pictogramCreditsFor() : undefined;
+
+  return renderODT(doc, {
+    signedOff: isSignedOff(doc),
+    ...(pictogramImages ? { pictogramImages } : {}),
+    ...(pictogramCredits ? { pictogramCredits } : {}),
+  });
 }
 
 /**
@@ -88,6 +111,9 @@ async function linearFor(jobId: string, learnerCode: string) {
 
   const corpus = parseAudioCorpus(await loadInstruction('audio'));
   const signedOff = isSignedOff(doc);
+  // The linear exports carry the attribution too, so they printed the same false
+  // credit (COD-08, P40).
+  const credits = await pictogramCreditsFor();
 
   // The same gate, on the same document, as every other modality.
   const asHtml = renderHTML(doc, { signedOff });
@@ -95,14 +121,16 @@ async function linearFor(jobId: string, learnerCode: string) {
     await learnerFacts(learnerCode));
   if (!check.ok) throw new RampaError('render-learner-data', check.findings.join(' '), check.findings);
 
-  return { doc, corpus, signedOff };
+  return { doc, corpus, signedOff, credits };
 }
 
 export async function renderAudioReady(
   jobId: string, learnerCode: string,
 ): Promise<{ text: string; announced: Array<{ id: string; because: string }> }> {
-  const { doc, corpus, signedOff } = await linearFor(jobId, learnerCode);
-  const linear = renderLinear(doc, { ...corpus, modality: 'audio', signedOff });
+  const { doc, corpus, signedOff, credits } = await linearFor(jobId, learnerCode);
+  const linear = renderLinear(doc, {
+    ...corpus, modality: 'audio', signedOff, pictogramCredits: credits,
+  });
   /*
    * `announced` is returned, not merely written. What could not be read in order is
    * a decision she has to know about — and burying it inside a text file she may
@@ -114,10 +142,12 @@ export async function renderAudioReady(
 export async function renderBraille(
   jobId: string, learnerCode: string,
 ): Promise<{ text: string; announced: Array<{ id: string; because: string }> }> {
-  const { doc, corpus, signedOff } = await linearFor(jobId, learnerCode);
+  const { doc, corpus, signedOff, credits } = await linearFor(jobId, learnerCode);
   return {
-    text: renderBrailleReady(doc, { ...corpus, signedOff }),
-    announced: renderLinear(doc, { ...corpus, modality: 'braille', signedOff }).announced,
+    text: renderBrailleReady(doc, { ...corpus, signedOff, pictogramCredits: credits }),
+    announced: renderLinear(doc, {
+      ...corpus, modality: 'braille', signedOff, pictogramCredits: credits,
+    }).announced,
   };
 }
 

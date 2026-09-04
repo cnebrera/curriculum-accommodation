@@ -59,6 +59,15 @@
 
 - [X] T017 `pictograms:candidates` — the ambiguous words of a job with their candidates,
   popularity-ordered (FR-2217).
+  *(**«Popularity-ordered» was false until 2026-09-04**, review COD-09, decision P41.
+  `popularity` lived only in `readIndex`/`planWholeSet` during the download, where it
+  ordered *arrival*; `mergeSet` discarded it when writing `pictograms.<lang>.json`, so
+  the number was not on disk and `candidatesFor` returned the ids in whatever order the
+  file happened to hold — under a comment in `bring.ts` and another in `ChooseWord.tsx`
+  both claiming an order no code produced. Entries persist `popularity` now and
+  `mostUsedFirst` in `packages/core` does the sorting — in core, because the first
+  version of the fix lived in the shell where nothing offline could test it and it
+  survived being deleted with the suite still green.)*
 - [X] T018 `app/ui/src/pictograms/ChooseWord.tsx`: the pictures, not the ids. One click
   records it in her vocabulary (FR-2214, FR-2217).
 - [X] T019 Reachable from where the omission is reported, because that is where she

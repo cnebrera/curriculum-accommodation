@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Callout } from '../components/Callout.js';
 import { useCurrentSet } from '../data/pictograms.js';
 
@@ -34,16 +35,49 @@ import { useCurrentSet } from '../data/pictograms.js';
  * set is there, saying so would be one more line about something that is fine — and the
  * point of this component is that there are three lines and not thirty.
  */
-export function LearnerPictograms({ enabled, scope, onEnabled, onScope, onConfigure }: {
+export function LearnerPictograms({
+  enabled, scope, overrides, onEnabled, onScope, onOverrides, onConfigure,
+}: {
   enabled: boolean;
   scope: string;
+  /**
+   * «For this child, this word uses this drawing» (`018` FR-1612, decision P48).
+   *
+   * The first rung of the four-step precedence in `match.ts` — name → override →
+   * vocabulary → the set's single answer — and the exception `024` FR-2215 keeps
+   * deliberately. It was **«carried rather than surfaced»**: `ProfileEditor`
+   * parked it in `_pictoOverrides` with no control to edit it, and `ChooseWord`
+   * writes only to the global vocabulary. So a MUST of `018` was satisfiable only
+   * by editing YAML by hand, and G30 — which recorded exactly that, «the override
+   * is a field only a developer can set» — was closed «by `024`», which built the
+   * vocabulary chooser and not this.
+   */
+  overrides: Record<string, string>;
   onEnabled: (on: boolean) => void;
   onScope: (scope: string) => void;
+  onOverrides: (next: Record<string, string>) => void;
   /** Takes her to Configuración ▸ Pictogramas, and back afterwards (FR-2304). */
   onConfigure: () => void;
 }) {
   const current = useCurrentSet();
   const missing = current.state === 'ready' && (!current.value || current.value.missing);
+  const [word, setWord] = useState('');
+  const [id, setId] = useState('');
+
+  const add = (): void => {
+    const w = word.trim().toLowerCase();
+    const picture = id.trim();
+    if (!w || !picture) return;
+    onOverrides({ ...overrides, [w]: picture });
+    setWord('');
+    setId('');
+  };
+
+  const remove = (w: string): void => {
+    const next = { ...overrides };
+    delete next[w];
+    onOverrides(next);
+  };
 
   return (
     <fieldset className="fieldset-bare">
@@ -84,6 +118,61 @@ export function LearnerPictograms({ enabled, scope, onEnabled, onScope, onConfig
             The one line about the set, and only when it is the thing stopping her
             (FR-2303). One way to fix it, not two.
           */}
+          {/*
+            The per-child exception (FR-1612, P48).
+
+            Deliberately small and deliberately last: it is the rung she will use
+            twice a year, for the word her school has its own picture for. The
+            vault file stays the other editor — this is a control, not a
+            replacement for it.
+
+            An id and not a picture-picker, and that is honest rather than lazy:
+            choosing between drawings is what `ChooseWord` is for, and it works
+            over the words a report just flagged. This answers a different
+            question — «my school uses *this* one for «recreo»» — where she
+            already knows which.
+          */}
+          {!missing ? (
+          <details className="field">
+            <summary style={{ cursor: 'pointer' }}>
+              Dibujos suyos para palabras concretas
+              {Object.keys(overrides).length ? ` (${Object.keys(overrides).length})` : ''}
+            </summary>
+            <p className="field-help">
+              Para cuando en su clase una palabra tiene <em>su</em> dibujo: manda
+              sobre el vocabulario y sobre el juego, sólo para él.
+            </p>
+
+            {Object.keys(overrides).length ? (
+              <ul className="pick-list" role="list">
+                {Object.entries(overrides).sort(([a], [b]) => a.localeCompare(b))
+                  .map(([w, picture]) => (
+                  <li key={w} className="row" style={{ justifyContent: 'space-between' }}>
+                    <span className="small"><strong>{w}</strong> → <code>{picture}</code></span>
+                    <button type="button" className="btn btn-sm" onClick={() => remove(w)}>
+                      Quitar
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+
+            <div className="row gap2" style={{ flexWrap: 'wrap' }}>
+              <input className="input" aria-label="Palabra" placeholder="palabra"
+                     value={word} onChange={(e) => setWord(e.target.value)} />
+              <input className="input" aria-label="Número del dibujo" placeholder="nº del dibujo"
+                     value={id} onChange={(e) => setId(e.target.value)} />
+              <button type="button" className="btn btn-sm"
+                      disabled={!word.trim() || !id.trim()} onClick={add}>
+                Añadir
+              </button>
+            </div>
+            <p className="field-help">
+              El número está en el nombre del fichero, en la carpeta del juego.
+            </p>
+          </details>
+          ) : null}
+
           {missing ? (
             <Callout intent="decide" title="No tienes el juego de pictogramas">
               <p>

@@ -140,26 +140,63 @@ export function readCandidates(json: unknown, word: string): PictogramCandidate[
  */
 export function mergeSet(
   existing: readonly PictogramEntry[], fetched: readonly PictogramCandidate[],
+  /**
+   * Which publisher these came from (`023` FR-2116, decision P40).
+   *
+   * Recorded **per entry**, because a set assembled from two sources has to be
+   * attributable to both — and until this existed the render printed one
+   * publisher's credit over every pictogram on the sheet, which is a false
+   * attribution and legally worse than a missing one.
+   *
+   * Optional: `mergeSet` is also how a set she assembled by hand is normalised,
+   * and there is no publisher to name in that case.
+   */
+  from?: string,
 ): PictogramEntry[] {
   const byId = new Map<string, Set<string>>();
+  const source = new Map<string, string>();
+  /*
+   * Popularity survives the merge now (`024` FR-2217, decision P41).
+   *
+   * `readIndex` computed it, `planWholeSet` ordered the download with it, and this
+   * function **threw it away** when writing the metadata — so the chooser showed
+   * her the four drawings of «casa» in whatever order the file happened to hold,
+   * under a comment claiming popularity order and a ticked task saying the same.
+   */
+  const used = new Map<string, number>();
 
-  for (const e of existing) {
-    if (!ID.test(e.id)) continue;
+  const keep = (e: PictogramEntry | PictogramCandidate, publisher?: string) => {
     const words = byId.get(e.id) ?? new Set<string>();
     for (const k of e.keywords) if (normalise(k)) words.add(normalise(k));
     byId.set(e.id, words);
+
+    const entry = e as Partial<PictogramEntry>;
+    const declared = publisher ?? entry.from;
+    if (declared && !source.has(e.id)) source.set(e.id, declared);
+    // The larger number wins: a re-fetch of a busier catalogue is newer news, and
+    // an entry that arrived without one must not overwrite one that has it.
+    const pop = typeof entry.popularity === 'number' ? entry.popularity
+      : typeof (e as { popularity?: unknown }).popularity === 'number'
+        ? (e as { popularity: number }).popularity : undefined;
+    if (pop !== undefined && pop > (used.get(e.id) ?? -1)) used.set(e.id, pop);
+  };
+
+  for (const e of existing) {
+    if (!ID.test(e.id)) continue;
+    keep(e);
   }
-  for (const c of fetched) {
-    const words = byId.get(c.id) ?? new Set<string>();
-    for (const k of c.keywords) if (normalise(k)) words.add(normalise(k));
-    byId.set(c.id, words);
-  }
+  for (const c of fetched) keep(c, from);
 
   return [...byId.entries()]
     .filter(([, words]) => words.size > 0)
     // Sorted, so the file's diff is about what changed and not about fetch order.
     .sort(([a], [b]) => a.localeCompare(b))
-    .map(([id, words]) => ({ id, keywords: [...words].sort() }));
+    .map(([id, words]) => ({
+      id,
+      keywords: [...words].sort(),
+      ...(source.has(id) ? { from: source.get(id)! } : {}),
+      ...(used.has(id) ? { popularity: used.get(id)! } : {}),
+    }));
 }
 
 /**

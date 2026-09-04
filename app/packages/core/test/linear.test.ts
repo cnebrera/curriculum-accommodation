@@ -187,10 +187,30 @@ describe('what is always said, and what is never said', () => {
   });
 
   it('carries the pictogram attribution, which is a licence condition', () => {
+    /*
+     * From the sources the document names, not from a constant (review COD-08,
+     * decision P40). `attributionFor` used to default to ARASAAC's credit and
+     * both callers took the default, so a sheet made from any other set printed
+     * ARASAAC's credit — a **false** attribution, legally worse than none.
+     */
+    const doc = sheet([
+      '::: {#b1 .instruction data-picto="casa=1001@arasaac"}', 'Rodea la casa.', ':::',
+    ]);
+    const credits = new Map([['arasaac', {
+      author: 'Sergio Palao', source: 'ARASAAC · Gobierno de Aragón', licence: 'CC BY-NC-SA',
+    }]]);
+    expect(renderLinear(doc, { ...opts, modality: 'audio', pictogramCredits: credits }).text)
+      .toContain('Sergio Palao');
+  });
+
+  it('and says «the set you have» rather than inventing a credit', () => {
+    // A sheet from before publishers were recorded, or a set she built herself.
     const doc = sheet([
       '::: {#b1 .instruction data-picto="casa=1001"}', 'Rodea la casa.', ':::',
     ]);
-    expect(audio(doc).text).toContain('Sergio Palao');
+    const said = audio(doc).text;
+    expect(said).toMatch(/juego que tienes puesto/);
+    expect(said).not.toContain('Sergio Palao');
   });
 });
 

@@ -47,7 +47,7 @@ describe('a name never gets a pictogram, accents and all (018 FR-1610)', () => {
     const set = {
       root: '/x',
       byLanguage: new Map([['es', new Map([['maria', ['1']], ['casa', ['2']]])]]),
-      images: new Set(['1', '2']),
+      images: new Set(['1', '2']), from: new Map(), popularity: new Map(),
     };
     const names = nameWords(['María Nebrera']);
     expect(matchWord('María', set, { language: 'es', names }).kind).toBe('name');
@@ -68,7 +68,7 @@ describe('a name never gets a pictogram, accents and all (018 FR-1610)', () => {
     const set = {
       root: '/x',
       byLanguage: new Map([['es', new Map([['maria', ['7']]])]]),
-      images: new Set(['7']),
+      images: new Set(['7']), from: new Map(), popularity: new Map(),
     };
     const chosen = forLanguage(choose(emptyVocabulary(), 'es', 'maria', '7'), 'es');
     expect(matchWord('María', set, {

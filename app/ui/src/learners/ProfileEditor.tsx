@@ -39,8 +39,9 @@ export function ProfileEditor({ code, onSaved, onConfigure }: {
    * plain one is being marked out by the tool meant to include him. No axis value
    * reaches it, so this checkbox is the only way it turns on.
    */
-  const [pictos, setPictos] = useState<{ enabled: boolean; scope: string }>(
-    { enabled: false, scope: 'vocabulary' });
+  const [pictos, setPictos] = useState<{
+    enabled: boolean; scope: string; overrides: Record<string, string>;
+  }>({ enabled: false, scope: 'vocabulary', overrides: {} });
   /**
    * Everything the schema knows and this form does not (T092c).
    *
@@ -77,16 +78,19 @@ export function ProfileEditor({ code, onSaved, onConfigure }: {
         setPictos({
           enabled: pictograms?.enabled === true,
           scope: pictograms?.scope ?? 'vocabulary',
+          overrides: pictograms?.overrides ?? {},
         });
         /*
-         * `overrides` is carried rather than surfaced: her school's own picture for
-         * «recreo» is a thing she edits in the vault, and a form field for a map
-         * would be a worse editor than a text file.
+         * `overrides` used to be carried here rather than surfaced, on the argument
+         * that «a form field for a map would be a worse editor than a text file».
+         * True, and it left a MUST of `018` (FR-1612, the first rung of the
+         * precedence in `match.ts`) satisfiable **only** by editing YAML by hand —
+         * and G30, which recorded exactly that, was closed «by `024`», which built
+         * the vocabulary chooser and not this one (review COD-25, decision P48).
+         *
+         * It is a control now, and the vault file is still the other editor.
          */
-        setCarried({
-          ...rest,
-          ...(pictograms?.overrides ? { _pictoOverrides: pictograms.overrides } : {}),
-        });
+        setCarried({ ...rest });
         setRepairs(l.repairs ?? []);
       });
       void resolveName.run(code).then((n) => setName(n ?? ''));
@@ -136,7 +140,7 @@ export function ProfileEditor({ code, onSaved, onConfigure }: {
           enabled: true,
           scope: pictos.scope,
           decided_on: new Date().toISOString().slice(0, 10),
-          overrides: (carried['_pictoOverrides'] as Record<string, string>) ?? {},
+          overrides: pictos.overrides,
         },
       } : {}),
     });
@@ -214,8 +218,10 @@ export function ProfileEditor({ code, onSaved, onConfigure }: {
       <LearnerPictograms
         enabled={pictos.enabled}
         scope={pictos.scope}
+        overrides={pictos.overrides}
         onEnabled={(on) => setPictos((p) => ({ ...p, enabled: on }))}
         onScope={(scope) => setPictos((p) => ({ ...p, scope }))}
+        onOverrides={(overrides) => setPictos((p) => ({ ...p, overrides }))}
         onConfigure={onConfigure} />
 
       <div className="row">

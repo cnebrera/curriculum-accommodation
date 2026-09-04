@@ -3,6 +3,7 @@ import { learnerFacing } from '../ir/parse.js';
 import { draftMark } from './draft.js';
 import { attributionFor } from './attribution.js';
 import { parsePicto } from '../pictograms/apply.js';
+import type { Attribution } from './attribution.js';
 
 /**
  * One linear rendering, two modalities (019 T012-T019, FR-1708…1715).
@@ -50,6 +51,13 @@ export interface LinearOptions {
   spatialPhrases: readonly string[];
   /** What to say where the page has an answer box. Also corpus. */
   answerSpace: string;
+  /**
+   * What each pictogram source says about itself (COD-08, P40).
+   *
+   * Same map the HTML renderer takes, and for the same reason: the linear export
+   * carries the attribution too, so it printed the same false credit.
+   */
+  pictogramCredits?: ReadonlyMap<string, Attribution>;
   /** Cleared only by the review step (`007` FR-509). */
   signedOff?: boolean;
 }
@@ -205,7 +213,7 @@ export function renderLinear(doc: IRDocument, opts: LinearOptions): Linear {
     if (hasAnswerSpace(b)) push(opts.answerSpace, b.id);
   }
 
-  const attribution = attributionFor(doc);
+  const attribution = attributionFor(doc, opts.pictogramCredits ?? new Map());
   if (attribution) push(attribution);
 
   return {

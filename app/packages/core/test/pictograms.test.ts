@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   readSet, matchWord, reportSkipped, applyPictograms, parsePicto, normalise,
-  parseIR, hasImage, type SetReader, type PictogramSet,
+  parseIR, hasImage, mergeSet, mostUsedFirst, type SetReader, type PictogramSet,
 } from '../src/index.js';
 
 /**
@@ -18,9 +18,10 @@ import {
  */
 const FIXTURE: Record<string, string> = {
   '/set/pictograms.es.json': JSON.stringify([
-    { id: '2483', keywords: ['rana', 'sapo'] },
+    // The two optional fields, on the entries a fetch would have written (P40/P41).
+    { id: '2483', keywords: ['rana', 'sapo'], from: 'arasaac', popularity: 900 },
     // Deliberate ambiguity: two pictures claim «rana».
-    { id: '2484', keywords: ['rana'] },
+    { id: '2484', keywords: ['rana'], from: 'arasaac', popularity: 12 },
     { id: '1001', keywords: ['casa'] },
     { id: '1002', keywords: ['árbol'] },
     { id: '9999', keywords: ['recreo'] },
@@ -51,6 +52,33 @@ describe('reading a set she brought', () => {
     const set = await loaded();
     expect(set.byLanguage.get('es')?.get('rana')).toEqual(['2483', '2484']);
     expect(set.byLanguage.get('es')?.get('sapo')).toEqual(['2483']);
+  });
+
+  /**
+   * The two fields a fetch records, and the reader's tolerance for their absence
+   * (review COD-08/COD-09, decisions P40 and P41).
+   *
+   * `PictogramEntry` was `{ id, keywords }` and nothing else: `mergeSet` kept no
+   * publisher — so a set built from two sources was attributed to one of them, and
+   * the render printed a **false** credit — and it threw popularity away, so «los
+   * candidatos, del más usado al menos» could not be true however many tasks said
+   * it was.
+   */
+  it('reads where each pictogram came from, and how used it is', async () => {
+    const set = await loaded();
+    expect(set.from.get('2483')).toBe('arasaac');
+    expect(set.popularity.get('2483')).toBe(900);
+    expect(set.popularity.get('2484')).toBe(12);
+  });
+
+  it('tolerates their absence, which is every hand-built set', async () => {
+    // `018` FR-2102's «no change to the contract»: an entry without them is valid,
+    // and «I do not know where this came from» is answered honestly rather than
+    // guessed at.
+    const set = await loaded();
+    expect(set.from.has('1001')).toBe(false);
+    expect(set.popularity.has('1001')).toBe(false);
+    expect(set.byLanguage.get('es')?.get('casa')).toEqual(['1001']);
   });
 
   it('reads each language separately', async () => {
@@ -250,5 +278,94 @@ describe('the exam rule', () => {
     const { doc: out } = applyPictograms(mixed, await loaded(), { language: 'es', scope: 'all' });
     expect(out.blocks.find((b) => b.id === 'b1')?.attrs['data-picto']).toBeDefined();
     expect(out.blocks.find((b) => b.id === 'q1')?.attrs['data-picto']).toBeUndefined();
+  });
+});
+
+/**
+ * Popularity survives the merge, so «most-used first» can be true
+ * (review COD-09, decision P41).
+ *
+ * `024` FR-2217 and US2 both say the candidates are shown «largest-used first», and
+ * T017 was ticked as «popularity-ordered». But `popularity` lived only in
+ * `readIndex`/`planWholeSet` during the download — it ordered *arrival* — and
+ * `mergeSet` **threw it away** when writing `pictograms.<lang>.json`. The data was
+ * not on disk, so `candidatesFor` returned the ids in whatever order the file held,
+ * and the chooser's own comment claimed an order no code produced.
+ */
+describe('the catalogue remembers how used a pictogram is', () => {
+  it('keeps popularity and the publisher through a merge', () => {
+    const merged = mergeSet([], [
+      { id: '1001', keywords: ['casa'], popularity: 900 } as never,
+      { id: '2002', keywords: ['casa'], popularity: 12 } as never,
+    ], 'arasaac');
+
+    expect(merged.map((e) => e.id)).toEqual(['1001', '2002']);
+    expect(merged.every((e) => e.from === 'arasaac')).toBe(true);
+    expect(merged.find((e) => e.id === '1001')?.popularity).toBe(900);
+  });
+
+  it('keeps what a hand-built set already recorded', () => {
+    // A fetch is additive by definition, and an entry that arrives with no number
+    // must not erase one that has it.
+    const merged = mergeSet(
+      [{ id: '1001', keywords: ['casa'], from: 'mio', popularity: 5 }],
+      [{ id: '1001', keywords: ['vivienda'] }],
+    );
+    expect(merged[0]).toMatchObject({ from: 'mio', popularity: 5 });
+    expect(merged[0]!.keywords).toEqual(['casa', 'vivienda']);
+  });
+
+  it('takes the larger number when a re-fetch brings a newer one', () => {
+    const merged = mergeSet(
+      [{ id: '1001', keywords: ['casa'], popularity: 5 }],
+      [{ id: '1001', keywords: ['casa'], popularity: 900 } as never],
+    );
+    expect(merged[0]!.popularity).toBe(900);
+  });
+
+  it('records nothing where there is nothing to record', () => {
+    // A set she assembled by hand has no publisher and no download count, and
+    // inventing either would be the same false-attribution mistake in the data.
+    const merged = mergeSet([], [{ id: '1001', keywords: ['casa'] }]);
+    expect(merged[0]).not.toHaveProperty('from');
+    expect(merged[0]).not.toHaveProperty('popularity');
+  });
+});
+
+
+/**
+ * Most-used first, and testable (`024` FR-2217, decision P41).
+ *
+ * The first version of this fix was two lines inside `candidatesFor`, which reaches
+ * the settings and the filesystem — so nothing in the offline suite could see it,
+ * and it **survived being deleted**: every test still passed with the ordering
+ * gone. Which is the same shape as the defect it was fixing, arriving in the fix.
+ */
+describe('the candidates she is shown are ordered', () => {
+  it('puts the most-used drawing first', () => {
+    const order = mostUsedFirst(['2002', '1001', '3003'], new Map([
+      ['1001', 12], ['2002', 900], ['3003', 40],
+    ]));
+    expect(order).toEqual(['2002', '3003', '1001']);
+  });
+
+  it('is stable when nothing knows how used they are', () => {
+    // An arbitrary order that changes between openings is worse than one that does
+    // not: she is comparing four drawings of «casa» by eye.
+    const ids = ['3003', '1001', '2002'];
+    expect(mostUsedFirst(ids, new Map())).toEqual(['1001', '2002', '3003']);
+    expect(mostUsedFirst(ids, new Map())).toEqual(mostUsedFirst([...ids].reverse(), new Map()));
+  });
+
+  it('puts an unknown one after every known one', () => {
+    // Absent is not zero anywhere else in this project, and it is not here either:
+    // «I do not know» sorts below «hardly used», because a real number is evidence.
+    expect(mostUsedFirst(['aaa', 'bbb'], new Map([['bbb', 0]]))).toEqual(['bbb', 'aaa']);
+  });
+
+  it('does not mutate what it was given', () => {
+    const ids = ['2002', '1001'];
+    mostUsedFirst(ids, new Map([['1001', 5]]));
+    expect(ids).toEqual(['2002', '1001']);
   });
 });

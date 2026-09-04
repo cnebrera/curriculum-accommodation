@@ -2,6 +2,8 @@ import type { IRDocument, Block } from '../ir/types.js';
 import { draftMark } from './draft.js';
 import { learnerFacing } from '../ir/parse.js';
 import { zip, type ZipEntry } from './zip.js';
+import { parsePicto } from '../pictograms/apply.js';
+import { attributionFor, pictogramAlt, type Attribution } from './attribution.js';
 
 /**
  * IR → ODT, the document she can fix by hand (019 US1, FR-1704…1707).
@@ -54,7 +56,60 @@ function inline(text: string): string {
  * undifferentiated body text — which is what makes the exported document
  * something she can navigate rather than a wall she has to re-read.
  */
-function renderBlock(b: Block): string {
+/**
+ * The pictograms of one block, as ODF draw frames (review COD-24, decision P47).
+ *
+ * ## What used to happen
+ *
+ * Nothing. This file contained not one reference to `data-picto`, an image or an
+ * attribution, so a sheet **with** pictograms exported to ODT came out without
+ * them, with no marked gap and **without saying anything** — a silent loss of a
+ * support she had turned on, in the modality that exists precisely so she can
+ * retouch and reprint. `019` FR-1702 claims «the same adapted IR» in every
+ * modality and its coverage table called it «satisfied by absence»; here the
+ * absence was the defect.
+ *
+ * ## Word beside picture, as everywhere else
+ *
+ * Never the picture alone. On a black-and-white photocopy — the delivery format,
+ * not an edge case (`006` FR-427) — a pictogram loses the colour distinctions its
+ * design uses, and the word is what still works. `instructions/pictograms.md`
+ * states it as a rule, and the HTML renderer and this one both keep it.
+ *
+ * An id whose image is absent becomes a **named gap**, exactly as in the HTML
+ * (`018` FR-1616): a moved set degrades the sheet, it does not fail the export.
+ */
+function renderPictos(b: Block, images?: ReadonlyMap<string, ImageBytes>): string {
+  const pairs = parsePicto(b.attrs['data-picto']);
+  if (pairs.length === 0) return '';
+
+  const items = pairs.map(({ word, id }) => {
+    const image = images?.get(id);
+    if (!image) {
+      // The word and the id, so the gap traces to a decision (Principle VI).
+      return `<text:p text:style-name="Apoyo">[${esc(word)} · falta el dibujo `
+        + `${esc(id)}]</text:p>`;
+    }
+    /*
+     * A frame per pictogram, sized in centimetres because ODF has no pixels and a
+     * word processor needs a box to lay out. 2 cm is `instructions/pictograms.md`'s
+     * 20 mm minimum — the size below which a photocopy stops being legible.
+     */
+    return '<text:p text:style-name="Apoyo">'
+      + `<draw:frame draw:name="${esc(`picto-${b.id}-${id}`)}" text:anchor-type="as-char"`
+      + ' svg:width="2cm" svg:height="2cm">'
+      + `<draw:image xlink:href="${esc(image.path)}" xlink:type="simple"`
+      + ' xlink:show="embed" xlink:actuate="onLoad"/>'
+      + `<svg:title>${esc(pictogramAlt(word))}</svg:title>`
+      + `</draw:frame> ${esc(word)}</text:p>`;
+  });
+  return items.join('\n');
+}
+
+/** One pictogram, ready to be written into the package. */
+interface ImageBytes { path: string; data: Uint8Array; mediaType: string }
+
+function renderBlock(b: Block, images?: ReadonlyMap<string, ImageBytes>): string {
   const style = STYLE_FOR[b.classes.find((c) => c in STYLE_FOR) ?? 'explanation'] ?? 'Cuerpo';
   const number = b.attrs['data-number'];
 
@@ -96,7 +151,8 @@ function renderBlock(b: Block): string {
     out.push(`<text:p text:style-name="${style}">${prefix}${inline(para.replace(/\n/g, ' '))}</text:p>`);
   });
 
-  return out.join('\n');
+  const pictos = renderPictos(b, images);
+  return [...out, ...(pictos ? [pictos] : [])].join('\n');
 }
 
 const STYLE_FOR: Record<string, string> = {
@@ -146,6 +202,24 @@ const STYLES_XML = `<?xml version="1.0" encoding="UTF-8"?>
  </office:styles>
 </office:document-styles>`;
 
+/**
+ * The manifest, with an entry per picture (P47).
+ *
+ * ODF requires every part of the package to be declared here. A picture written
+ * into the ZIP and missing from the manifest is a picture a word processor may
+ * silently drop — which would be the same silent loss in a new place.
+ */
+function manifestFor(pictures: ReadonlyMap<string, ImageBytes>): string {
+  const extra = [...pictures.values()]
+    .sort((a, b) => a.path.localeCompare(b.path))
+    .map((p) => ` <manifest:file-entry manifest:full-path="${esc(p.path)}"`
+      + ` manifest:media-type="${esc(p.mediaType)}"/>`)
+    .join('\n');
+  return extra
+    ? MANIFEST.replace('</manifest:manifest>', `${extra}\n</manifest:manifest>`)
+    : MANIFEST;
+}
+
 const MANIFEST = `<?xml version="1.0" encoding="UTF-8"?>
 <manifest:manifest xmlns:manifest="urn:oasis:names:tc:opendocument:xmlns:manifest:1.0"
   manifest:version="1.3">
@@ -179,7 +253,40 @@ export interface OdtOptions {
   /** Omits the draft mark. Derived from the document, never passed by a screen. */
   signedOff?: boolean;
   lang?: string;
+  /**
+   * Pictogram id → `data:` URI, the same map the HTML renderer takes (P47).
+   *
+   * The same shape on purpose: one caller computes it once and both modalities
+   * render the same pictures. ODF wants bytes in the package rather than a URI, so
+   * the `data:` payload is decoded here — which keeps the shell's job identical
+   * for both outputs.
+   */
+  pictogramImages?: ReadonlyMap<string, string>;
+  /** What each pictogram source says about itself (COD-08, P40). */
+  pictogramCredits?: ReadonlyMap<string, Attribution>;
 }
+
+/**
+ * `data:image/png;base64,…` → bytes and a media type.
+ *
+ * Returns `null` for anything it does not recognise rather than throwing: an
+ * unreadable image is a named gap, and a broken export would lose the whole sheet
+ * over one picture.
+ */
+function decodeDataUri(uri: string): { data: Uint8Array; mediaType: string } | null {
+  const m = /^data:([a-z]+\/[a-z0-9.+-]+);base64,(.*)$/i.exec(uri);
+  if (!m) return null;
+  try {
+    const raw = atob(m[2]!);
+    const data = new Uint8Array(raw.length);
+    for (let i = 0; i < raw.length; i++) data[i] = raw.charCodeAt(i);
+    return { data, mediaType: m[1]!.toLowerCase() };
+  } catch { return null; }
+}
+
+const EXTENSION: Record<string, string> = {
+  'image/png': 'png', 'image/jpeg': 'jpg', 'image/webp': 'webp', 'image/svg+xml': 'svg',
+};
 
 export function renderODT(doc: IRDocument, opts: OdtOptions = {}): Uint8Array {
   const lang = opts.lang ?? (typeof doc.frontMatter['lang'] === 'string' ? doc.frontMatter['lang'] : 'es');
@@ -197,18 +304,57 @@ export function renderODT(doc: IRDocument, opts: OdtOptions = {}): Uint8Array {
     ? `<text:p text:style-name="Borrador">${esc(mark.banner)}</text:p>`
     : '';
 
-  const body = doc.blocks.filter(learnerFacing).map(renderBlock).join('\n');
+  /*
+   * The pictures, decoded into the package (P47). Written under `Pictures/` with a
+   * manifest entry each, which is what ODF requires and what makes the ODT carry
+   * the same pictograms as the PDF — «one document, N outputs» for real.
+   */
+  const pictures = new Map<string, ImageBytes>();
+  /*
+   * Only the ids this document actually uses. The caller's map may hold more —
+   * `pictogramImagesFor` is asked for a batch — and a package carrying pictures
+   * the sheet never shows is a bigger file for nothing, plus a licence credit for
+   * a picture nobody sees.
+   */
+  const wanted = new Set(doc.blocks.flatMap(
+    (b) => parsePicto(b.attrs['data-picto']).map((pp) => pp.id)));
+  for (const [id, uri] of opts.pictogramImages ?? []) {
+    if (!wanted.has(id)) continue;
+    const decoded = decodeDataUri(uri);
+    if (!decoded) continue;
+    const ext = EXTENSION[decoded.mediaType] ?? 'png';
+    pictures.set(id, { path: `Pictures/${id}.${ext}`, ...decoded });
+  }
+
+  const body = doc.blocks.filter(learnerFacing)
+    .map((b) => renderBlock(b, pictures)).join('\n');
+
+  /*
+   * And the credit, at the foot, from the sources the document actually used
+   * (COD-08, P40). It reached the PDF and the linear exports and **not this one**,
+   * so the modality she uses to retouch and reprint was the one printing a
+   * pictogram with no attribution at all.
+   */
+  const credit = attributionFor(doc, opts.pictogramCredits ?? new Map());
+  const attribution = credit
+    ? credit.split('\n').map((line) =>
+        `<text:p text:style-name="Apoyo">${esc(line)}</text:p>`).join('\n')
+    : '';
 
   const content = `<?xml version="1.0" encoding="UTF-8"?>
 <office:document-content xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0"
   xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0"
   xmlns:style="urn:oasis:names:tc:opendocument:xmlns:style:1.0"
   xmlns:fo="urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0"
+  xmlns:draw="urn:oasis:names:tc:opendocument:xmlns:drawing:1.0"
+  xmlns:svg="urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0"
+  xmlns:xlink="http://www.w3.org/1999/xlink"
   office:version="1.3">
  <office:body>
   <office:text text:use-soft-page-breaks="true" xml:lang="${esc(lang)}">
 ${banner}
 ${body}
+${attribution}
   </office:text>
  </office:body>
 </office:document-content>`;
@@ -219,10 +365,14 @@ ${body}
    */
   const entries: ZipEntry[] = [
     { path: 'mimetype', data: 'application/vnd.oasis.opendocument.text' },
-    { path: 'META-INF/manifest.xml', data: MANIFEST },
+    { path: 'META-INF/manifest.xml', data: manifestFor(pictures) },
     { path: 'content.xml', data: content },
     { path: 'styles.xml', data: STYLES_XML },
     { path: 'meta.xml', data: META },
+    // Sorted, so the package's bytes do not depend on map insertion order — the
+    // same determinism argument the ZIP writer and `META` already make.
+    ...[...pictures.values()].sort((a, b) => a.path.localeCompare(b.path))
+      .map((p): ZipEntry => ({ path: p.path, data: p.data })),
   ];
 
   return zip(entries);

@@ -35,6 +35,31 @@ import { logger } from '../log.js';
 export interface PictogramEntry {
   id: string;
   keywords: string[];
+  /**
+   * Which publisher this pictogram came from (`023` FR-2116, decision P40).
+   *
+   * Optional, and its absence is the honest state of every set assembled by hand
+   * or fetched before this existed. Without it a set built from two sources was
+   * **attributed to one of them** — the render printed «Autor pictogramas: Sergio
+   * Palao · Origen: ARASAAC» over pictograms that were not ARASAAC's, and a false
+   * attribution is legally worse than a missing one.
+   *
+   * The reader tolerates fields it does not know (`018` FR-2102's «no change to
+   * the contract»), which is what lets this be added without breaking a set she
+   * already has.
+   */
+  from?: string;
+  /**
+   * How much the publisher's own catalogue says this pictogram is used
+   * (`024` FR-2217, decision P41).
+   *
+   * Optional for the same reason. It exists so «los candidatos, del más usado al
+   * menos» can be true: `readIndex` had this number, `mergeSet` **threw it away**
+   * when writing the metadata, and the chooser then showed her the four drawings
+   * of «casa» in whatever order the file happened to hold — with a comment above
+   * it claiming popularity order and a ticked task saying the same.
+   */
+  popularity?: number;
 }
 
 export interface PictogramSet {
@@ -44,6 +69,16 @@ export interface PictogramSet {
   byLanguage: Map<string, Map<string, string[]>>;
   /** Ids for which an image file was found. */
   images: Set<string>;
+  /**
+   * Id → the publisher it came from, for the ids that record one (P40).
+   *
+   * A map rather than a field on the keyword index, because the question asked of
+   * it is «where did *this id* come from» — the attribution of a document is
+   * derived from the ids it actually used.
+   */
+  from: Map<string, string>;
+  /** Id → how used the publisher says it is, for ordering the chooser (P41). */
+  popularity: Map<string, number>;
   /** What the licence file said, when there is one. Shown to her, never parsed. */
   licence?: string;
 }
@@ -83,6 +118,9 @@ export async function readSet(root: string, reader: SetReader): Promise<SetReadi
 
   const byLanguage = new Map<string, Map<string, string[]>>();
   const images = new Set<string>();
+  /** Per id, and across languages: an id is one pictogram whatever calls it. */
+  const from = new Map<string, string>();
+  const popularity = new Map<string, number>();
 
   for (const name of entries) {
     const img = IMAGE.exec(name);
@@ -135,6 +173,17 @@ export async function readSet(root: string, reader: SetReader): Promise<SetReadi
         : [];
       if (!id || keywords.length === 0) continue;
 
+      /*
+       * Two optional fields, and both absent is the normal state of a set she
+       * assembled by hand (P40, P41). Read here rather than guessed anywhere else:
+       * an id with no `from` is attributed to the set she configured, not to
+       * whichever publisher the code happened to know about.
+       */
+      if (typeof e['from'] === 'string' && e['from'].trim()) from.set(id, e['from'].trim());
+      if (typeof e['popularity'] === 'number' && Number.isFinite(e['popularity'])) {
+        popularity.set(id, e['popularity']);
+      }
+
       for (const keyword of keywords) {
         const key = normalise(keyword);
         if (!key) continue;
@@ -178,7 +227,7 @@ export async function readSet(root: string, reader: SetReader): Promise<SetReadi
     ?? undefined;
 
   return {
-    set: { root, byLanguage, images, ...(licence ? { licence } : {}) },
+    set: { root, byLanguage, images, from, popularity, ...(licence ? { licence } : {}) },
     problems,
     summary: describe(byLanguage, images),
   };
@@ -208,3 +257,30 @@ function describe(
 export const normalise = (s: string): string =>
   s.normalize('NFD').replace(/[̀-ͯ]/g, '')
     .toLowerCase().replace(/\s+/g, ' ').trim();
+
+
+/**
+ * Candidate ids, most-used first (`024` FR-2217, decision P41).
+ *
+ * ## Why this is a function in `core` and not two lines in the shell
+ *
+ * Because the two lines in the shell could not be tested. `candidatesFor` reaches
+ * the settings and the filesystem, so nothing in the offline suite can see it —
+ * and the first version of this fix lived there and **survived being deleted**:
+ * every test still passed with the ordering gone, which is the same shape as the
+ * defect it was fixing. FR-2217 and US2 both say «largest-used first», T017 was
+ * ticked as «popularity-ordered», and the number was not on disk at all.
+ *
+ * By id as the tie-break, so a set with no popularity recorded still has a
+ * **stable** order: an arbitrary order that changes between openings is worse than
+ * an arbitrary one that does not.
+ *
+ * It is an order and not a recommendation. Which pictogram is right is hers
+ * (`018` FR-1609, `024` FR-2203) — this only decides which she is shown first.
+ */
+export function mostUsedFirst(
+  ids: readonly string[], popularity: ReadonlyMap<string, number>,
+): string[] {
+  return [...ids].sort((a, b) =>
+    (popularity.get(b) ?? -1) - (popularity.get(a) ?? -1) || a.localeCompare(b));
+}

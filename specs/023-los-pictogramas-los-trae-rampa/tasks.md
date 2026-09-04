@@ -25,6 +25,14 @@ arranged so that any change to it shows up as a diff nobody asked for.
 - [X] T002 Parse it in `app/packages/core/src/pictograms/publisher.ts`, with a guard in
   `corpus-guarantees.test.ts` asserting every field the code reads is present — the
   twelfth unread field is not shipping in this feature (backlog G25).
+  *(**Only half of FR-2116 until 2026-09-04**, review COD-08, decision P40. These two
+  tasks cite the requirement and cover the **catalogue**; its other half — «the
+  attribution records which publisher each pictogram came from, so a set built from two
+  sources is attributed correctly» — had no data anywhere: `PictogramEntry` was
+  `{ id, keywords }`, `mergeSet` kept no publisher, and the inventory held a single
+  global one. Meanwhile the render printed a hardcoded ARASAAC credit over every
+  pictogram, whatever set it came from. Entries carry `from` now, `data-picto` records
+  `word=id@publisher`, and the credit is derived from the sources the document used.)*
 
 ## Phase 2: Foundational — what is sent, and what is written
 

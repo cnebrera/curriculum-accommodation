@@ -141,7 +141,18 @@ export function applyPictograms(
         continue;
       }
 
-      here.push(`${word}=${m.id}`);
+      /*
+       * And **where the picture came from** (`023` FR-2116, decision P40).
+       *
+       * `word=id@publisher`, with the publisher omitted when the set does not
+       * record one — which is every set assembled by hand. Recorded in the
+       * document because that is where the attribution is derived from: a sheet
+       * built from two sources has to credit both, and until this existed the
+       * render printed one publisher's credit over all of them. A false
+       * attribution is legally worse than a missing one.
+       */
+      const publisher = set.from.get(m.id);
+      here.push(publisher ? `${word}=${m.id}@${publisher}` : `${word}=${m.id}`);
       used.push({ blockId: b.id, word, id: m.id, source: m.source });
     }
 
@@ -157,11 +168,28 @@ export function applyPictograms(
   return { doc, used, skipped: reportSkipped(matches) };
 }
 
-/** What `data-picto` holds, parsed back. */
-export function parsePicto(value: string | undefined): Array<{ word: string; id: string }> {
+/**
+ * What `data-picto` holds, parsed back.
+ *
+ * `word=id` or `word=id@publisher`. The publisher is optional and its absence is
+ * the state of every sheet made before it was recorded — read as «the set she has
+ * configured», never as a particular publisher, which is the whole point of
+ * recording it (P40).
+ */
+export function parsePicto(
+  value: string | undefined,
+): Array<{ word: string; id: string; from?: string }> {
   if (!value) return [];
   return value.split(/\s+/).filter(Boolean).map((pair) => {
     const at = pair.lastIndexOf('=');
-    return at < 0 ? { word: pair, id: '' } : { word: pair.slice(0, at), id: pair.slice(at + 1) };
+    if (at < 0) return { word: pair, id: '' };
+    const word = pair.slice(0, at);
+    const rest = pair.slice(at + 1);
+    // Ids are digits and ASCII letters (`fetch.ts`'s allowlist), so `@` cannot be
+    // part of one — which is what makes it a safe separator rather than a guess.
+    const sep = rest.indexOf('@');
+    return sep < 0
+      ? { word, id: rest }
+      : { word, id: rest.slice(0, sep), from: rest.slice(sep + 1) };
   }).filter((p) => p.id !== '');
 }

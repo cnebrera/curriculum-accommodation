@@ -36,7 +36,8 @@ const render = (enabled: boolean, hasSet = false) => {
   installed = hasSet;
   return renderToStaticMarkup(
     <LearnerPictograms enabled={enabled} scope="vocabulary"
-                       onEnabled={() => {}} onScope={() => {}} onConfigure={() => {}} />);
+                       overrides={{}} onEnabled={() => {}} onScope={() => {}}
+      onOverrides={() => {}} onConfigure={() => {}} />);
 };
 
 describe('what is not on it any more', () => {
@@ -115,6 +116,40 @@ describe('what is on it', () => {
     expect(html).toContain('Traer los pictogramas →');
   });
 
+  /**
+   * FR-1612, decision P48 — the rung that had no control at all.
+   *
+   * `match.ts`'s precedence is name → **override** → vocabulary → the set's single
+   * answer, and the override was «carried rather than surfaced»: `ProfileEditor`
+   * parked it in `_pictoOverrides` with nothing to edit it, and `ChooseWord` writes
+   * only to the global vocabulary. A MUST of `018` satisfiable only by editing YAML
+   * by hand — and G30, which said exactly that, was closed «by `024`», which built
+   * the vocabulary chooser and not this.
+   */
+  it('lets her set a drawing of her own for one word (FR-1612)', () => {
+    const html = render(true, true);
+    expect(html).toContain('Dibujos suyos para palabras concretas');
+    expect(html).toContain('aria-label="Palabra"');
+    expect(html).toContain('aria-label="Número del dibujo"');
+  });
+
+  it('does not offer it while there is no set to override', () => {
+    /*
+     * With no drawings there is nothing to point a word at, and FR-2303 wants
+     * **one** way to fix a missing set. A second control in that state is the
+     * «one way, not two» rule broken by a helpful addition.
+     */
+    expect(render(true, false)).not.toContain('Dibujos suyos para palabras concretas');
+  });
+
+  it('keeps it collapsed, because it is a twice-a-year decision', () => {
+    // Behind a `<details>` with no `open`: the page she sees every other day stays
+    // three fields long, which is what `025` was for.
+    const html = render(true, true);
+    expect(html).toMatch(/<details[^>]*>/);
+    expect(html).not.toMatch(/<details[^>]*\sopen/);
+  });
+
   it('says nothing about the set when nothing is wrong', () => {
     // One more line about something that is fine is one more line, and the point of
     // this component is that there are three and not thirty.
@@ -124,7 +159,24 @@ describe('what is on it', () => {
   });
 });
 
+/**
+ * The sentences on the page, **excluding what a closed `<details>` hides**.
+ *
+ * Amended 2026-09-04, when the per-child override control landed (FR-1612,
+ * decision P48). The bound exists because «la página que ve cada dos días es
+ * corta», and a collapsed disclosure is not on that page: she sees one line of
+ * summary and opens it twice a year, for the word her school has its own drawing
+ * for. Counting its body would either forbid the control or make the bound
+ * meaningless.
+ *
+ * The summary line **is** counted — it is on the page — and so is everything
+ * outside a `<details>`, which is where the rule bites.
+ */
 const sentencesIn = (html: string): string[] => html
+  .replace(/<details[\s\S]*?<\/details>/g, (block) => {
+    const summary = /<summary[^>]*>([\s\S]*?)<\/summary>/.exec(block);
+    return summary ? summary[1]! : '';
+  })
   .replace(/<[^>]+>/g, ' ')
   .replace(/&[a-z]+;/g, ' ')
   .replace(/\s+/g, ' ')
@@ -160,12 +212,23 @@ describe('and it is short (SC-2303)', () => {
      * sheets, that it is a one-off for everybody, and the way to fix it.
      *
      * The bound was `<= 5` while the title and this comment said three — a review
-     * pointed out the test read as tighter than it enforced. Measured delta is 3.
+     * pointed out the test read as tighter than it enforced.
+     *
+     * **Measured on the exception itself since 2026-09-04, not as a delta** (P48).
+     * The delta worked while the missing-set callout was the only difference between
+     * the two states; the per-child override control is offered *only when the set
+     * is there*, so the two states now differ in both directions and a subtraction
+     * measures neither. Counting the callout's own sentences is what the title
+     * always claimed, and it does not move when something unrelated is added.
      */
-    const missing = sentencesIn(render(true, false));
-    const ordinary = sentencesIn(render(true, true));
-    expect(missing.length - ordinary.length,
-      `the exception is too talkative:\n${missing.join('\n')}`).toBe(3);
+    const html = render(true, false);
+    const callout = /<div class="callout[\s\S]*?<\/div>\s*<\/div>/.exec(html)?.[0]
+      ?? html.slice(html.indexOf('No tienes el juego de pictogramas'));
+    const sentences = sentencesIn(callout);
+    expect(sentences.length, `the exception is too talkative:\n${sentences.join('\n')}`)
+      .toBeLessThanOrEqual(3);
+    // And it really is measuring the exception rather than an empty slice.
+    expect(sentences.length).toBeGreaterThanOrEqual(2);
   });
 
   /*

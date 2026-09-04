@@ -1,5 +1,5 @@
 import { draftMark } from './draft.js';
-import { attributionFor, pictogramAlt } from './attribution.js';
+import { attributionFor, pictogramAlt, type Attribution } from './attribution.js';
 import { parsePicto } from '../pictograms/apply.js';
 import { createRenderer, learnerFacing } from '../ir/parse.js';
 import type { IRDocument, Block } from '../ir/types.js';
@@ -50,6 +50,20 @@ export interface RenderOptions {
    * set degrades the sheet rather than failing the render.
    */
   pictogramImages?: ReadonlyMap<string, string>;
+  /**
+   * What each pictogram source says about itself (review COD-08, decision P40).
+   *
+   * Publisher id → its required credit, with `''` for «the set she has
+   * configured». **Which sources apply is derived from the document**; this only
+   * says what each one requires, and the caller reads it from the publisher
+   * catalogue and the set's own LICENSE.
+   *
+   * Empty or absent still prints a line: `attributionFor` names the source it
+   * cannot describe rather than inventing a credit for it, which is the defect
+   * this replaced — a hardcoded ARASAAC credit printed over pictograms that were
+   * not ARASAAC's.
+   */
+  pictogramCredits?: ReadonlyMap<string, Attribution>;
 }
 
 export interface Presentation {
@@ -205,7 +219,7 @@ export function renderHTML(doc: IRDocument, opts: RenderOptions = {}): string {
    *
    * If it were dropped, **her** sheet would be the infringing document, not ours.
    */
-  const attribution = attributionFor(doc);
+  const attribution = attributionFor(doc, opts.pictogramCredits ?? new Map());
   const credit = attribution === null ? '' :
     `<footer class="picto-credit">${esc(attribution)}</footer>`;
 

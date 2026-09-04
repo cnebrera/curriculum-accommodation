@@ -3,7 +3,7 @@ import {
   readSet, pictogramVaultNote, parsePictogramFetchCorpus, RampaError, fetchGate,
   updateStatus, readIndex, urlFor, logger, normalise, PICTOGRAM_PROGRESS_STAGE,
   parseVocabulary, renderVocabulary, emptyVocabulary, choose, unchoose, chosenFor,
-  forLanguage,
+  forLanguage, mostUsedFirst,
   type SetReading, type SetInventory, type UpdateStatus, type Vocabulary,
 } from '@rampa/core';
 import { basename } from 'node:path';
@@ -516,10 +516,26 @@ export async function candidatesFor(args: {
     const key = normalise(word);
     if (!key || names.has(key)) continue;   // a name is never offered a pictogram
 
-    const ids = set.byLanguage.get(language)?.get(key) ?? [];
+    const found = set.byLanguage.get(language)?.get(key) ?? [];
     // Only the genuinely ambiguous: one candidate needs no decision, and none is the
     // ordinary case for most words in most sentences.
-    if (ids.length < 2) continue;
+    if (found.length < 2) continue;
+
+    /*
+     * Most-used first (`024` FR-2217, decision P41).
+     *
+     * The requirement and US2 both say «largest-used first», and T017 was ticked as
+     * «popularity-ordered» — but `mergeSet` discarded the number when it wrote the
+     * metadata, so the data was not on disk, and this function returned the ids in
+     * whatever order the file happened to hold (lexicographic by id). She saw the
+     * four drawings of «casa» in an arbitrary order, under a comment claiming
+     * otherwise.
+     *
+     * By id as the tie-break, so a set with no popularity at all still has a
+     * **stable** order — an arbitrary order that changes between openings is worse
+     * than an arbitrary order that does not.
+     */
+    const ids = mostUsedFirst(found, set.popularity);
 
     const images = await pictogramImagesFor(ids);
     out.push({

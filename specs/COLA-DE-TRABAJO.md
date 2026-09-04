@@ -194,9 +194,37 @@ justamente eso.
       `es.errors.offline` («puedes leer tus notas y volver a imprimir») venía prometiendo.
       3 e2e nuevos, incluida la escritura real del fichero sin red; costura verificada por
       mutación.
-- [ ] **2.4** Pictogramas: atribución derivada del set real + fuente por pictograma en el catálogo
+- [x] **2.4** Pictogramas: atribución derivada del set real + fuente por pictograma en el catálogo
       (P40); persistir popularity y ordenar el selector (P41); incrustar pictogramas+atribución en
       ODT (P47); pantalla del override por niño (P48, puede ir al final del lote).
+      **Hecho 2026-09-04, las cuatro partes.**
+      **(a) Atribución (P40).** `attributionFor(doc, attribution = ARASAAC_ATTRIBUTION)` aceptaba
+      una atribución alternativa y **los dos call sites la llamaban sin segundo argumento**: el
+      parámetro estaba muerto y la constante era lo único que se imprimía. Una docente con su
+      propia carpeta y su propio LICENSE —que `readSet` lee y le muestra y nunca llegaba al
+      render— imprimía «Autor pictogramas: Sergio Palao · Origen: ARASAAC» en cada hoja. Una
+      atribución **falsa**, legalmente peor que ninguna. Ahora `data-picto` lleva
+      `word=id@publisher`, la línea se **deriva** de las fuentes que el documento usó, y
+      `attributionFor` **no tiene default**. Una fuente que nadie sabe describir se **dice**, no
+      se adivina.
+      **(b) Popularidad (P41).** `mergeSet` la tiraba al escribir el catálogo, así que
+      «del más usado al menos» no podía ser verdad. Se persiste, y `mostUsedFirst` vive en core
+      **porque la primera versión del arreglo estaba en el shell, donde nada offline la veía, y
+      sobrevivió a que la borrase con la suite en verde** — el mismo defecto que arreglaba,
+      llegando en el arreglo.
+      **(c) ODT (P47).** `render/odt.ts` no tenía ni una referencia a `data-picto`: una hoja con
+      pictogramas exportada a ODT salía sin ellos, sin hueco marcado y **sin decir nada**, en la
+      modalidad que existe para que ella retoque y reimprima. Ahora `Pictures/` + entrada de
+      manifest por imagen, la palabra al lado, y la misma atribución que el PDF.
+      **(d) Override por niño (P48).** Era «carried rather than surfaced»: un MUST de `018`
+      satisfacible solo editando YAML a mano, y G30 —que lo decía— se cerró «por 024», que
+      construyó el selector del vocabulario y no este. Control plegado en la página del alumno,
+      ofrecido solo si hay juego instalado (sin juego no hay a qué apuntar, y FR-2303 quiere
+      **una** forma de arreglar eso).
+      Y de paso: la cota de «seis frases» de `025` se mide ahora excluyendo lo que un `<details>`
+      cerrado esconde, y la de «tres frases de la excepción» se mide sobre la excepción en vez de
+      como resta —la resta funcionaba mientras el callout fuese la única diferencia entre los dos
+      estados. 20 casos nuevos; 5 costuras verificadas por mutación.
 - [ ] **2.5** Figura esencial: regla unificada «visual imprime, no-visual bloquea» — código de
       print/export + render.md + 019 (P43).
 - [ ] **2.6** Traspaso honesto: «apuntado en el perfil» sin fuerza inventada + fechas reales de

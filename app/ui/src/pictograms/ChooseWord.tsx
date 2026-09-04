@@ -30,6 +30,14 @@ import { useCandidates, useChooseWord, type WordChoice } from '../data/pictogram
  * FR-2216. If she does not choose, the sheet renders without that pictogram and says
  * so. This adds a way to answer the question; it does not answer it for her, and the
  * popularity order is a fact about downloads rather than a recommendation.
+ *
+ * **That order is real since 2026-09-04** (review COD-09, decision P41). The
+ * sentence above was here, and `024` T017 was ticked as «popularity-ordered», while
+ * `mergeSet` discarded the number when it wrote the metadata — so this screen showed
+ * her the four drawings of «casa» in whatever order the file happened to hold. The
+ * ordering is `candidatesFor`'s, in the main process, because that is where the set
+ * is read: a component sorting a list it was handed would be a second opinion about
+ * what «most used» means.
  */
 export function ChooseWord({ words, language = 'es', onChosen }: {
   /** The ambiguous words to offer. Usually the ones a report just listed. */
