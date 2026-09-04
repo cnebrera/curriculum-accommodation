@@ -242,12 +242,36 @@ export function App() {
              */
             jobId={route.job ?? null}
             learnerCode={guideFor.code}
+            /*
+             * Its own «traer el documento» (COD-01, decision P37).
+             *
+             * The screen used to say «trae primero el documento y comprueba que lo
+             * he leído bien» and offer **no control to do it** — a note describing a
+             * step with no door. Now it opens `008`'s ingest with the destination
+             * carried, so the gate hands her back here instead of into the adapt
+             * flow.
+             */
+            onBring={() => go({ type: 'legacy', view: 'ingest', then: 'guide' })}
+            /*
+             * And the conversation, which was rendered by this file and reachable
+             * from nowhere: no code anywhere dispatched `view: 'guide-ask'`. `017`
+             * US3 — «she loads a guide and asks about it» — was an entire feature
+             * that could not be opened, in a specification marked «Built, all 26
+             * tasks».
+             */
+            {...(route.job ? { onAsk: () => go({ type: 'legacy', view: 'guide-ask', job: route.job }) } : {})}
             {...(guideFor.name ? { learnerName: guideFor.name } : {})}
             onDone={() => { setGuideFor(null); go({ type: 'caseload' }); }}
             onBack={() => { setGuideFor(null); go({ type: 'caseload' }); }} />
         ) : null}
         {route.at === 'legacy' && route.view === 'guide-ask' && route.job ? (
-          <GuideConversation jobId={route.job} onBack={() => go({ type: 'caseload' })} />
+          /*
+           * Back to the document she was asking about, not out to the caseload
+           * (COD-01). Asking is a read that writes nothing, so leaving it must
+           * return her to where she was — and the job is on the route, so it can.
+           */
+          <GuideConversation jobId={route.job}
+                             onBack={() => go({ type: 'legacy', view: 'guide', job: route.job })} />
         ) : null}
         {route.at === 'legacy' && route.view === 'acns' && guideFor ? (
           <AcnsDraftScreen
@@ -280,12 +304,36 @@ export function App() {
           : null}
         {route.at === 'legacy' && route.view === 'ingest'
           ? <IngestScreen
-              onIngested={(r) => go({ type: 'legacy', view: 'verify', job: r.jobId })}
-              onResume={(jobId) => go({ type: 'legacy', view: 'verify', job: jobId })} />
+              /*
+               * `then` travels through the gate (COD-01, decision P37). The
+               * curriculum section brings its own document, and `017`'s guide needs
+               * a **verified** extraction — so the ingest and the verification are
+               * the same machinery either way, and only the destination differs.
+               */
+              onIngested={(r) => go({
+                type: 'legacy', view: 'verify', job: r.jobId,
+                ...(route.then ? { then: route.then } : {}),
+              })}
+              onResume={(jobId) => go({
+                type: 'legacy', view: 'verify', job: jobId,
+                ...(route.then ? { then: route.then } : {}),
+              })} />
           : null}
         {route.at === 'legacy' && route.view === 'verify' && route.job
           ? <VerifyScreen jobId={route.job}
-                          onVerified={() => go({ type: 'legacy', view: 'adapt', job: route.job })} />
+                          /*
+                           * What is on the other side of the gate, said in the words
+                           * of the document she actually brought (COD-01).
+                           */
+                          {...(route.then === 'guide' ? {
+                            next: {
+                              label: 'Ver sus medidas',
+                              why: 'Ya puedo sacarte las medidas de este documento. Las verás antes de que guarde nada.',
+                            },
+                          } : {})}
+                          onVerified={() => go(route.then === 'guide'
+                            ? { type: 'legacy', view: 'guide', job: route.job }
+                            : { type: 'legacy', view: 'adapt', job: route.job })} />
           : null}
         {route.at === 'legacy' && route.view === 'review' && route.sheet
           ? <ReviewScreen jobId={route.job ?? ''} learner={route.sheet.learner}

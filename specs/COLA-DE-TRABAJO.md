@@ -174,8 +174,17 @@ justamente eso.
       trae se envía tal cual, porque redimensionarla exige un decodificador que no llevamos.
       **BACKLOG G43** con las tres salidas y su coste. Y en `008` tasks.md corregidos los dos
       ticks que afirmaban lo contrario (T012 «PDF page rendering» y T013 «downscale»).
-- [ ] **2.2** Guía: botón de traer propio en «Su adaptación curricular» + conectar la pantalla de
+- [x] **2.2** Guía: botón de traer propio en «Su adaptación curricular» + conectar la pantalla de
       preguntas muerta (P37).
+      **Hecho 2026-09-04.** «Su adaptación curricular» abre la ingesta de `008` con el destino
+      en la ruta (`then: 'guide'`), así que es la **misma** maquinaria y la misma puerta de
+      verificación — sin tipo de material que contestar, que era el paso muerto (un DIAC no es
+      «una ficha» ni «un examen»). Y la puerta dice ahora «Ver sus medidas» en vez de «Adaptar
+      para un alumno», que era una frase sobre otro documento. La conversación (US3 de `017`)
+      se conecta por fin: se renderizaba y **nadie despachaba nunca** `view: 'guide-ask'`;
+      ahora hay control en los dos estados de la guía, ausente —no deshabilitado— mientras no
+      haya documento, y volver de ella regresa al documento y no al listado.
+      4 e2e nuevos; 3 costuras verificadas por mutación.
 - [ ] **2.3** Reimprimir: el expediente ofrece el PDF/render antiguo (`documents.rendered` gana su
       lector) (FLU-06, decisión implícita en el tema 7 — confirmada por el texto de offline).
 - [ ] **2.4** Pictogramas: atribución derivada del set real + fuente por pictograma en el catálogo

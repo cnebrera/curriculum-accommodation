@@ -186,3 +186,131 @@ test.describe('her caseload is where she starts', () => {
     await app.close();
   });
 });
+
+/**
+ * `017`'s guide had an unreachable conversation and a dead end for a door
+ * (review COD-01, decision P37).
+ *
+ * Three linked defects in a specification marked «Built, all 26 tasks»:
+ *
+ * 1. `GuideConversation` — US3, «she loads a guide and asks about it» — was
+ *    rendered by `App.tsx` and **dispatched by nothing**. A whole user story that
+ *    could not be opened.
+ * 2. «Traer el documento que me han dado» opened a screen whose note said «trae
+ *    primero el documento» and which offered **no control to do it**. The only
+ *    route in was the door → «Adaptar algo que tengo» → *choose a material kind*
+ *    (is a DIAC «una ficha» or «un examen»?) → photo → verify → abandon the adapt
+ *    flow → walk back to the learner.
+ * 3. With a stale `ingested` from an earlier worksheet, «Leer las medidas» was
+ *    **enabled**, and it would read the measures of a maths sheet as if it were
+ *    the official curricular adaptation. That one is closed by `0.1`: the job
+ *    lives on the route now, so there is no session residue to inherit.
+ */
+test.describe('the official document has a way in', () => {
+  test('«Su adaptación curricular» offers to bring it, from there', async () => {
+    const { app, page, vault } = await launch();
+    await seed(page, vault);
+
+    await intoLearner(page);
+    await toTab(page, 'curriculum');
+    await page.getByRole('button', { name: 'Traer el documento que me han dado' }).click();
+
+    // The guide's entry screen, and now with the control its own note describes.
+    await page.getByRole('heading', { name: 'Traer la adaptación curricular' }).waitFor();
+    await expect(page.getByRole('button', { name: 'Traer el documento' })).toBeVisible();
+    // «Leer las medidas» stays disabled until there is a document — no stale job
+    // can enable it any more (`0.1`).
+    await expect(page.getByRole('button', { name: 'Leer las medidas' })).toBeDisabled();
+
+    await app.close();
+  });
+
+  test('and the way in is the ingest, with no material kind to answer', async () => {
+    const { app, page, vault } = await launch();
+    await seed(page, vault);
+
+    await intoLearner(page);
+    await toTab(page, 'curriculum');
+    await page.getByRole('button', { name: 'Traer el documento que me han dado' }).click();
+    await page.getByRole('button', { name: 'Traer el documento' }).click();
+
+    // `008`'s own screen, reached without answering «¿qué es?» — a DIAC is not
+    // «una ficha» and it is not «un examen», and being asked was the dead step.
+    await page.getByRole('heading', { name: /Traer el material|Trae el material/ })
+      .or(page.getByText(/Fotos \(JPG, PNG, HEIC\)/)).first().waitFor({ timeout: 15000 });
+    await expect(page.locator('fieldset', { hasText: '¿Qué es?' })).toBeHidden();
+
+    await app.close();
+  });
+
+  test('the conversation is reachable at all, which it was not', async () => {
+    const { app, page, vault } = await launch();
+    await seed(page, vault);
+
+    /*
+     * The whole walk, offline. An extraction is seeded straight into the vault
+     * **unconfirmed**, because extracting one needs a provider call — everything
+     * after that point is the interface, which is where the defect was.
+     */
+    await page.evaluate(async () => {
+      await window.rampa.vault.write('material/job-20260904T090000/ir.md',
+        '---\nsource: "photos"\nverified: false\nkind: "material"\n---\n\n'
+        + '::: {#b1 .explanation}\nMedidas: letra grande y más tiempo.\n:::\n');
+      await window.rampa.vault.write('material/job-20260904T090000/extraction.json',
+        JSON.stringify({
+          source: 'photos', boundReached: false, cutPages: [], costCents: 1, verified: false,
+          pages: [{ page: 1, verified: false, problems: [], attempts: 1, flags: [] }],
+        }));
+    });
+
+    await intoLearner(page);
+    await toTab(page, 'curriculum');
+    await page.getByRole('button', { name: 'Traer el documento que me han dado' }).click();
+    await page.getByRole('button', { name: 'Traer el documento' }).click();
+
+    // Resume the seeded extraction, which lands on `008`'s verification gate.
+    await page.getByRole('button', { name: 'Seguir con esto' }).click();
+    await page.getByRole('button', { name: 'Está bien leída' }).click();
+
+    /*
+     * And the gate says what is actually on the other side. It used to say
+     * «Adaptar para un alumno» whatever she had brought — a sentence about a
+     * different document, on the screen where she has just confirmed a DIAC.
+     */
+    const through = page.getByRole('button', { name: 'Ver sus medidas' });
+    await expect(through).toBeVisible({ timeout: 15000 });
+    await expect(page.getByRole('button', { name: 'Adaptar para un alumno' })).toBeHidden();
+    await through.click();
+
+    // Back on the guide, with a document — so the conversation has something to
+    // be about, and a control that opens it.
+    await page.getByRole('heading', { name: 'Traer la adaptación curricular' }).waitFor();
+    const ask = page.getByRole('button', { name: 'Preguntar sobre él' });
+    await expect(ask, '`017` US3 has no way in').toBeVisible();
+    await ask.click();
+
+    await expect(page.getByRole('heading', { name: 'Preguntar sobre este documento' }))
+      .toBeVisible({ timeout: 15000 });
+
+    // And leaving it returns to the document, not out to the caseload.
+    await page.getByRole('button', { name: 'Volver' }).click();
+    await expect(page.getByRole('heading', { name: 'Traer la adaptación curricular' }))
+      .toBeVisible();
+
+    await app.close();
+  });
+
+  test('and there is nothing to ask about before a document is in', async () => {
+    // The control is absent rather than disabled: «pregunta sobre este documento»
+    // with no document is a question about nothing.
+    const { app, page, vault } = await launch();
+    await seed(page, vault);
+
+    await intoLearner(page);
+    await toTab(page, 'curriculum');
+    await page.getByRole('button', { name: 'Traer el documento que me han dado' }).click();
+    await expect(page.getByRole('button', { name: 'Preguntar sobre él' })).toHaveCount(0);
+
+    await app.close();
+  });
+});

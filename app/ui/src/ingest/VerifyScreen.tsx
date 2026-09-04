@@ -40,7 +40,20 @@ interface Extraction {
 
 const FLAG_ORDER = ['unreadable', 'essential-figure', 'numbering', 'note'];
 
-export function VerifyScreen({ jobId, onVerified }: { jobId: string; onVerified: () => void }) {
+export function VerifyScreen({ jobId, onVerified, next }: {
+  jobId: string;
+  onVerified: () => void;
+  /**
+   * What happens after the gate, in her words (COD-01, decision P37).
+   *
+   * The button said «Adaptar para un alumno» unconditionally, because for a long
+   * time that was the only thing on the other side. Since «Su adaptación
+   * curricular» brings its own document, it is not: she has just confirmed the
+   * reading of a **DIAC**, and being offered to «adapt it for a learner» would be
+   * a sentence about a different document.
+   */
+  next?: { label: string; why: string };
+}) {
   const [extraction, setExtraction] = useState<Extraction | null>(null);
   const [images, setImages] = useState<Record<number, string>>({});
   const [blocks, setBlocks] = useState<Array<{ id: string; page: number; content: string; number?: string }>>([]);
@@ -242,11 +255,11 @@ export function VerifyScreen({ jobId, onVerified }: { jobId: string; onVerified:
         {extraction.verified ? (
           <>
             <Callout intent="ok" title="Todo confirmado">
-              Ya puedes adaptar esta ficha para tus alumnos.
+              {next ? next.why : 'Ya puedes adaptar esta ficha para tus alumnos.'}
             </Callout>
             <div className="row">
               <button className="btn btn-primary btn-lg" onClick={onVerified}>
-                Adaptar para un alumno
+                {next ? next.label : 'Adaptar para un alumno'}
               </button>
             </div>
           </>

@@ -46,6 +46,15 @@ safeguard built around code that already works without it.
       (FR-1510), never dropped *(done, with its own section and its own sentence: «están aquí porque el documento las dice, no porque yo haga algo con ellas».)*
 - [x] T011 [P] The guide goes through `008`'s pipeline unchanged, and through its
       verification gate (FR-1505/1506). Assert there is **no second ingest path** *(done, and structurally: `ipc/guide.ts` opens no channel that reads a file, `readGuideJob` refuses a job whose extraction is unverified, and a test asserts the reading half of the job contains **no write at all**. A guide comes in through `job:ingest` and `008`'s per-page gate, unchanged.)*
+      **Amended 2026-09-04 (COD-01, P37): still no second ingest path, and now a
+      door.** The guarantee held and the *route* was a dead end: the screen's note said
+      «trae primero el documento» and offered no control, so the only way in was the
+      door → «Adaptar algo que tengo» → **choose a material kind** (is a DIAC «una
+      ficha» or «un examen»?) → photo → verify → abandon the adapt flow → walk back to
+      the learner. «Su adaptación curricular» now opens `008`'s own ingest with the
+      destination carried on the route (`then: 'guide'`), so it is the same machinery
+      and the same gate — and the gate's own button says «Ver sus medidas» rather than
+      «Adaptar para un alumno», which was a sentence about a different document.
 
 ---
 
@@ -100,6 +109,14 @@ provider** — no key in the suite, on purpose.)*
 - [x] T023 [US3] A bounded exchange about **one loaded document**: every answer
       cites the passage it rests on, and a question the document does not answer gets
       «eso no lo dice» (FR-1519, research R4) *(done: `GuideConversation` and `askAboutGuide`. One loaded document, and the system prompt says «si el documento no lo dice, di *eso no lo dice* — no lo saques de tu propio conocimiento».)*
+      **Corrected 2026-09-04 (review COD-01, decision P37): it was built and it could
+      not be opened.** `App.tsx` rendered `GuideConversation` for `view: 'guide-ask'`
+      and **nothing in the repository ever dispatched that view** — a whole user story
+      unreachable, in a specification marked «Built, all 26 tasks». `GuideScreen` now
+      carries «Preguntar sobre él», on both of its states, and leaving the conversation
+      returns to the document instead of out to the caseload. `e2e/nav.spec.ts` walks
+      it, and asserts the control is **absent** before a document is in rather than
+      disabled: a question about nothing is not a question.
 - [x] T024 [US3] The exchange reaches nothing — no vault write, no adaptation, no
       profile change — and what is kept is what **she** selects (FR-1521, Principle
       VIII). Cost visible and bounded (FR-1522) *(done. The exchange reaches nothing: no vault write, no adaptation, no profile change, no second document. Cost accumulates visibly per conversation, and the field help says it plainly — «nada de esto se guarda solo».)*

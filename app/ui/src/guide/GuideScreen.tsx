@@ -23,13 +23,34 @@ import {
  * them into one would hide the second — and a silent filter makes the overlay a
  * partial record of a document she believes was loaded whole (FR-1508).
  */
-export function GuideScreen({ jobId, learnerCode, learnerName, onDone, onBack }: {
+export function GuideScreen({
+  jobId, learnerCode, learnerName, onDone, onBack, onBring, onAsk,
+}: {
   /** A job already ingested and already through `008`'s verification gate. */
   jobId: string | null;
   learnerCode: string;
   learnerName?: string;
   onDone: () => void;
   onBack: () => void;
+  /**
+   * Bring the document, from here (COD-01, decision P37).
+   *
+   * This screen said «trae primero el documento y comprueba que lo he leído bien»
+   * and offered **no control to do it**: a note describing a step with no door.
+   * The only route was the door → «Adaptar algo que tengo» → choose a material
+   * kind (is a DIAC «una ficha» or «un examen»?) → bring the photo → verify →
+   * abandon the adapt flow → walk back to the learner. So the entry point of a
+   * feature marked «Built» was a dead end.
+   */
+  onBring?: () => void;
+  /**
+   * Ask about the document (`017` US3, COD-01).
+   *
+   * `GuideConversation` was rendered by `App.tsx` and **dispatched by nothing** —
+   * a whole user story that could not be opened. Optional because it needs a job:
+   * there is nothing to ask about until a document is in.
+   */
+  onAsk?: () => void;
 }) {
   const read = useReadGuide();
   const apply = useApplyGuide();
@@ -68,7 +89,24 @@ export function GuideScreen({ jobId, learnerCode, learnerName, onDone, onBack }:
                 Leer las medidas
               </button>
             }
-            note={jobId ? undefined : 'Trae primero el documento y comprueba que lo he leído bien.'}>
+            note={jobId
+              ? undefined
+              : onBring
+                ? 'Tráelo y te lo leo página a página antes de guardar nada.'
+                : 'Trae primero el documento y comprueba que lo he leído bien.'}>
+            {/*
+              The control the note used to describe and not offer. Not primary:
+              «Leer las medidas» is this screen's one strong control (`013`
+              FR-1105), and it becomes the right one the moment there is a document.
+            */}
+            {onBring ? (
+              <button className="btn" onClick={onBring}>
+                {jobId ? 'Traer otro documento' : 'Traer el documento'}
+              </button>
+            ) : null}
+            {onAsk ? (
+              <button className="btn" onClick={onAsk}>Preguntar sobre él</button>
+            ) : null}
             <button className="btn btn-ghost" onClick={onBack}>Volver</button>
           </Actions>
         }>
@@ -121,6 +159,14 @@ export function GuideScreen({ jobId, learnerCode, learnerName, onDone, onBack }:
             </button>
           }
           note={chosen.size === 0 ? 'No has dejado ninguna marcada.' : undefined}>
+          {/*
+            `017` US3, from where she is actually looking at the document. Beside
+            «descartar» rather than instead of it: asking is a read, it writes
+            nothing, and it must not look like a step of saving.
+          */}
+          {onAsk ? (
+            <button className="btn" onClick={onAsk}>Preguntar sobre él</button>
+          ) : null}
           <button className="btn btn-ghost" onClick={onBack}>Descartar</button>
         </Actions>
       }>

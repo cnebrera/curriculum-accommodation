@@ -361,6 +361,38 @@ En `008` tasks.md corregidos los dos ticks que afirmaban lo contrario.
 
 tsc limpio · 1560 casos · 115 e2e.
 
+### 2.2 · La guía tenía la conversación inalcanzable y la puerta cerrada — P37 (COD-01)
+
+Tres defectos encadenados en una spec marcada «Built, all 26 tasks».
+
+**La conversación no se podía abrir.** `App.tsx` renderizaba `GuideConversation` para
+`view: 'guide-ask'` y **nada en el repositorio despachaba jamás esa vista**. La US3 de `017`
+—«carga una guía y le pregunta»— era una feature entera inalcanzable. Ahora hay control
+«Preguntar sobre él» en los dos estados de la guía, **ausente** (no deshabilitado) mientras
+no haya documento —una pregunta sobre nada no es una pregunta— y volver de ella regresa al
+documento en vez de salir al listado.
+
+**La puerta de entrada era un callejón.** La pantalla decía «trae primero el documento y
+comprueba que lo he leído bien» y **no ofrecía ningún control para hacerlo**: una nota que
+describe un paso sin puerta. El único camino era door → «Adaptar algo que tengo» → elegir un
+**tipo de material** (¿un DIAC es «una ficha» o «un examen»?) → foto → verificar → abandonar
+el flujo de adaptar → volver andando al alumno. Ahora «Su adaptación curricular» abre la
+ingesta de `008` con el destino en la ruta, así que es la misma maquinaria y la misma puerta
+de verificación, sin tipo de material que contestar.
+
+De paso, la puerta de verificación decía «Adaptar para un alumno» pase lo que pase — una
+frase sobre otro documento, en la pantalla donde acaba de confirmar la lectura de un DIAC.
+Ahora dice «Ver sus medidas» cuando eso es lo que hay al otro lado.
+
+**El tercer defecto ya estaba cerrado por 0.1:** con un `ingested` residual de una ficha
+anterior, «Leer las medidas» se habilitaba y leía las «medidas» de una hoja de mates como si
+fuera la adaptación curricular oficial. El job vive en la ruta desde 0.1, así que no hay
+residuo de sesión que heredar — y el e2e nuevo lo comprueba de paso.
+
+4 e2e nuevos, 3 costuras verificadas por mutación (sin `onAsk`, sin `onBring`, sin `then`).
+
+tsc limpio · 1560 casos · 119 e2e.
+
 ## Saltados y por qué
 
 _(nada todavía)_
@@ -384,10 +416,10 @@ _(nada todavía)_
 |---|---|
 | `npx tsc --noEmit` | verde (línea base) |
 | `npx vitest run` | verde — 1560 casos |
-| `npm run test:e2e` | verde — 115 casos |
+| `npm run test:e2e` | verde — 119 casos |
 | `scripts/check-fr-coverage.sh` | verde (línea base) |
 | `scripts/check-spec-kit.sh` | verde (línea base) |
 
 ---
 
-**Lotes 0 y 1 completos; Lote 2 empezado (1/12).** Quedan 13 ítems de la cola (Lote 2: 11 · Lote 3: 2 abiertos + 11 features por implementar).
+**Lotes 0 y 1 completos; Lote 2 en 2/12.** Quedan 12 ítems de la cola (Lote 2: 10 · Lote 3: 2 abiertos + 11 features por implementar).

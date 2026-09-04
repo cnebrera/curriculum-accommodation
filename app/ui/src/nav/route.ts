@@ -144,6 +144,21 @@ export interface LegacyContext {
    */
   ran?: boolean;
   /**
+   * Where the verification gate hands her next (COD-01, decision P37).
+   *
+   * `008`'s ingest and its page-by-page confirmation are the only honest way to
+   * bring a document in, and `017`'s guide *requires* a verified extraction —
+   * `readGuideJob` refuses an unverified one. But the only route into the ingest
+   * was the door: «Adaptar algo que tengo» → **choose a material kind** (is a DIAC
+   * «una ficha» or «un examen»?) → bring the photo → verify → abandon the adapt
+   * flow → walk back to the learner → «Su adaptación curricular». A dead step, and
+   * the questions in the wrong order.
+   *
+   * So the curriculum section brings its own document, and this says where the gate
+   * leads when it does. Absent means the adapt flow, which is what it was.
+   */
+  then?: 'guide';
+  /**
    * Where «volver» goes from here (FLU-01).
    *
    * `batch` is the run she came from; `learner` is the section she came from, for a
@@ -333,6 +348,7 @@ export function reduceRoute(route: Route, action: RouteAction): Route {
         ...(action.job ? { job: action.job } : {}),
         ...(action.sheet ? { sheet: action.sheet } : {}),
         ...(action.ran ? { ran: action.ran } : {}),
+        ...(action.then ? { then: action.then } : {}),
         ...(action.back ? { back: action.back } : {}),
       };
 
