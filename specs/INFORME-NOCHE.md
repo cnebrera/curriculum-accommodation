@@ -583,6 +583,46 @@ es —que es precisamente el objetivo— así que ahora usa `REG:2`, que es dond
 
 7 casos nuevos.
 
+### 2.9 · Lematización mínima para pictogramas — P20 (AGE-05)
+
+La sustitución palabra→pictograma era un lookup ortográfico exacto: `normalise` pliega
+acentos, mayúsculas y espacios y nada más, por diseño explícito y documentado. Lo que la
+revisión encontró no es que la cobertura sea baja, sino que es **inconsistente**: «rana»
+casaba y «ranas» no, así que la misma palabra llevaba dibujo en una frase y no en la
+siguiente. Para quien lee por pictogramas eso es **peor** que una ausencia consistente,
+porque la ausencia se lee como una diferencia de significado.
+
+Y el scope `instructions` —«sólo en lo que hay que hacer», el que existe precisamente para
+que entienda **qué se le pide**— era el peor servido de los tres: un enunciado va en
+imperativo («rodea», «une», «escribe») y los keywords de un catálogo son infinitivos.
+
+`lemmaCandidates` hace lo mínimo determinista: plurales (`-s`, `-es`, `-ces`→`-z`) y las
+**dos** formas verbales que de verdad aparecen en una hoja —imperativo de 2ª persona y
+presente de 3ª, que se resuelven con la misma regla— más la reflexiva, que es como un
+catálogo lista una acción sobre uno mismo. Sin diccionario: un diccionario es un fichero
+de datos que alguien tiene que mantener.
+
+**Toda la seguridad está en el orden**, no en la precisión del stemmer: el lema se prueba
+**solo** cuando la forma literal no encontró nada, así que «casa» nunca llega al stemmer y
+no puede convertirse en «casar» — una palabra real nunca queda desplazada por el stem de
+otra. Y la regla «exactamente uno o ninguno» sigue intacta: un lema con cuatro candidatos
+es omisión más línea de informe, igual que una palabra literal.
+
+**Más la lista de clase cerrada.** «Para» deriva a «parar», y una señal de stop sobre la
+preposición *para* es exactamente el fallo de pictograma equivocado que este módulo existe
+para evitar: la palabra la lee el niño y la maestra no la comprueba. Las clases cerradas
+—artículos, preposiciones, conjunciones, pronombres— se rechazan de entrada, **antes
+incluso del override**, porque una palabra de esa lista no es una palabra que nadie quisiera
+mapear. Y un pictograma sobre «de» no ayuda a nadie de todas formas.
+
+La otra mitad de AGE-05 —los keywords **multi-palabra**, indexados y permanentemente
+inalcanzables porque el tokenizador entrega una palabra a la vez— no tenía decisión tuya y
+toca el formato de `data-picto`, que leen cinco sitios y que además es lo que ella lee para
+comprobar qué dibujo fue con qué palabra. **BACKLOG G44**, con las dos cosas que habría que
+cambiar juntas y lo que cuesta no hacerlo.
+
+17 casos nuevos; 2 costuras verificadas por mutación.
+
 ## Saltados y por qué
 
 _(nada todavía)_
@@ -605,11 +645,11 @@ _(nada todavía)_
 | | |
 |---|---|
 | `npx tsc --noEmit` | verde (línea base) |
-| `npx vitest run` | verde — 1594 casos |
+| `npx vitest run` | verde — 1612 casos |
 | `npm run test:e2e` | verde — 129 casos |
 | `scripts/check-fr-coverage.sh` | verde (línea base) |
 | `scripts/check-spec-kit.sh` | verde (línea base) |
 
 ---
 
-**Lotes 0 y 1 completos; Lote 2 en 8/12.** Quedan 6 ítems de la cola (Lote 2: 4 · Lote 3: 2 abiertos + 11 features por implementar).
+**Lotes 0 y 1 completos; Lote 2 en 9/12.** Quedan 5 ítems de la cola (Lote 2: 3 · Lote 3: 2 abiertos + 11 features por implementar).

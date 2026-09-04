@@ -150,13 +150,74 @@ describe('the right pictogram, or none', () => {
     expect(m).toEqual({ kind: 'matched', word: 'casa', id: '1001', source: 'set' });
   });
 
-  it('folds accents and case, and infers nothing else', async () => {
+  it('folds accents and case', async () => {
     const set = await loaded();
     expect(matchWord('Árbol', set, opts).kind).toBe('matched');
     expect(matchWord('arbol', set, opts).kind).toBe('matched');
-    // No plural rule, no stemming: «casas» is a word the set does not have.
-    expect(matchWord('casas', set, opts).kind).toBe('none');
     expect(normalise('  Ráná  ')).toBe('rana');
+  });
+
+  /**
+   * The smallest morphology that is safe (review AGE-05, decision P20).
+   *
+   * This test used to assert the opposite — «no plural rule, no stemming: «casas» is
+   * a word the set does not have» — and the design it recorded was explicit. What
+   * the review found is that the cost is not low coverage but **inconsistent**
+   * coverage: «rana» matched and «ranas» did not, so the same word carried a drawing
+   * in one sentence and not in the next, which for a learner reading by pictogram is
+   * worse than a consistent absence, because the absence reads as a difference in
+   * meaning.
+   *
+   * And the `instructions` scope — «sólo en lo que hay que hacer», the one that
+   * exists so he can understand *what is being asked* — was the worst served of the
+   * three: an instruction is an imperative («rodea») and a keyword is an infinitive.
+   */
+  it('finds the singular of a plural it was given', async () => {
+    const set = await loaded();
+    const m = matchWord('casas', set, opts);
+    expect(m.kind).toBe('matched');
+    if (m.kind !== 'matched') throw new Error('unreachable');
+    expect(m.id).toBe('1001');
+  });
+
+  it('tries the lemma only where the literal word found nothing', async () => {
+    /*
+     * The whole safety argument. «Casa» is in the set, so it never reaches the
+     * stemmer and cannot become «casar» — a real word is never displaced by the
+     * stem of a different one.
+     */
+    const set = await loaded();
+    expect(matchWord('casa', set, opts)).toEqual(
+      { kind: 'matched', word: 'casa', id: '1001', source: 'set' });
+  });
+
+  it('keeps «exactly one, or nothing» through the lemma', async () => {
+    // «Ranas» stems to «rana», which two pictures claim: an omission plus a report
+    // line, exactly as the literal word gets (FR-1609). Not a vaguer guess.
+    const m = matchWord('ranas', await loaded(), opts);
+    expect(m.kind).toBe('ambiguous');
+    if (m.kind !== 'ambiguous') throw new Error('unreachable');
+    expect(m.candidates).toEqual(['2483', '2484']);
+  });
+
+  it('never puts a picture on a function word', async () => {
+    /*
+     * «Para» stems to «parar», and a stop sign on the preposition *para* is exactly
+     * the wrong-pictogram failure this module is built around. Refused outright
+     * rather than relied on to match nothing — and a pictogram on «de» helps nobody
+     * anyway.
+     */
+    const set = await loaded();
+    for (const word of ['para', 'de', 'con', 'que', 'como', 'sobre']) {
+      expect(matchWord(word, set, opts).kind, word).toBe('none');
+    }
+  });
+
+  it('refuses a function word even when her override names it', async () => {
+    // Her override is a map from a word to a picture, and a closed-class word is
+    // not a word anybody meant to map — so the check runs before it.
+    const m = matchWord('para', await loaded(), { ...opts, overrides: { para: '9999' } });
+    expect(m.kind).toBe('none');
   });
 
   /** **The case the feature turns on.** */

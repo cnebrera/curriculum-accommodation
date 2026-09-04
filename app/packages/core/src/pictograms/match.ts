@@ -1,4 +1,5 @@
 import { normalise, type PictogramSet } from './set.js';
+import { lemmaCandidates, NEVER_A_PICTOGRAM } from './lemma.js';
 
 /**
  * Matching a word to a pictogram (018 T009/T010, FR-1608…1612).
@@ -114,6 +115,20 @@ export function matchWord(
    */
   if (opts.names?.has(key)) return { kind: 'name', word };
 
+  /*
+   * A closed-class word gets nothing, and it is checked **before** the override
+   * (review AGE-05, decision P20).
+   *
+   * Not an optimisation. «Para» stems to «parar», and a stop sign on the preposition
+   * *para* is precisely the wrong-pictogram failure this module is built around — so
+   * the class that could produce it is refused outright rather than relied on to
+   * match nothing. A pictogram on «de» helps nobody either way.
+   *
+   * Before the override because her override is a map from a word to a picture, and
+   * a word in this list is not a word anybody meant to map.
+   */
+  if (NEVER_A_PICTOGRAM.has(key)) return { kind: 'none', word };
+
   const override = opts.overrides
     ? Object.entries(opts.overrides).find(([w]) => normalise(w) === key)?.[1]
     : undefined;
@@ -128,11 +143,47 @@ export function matchWord(
   const chosen = opts.chosen?.get(key);
   if (chosen) return { kind: 'matched', word, id: chosen, source: 'vocabulary' };
 
-  const candidates = set.byLanguage.get(opts.language)?.get(key) ?? [];
-  if (candidates.length === 0) return { kind: 'none', word };
+  const byWord = set.byLanguage.get(opts.language);
+  const candidates = byWord?.get(key) ?? [];
   if (candidates.length > 1) return { kind: 'ambiguous', word, candidates };
+  if (candidates.length === 1) return { kind: 'matched', word, id: candidates[0]!, source: 'set' };
 
-  return { kind: 'matched', word, id: candidates[0]!, source: 'set' };
+  /*
+   * The literal form matched nothing, so try the lemma (review AGE-05, decision P20).
+   *
+   * ## Why this is here and not in `normalise`
+   *
+   * Because it must be **second**. `normalise` is what indexes the set, so folding
+   * morphology into it would change what a keyword means — «casa» and «casar» would
+   * collide in the index, and the ambiguity rule would then refuse both. Trying the
+   * lemma only where the literal form found nothing means a real word is never
+   * displaced by a stem of a different one.
+   *
+   * ## What it fixes
+   *
+   * Inconsistency, more than coverage. «rana» matched and «ranas» did not, so the
+   * same word carried a drawing in one sentence and not in the next — which for a
+   * learner reading by pictogram is worse than a consistent absence, because the
+   * absence reads as a difference in meaning. And the `instructions` scope, the one
+   * that exists so he can understand *what is being asked*, was the worst served of
+   * the three: instructions are imperatives («rodea») and keywords are infinitives.
+   *
+   * ## What it does not change
+   *
+   * «Exactly one, or nothing» (FR-1609). A lemma with several candidates is an
+   * omission plus a report line, exactly as a literal one is — the first lemma that
+   * resolves cleanly wins, and one that resolves ambiguously stops the search rather
+   * than being skipped in favour of a vaguer guess.
+   */
+  if (byWord && !NEVER_A_PICTOGRAM.has(key)) {
+    for (const lemma of lemmaCandidates(key)) {
+      const also = byWord.get(lemma) ?? [];
+      if (also.length > 1) return { kind: 'ambiguous', word, candidates: also };
+      if (also.length === 1) return { kind: 'matched', word, id: also[0]!, source: 'set' };
+    }
+  }
+
+  return { kind: 'none', word };
 }
 
 /**

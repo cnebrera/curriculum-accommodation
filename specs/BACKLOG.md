@@ -413,6 +413,44 @@ every moment should have a spec. What it added beyond the seams pass:
    journey sentence → T094). Handover *import* (004 US2) recorded as deliberately
    deferred rather than silently missing.
 
+## G44 · A multi-word keyword is indexed and unreachable
+
+**Open, added 2026-09-04** (review AGE-05, the half without a decision).
+
+`readSet` indexes a catalogue's keywords whatever they are, so «lavarse las manos»,
+«por favor» and «darse la vuelta» are all in the map — and `matchWord` is handed
+**one word at a time**, by a tokeniser that splits on `\p{L}[\p{L}\p{M}'-]*`. Every
+multi-word key is therefore in the index and unreachable, permanently.
+
+`018` FR-1609's "exactly one or none" is not the obstacle; the tokeniser is. Two
+things would have to change together:
+
+1. **An n-gram pass over the block's content**, checking two- and three-word spans
+   against the index before the single-word pass, so the longest key wins. Cheap, and
+   the "one or none" rule applies unchanged.
+2. **The `data-picto` encoding**, which is the actual blocker. It is
+   `word=id word=id`, space-separated — a key with a space in it cannot be written
+   into it without changing the format, and that format is read by `parsePicto`, the
+   HTML renderer, the linear renderer, the ODT renderer and `031`'s coming freshness
+   axis. It is also what a teacher reads when she checks which drawing went with
+   which word, so it has to stay legible.
+
+**Why it is a backlog entry and not part of the lemmatiser** (decision P20 asked for
+«lematización determinista mínima» and got it): this half has no decision on it, and
+the encoding change touches five readers plus a spec that is not written yet. Doing
+it inside a corpus fix would be the kind of quiet format change this project's own
+history warns about.
+
+**What it costs meanwhile:** AAC vocabularies are full of multi-word actions —
+precisely the ones a `scope: instructions` sheet wants. So the scope that exists so a
+learner can understand *what is being asked* is the one still losing keys.
+
+**Closure criterion:** a set whose catalogue contains «lavarse las manos» puts that
+pictogram on a sheet that says it, `data-picto` still reads as word→id to a person,
+and every existing reader of the attribute is updated in the same commit.
+
+---
+
 ## G43 · A photograph she brings is still sent at the size her phone made it
 
 **Open, added 2026-09-04** (review COD-05, half fixed).

@@ -263,7 +263,26 @@ justamente eso.
       **Cuentas, nunca códigos**, y el e2e comprueba que no aparece el código de ningún otro
       alumno. Costura verificada por mutación.
 - [ ] **2.8** Borrador de ACNS: guardar en vault, imprimir con marca, firmar (P46).
-- [ ] **2.9** Lematización determinista mínima para pictogramas (P20).
+- [x] **2.9** Lematización determinista mínima para pictogramas (P20).
+      **Hecho 2026-09-04.** `lemmaCandidates` en core: plurales (`-s`, `-es`, `-ces`→`-z`) y
+      **las dos formas verbales que aparecen en una hoja** —imperativo de 2ª y presente de
+      3ª, que es lo que dice un enunciado («rodea», «salta»)— más la reflexiva. Se prueba
+      **solo cuando la forma literal no encontró nada**, y eso es toda la seguridad: «casa»
+      nunca llega al stemmer, así que no puede convertirse en «casar». La regla «exactamente
+      uno o ninguno» intacta: un lema con cuatro candidatos sigue siendo omisión + línea de
+      informe.
+      Lo que de verdad importaba no era la cobertura sino la **inconsistencia**: «rana» casaba
+      y «ranas» no, así que la misma palabra llevaba dibujo en una frase y no en la
+      siguiente — que para quien lee por pictogramas es peor que una ausencia consistente,
+      porque la ausencia se lee como una diferencia de significado. Y el scope `instructions`
+      —el que existe para que entienda **qué se le pide**— era el peor servido: los enunciados
+      son imperativos y los keywords infinitivos.
+      **Y una lista de clase cerrada** (`NEVER_A_PICTOGRAM`): «para» deriva a «parar», y una
+      señal de stop sobre la preposición *para* es exactamente el fallo de pictograma
+      equivocado que este módulo existe para evitar. Se rechaza de entrada, antes incluso del
+      override. La otra mitad de AGE-05 —keywords multi-palabra indexados e inalcanzables— no
+      tenía decisión y toca el formato de `data-picto` que leen cinco sitios: **BACKLOG G44**
+      con las dos cosas que habría que cambiar juntas. 17 casos nuevos; 2 costuras por mutación.
 - [x] **2.10** Recetas mono-eje nuevas: DEC solo, PER-A, ATE solo, LIN solo (P1). Corpus; validar
       contenido pedagógico con una PT cuando se pueda (reviewed_by_teacher).
       **Hecho 2026-09-04.** Cuatro recetas: `decoding-load` (DEC>=2), `spoken-is-not-enough`
