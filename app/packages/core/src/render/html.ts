@@ -104,6 +104,11 @@ h1,h2,h3{line-height:1.25;margin:2em 0 .6em;font-weight:700}
 .example{border-left:4px solid var(--rule);padding-left:1em;margin:1.5em 0}
 .instruction{font-weight:700;margin:1.8em 0 .8em}
 .exercise,.assessment{border:2px solid var(--rule);border-radius:10px;padding:1.4em 1.5em;margin:1.6em 0}
+/* Somewhere to write (027 FR-2503). Two ruled lines, because one is never enough
+   for a child's handwriting and three make a ten-question exam four pages. */
+.answer-space{margin-top:1em}
+.answer-label{display:block;font-size:.85em;letter-spacing:.03em;margin-bottom:.5em}
+.answer-space .rule{display:block;border-bottom:1px solid var(--rule);height:1.9em}
 .assessment{border-color:var(--accent)}
 .scaffold{background:#f4f7f7;border-radius:10px;padding:1.2em 1.4em;margin:1.4em 0}
 .unsupported{border:2px dashed #8a2f2c;padding:1em 1.2em;margin:1.4em 0}
@@ -164,7 +169,25 @@ export function renderBlock(
   const label = number ? `<span class="n">${esc(number)}.</span> ` : '';
   const pictos = renderPictos(b, images);
   return `<section id="${esc(b.id)}" class="${esc(cls)}"${data}>${label}`
-    + `${md.render(b.content)}${pictos}</section>`;
+    + `${md.render(b.content)}${pictos}${answerSpace(b)}</section>`;
+}
+
+/**
+ * Somewhere to write, for a block that asked for one (027 T014, FR-2503).
+ *
+ * Ruled lines and a label, and **no answer** — which is the whole point of an exam
+ * question. `aria-hidden` on the rules because empty lines read aloud are noise; the
+ * label is not hidden, because «Respuesta» is information.
+ *
+ * Keyed on `data-answer-space` and not on the `assessment` class: an ingested exam
+ * already has its own space on the page it came from, and a second one under every
+ * question would be this renderer inventing paper.
+ */
+function answerSpace(b: Block): string {
+  if (!b.attrs['data-answer-space']) return '';
+  return '<div class="answer-space"><span class="answer-label">Respuesta:</span>'
+    + '<span class="rule" aria-hidden="true"></span>'
+    + '<span class="rule" aria-hidden="true"></span></div>';
 }
 
 /**

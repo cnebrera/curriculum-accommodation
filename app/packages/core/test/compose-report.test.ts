@@ -4,6 +4,7 @@ import { join, dirname } from 'node:path';
 import {
   buildComposeReport, composeExercises, arithmetic, readObjective, levelAll,
   parseEducationSystem, buildSheet, type Skill,
+  type Objective,
 } from '../src/index.js';
 
 /**
@@ -15,6 +16,18 @@ import {
  * She is signing for the content, and the content is the part nobody has read.
  */
 const root = join(dirname(new URL(import.meta.url).pathname), '..', '..', '..', '..');
+
+/**
+ * One objective, for the cases that are about one.
+ *
+ * `readObjective` returns a **list** since `027` T006 — «sumas y restas con llevadas» is
+ * one line and two skills — and there is deliberately no single-objective variant in the
+ * API, because that variant is what silently discarded half of her line (AGE-08). Each
+ * case below names one operation, so it takes the first, and this says so once instead
+ * of `[0]!` thirty times.
+ */
+const one = (text: string): Objective => readObjective(text)[0]!;
+
 const es = parseEducationSystem(
   readFileSync(join(root, 'instructions', 'education', 'es.md'), 'utf8'), 'x');
 if (!es) throw new Error('instructions/education/es.md no longer parses');
@@ -33,7 +46,7 @@ const run = async (expressions: string[], wanted: number) => {
 const report = async (yearId: string | undefined, expressions: string[], wanted: number) => {
   const objective = 'multiplicar con llevadas';
   const outcome = await run(expressions, wanted);
-  const leveled = levelAll([readObjective(objective)], es, yearId);
+  const leveled = levelAll([one(objective)], es, yearId);
   const { listing } = buildSheet({
     title: 'X', lang: 'es', materialKind: 'worksheet', objectives: [objective], composedOn: '2026-08-31',
     groups: [{ objective, instruction: 'Resuelve.', accepted: outcome.accepted }],

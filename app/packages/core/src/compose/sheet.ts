@@ -31,8 +31,73 @@ import { NO_ANSWERS_ES } from './unverifiable.js';
  * worse than no key at all, because she will trust it.
  */
 
+/**
+ * One problem on the sheet (027 US1, FR-2501).
+ *
+ * `answer` present means **computed by code** from quantities found in `statement`.
+ * Absent means nothing could check it, and the block says so per item (FR-2504) — a
+ * sheet marked «unverified somewhere» teaches her to distrust all of it.
+ */
+export interface ProblemItem {
+  /** The statement, verbatim, as the child reads it. Carries no answer, ever. */
+  statement: string;
+  /** The admitted operation: every operand was found in the statement. */
+  expression?: string;
+  /** Computed by the arithmetic verifier. Never the model's claim. */
+  answer?: string;
+}
+
+/** One exam question: numbered, asking, withholding (027 US2, FR-2503). */
+export interface ExamQuestion {
+  /** The prompt, as the learner reads it. Carries no answer, ever. */
+  text: string;
+  /** Present and code-verified for a computable question. */
+  expression?: string;
+  /** Computed by code. Absent ⇒ this question is declared unverified. */
+  answer?: string;
+  /**
+   * The model's draft answer, for a question code cannot check (research R3).
+   *
+   * Reaches **the key only**, led by its own unchecked label. This departs from the
+   * skill path, where a model's stated answer is dropped entirely (`NO_ANSWERS_ES`) —
+   * and the departure is argued, not accidental: an exam key silent on six of ten
+   * questions is a key she completes by hand or stops reading. The label does the work
+   * `NO_ANSWERS_ES` fears is undone, per entry, and FR-2512 keeps the key out of every
+   * learner-facing path structurally.
+   */
+  draftAnswer?: string;
+}
+
+/**
+ * One group on the sheet, of whichever shape the kind produces (027 T007).
+ *
+ * A union rather than three optional fields, so the compiler refuses a group that is
+ * two shapes at once — `021` FR-1909's «the kind governs what is produced» is a claim
+ * about shape, and a type that admits «exercises **and** questions» is a type that lets
+ * the claim be false.
+ *
+ * `of` is optional on the exercise variant because that is what every existing caller
+ * already builds: the skill path's contract is untouched (FR-2507).
+ */
+export type SheetGroup = ExerciseGroup | ProblemGroup | QuestionGroup;
+
+export interface ProblemGroup {
+  of: 'problems';
+  objective: string;
+  instruction: string;
+  problems: readonly ProblemItem[];
+}
+
+export interface QuestionGroup {
+  of: 'questions';
+  objective: string;
+  instruction: string;
+  questions: readonly ExamQuestion[];
+}
+
 /** One group of exercises: what she asked for, and what survived verification. */
-export interface SheetGroup {
+export interface ExerciseGroup {
+  of?: 'exercises';
   /** Her objective, verbatim and in her words. It is what `data-objective` holds. */
   objective: string;
   /** The instruction line above the exercises, in her language. */
@@ -138,6 +203,54 @@ export interface SheetInput {
   notes?: readonly string[];
 }
 
+/**
+ * The key learns to say what it does not know (027 T007, data-model).
+ *
+ * A union so the two cases cannot be confused, and `status` optional on the computed
+ * variant so every existing caller keeps working unchanged — the skill path's contract
+ * is untouched (FR-2507), and an `AnswerLine` **is** a computed entry.
+ *
+ * In sheet order, not in two lists: an exam key that runs 1, 2, 4, 5 and then «and by
+ * the way, 3 and 6» is a key she marks from with her finger on the wrong line.
+ */
+export type KeyEntry =
+  | (AnswerLine & { status?: 'computed' })
+  | {
+      status: 'declared-unverified';
+      objective: string;
+      number: number;
+      /** The question or statement, so she knows which one she is completing. */
+      text: string;
+      /** The model's draft, labelled per entry as unchecked. Never on the sheet. */
+      draftAnswer?: string;
+    };
+
+/** Was this entry computed by code? The only authority the key claims. */
+export const isComputed = (e: KeyEntry): e is AnswerLine =>
+  !('status' in e) || e.status === 'computed';
+
+/**
+ * Objectives with anything on the sheet that nothing could check.
+ *
+ * Two sources, one answer: a whole group with no verifier (`002` FR-125) and an
+ * individual item that could not be computed (`027` FR-2504). Derived here so the front
+ * matter, the report and the checklist read one fact.
+ */
+function unverifiedObjectives(
+  groups: readonly SheetGroup[], key: readonly KeyEntry[],
+): string[] {
+  const out = new Set<string>();
+  for (const g of groups) if (g.of !== 'problems' && g.of !== 'questions' && g.unverified) out.add(g.objective);
+  for (const e of key) if (!isComputed(e)) out.add(e.objective);
+  return [...out];
+}
+
+/** How many items a group has, whichever shape it is. */
+const countOf = (g: SheetGroup): number =>
+  g.of === 'problems' ? g.problems.length
+    : g.of === 'questions' ? g.questions.length
+      : g.accepted.length;
+
 export interface AnswerLine {
   objective: string;
   /** Position on the composed sheet, for reading down the page. */
@@ -160,8 +273,19 @@ export interface ComposedSheet {
   doc: IRDocument;
   /** The IR as it is written to `ir.md`. */
   markdown: string;
-  /** Only the checked ones. This is what the key is built from. */
+  /**
+   * Only the checked ones — the computed subset of `key`.
+   *
+   * Kept because its callers count verified work («N ejercicios con las cuentas
+   * comprobadas»), and derived from `key` rather than accumulated beside it.
+   */
   answers: AnswerLine[];
+  /**
+   * Every key entry, in sheet order, computed or declared unverified (027 T007).
+   *
+   * This is what `renderAnswerKey` writes. `answers` is a filter of it.
+   */
+  key: KeyEntry[];
   /**
    * **Every** exercise on the sheet, checked or not.
    *
@@ -174,7 +298,7 @@ export interface ComposedSheet {
 
 export function buildSheet(input: SheetInput): ComposedSheet {
   const blocks: Block[] = [];
-  const answers: AnswerLine[] = [];
+  const key: KeyEntry[] = [];
   const listing: ExerciseLine[] = [];
   let n = 0;
   let line = 1;
@@ -222,7 +346,7 @@ export function buildSheet(input: SheetInput): ComposedSheet {
   }
 
   for (const [g, group] of input.groups.entries()) {
-    if (group.accepted.length === 0) continue;
+    if (countOf(group) === 0) continue;
 
     push({
       id: `g${g + 1}-instruction`,
@@ -231,15 +355,114 @@ export function buildSheet(input: SheetInput): ComposedSheet {
       content: group.instruction,
     });
 
+    const at = (unverified: boolean): Record<string, string> => ({
+      'data-objective': group.objective,
+      ...(unverified ? { 'data-unverified': '1' } : {}),
+    });
+
+    if (group.of === 'problems') {
+      for (const item of group.problems) {
+        n += 1;
+        /*
+         * The statement, and **nothing else**.
+         *
+         * No operation and no answer: the operation is a fact about how it was checked
+         * and belongs in the key beside the answer, not on the page. A problem whose
+         * arithmetic is printed under it is a problem that has been solved for him.
+         */
+        push({
+          id: `g${g + 1}-p${n}`,
+          /*
+           * `exercise`, and **not a new `problem` class** — a deliberate departure from
+           * plan.md, recorded rather than slipped in.
+           *
+           * `BlockClass` is a closed vocabulary and recipes select on it: `scope` is
+           * matched against the classes a document actually contains
+           * (`recipes/index.ts`, `presentClasses`). A `problem` class nothing scopes to
+           * would put every composed problems sheet **outside every recipe's scope** —
+           * so adapting one for a learner would apply nothing at all, which is this
+           * feature's own «offered and not produced» failure one layer down.
+           *
+           * And a word problem *is* an exercise: a task the child performs. The
+           * statement is its content, which is the only difference from a bare
+           * operation, and that difference needs no new class to express.
+           */
+          classes: ['exercise'],
+          attrs: at(item.answer === undefined),
+          content: `${n}. ${item.statement}`,
+        });
+        listing.push({
+          objective: group.objective, number: n,
+          expression: item.expression ?? item.statement,
+          verified: item.answer !== undefined,
+        });
+        key.push(item.answer !== undefined && item.expression
+          ? { objective: group.objective, number: n, expression: item.expression, answer: item.answer }
+          : { status: 'declared-unverified', objective: group.objective, number: n,
+              text: item.statement });
+      }
+      continue;
+    }
+
+    if (group.of === 'questions') {
+      for (const q of group.questions) {
+        n += 1;
+        push({
+          id: `g${g + 1}-q${n}`,
+          /*
+           * `assessment`, the class the vocabulary **already has** for a question in a
+           * test — same departure from plan.md's `question`, and the same argument plus
+           * a positive one: `exam-access-not-difficulty` is scoped `[assessment]`, so a
+           * composed exam adapted for a learner gets the access-not-difficulty recipe
+           * by construction. With a new class it would get nothing.
+           */
+          classes: ['assessment'],
+          /*
+           * `data-number` so the renderers can put the number where the page style
+           * wants it — the same attribute an ingested exercise carries. The answer
+           * space is a **rendering** decision per class (T014) and is deliberately not
+           * written here: writing underscores into the IR would put a fixed amount of
+           * space into every modality, including the ones with no space at all.
+           */
+          attrs: {
+            ...at(q.answer === undefined),
+            'data-number': String(n),
+            /*
+             * **This block needs somewhere to write** (027 T014, FR-2503).
+             *
+             * An attribute rather than the `assessment` class alone, because an
+             * *ingested* exam already has its answer space on the page it was
+             * photographed from — giving every `assessment` block a writing area would
+             * add a second one to every adapted exam in the vault. Composed questions
+             * are the ones with nothing under them yet.
+             *
+             * How much space, and whether space means anything at all, is each
+             * renderer's decision: lines on paper, a spoken sentence in the linear
+             * reading. Writing underscores into the IR would put a fixed amount of
+             * ruled paper into a modality that has no paper.
+             */
+            'data-answer-space': '1',
+          },
+          content: q.text,
+        });
+        listing.push({
+          objective: group.objective, number: n,
+          expression: q.expression ?? q.text, verified: q.answer !== undefined,
+        });
+        key.push(q.answer !== undefined && q.expression
+          ? { objective: group.objective, number: n, expression: q.expression, answer: q.answer }
+          : { status: 'declared-unverified', objective: group.objective, number: n,
+              text: q.text, ...(q.draftAnswer ? { draftAnswer: q.draftAnswer } : {}) });
+      }
+      continue;
+    }
+
     for (const item of group.accepted) {
       n += 1;
       push({
         id: `g${g + 1}-e${n}`,
         classes: ['exercise'],
-        attrs: {
-          'data-objective': group.objective,
-          ...(group.unverified ? { 'data-unverified': '1' } : {}),
-        },
+        attrs: at(group.unverified === true),
         /*
          * The trailing `=` and nothing after it. The exercise is the question;
          * the answer is in the other document.
@@ -255,7 +478,7 @@ export function buildSheet(input: SheetInput): ComposedSheet {
       // caveat»: a proposed result presented as a solution is worse than none,
       // because she marks with it in her hand.
       if (!group.unverified) {
-        answers.push({
+        key.push({
           objective: group.objective,
           number: n,
           expression: item.exercise.expression,
@@ -273,6 +496,8 @@ export function buildSheet(input: SheetInput): ComposedSheet {
       content: input.notes.join('\n'),
     });
   }
+
+  const unverified = unverifiedObjectives(input.groups, key);
 
   const doc: IRDocument = {
     frontMatter: {
@@ -311,9 +536,12 @@ export function buildSheet(input: SheetInput): ComposedSheet {
        * The objectives nothing could check (FR-125), in the document so the
        * report, the key and the checklist read one fact rather than three.
        */
-      ...(input.groups.some((g) => g.unverified)
-        ? { unverified_objectives: input.groups.filter((g) => g.unverified).map((g) => g.objective) }
-        : {}),
+      /*
+       * Now also true of a group whose **items** are individually unverified (FR-2504):
+       * an exam of ten questions where four cannot be computed has an unverified
+       * objective, and the checklist and the report have to know without re-deriving it.
+       */
+      ...(unverified.length ? { unverified_objectives: unverified } : {}),
       /**
        * Louder than elsewhere (Principle VII, T016).
        *
@@ -330,7 +558,17 @@ export function buildSheet(input: SheetInput): ComposedSheet {
     notices: [],
   };
 
-  return { doc, markdown: irToMarkdown(doc), answers, listing };
+  return {
+    doc, markdown: irToMarkdown(doc), key, listing,
+    /*
+     * The computed subset, derived here rather than accumulated in parallel.
+     *
+     * Its callers count verified work — the review screen's «N ejercicios con las cuentas
+     * comprobadas» — and two lists filled in two places is the drift this project has
+     * found more often than any other kind of bug.
+     */
+    answers: key.filter(isComputed),
+  };
 }
 
 /**
@@ -359,10 +597,20 @@ export function buildSheet(input: SheetInput): ComposedSheet {
 export const ANSWER_KEY_HEADING =
   'SOLUCIONES · NO REPARTIR — esta hoja es para ti, no para el alumno.';
 
+/**
+ * The per-entry label for an answer nobody checked (027 research R3).
+ *
+ * Its own constant for the same reason `ANSWER_KEY_HEADING` is: it is the whole
+ * justification for carrying a model's draft answer at all, and two copies of it is one
+ * copy that gets softened. Read by every renderer of the key.
+ */
+export const UNCHECKED_ENTRY_ES =
+  'propuesta del modelo, **sin comprobar**: revísala antes de corregir con ella';
+
 export function renderAnswerKey(input: {
   title: string;
   composedOn: string;
-  answers: readonly AnswerLine[];
+  answers: readonly KeyEntry[];
   /** Objectives nothing could check, named rather than omitted (FR-125). */
   unverifiedObjectives?: readonly string[];
 }): string {
@@ -381,12 +629,25 @@ export function renderAnswerKey(input: {
   ];
 
   let current = '';
-  for (const a of input.answers) {
-    if (a.objective !== current) {
-      current = a.objective;
-      lines.push('', `## ${a.objective}`, '');
+  for (const e of input.answers) {
+    if (e.objective !== current) {
+      current = e.objective;
+      lines.push('', `## ${e.objective}`, '');
     }
-    lines.push(`${a.number}. ${a.expression} = **${a.answer}**`);
+    if (isComputed(e)) {
+      lines.push(`${e.number}. ${e.expression} = **${e.answer}**`);
+      continue;
+    }
+    /*
+     * A question code could not check, **led by its label** (FR-2504, research R3).
+     *
+     * Led, not followed: she reads down a key while marking, and a caveat after the
+     * answer is a caveat she reads after using it. The draft answer only appears at all
+     * because an exam key silent on six of ten questions is one she completes by hand
+     * or stops reading — and it appears nowhere else, ever (FR-2512).
+     */
+    lines.push(`${e.number}. ${e.text}`);
+    lines.push(`   — ${UNCHECKED_ENTRY_ES}${e.draftAnswer ? `: ${e.draftAnswer}` : '.'}`);
   }
 
   if (input.answers.length === 0) {

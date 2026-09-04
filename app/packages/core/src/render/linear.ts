@@ -166,6 +166,10 @@ function inReadingOrder(blocks: readonly Block[]): Block[] {
 /** Does this block have somewhere to write? */
 const hasAnswerSpace = (b: Block): boolean =>
   /_{4,}|\.{6,}|☐|\[\s*\]/.test(b.content)
+  // A composed question says so outright (`027` FR-2503). The classes below already
+  // covered it, and this makes the attribute mean the same thing in all three
+  // renderers rather than being HTML's private arrangement.
+  || b.attrs['data-answer-space'] !== undefined
   || b.classes.includes('exercise') || b.classes.includes('assessment');
 
 export function renderLinear(doc: IRDocument, opts: LinearOptions): Linear {

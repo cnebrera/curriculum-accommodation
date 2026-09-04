@@ -152,7 +152,27 @@ function renderBlock(b: Block, images?: ReadonlyMap<string, ImageBytes>): string
   });
 
   const pictos = renderPictos(b, images);
-  return [...out, ...(pictos ? [pictos] : [])].join('\n');
+  return [...out, ...(pictos ? [pictos] : []), ...answerSpace(b)].join('\n');
+}
+
+/**
+ * Somewhere to write, on the page she photocopies (027 T014, FR-2503).
+ *
+ * A label and two underlined empty paragraphs — the ODF way to put a ruled line on
+ * paper, and the format matters here more than in HTML: this is the file she opens to
+ * fix two words before printing, and lines she can extend by pressing Enter are lines
+ * she can adjust for a child with big handwriting.
+ *
+ * Keyed on `data-answer-space` for the reason the HTML renderer gives: an ingested exam
+ * already has its own space on the page it came from.
+ */
+function answerSpace(b: Block): string[] {
+  if (!b.attrs['data-answer-space']) return [];
+  return [
+    '<text:p text:style-name="RespuestaEtiqueta">Respuesta:</text:p>',
+    '<text:p text:style-name="RespuestaLinea"/>',
+    '<text:p text:style-name="RespuestaLinea"/>',
+  ];
 }
 
 const STYLE_FOR: Record<string, string> = {
@@ -180,6 +200,14 @@ const STYLES_XML = `<?xml version="1.0" encoding="UTF-8"?>
   </style:style>
   <style:style style:name="Ejercicio" style:family="paragraph" style:parent-style-name="Cuerpo">
    <style:paragraph-properties fo:margin-top="0.5cm" fo:keep-together="always"/>
+  </style:style>
+  <style:style style:name="RespuestaEtiqueta" style:family="paragraph" style:parent-style-name="Cuerpo">
+   <style:paragraph-properties fo:margin-top="0.3cm" fo:margin-bottom="0.1cm"/>
+   <style:text-properties fo:font-size="10pt"/>
+  </style:style>
+  <style:style style:name="RespuestaLinea" style:family="paragraph" style:parent-style-name="Cuerpo">
+   <style:paragraph-properties fo:margin-bottom="0.5cm" fo:padding-bottom="0.1cm"
+     fo:border-bottom="0.02cm solid #000000"/>
   </style:style>
   <style:style style:name="Apoyo" style:family="paragraph" style:parent-style-name="Cuerpo">
    <style:paragraph-properties fo:margin-left="0.6cm"/>

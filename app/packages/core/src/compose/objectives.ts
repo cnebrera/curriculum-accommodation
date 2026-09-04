@@ -70,12 +70,48 @@ const NEGATED: Array<[RegExp, string]> = [
  * direction: content requires an anchor and gets human verification, so a
  * misread skill is handled conservatively rather than shipped unchecked.
  */
-export function readObjective(text: string): Objective {
+/**
+ * Read one objective as she wrote it — **as many skills as it names** (027 T006, AGE-08).
+ *
+ * ## The silent narrowing this replaces
+ *
+ * It was `OPERATIONS.find()`: the first regex that matched won and the rest of her line
+ * was discarded. «Sumas y restas con llevadas» — a completely ordinary line for a PT —
+ * became `arith.add` + `carries`, so **every subtraction the model proposed was rejected
+ * as `does-not-exercise`**, and if the loop filled the ten sums she asked for,
+ * `budgetExhausted` was false, `explainOutcome` returned `null`, and nothing told her
+ * that half of her objective had been thrown away.
+ *
+ * Doubly invisible: the sheet looked right (ten verified sums with carrying) and the
+ * report said «he descartado los que no practicaban lo que pediste», which was **false**
+ * for the subtractions — they practised exactly what she asked for.
+ *
+ * So a line that names several operations yields one skill per operation, **in the order
+ * she wrote them**, each with its constraints resolved for its own operation
+ * («llevadas» is carrying in an addition and borrowing in a subtraction). Returning a
+ * list rather than one objective is deliberate: there is no single-objective variant to
+ * reach for, because that variant *is* the defect.
+ */
+export function readObjective(text: string): Objective[] {
   const trimmed = text.trim();
-  if (!trimmed) return { kind: 'content', text: trimmed };
+  if (!trimmed) return [{ kind: 'content', text: trimmed }];
 
-  const op = OPERATIONS.find(([re]) => re.test(trimmed))?.[1];
-  if (!op) return { kind: 'content', text: trimmed };
+  /*
+   * Every operation she named, ordered by where she named it.
+   *
+   * Her order and not the table's: «restas y sumas» should practise subtraction first,
+   * because that is the sentence she wrote and the sheet is read top to bottom.
+   */
+  const named = OPERATIONS
+    .map(([re, id]) => ({ id, at: trimmed.search(re) }))
+    .filter(({ at }) => at >= 0)
+    .sort((a, b) => a.at - b.at);
+
+  if (named.length === 0) return [{ kind: 'content', text: trimmed }];
+  return named.map(({ id }) => skillFor(trimmed, id));
+}
+
+function skillFor(trimmed: string, op: string): Objective {
 
   /*
    * A negated constraint is not the absence of one.
@@ -125,9 +161,16 @@ function resolveByOperation(constraint: string, op: string): string {
   return constraint;
 }
 
-/** Several objectives, in the order she wrote them. */
+/**
+ * Several objectives, in the order she wrote them — and a line may yield more than one.
+ *
+ * `flatMap`, not `map`: «sumas y restas con llevadas» is one line and two skills, and
+ * the sheet gets a group for each. Both groups keep her line verbatim as their
+ * objective, because `data-objective` has to match what she wrote for `checkObjectives`
+ * to recognise it — the split is ours, the objective is hers.
+ */
 export const readObjectives = (lines: readonly string[]): Objective[] =>
-  lines.map((l) => l.trim()).filter(Boolean).map(readObjective);
+  lines.map((l) => l.trim()).filter(Boolean).flatMap(readObjective);
 
 /**
  * Attach the level from the education corpus (FR-122).

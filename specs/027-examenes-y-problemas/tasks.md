@@ -17,18 +17,34 @@ draft mark, the report.
 
 ## Phase 1 · Setup · the two tests that come first
 
-- [ ] T001 Write `app/packages/core/test/exam-never-carries-answers.test.ts` **first**,
+- [x] T001 Write `app/packages/core/test/exam-never-carries-answers.test.ts` **first**,
       red, per [quickstart.md](quickstart.md) §1. **SC-2502 against the rendered
       output, not the IR**: the learner-facing document of a composed exam contains zero
       answers — computed or model-claimed, in text or in any support layer — in HTML, ODT
       and the linear text; and no problem statement contains its computed answer. Its
       failure mode is an answer on the page a child sits an exam with (FR-2503, FR-2512)
-- [ ] T002 [P] Write `app/packages/core/test/problem-verification.test.ts` **first**,
+      *(done: `packages/core/test/exam-never-carries-answers.test.ts`, 12 cases. Red
+      first on two of them — the two answer-space assertions — and **green on the ten
+      about answers**, which is worth recording: `buildSheet` already wrote no answer
+      anywhere, so what was missing was somewhere to write, not a leak. It also asserts
+      the questions **are** there, because «contains no answers» passes trivially for a
+      blank page. **And mutation caught one of its own assertions being vacuous**:
+      `toContain('answer-space')` was satisfied by the stylesheet, which is emitted
+      whether or not any block asked for space — so removing the attribute the renderer
+      reads left the suite green. Asserted on the element and its count now. Second time
+      in two days a test here has been satisfied by a CSS rule.)*
+- [x] T002 [P] Write `app/packages/core/test/problem-verification.test.ts` **first**,
       red, from quickstart §2: the seven cases, including the one the spec's checklist
       warns about — a model whose declared operands are consistent with its own wrong
       answer but absent from the statement is **rejected**, because verifying the
       model's separate claim is verifying the liar with his own declaration (FR-2501,
       FR-2502, FR-2504)
+      *(done: `packages/core/test/problem-verification.test.ts`, 21 cases, including the
+      one the checklist warned about — `3,50 - 1,10 = 2,40`, internally perfect and
+      rejected because `1,10` is nowhere in the statement. And the false positive the
+      naive form of the answer-in-the-statement check would cause: «Tenía 10 y se comió
+      5» answers 5, which is an operand, and refusing that would reject half of all
+      subtractions and burn her budget on correct problems.)*
 
 ---
 
@@ -37,8 +53,7 @@ draft mark, the report.
 **Blocking**: nothing in Phase 3 or later may start until this phase is green. A pipeline
 built against parsers that do not exist yet is a pipeline that gets a lenient parser
 retrofitted — and a lenient parser here verifies a guess.
-
-- [ ] T003 `app/packages/core/src/compose/problems.ts` (new) · `extractQuantities` and
+- [x] T003 `app/packages/core/src/compose/problems.ts` (new) · `extractQuantities` and
       `verifyProblem` per [research.md](research.md) R2 and
       [data-model.md](data-model.md): numbers pulled from the statement text (Spanish
       decimal comma, compared as values), the declared expression admitted **only if
@@ -46,24 +61,46 @@ retrofitted — and a lenient parser here verifies a guess.
       `arithmetic` verifier — never taken from the model — constraints and level checked
       by `exercises` unchanged, and the computed answer rejected if it appears in the
       statement. Reject, never repair (FR-2501, FR-2502)
-- [ ] T004 [P] `app/packages/core/src/compose/proposals.ts` · `parseProblemProposals`
+      *(done: `compose/problems.ts`. `extractQuantities` folds the Spanish comma and
+      reads a dot as a thousands group only when every group is three digits —
+      typography, not pedagogy, which is why it is code. The operand check and the
+      answer-in-the-statement check ride `malformed`'s channel with their own sentences,
+      so the loop, the budget, `explainOutcome` and the report all work unchanged.)*
+- [x] T004 [P] `app/packages/core/src/compose/proposals.ts` · `parseProblemProposals`
       and `parseExamProposals` per
       [contracts/proposal-formats.md](contracts/proposal-formats.md), with
       `parseProposals`' exact intolerance: tolerant of a fence, numbering and a full
       stop; a half-labelled block is **no proposal**, never a guessed one (FR-2507)
-- [ ] T005 `app/packages/core/src/compose/loop.ts` · the P19 cut: a batch whose every
+      *(done: `parseProblemProposals` and `parseExamProposals` in
+      `compose/proposals.ts`, sharing one label parser and `parseProposals`' exact
+      intolerance. A block with no `ENUNCIADO`/`TEXTO` is no proposal; one with no
+      `OPERACIÓN` **is kept**, because that is the declared-unverified case and dropping
+      it would hide it.)*
+- [x] T005 `app/packages/core/src/compose/loop.ts` · the P19 cut: a batch whose every
       verdict is `unknown` **aborts** `composeExercises` instead of re-proposing; the
       outcome records it, and `explainOutcome` names the constraint in her words (the
       verifier's `describe`) and the proposals spent (FR-2510). In the loop so the new
       paths get it by construction. **COLA 0.4 names the same cut** — whichever lands
       first owns it, the other cites it (`021` R2's ownership rule)
-- [ ] T006 [P] `app/packages/core/src/compose/objectives.ts` · an objective naming
+      *(**done by COLA 0.4 on 2026-09-04**, which named the same cut — the ownership
+      rule says whichever lands first owns it. `constraintUnverifiable` in
+      `compose/loop.ts`, with `explainOutcome`'s own sentence («no lo sé comprobar en
+      esta operación») instead of the one that read as a model having a bad day. Cited
+      here, not reimplemented.)*
+- [x] T006 [P] `app/packages/core/src/compose/objectives.ts` · an objective naming
       several operations yields **several skills**, one per operation, constraints
       resolved per operation — «llevadas» + resta → `borrows` (Carlos's P19 answer) — so
       «sumas y restas con llevadas» composes both, verified, and nothing silently narrows
       to the first match (FR-2508, SC-2504). The borrows mapping is also COLA 0.4's:
       same ownership rule as T005
-- [ ] T007 `app/packages/core/src/compose/sheet.ts` · `buildSheet` takes problem items
+      *(done, and it is the half 0.4 did **not** do. 0.4 fixed «llevadas» resolving per
+      operation; the silent narrowing stayed — `OPERATIONS.find()`, first match wins.
+      Now `readObjective` returns a **list**, one skill per operation named, in her
+      order, each with its constraints resolved for its own operation. There is
+      deliberately no single-objective variant left in the API, because that variant is
+      the defect: the four test files that wanted one now declare a local `one()` and
+      say why. 7 new cases in `objectives.test.ts`.)*
+- [x] T007 `app/packages/core/src/compose/sheet.ts` · `buildSheet` takes problem items
       and exam questions per [data-model.md](data-model.md): statements and prompts as
       blocks with `data-objective` (and `data-unverified` where declared), numbered
       questions, **no answer of any provenance written to the sheet**; `renderAnswerKey`
@@ -71,6 +108,17 @@ retrofitted — and a lenient parser here verifies a guess.
       their per-entry label (research R3's position, and the recorded fallback if it is
       rejected in review). The skill path's no-model-answers rule untouched (FR-2503,
       FR-2507)
+      *(done, with **two departures from plan.md, recorded rather than slipped in**: no
+      new `problem`/`question` block classes. `BlockClass` is a closed vocabulary and
+      recipes select on it (`presentClasses`), so classes nothing scopes to would put
+      every composed problems sheet and every composed exam **outside every recipe's
+      scope** — adapting one would apply nothing at all, which is this feature's own
+      «offered and not produced» failure one layer down. A word problem is an
+      `exercise`; an exam question is an `assessment`, the class
+      `exam-access-not-difficulty` is already scoped to, so a composed exam gets the
+      access-not-difficulty recipe by construction. `SheetGroup` is a union so a group
+      cannot be two shapes at once, and `KeyEntry` keeps `status` optional on the
+      computed variant so the skill path's contract is literally untouched (FR-2507).)*
 - [ ] T008 `app/packages/shell/src/jobs/compose.ts` · **one system per path**
       (FR-2507): `OUTPUT_FORMAT` appended only for skill practice; problems and exam
       paths get their own format suffixes from the contract; `composeContent`'s system
@@ -131,10 +179,16 @@ was verified.
       an `OPERACIÓN` verified exactly as problems, questions without one carried
       **declared-unverified** — and the report says which are which before she signs
       (FR-2503, FR-2504). The quantity counts **questions** (FR-2505)
-- [ ] T014 [US2] Answer space in the renderers: a `question` block renders with space to
+- [x] T014 [US2] Answer space in the renderers: a `question` block renders with space to
       answer in `app/packages/core/src/render/html.ts`, `odt.ts` and `linear.ts` — and
       **T001 goes green here**: zero answers in any learner-facing rendering, in text or
       support layer (FR-2503, SC-2502)
+      *(done: `data-answer-space` written by the sheet and read by all three renderers —
+      ruled lines and a «Respuesta:» label in HTML and ODT, and in the linear reading
+      the corpus sentence `019` already had, because lines on paper mean nothing read
+      aloud. Keyed on the attribute and **not** on the `assessment` class: an ingested
+      exam already has its own space on the page it was photographed from, and every
+      adapted exam in the vault would have gained a second one. T001 green.)*
 - [ ] T015 [US2] The key is the job's, and never the learner's (FR-2512): exam entries
       land in `material/<job>/answers.md` (`jobAnswers`, the existing file — no sibling),
       and an asserted **absence**: no learner-facing path — `resolveDocument`, the

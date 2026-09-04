@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import {
   parseEducationSystem, readObjective, levelFor, levelAll, levelWasChecked, explainLevel,
+  type Objective,
 } from '../src/index.js';
 
 /**
@@ -17,6 +18,18 @@ import {
  * honest half of the corpus the reason nothing works.
  */
 const root = join(dirname(new URL(import.meta.url).pathname), '..', '..', '..', '..');
+
+/**
+ * One objective, for the cases that are about one.
+ *
+ * `readObjective` returns a **list** since `027` T006 — «sumas y restas con llevadas» is
+ * one line and two skills — and there is deliberately no single-objective variant in the
+ * API, because that variant is what silently discarded half of her line (AGE-08). Each
+ * case below names one operation, so it takes the first, and this says so once instead
+ * of `[0]!` thirty times.
+ */
+const one = (text: string): Objective => readObjective(text)[0]!;
+
 /**
  * The **shipped** corpus, not a fixture — and asserted to parse.
  *
@@ -38,7 +51,7 @@ if (!es) throw new Error('instructions/education/es.md no longer parses');
 
 describe('the bounds come from the year', () => {
   it('gives a third-year two digits for a multiplication', () => {
-    const l = levelFor(readObjective('multiplicar con llevadas'), es, 'es:primaria-3');
+    const l = levelFor(one('multiplicar con llevadas'), es, 'es:primaria-3');
 
     expect(levelWasChecked(l)).toBe(true);
     if (l.objective.kind !== 'skill') throw new Error('expected a skill');
@@ -46,7 +59,7 @@ describe('the bounds come from the year', () => {
   });
 
   it('gives a sixth-year more, and decimals', () => {
-    const l = levelFor(readObjective('sumar'), es, 'es:primaria-6');
+    const l = levelFor(one('sumar'), es, 'es:primaria-6');
     if (l.objective.kind !== 'skill') throw new Error('expected a skill');
     expect(l.objective.skill.level).toEqual({ maxDigits: 6, decimals: true });
   });
@@ -54,7 +67,7 @@ describe('the bounds come from the year', () => {
   it('keeps the constraint she asked for alongside the level', () => {
     // The level is a bound on the numbers; «con llevadas» is a property every
     // exercise must have. Losing either one loses what she asked for.
-    const l = levelFor(readObjective('multiplicar con llevadas'), es, 'es:primaria-5');
+    const l = levelFor(one('multiplicar con llevadas'), es, 'es:primaria-5');
     if (l.objective.kind !== 'skill') throw new Error('expected a skill');
     expect(l.objective.skill.constraints).toEqual(['carries']);
     expect(l.objective.skill.level?.maxDigits).toBe(3);
@@ -69,13 +82,13 @@ describe('never from her wording', () => {
     const text = 'multiplicar con llevadas para un niño de sexto de primaria';
 
     // Profile says third year. The text says sixth. Third wins.
-    const l = levelFor(readObjective(text), es, 'es:primaria-3');
+    const l = levelFor(one(text), es, 'es:primaria-3');
     if (l.objective.kind !== 'skill') throw new Error('expected a skill');
     expect(l.objective.skill.level).toEqual({ maxDigits: 2, decimals: false });
   });
 
   it('does not invent a level when no course is recorded', () => {
-    const l = levelFor(readObjective('multiplicar con llevadas'), es, undefined);
+    const l = levelFor(one('multiplicar con llevadas'), es, undefined);
     if (l.objective.kind !== 'skill') throw new Error('expected a skill');
     expect(l.objective.skill.level).toBeUndefined();
     expect(l.source.kind).toBe('no-year');
@@ -84,7 +97,7 @@ describe('never from her wording', () => {
 
 describe('not knowing is an outcome', () => {
   it('names a course it does not recognise, rather than falling back', () => {
-    const l = levelFor(readObjective('sumar'), es, 'tercero-de-lo-que-sea');
+    const l = levelFor(one('sumar'), es, 'tercero-de-lo-que-sea');
     expect(l.source).toEqual({ kind: 'year-unknown', yearId: 'tercero-de-lo-que-sea' });
     expect(levelWasChecked(l)).toBe(false);
   });
@@ -92,23 +105,23 @@ describe('not knowing is an outcome', () => {
   it('distinguishes «this year has no levels» from «not for this skill»', () => {
     // Two different things she can act on: the first is the corpus being silent
     // about a whole stage; the second is silent about divisions in second year.
-    const eso = levelFor(readObjective('sumar'), es, 'es:eso-1');
+    const eso = levelFor(one('sumar'), es, 'es:eso-1');
     expect(eso.source.kind).toBe('year-has-no-levels');
 
-    const divide = levelFor(readObjective('dividir'), es, 'es:primaria-2');
+    const divide = levelFor(one('dividir'), es, 'es:primaria-2');
     expect(divide.source.kind).toBe('skill-not-in-year');
   });
 
   it('says nothing about the level of a content objective', () => {
     // There are no digits to bound in «los ríos de España», and reporting an
     // unchecked level about it would be noise she learns to skip.
-    const l = levelFor(readObjective('los ríos de España'), es, 'es:primaria-3');
+    const l = levelFor(one('los ríos de España'), es, 'es:primaria-3');
     expect(l.source).toEqual({ kind: 'not-a-skill' });
     expect(explainLevel(l)).toBeNull();
   });
 
   it('composes anyway — the level is what is missing, not the material', () => {
-    const l = levelFor(readObjective('multiplicar con llevadas'), es, 'es:eso-1');
+    const l = levelFor(one('multiplicar con llevadas'), es, 'es:eso-1');
     if (l.objective.kind !== 'skill') throw new Error('expected a skill');
     // Still a skill, still carrying, still verifiable arithmetic.
     expect(l.objective.skill.constraints).toEqual(['carries']);
@@ -117,11 +130,11 @@ describe('not knowing is an outcome', () => {
 
 describe('what she is told', () => {
   it('says nothing when the corpus knew', () => {
-    expect(explainLevel(levelFor(readObjective('sumar'), es, 'es:primaria-3'))).toBeNull();
+    expect(explainLevel(levelFor(one('sumar'), es, 'es:primaria-3'))).toBeNull();
   });
 
   it('points at the field she can fill in when no course is recorded', () => {
-    const said = explainLevel(levelFor(readObjective('sumar'), es, undefined));
+    const said = explainLevel(levelFor(one('sumar'), es, undefined));
     expect(said).toContain('en qué curso está');
     // And it is explicit about what *was* checked, so «no comprobado» does not
     // read as «nada comprobado».
@@ -130,7 +143,7 @@ describe('what she is told', () => {
 
   it('uses her label for the course, not our id', () => {
     const said = explainLevel(
-      levelFor(readObjective('sumar'), es, 'es:eso-1'),
+      levelFor(one('sumar'), es, 'es:eso-1'),
       () => '1.º de la ESO',
     );
     expect(said).toContain('1.º de la ESO');
@@ -141,7 +154,7 @@ describe('what she is told', () => {
 describe('several objectives at once', () => {
   it('levels each one and keeps her order', () => {
     const ls = levelAll(
-      ['multiplicar con llevadas', 'los ríos de España', 'dividir'].map(readObjective),
+      ['multiplicar con llevadas', 'los ríos de España', 'dividir'].flatMap(readObjective),
       es, 'es:primaria-4',
     );
 

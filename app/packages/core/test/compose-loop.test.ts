@@ -2,7 +2,20 @@ import { describe, it, expect } from 'vitest';
 import {
   composeExercises, explainOutcome, arithmetic, readObjective,
   type Skill, type ProposedExercise, type Propose,
+  type Objective,
 } from '../src/index.js';
+
+/**
+ * One objective, for the cases that are about one.
+ *
+ * `readObjective` returns a **list** since `027` T006 — «sumas y restas con llevadas» is
+ * one line and two skills — and there is deliberately no single-objective variant in the
+ * API, because that variant is what silently discarded half of her line (AGE-08). Each
+ * case below names one operation, so it takes the first, and this says so once instead
+ * of `[0]!` thirty times.
+ */
+const one = (text: string): Objective => readObjective(text)[0]!;
+
 
 /**
  * The compose loop (002 T011, ADR 0007).
@@ -215,7 +228,7 @@ describe('the level travels with the skill', () => {
  */
 describe('«llevadas» means borrowing when the operation is a subtraction', () => {
   it('reads it as borrows, so the verifier can actually check it', () => {
-    const o = readObjective('Restas con llevadas');
+    const o = one('Restas con llevadas');
     expect(o.kind).toBe('skill');
     if (o.kind !== 'skill') throw new Error('unreachable');
     expect(o.skill.id).toBe('arith.subtract');
@@ -225,7 +238,7 @@ describe('«llevadas» means borrowing when the operation is a subtraction', () 
   it('still means carrying in an addition or a multiplication', () => {
     for (const [text, id] of [['Sumas llevando', 'arith.add'],
                               ['Multiplicar con llevadas', 'arith.multiply']] as const) {
-      const o = readObjective(text);
+      const o = one(text);
       if (o.kind !== 'skill') throw new Error('unreachable');
       expect(o.skill.id).toBe(id);
       expect(o.skill.constraints).toEqual(['carries']);
@@ -233,7 +246,7 @@ describe('«llevadas» means borrowing when the operation is a subtraction', () 
   });
 
   it('produces exercises now, where it produced none', async () => {
-    const o = readObjective('Restas con llevadas');
+    const o = one('Restas con llevadas');
     if (o.kind !== 'skill') throw new Error('unreachable');
     // 52 − 27 borrows; 58 − 23 does not.
     const { propose } = scripted([['52 − 27', '81 − 46', '58 − 23']]);
