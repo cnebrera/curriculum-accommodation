@@ -1,7 +1,9 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync, writeFileSync, mkdtempSync } from 'node:fs';
+import { join as joinPath } from 'node:path';
 import { tmpdir } from 'node:os';
 import { join, dirname } from 'node:path';
+import { deflateSync } from 'node:zlib';
 import { readSources, imageSize, ACCEPTED_EXTENSIONS, ACCEPTED_DESCRIPTION } from '../src/ingest/read.js';
 
 /**
@@ -166,5 +168,193 @@ describe('plain text', () => {
     expect(r.source).toBe('pasted');
     expect(r.pages[0]!.text).toContain('¿Qué come el búho?');
     expect(r.pages[0]!.image).toBeUndefined();
+  });
+});
+
+
+/**
+ * A scanned PDF: one bitmap per page and no text layer (review COD-04, P39).
+ *
+ * ## What this suite could not see before
+ *
+ * `readPdf` read the text layer and the operator lists and returned, for a
+ * scanned page, a `SourcePage` with **neither `text` nor `image`**. Then
+ * `needsVision` (`p.image && !p.text`) was false — so the vision-capability check
+ * did not even fire — and `extractPage` sent «Página N. Lee esta imagen.» with
+ * `images: undefined`. The model invented a page or failed, and she paid for the
+ * call. Meanwhile `tasks.md` T012 was ticked as «PDF page rendering via
+ * pdfjs-dist» and FR-601 claimed «PDF (scanned and digital)».
+ *
+ * The fixture is built here rather than committed, so what makes it a scan is
+ * readable: a `/FlateDecode` RGB image XObject drawn across the whole MediaBox,
+ * and not one text-drawing operator anywhere.
+ */
+function scannedPdf(pages: number, w = 120, h = 160): Buffer {
+  const px = Buffer.alloc(w * h * 3);
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      const i = (y * w + x) * 3;
+      // Two dark bars: something a resample can be checked against, and nothing
+      // that looks like a real worksheet — no third-party material, ever.
+      const dark = (y > 30 && y < 40) || (y > 60 && y < 70 && x < w / 2);
+      px[i] = px[i + 1] = px[i + 2] = dark ? 20 : 240;
+    }
+  }
+  const img = deflateSync(px);
+  const content = `q 595 0 0 842 0 0 cm /Im0 Do Q\n`;
+
+  const kids: string[] = [];
+  const objs: Array<string | Buffer> = [];
+  const at: number[] = [];
+  let n = 3;
+  for (let i = 0; i < pages; i++) {
+    kids.push(`${n} 0 R`);
+    n += 2;   // one page object and one content stream each
+  }
+
+  let out = Buffer.from('%PDF-1.4\n', 'latin1');
+  const push = (b: string | Buffer) => {
+    out = Buffer.concat([out, Buffer.isBuffer(b) ? b : Buffer.from(b, 'latin1')]);
+  };
+  const obj = (num: number, body: string | Buffer, tail = '') => {
+    at[num] = out.length;
+    push(`${num} 0 obj\n`);
+    push(body);
+    push(`${tail}\nendobj\n`);
+  };
+
+  const imgNum = 3 + pages * 2;
+  obj(1, '<< /Type /Catalog /Pages 2 0 R >>');
+  obj(2, `<< /Type /Pages /Kids [${kids.join(' ')}] /Count ${pages} >>`);
+  for (let i = 0; i < pages; i++) {
+    const pageNum = 3 + i * 2;
+    obj(pageNum, `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] `
+      + `/Resources << /XObject << /Im0 ${imgNum} 0 R >> >> /Contents ${pageNum + 1} 0 R >>`);
+    obj(pageNum + 1, `<< /Length ${content.length} >>\nstream\n${content}endstream`);
+  }
+  at[imgNum] = out.length;
+  push(`${imgNum} 0 obj\n<< /Type /XObject /Subtype /Image /Width ${w} /Height ${h} `
+    + `/ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /FlateDecode /Length ${img.length} >>\nstream\n`);
+  push(img);
+  push('\nendstream\nendobj\n');
+
+  const xref = out.length;
+  let table = `xref\n0 ${imgNum + 1}\n0000000000 65535 f \n`;
+  for (let i = 1; i <= imgNum; i++) {
+    table += `${String(at[i] ?? 0).padStart(10, '0')} 00000 n \n`;
+  }
+  push(table);
+  push(`trailer\n<< /Size ${imgNum + 1} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF\n`);
+  void objs;
+  return out;
+}
+
+describe('a scanned PDF', () => {
+  const write = (pages: number): string => {
+    const path = join(scratch(), 'escaneado.pdf');
+    writeFileSync(path, scannedPdf(pages));
+    return path;
+  };
+
+  it('is routed as a scan, because there is no text to read', async () => {
+    const r = await readSources([write(1)]);
+    expect(r.source).toBe('pdf-scanned');
+  });
+
+  it('arrives with pixels, so nothing is paid for without an image', async () => {
+    const r = await readSources([write(1)]);
+    const page = r.pages[0]!;
+    expect(page.text, 'a scan has no text layer').toBeUndefined();
+    expect(page.image, 'the page reached the pipeline with no image').toBeDefined();
+    expect(page.image!.width).toBeGreaterThan(0);
+    expect(page.image!.height).toBeGreaterThan(0);
+  });
+
+  it('sends a media type a provider accepts', async () => {
+    const r = await readSources([write(1)]);
+    const image = r.pages[0]!.image!;
+    expect(image.mediaType).toBe('image/png');
+    // Read back rather than trusted: the bytes are a PNG.
+    expect(Array.from(image.data.slice(0, 8)))
+      .toEqual([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+  });
+
+  it('gives every page its own image, not just the first', async () => {
+    // Three pages, one path. The old `storeSource` also gave up after the first,
+    // because it keyed on `paths[i]` — so pages 2..N had nothing to show her on
+    // the verification screen either.
+    const r = await readSources([write(3)]);
+    expect(r.pages).toHaveLength(3);
+    for (const p of r.pages) expect(p.image, `page ${p.page}`).toBeDefined();
+  });
+
+  it('applies the corpus bound rather than parsing it and forgetting it', async () => {
+    // The fixture is 120×160, so a bound of 40 must actually shrink it — the
+    // assertion `planDownscale` never got, because nothing called it.
+    const r = await readSources([write(1)], 40);
+    const image = r.pages[0]!.image!;
+    expect(Math.max(image.width, image.height)).toBe(40);
+  });
+
+  it('leaves a page smaller than the bound alone, never enlarged', async () => {
+    const r = await readSources([write(1)], 4000);
+    const image = r.pages[0]!.image!;
+    expect(image).toMatchObject({ width: 120, height: 160 });
+  });
+
+  it('carries no internal handle out of the module', async () => {
+    /*
+     * The scanned branch needs the pdf.js page *after* the text threshold has
+     * decided what the document is, so it is held on the page and deleted before
+     * returning. A live worker object escaping into the job layer would be a
+     * value nobody there can use and something the vault would try to serialise.
+     */
+    for (const bound of [40, 4000]) {
+      const r = await readSources([write(2)], bound);
+      for (const p of r.pages) expect(p).not.toHaveProperty('handle');
+    }
+    const digital = await readSources([join(fixtures, 'digital-hidden-text.pdf')]);
+    for (const p of digital.pages) expect(p).not.toHaveProperty('handle');
+  });
+});
+
+
+/**
+ * HEIC, the format the commonest phone chooses by itself (review COD-05).
+ *
+ * There is no fixture: a HEIC file cannot be fabricated in a test without
+ * shipping an encoder, and a real one would be somebody's photograph. What can be
+ * asserted without one is the thing that was wrong — the media type the decoder
+ * hands over — and `packages/core/test/pixels.test.ts` covers the pixels.
+ *
+ * The defect was end to end and silent until the provider answered: `decodeHeic`
+ * returned raw RGBA as `mediaType: 'image/rgba'` with a comment saying the
+ * renderer re-encodes it to JPEG, and no such renderer existed. So every iPhone
+ * photograph reached Anthropic as `media_type: 'image/rgba'` and was rejected —
+ * after she had waited for the decode. The docblock on that very function
+ * promises «a teacher must never see a format error for the format her phone
+ * produces by default».
+ */
+describe('the HEIC path', () => {
+  /*
+   * Comments stripped, because the docblock in `read.ts` *quotes* the old media
+   * type to explain what was wrong — and an assertion that matched the
+   * explanation would forbid writing down the history.
+   */
+  const src = readFileSync(joinPath(here, '..', 'src', 'ingest', 'read.ts'), 'utf8')
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .replace(/^\s*\/\/.*$/gm, '');
+
+  it('no longer hands over a media type no API accepts', () => {
+    expect(src).not.toMatch(/mediaType:\s*'image\/rgba'/);
+    expect(src, 'nothing sends raw RGBA as an image any more').not.toMatch(/'image\/rgba'/);
+  });
+
+  it('goes through the one function that applies the corpus bound', () => {
+    // `toSendablePng` is where `planDownscale` is finally called. A second path
+    // that encoded its own way would be a second place for the bound to be
+    // forgotten, which is how it came to be parsed and never applied.
+    const heic = src.slice(src.indexOf('async function decodeHeic'));
+    expect(heic.slice(0, heic.indexOf('\n}\n'))).toContain('toSendablePng');
   });
 });

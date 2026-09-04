@@ -300,6 +300,67 @@ Con esto el **Lote 1 está completo** (17/17).
 
 tsc limpio · 1537 casos · 115 e2e.
 
+### 2.1 · El PDF escaneado, el downscale y el HEIC — P39, COD-04, COD-05
+
+Tres defectos de la misma zona, y el primero es de los que más caro salen: **un PDF
+escaneado nunca se convertía a imagen**. `readPdf` leía la capa de texto y las listas de
+operadores y devolvía, para una página escaneada, un `SourcePage` **sin texto y sin
+imagen**. Entonces `needsVision` (`p.image && !p.text`) daba false —así que ni siquiera
+saltaba la comprobación de si el servicio lee fotos— y `extractPage` mandaba «Página N.
+Lee esta imagen.» con `images: undefined`. El modelo inventaba una página o fallaba, y ella
+pagaba la llamada. Mientras, `tasks.md` T012 estaba marcado como «PDF page rendering via
+pdfjs-dist» y FR-601 reclamaba «PDF (scanned and digital)».
+
+**Lo he hecho por un camino más simple del que dice tu decisión, y conviene que lo sepas.**
+P39 decía «renderizar las páginas con pdfjs en el renderer». No hace falta canvas: pdf.js
+trae sus propios decodificadores, así que la imagen que pinta una página llega **ya
+decodificada** desde `page.objs` (o `commonObjs`, que es donde acaba la que comparten
+varias páginas — pedir solo `objs` funcionaba en la página 1 y se colgaba en la 2). Una
+página escaneada es un bitmap que cubre la hoja, así que esos píxeles **son** la página.
+Hacerlo en el main es estrictamente mejor: sin ida y vuelta por IPC, sin depender de una
+ventana que puede no existir, funciona headless, y todo el camino queda cubierto por la
+suite offline. El objetivo de tu decisión —«nada de pagar llamadas sin imagen»— se cumple
+igual o mejor.
+
+**El downscale existía y no lo ejecutaba nadie.** `planDownscale` se escribió como
+«aritmética pura: redimensionar píxeles va donde hay canvas», el canvas está en el
+renderer, el envío está en el main, y el resultado fue que el límite del corpus
+(`image_long_edge: 1600`) se parseaba, se tipaba, se importaba en `jobs/ingest.ts` y **no
+se llamaba nunca**. `packages/core/src/ingest/pixels.ts` mete el filtro de caja y el
+codificador PNG como aritmética —cien líneas, cero dependencias— y `toSendablePng` es el
+único sitio donde el límite se aplica.
+
+**Y el HEIC estaba roto de punta a punta.** `decodeHeic` devolvía RGBA en crudo con
+`mediaType: 'image/rgba'` y un comentario que decía «el renderer lo re-codifica a JPEG»;
+ese renderer no existía. Una foto de iPhone —el formato por defecto del móvil más común—
+llegaba a Anthropic como `media_type: 'image/rgba'`, que la API rechaza, después de que
+ella esperara el decodificado. El propio docblock de esa función promete «una docente no
+debe ver nunca un error de formato por el formato que eligió su móvil».
+
+De paso salieron dos cosas más: `runIngest` ahora **para antes del proveedor** si una
+página no tiene ni texto ni imagen (y lo reporta por página si es solo alguna), y
+`storeSource` solo guardaba la primera página de un PDF porque se apoyaba en `paths[i]` —
+de la página 2 en adelante no había nada que enseñarle en la pantalla de verificación,
+así que se le pedía comprobar una lectura contra un panel vacío.
+
+**Lo que sigue sin hacerse, dicho y no descubierto:** una foto JPG/PNG/WEBP que ella trae
+se envía al tamaño que la hizo su móvil, porque redimensionarla exige decodificarla y no
+llevamos decodificador para esos formatos — una decisión explícita de `read.ts` («el modo
+de fallo de un módulo nativo en Electron es una aplicación que no arranca, en una
+plataforma, tras un bump de versión, y quien lo tiene delante es una docente que no puede
+leer el stack trace»). **BACKLOG G43** con las tres salidas posibles y lo que cuesta cada
+una. Es dinero, no corrección: la extracción no cambia.
+
+**Tests:** 13 casos en `pixels.test.ts` (incluido un round-trip que infla el IDAT y compara
+píxel a píxel, y una comprobación de CRC por chunk), 9 en `documents.test.ts` sobre un
+fixture de PDF escaneado **construido en el test** —para que lo que lo hace un escaneo se
+pueda leer— y dos aserciones de fuente sobre el camino HEIC. Tres costuras verificadas por
+mutación: quitar el rasterizado, ignorar el límite, y pedir solo `objs`.
+
+En `008` tasks.md corregidos los dos ticks que afirmaban lo contrario.
+
+tsc limpio · 1560 casos · 115 e2e.
+
 ## Saltados y por qué
 
 _(nada todavía)_
@@ -322,11 +383,11 @@ _(nada todavía)_
 | | |
 |---|---|
 | `npx tsc --noEmit` | verde (línea base) |
-| `npx vitest run` | verde — 1537 casos |
+| `npx vitest run` | verde — 1560 casos |
 | `npm run test:e2e` | verde — 115 casos |
 | `scripts/check-fr-coverage.sh` | verde (línea base) |
 | `scripts/check-spec-kit.sh` | verde (línea base) |
 
 ---
 
-**Lotes 0 y 1 completos.** Quedan 14 ítems de la cola (Lote 2: 12 · Lote 3: 2 abiertos + 11 features por implementar).
+**Lotes 0 y 1 completos; Lote 2 empezado (1/12).** Quedan 13 ítems de la cola (Lote 2: 11 · Lote 3: 2 abiertos + 11 features por implementar).

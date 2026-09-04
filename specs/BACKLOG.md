@@ -413,6 +413,46 @@ every moment should have a spec. What it added beyond the seams pass:
    journey sentence → T094). Handover *import* (004 US2) recorded as deliberately
    deferred rather than silently missing.
 
+## G43 · A photograph she brings is still sent at the size her phone made it
+
+**Open, added 2026-09-04** (review COD-05, half fixed).
+
+`008` FR-616 asks for images to be reduced to the corpus bound before they are
+sent, and until today **nothing applied the bound at all** — `planDownscale` was
+parsed, typed, imported and never called. That is fixed for the two paths where
+this application holds actual pixels: a scanned PDF page (pdf.js hands over
+decoded pixels) and a HEIC photograph (libheif does). Both now go through
+`toSendablePng`, which is `planDownscale` plus a box filter plus a PNG encoder.
+
+**What is still not done:** an already-encoded JPG, PNG or WEBP that she picks
+from her phone or her scanner folder is sent exactly as it arrived. Resizing it
+means decoding it, and this application ships no image decoder for those formats —
+by an explicit choice recorded in `read.ts`: «everything here is pure JS or WASM on
+purpose, because a native module's failure mode in Electron is an application that
+does not launch, on one platform, after a version bump, and the person holding it
+is a teacher who cannot read the stack trace».
+
+Three ways out, none free:
+
+1. **The renderer's canvas.** Chromium decodes and re-encodes anything, and this
+   was the original plan (P39 said «pdfjs en el renderer»). It costs a main↔window
+   round trip for every page, and it does not work when there is no window — which
+   is every headless run, including the e2e suite.
+2. **pdf.js as a decoder.** It ships a pure-JS JPEG decoder, reachable by wrapping
+   the photograph in a one-page PDF in memory. Dependency-free and deterministic,
+   and too clever by half for a repository that prizes being readable.
+3. **A native or WASM codec.** The thing `read.ts` decided against.
+
+**What it costs meanwhile:** a 12-megapixel photograph is priced by tile count, so
+a full-resolution page can cost several times a legible one for the same
+extraction. It is money, not correctness — the extraction itself is unaffected,
+which is why this is a backlog entry and not a defect.
+
+**Closure criterion:** a photograph she brings at 12 megapixels leaves this
+machine at the corpus bound, on a headless run, with no native dependency added.
+
+---
+
 ## G42 · The name list is code, and it should be a list a school can extend
 
 **Open, added 2026-09-04** (review AGE-01, decision P17).

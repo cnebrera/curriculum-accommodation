@@ -154,8 +154,26 @@ justamente eso.
 
 ## Lote 2 · Arreglos medianos con decisión cerrada (código, sin spec nueva)
 
-- [ ] **2.1** PDF escaneado: renderizado página→imagen (pdfjs en renderer) antes de ingest; de paso
+- [x] **2.1** PDF escaneado: renderizado página→imagen (pdfjs en renderer) antes de ingest; de paso
       revisar downscale sin llamar y HEIC con mediaType inválido — misma zona (P39; COD-05/06).
+      **Hecho 2026-09-04, y por un camino más simple del que dice la decisión — conviene saberlo.**
+      No hace falta canvas ni renderer: pdf.js trae sus propios decodificadores, así que la imagen
+      que pinta una página llega **ya decodificada** (`page.objs`/`commonObjs`), y una página
+      escaneada es un bitmap que cubre la hoja. Hacerlo en el main es estrictamente mejor — sin
+      ida y vuelta por IPC, sin depender de una ventana que puede no existir, funciona headless y
+      todo el camino queda cubierto por la suite offline. El objetivo de P39 («nada de pagar
+      llamadas sin imagen») se cumple igual.
+      `packages/core/src/ingest/pixels.ts` nuevo: filtro de caja + codificador PNG, aritmética
+      pura, 13 casos. `toSendablePng` es **el único sitio** donde se aplica el límite del corpus
+      — que es el arreglo, porque `planDownscale` era política que nadie ejecutaba. HEIC deja de
+      mandar `image/rgba` (que ninguna API acepta) y sale como PNG al límite. Y `runIngest` para
+      **antes del proveedor** si una página no tiene ni texto ni imagen.
+      De paso: `storeSource` solo guardaba la primera página de un PDF (se apoyaba en `paths[i]`),
+      así que a partir de la 2 no había nada que enseñarle en la pantalla de verificación.
+      **Lo que sigue sin hacerse, dicho en vez de descubierto:** una foto JPG/PNG/WEBP que ella
+      trae se envía tal cual, porque redimensionarla exige un decodificador que no llevamos.
+      **BACKLOG G43** con las tres salidas y su coste. Y en `008` tasks.md corregidos los dos
+      ticks que afirmaban lo contrario (T012 «PDF page rendering» y T013 «downscale»).
 - [ ] **2.2** Guía: botón de traer propio en «Su adaptación curricular» + conectar la pantalla de
       preguntas muerta (P37).
 - [ ] **2.3** Reimprimir: el expediente ofrece el PDF/render antiguo (`documents.rendered` gana su

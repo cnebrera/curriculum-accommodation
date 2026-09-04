@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { extname } from 'node:path';
-import { logger, RampaError } from '@rampa/core';
+import { logger, RampaError, toSendablePng, type Bitmap } from '@rampa/core';
 
 /**
  * Reading whatever she has (008 T012, FR-601/614, research R1).
@@ -31,6 +31,15 @@ export interface SourcePage {
    * diagram disappears — and a diagram is often the thing the question is about.
    */
   figures?: Array<{ x: number; y: number; width: number; height: number }>;
+  /**
+   * The pdf.js page, while this module still has it.
+   *
+   * Internal and deleted before `readSources` returns: the scanned branch needs
+   * to ask a page for its pixels *after* the text-layer threshold has decided
+   * whether it is a scan, and re-opening the document to do that would parse it
+   * twice. Nothing outside this file ever sees it.
+   */
+  handle?: unknown;
 }
 
 export interface ReadResult {
@@ -52,7 +61,20 @@ export const ACCEPTED_EXTENSIONS = [
 export const ACCEPTED_DESCRIPTION =
   'Fotos (JPG, PNG, HEIC), PDF, Word (.docx) o texto.';
 
-export async function readSources(paths: readonly string[]): Promise<ReadResult> {
+/**
+ * How large an image may be when it leaves (008 FR-616).
+ *
+ * A parameter rather than a constant, because the number is corpus
+ * (`instructions/ingest.md`, `image_long_edge`) and this module must not read the
+ * corpus. Defaulted so the tests that only care about routing stay short — and
+ * defaulted to the shipped value rather than to «no bound», because a default of
+ * infinity is how the bound came to be parsed and never applied.
+ */
+export const DEFAULT_IMAGE_LONG_EDGE = 1600;
+
+export async function readSources(
+  paths: readonly string[], longEdge = DEFAULT_IMAGE_LONG_EDGE,
+): Promise<ReadResult> {
   if (paths.length === 0) {
     throw new RampaError('ingest-empty', 'No has añadido ningún fichero.');
   }
@@ -73,24 +95,24 @@ export async function readSources(paths: readonly string[]): Promise<ReadResult>
   }
 
   const first = extname(paths[0]!).toLowerCase();
-  if (first === '.pdf') return readPdf(paths[0]!);
+  if (first === '.pdf') return readPdf(paths[0]!, longEdge);
   if (first === '.docx') return readDocx(paths[0]!);
   if (first === '.txt' || first === '.md') {
     return { source: 'pasted', pages: [{ page: 1, text: await readFile(paths[0]!, 'utf8') }] };
   }
-  return readImages(paths);
+  return readImages(paths, longEdge);
 }
 
 /* ── Photographs ─────────────────────────────────────────────────────────── */
 
-async function readImages(paths: readonly string[]): Promise<ReadResult> {
+async function readImages(paths: readonly string[], longEdge: number): Promise<ReadResult> {
   const pages: SourcePage[] = [];
   for (const [i, path] of paths.entries()) {
     const ext = extname(path).toLowerCase();
     const data = await readFile(path);
 
     if (HEIC_EXTENSIONS.includes(ext)) {
-      pages.push({ page: i + 1, image: await decodeHeic(data) });
+      pages.push({ page: i + 1, image: await decodeHeic(data, longEdge) });
       continue;
     }
     const mediaType = IMAGE_TYPES[ext];
@@ -110,7 +132,7 @@ async function readImages(paths: readonly string[]): Promise<ReadResult> {
  * default — she has no idea her phone chose it, and "convert it first" is not an
  * instruction she can act on in a 45-minute gap.
  */
-async function decodeHeic(data: Buffer): Promise<NonNullable<SourcePage['image']>> {
+async function decodeHeic(data: Buffer, longEdge: number): Promise<NonNullable<SourcePage['image']>> {
   const { default: libheif } = await import('libheif-js/wasm-bundle');
   const decoder = new libheif.HeifDecoder();
   const images = decoder.decode(data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength));
@@ -124,8 +146,25 @@ async function decodeHeic(data: Buffer): Promise<NonNullable<SourcePage['image']
   const out = { data: new Uint8ClampedArray(width * height * 4), width, height };
   await new Promise<void>((resolve) => image.display(out, () => resolve()));
 
-  // RGBA, which the renderer re-encodes to JPEG at the corpus bound.
-  return { data: new Uint8Array(out.data.buffer), mediaType: 'image/rgba', width, height };
+  /*
+   * A PNG at the corpus bound, **here** (review COD-05).
+   *
+   * This used to return raw RGBA with `mediaType: 'image/rgba'` and a comment
+   * saying «the renderer re-encodes it to JPEG at the corpus bound». That renderer
+   * did not exist: no canvas, no `toDataURL`, nothing. So an iPhone photograph —
+   * the default format of the commonest phone — reached Anthropic as
+   * `media_type: 'image/rgba'`, which the API rejects, and the edge case this
+   * function's own docblock promises («a teacher must never see a format error for
+   * the format her phone produces by default») failed for every iPhone.
+   *
+   * `toSendablePng` is arithmetic in `packages/core`, so the whole path is covered
+   * by the offline suite and there is no window to depend on.
+   */
+  const bitmap: Bitmap = {
+    width, height, channels: 4, data: new Uint8Array(out.data.buffer),
+  };
+  const png = toSendablePng(bitmap, longEdge);
+  return { data: png.data, mediaType: png.mediaType, width: png.width, height: png.height };
 }
 
 /**
@@ -184,7 +223,7 @@ export function imageSize(data: Buffer, mediaType: string): { width: number; hei
  * text is already text. Scanned, it is a stack of photographs. The routing is
  * decided here from what the file actually contains rather than from its name.
  */
-async function readPdf(path: string): Promise<ReadResult> {
+async function readPdf(path: string, longEdge: number): Promise<ReadResult> {
   const pdfjs = await import('pdfjs-dist/legacy/build/pdf.mjs') as unknown as {
     getDocument(src: { data: Uint8Array; useSystemFonts?: boolean }): { promise: Promise<PdfDoc> };
   };
@@ -224,6 +263,9 @@ async function readPdf(path: string): Promise<ReadResult> {
       text: text || undefined,
       invisibleText: findInvisibleText(content.items),
       figures: figures.length ? figures : undefined,
+      /* Kept so the scanned branch below can ask for the pixels without
+         re-opening the document. Never sent: `image` is what travels. */
+      handle: page,
     });
   }
 
@@ -234,7 +276,132 @@ async function readPdf(path: string): Promise<ReadResult> {
    * noise a scan produces.
    */
   const perPage = doc.numPages > 0 ? charsFound / doc.numPages : 0;
-  return { source: perPage >= 40 ? 'pdf-digital' : 'pdf-scanned', pages };
+  const source = perPage >= 40 ? 'pdf-digital' : 'pdf-scanned';
+
+  /*
+   * A scanned page is a photograph, so give it its pixels (review COD-04, P39).
+   *
+   * ## What used to happen
+   *
+   * Nothing. `readPdf` read the text layer and the operator lists and returned,
+   * for a scanned page, a `SourcePage` with **neither `text` nor `image`**. Then
+   * `needsVision` (`p.image && !p.text`) was false, so the vision-capability
+   * check did not even fire, and `extractPage` sent the prompt «Página N. Lee
+   * esta imagen.» with `images: undefined`. The model invented or failed, and she
+   * paid for the call. Meanwhile `tasks.md` T012 was ticked as «PDF page
+   * rendering via pdfjs-dist» and FR-601 claimed «PDF (scanned and digital)».
+   *
+   * ## Why there is no canvas here
+   *
+   * The decision (P39) said «render the pages with pdfjs in the renderer», and
+   * the goal it was for is «nothing paid for without an image». It turns out no
+   * canvas is needed at all: pdf.js ships its own decoders, so the image objects a
+   * page paints arrive as **decoded pixels** — `{ width, height, kind, data }` —
+   * from `page.objs`. A scanned page is one bitmap covering the sheet, so those
+   * pixels *are* the page.
+   *
+   * Doing it here instead is strictly better and is worth saying rather than
+   * assuming: no IPC round trip, no dependency on a window that may not exist, it
+   * works headless, and the whole path is covered by the offline suite.
+   *
+   * Best-effort per page: a page whose bitmap cannot be reached keeps no image,
+   * and `runIngest` refuses to spend anything on it rather than sending a prompt
+   * about an image it does not have.
+   */
+  if (source === 'pdf-scanned') {
+    for (const page of pages) {
+      const handle = page.handle as PdfPage | undefined;
+      delete page.handle;
+      if (!handle) continue;
+      const bitmap = await pageBitmap(handle);
+      if (!bitmap) {
+        logger.warn('ingest.pdf-no-bitmap', { page: page.page });
+        continue;
+      }
+      const png = toSendablePng(bitmap, longEdge);
+      page.image = { data: png.data, mediaType: png.mediaType, width: png.width, height: png.height };
+    }
+  } else {
+    for (const page of pages) delete page.handle;
+  }
+
+  return { source, pages };
+}
+
+/**
+ * The pixels a page paints, from pdf.js's own decoders.
+ *
+ * The largest painted image wins when a page has several: a scanned page is one
+ * full-sheet bitmap, and a header logo beside it would otherwise be «the page».
+ * Nothing is composited — compositing is what a canvas is for, and a scan has
+ * nothing to composite.
+ */
+async function pageBitmap(page: PdfPage): Promise<Bitmap | null> {
+  if (!page.getOperatorList || !(page.objs || page.commonObjs)) return null;
+  let ops: PdfOperatorList;
+  try { ops = await page.getOperatorList(); } catch { return null; }
+
+  let best: Bitmap | null = null;
+  for (const [i, fn] of ops.fnArray.entries()) {
+    if (!PAINT_IMAGE_OPS.has(fn)) continue;
+    const arg = ops.argsArray[i]?.[0];
+    const name = typeof arg === 'string' ? arg : (arg as { name?: string } | undefined)?.name;
+    if (!name) continue;
+
+    /*
+     * Two stores, and both are needed.
+     *
+     * pdf.js puts a page-local image in `objs` under `img_p0_1`, and one shared
+     * between pages in `commonObjs` under a `g_`-prefixed name — which is exactly
+     * what a scanner that writes the same XObject on every page produces. Asking
+     * only `objs` worked for page one and hung for every page after it.
+     *
+     * Both are asked at once and the first answer wins, rather than sniffing the
+     * name prefix: the prefix is pdf.js's internal convention and this does not
+     * need to know it.
+     *
+     * Bounded, because `get` resolves through pdf.js's own worker and a name that
+     * never arrives would hang the ingest for ever. A timeout is a page with no
+     * image rather than an error — the page is still reported to her, and the run
+     * refuses to pay for it.
+     */
+    const obj = await new Promise<PdfImageObject | null>((resolve) => {
+      let settled = false;
+      const finish = (o: PdfImageObject | null) => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        resolve(o);
+      };
+      const timer = setTimeout(() => finish(null), 8_000);
+      for (const store of [page.objs, page.commonObjs]) {
+        try { store?.get(name, (o: unknown) => { if (o) finish(o as PdfImageObject); }); }
+        catch { /* the other store may still answer */ }
+      }
+    });
+
+    if (!obj?.data || !(obj.width > 0) || !(obj.height > 0)) continue;
+    // pdf.js `ImageKind`: 1 grayscale 1bpp, 2 RGB 24bpp, 3 RGBA 32bpp. A 1bpp
+    // bitmap is packed bits rather than bytes, so it is left alone rather than
+    // read as if it were one byte per pixel — which would be noise.
+    const channels = obj.kind === 3 ? 4 : obj.kind === 2 ? 3 : null;
+    if (channels === null) continue;
+    if (obj.data.length < obj.width * obj.height * channels) continue;
+
+    const bitmap: Bitmap = {
+      width: obj.width, height: obj.height, channels,
+      data: new Uint8Array(obj.data.buffer, obj.data.byteOffset, obj.width * obj.height * channels),
+    };
+    if (!best || bitmap.width * bitmap.height > best.width * best.height) best = bitmap;
+  }
+  return best;
+}
+
+interface PdfImageObject {
+  width: number;
+  height: number;
+  kind?: number;
+  data?: Uint8Array;
 }
 
 interface PdfTextItem { str?: string; height?: number; transform?: number[]; hasEOL?: boolean }
@@ -242,7 +409,17 @@ interface PdfOperatorList { fnArray: number[]; argsArray: unknown[][] }
 interface PdfPage {
   getTextContent(): Promise<{ items: PdfTextItem[] }>;
   getOperatorList?(): Promise<PdfOperatorList>;
+  /**
+   * pdf.js's object stores, where a decoded image arrives by callback.
+   *
+   * `objs` is per page; `commonObjs` holds what several pages share — which is
+   * what a scanner writing one XObject onto every page produces.
+   */
+  objs?: PdfObjectStore;
+  commonObjs?: PdfObjectStore;
 }
+
+interface PdfObjectStore { get(name: string, cb: (o: unknown) => void): void }
 interface PdfDoc {
   numPages: number;
   getPage(n: number): Promise<PdfPage>;

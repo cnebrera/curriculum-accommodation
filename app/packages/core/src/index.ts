@@ -55,6 +55,7 @@ export * from './ingest/validate.js';
 export * from './ingest/to-ir.js';
 export * from './ingest/budget.js';
 export * from './ingest/downscale.js';
+export * from './ingest/pixels.js';
 
 export * from './providers/catalogue.js';
 export * from './providers/recommend.js';

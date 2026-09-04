@@ -46,7 +46,26 @@ nobody has checked, which is worse than no extraction at all.
 **Independent test**: Ingest a fixture; structural validation passes; every ground-truth `[UNREADABLE]` is flagged and none is guessed; a seeded error is findable in the verification screen without opening a file.
 
 - [x] T012 [US1] Implement format reading in `app/packages/shell/src/ingest/read.ts`: HEIC via `libheif-js`, PDF page rendering and text-layer reading via `pdfjs-dist`, DOCX via `mammoth`, plain images passed through. One function per format, each returning page images and optional text *(done. The JPEG header walker had a bounds check one byte too strict, which returned zero dimensions for a JPEG whose frame header is its last segment — found by the test built from a realistic EXIF layout.)*
+      **Corrected 2026-09-04 (review COD-04, decision P39): «PDF page rendering» was not
+      done and this tick claimed it was.** `readPdf` read the text layer and the operator
+      lists and returned, for a scanned page, a `SourcePage` with neither `text` nor
+      `image` — so `needsVision` was false, the vision check never fired, and
+      `extractPage` sent «Lee esta imagen» with `images: undefined`. The model invented a
+      page or failed, and she paid. It renders now, and with no canvas: pdf.js ships its
+      own decoders, so a page's painted image arrives as decoded pixels from
+      `page.objs`/`commonObjs`, and a scanned page is one bitmap covering the sheet. Six
+      cases in `documents.test.ts`, over a fixture built in the test.
 - [x] T013 [US1] Implement the ingest job in `app/packages/shell/src/jobs/ingest.ts`: decode → downscale → one call per page → validate → bounded retry → write `ir.md` and `extraction.json`. **Code owns the loop**, per ADR 0007 *(done. Code owns the loop: validate, decide, stop or retry, all in `jobs/ingest.ts`.)*
+      **Corrected 2026-09-04 (review COD-05): the «downscale» in this line did not
+      happen.** `planDownscale` was imported by `jobs/ingest.ts` and never called, so every
+      photograph went at full resolution — and the HEIC branch handed over raw RGBA as
+      `mediaType: 'image/rgba'`, which no provider API accepts, trusting a renderer that
+      re-encoded it and did not exist. `packages/core/src/ingest/pixels.ts` now holds a box
+      filter and a PNG encoder as arithmetic, `toSendablePng` is the one place the corpus
+      bound is applied, and both the scanned-PDF and HEIC paths go through it. What is
+      **still not downscaled** is an already-encoded JPG/PNG/WEBP she brings, because
+      resizing one needs a decoder this application does not ship — recorded as BACKLOG
+      G43 rather than left looking done.
 - [x] T014 [US1] Wire the extraction call through `sendRedacted` like every other provider call, so ingest cannot become a second egress path *(done, through `sendRedacted` like every other provider call.)*
 - [x] T015 [US1] Enforce the page bound (FR-612) and report it: the boundary, the pages beyond it, listed. Never a silent truncation *(done, and the cut pages are listed by number. A teacher who dropped 60 pages and got 20 back with no explanation has been lied to by omission.)*
 - [x] T016 [US1] Accumulate cost per page into the job's visible cost (FR-611), and warn before an unusually expensive job (006 US4) *(done. Estimated from page count rather than prompt length, because an image is priced by tile count — `estimateCents` alone would have under-read a 20-page job by an order of magnitude.)*
@@ -131,7 +150,7 @@ at is a requirement nobody is keeping.**
 
 | | Where it is satisfied |
 |---|---|
-| FR-601 | `ingest/read.ts` — JPG, PNG, HEIC, PDF (scanned and digital), DOCX, plus pasted text. `documents.test.ts` |
+| FR-601 | `ingest/read.ts` — JPG, PNG, HEIC, PDF (scanned and digital), DOCX, plus pasted text. `documents.test.ts`. **«Scanned» was false until 2026-09-04** (COD-04): a scanned page arrived with no text and no image and the prompt asked the model to read an image that was not attached. It arrives with pixels now, from pdf.js's own decoders, at the corpus bound |
 | FR-602 | `runIngest` calls one page at a time and `validatePage` checks each answer **in code** before accepting it |
 | FR-603 | `attemptsPerPage` from the corpus, and exhausting it surfaces the page's problems — never accepts the last attempt. A dark photograph is a **stop**, not a retry: a second call produces a second dark extraction and a second charge |
 | FR-604 | `instructions/ingest.md` carries the extraction rules, per Principle I, and `[UNREADABLE]` is flagged in place |
@@ -139,5 +158,5 @@ at is a requirement nobody is keeping.**
 | FR-613 | `017` T011 · a guide is ingested material and takes no shortcut: same pipeline, same verification gate, asserted in `corpus-guarantees.test.ts`. `002`'s anchor is the other case — she pastes it, and it goes through the injection and invisible-character detectors |
 | FR-614 | Pure-JS and WASM only. `documents.test.ts` asserts no compilation step and no native build, which is also how SC-606 is measured |
 | FR-615 | `EXTRACTION_JSON_SCHEMA`, validated by `validatePage`, and `pagesToIR` is deterministic and lives in `core` |
-| FR-616 | `planDownscale` with the bound read from the corpus. A full-resolution phone photograph is several times the cost of a page that reads identically |
+| FR-616 | `toSendablePng` in `packages/core/src/ingest/pixels.ts` — `planDownscale` plus a box filter plus a PNG encoder, in one function, so the bound is applied where the pixels are. **Until 2026-09-04 nothing called `planDownscale` at all** (COD-05): the bound was parsed from the corpus, typed onto `IngestBudget`, imported by `jobs/ingest.ts` and never used. Now honoured on the scanned-PDF and HEIC paths, which are the two where this application holds pixels. An already-encoded JPG/PNG/WEBP is still sent as she brought it — resizing it needs a decoder we do not ship — and that gap is **BACKLOG G43**, not a tick |
 | FR-617 | `parseIngestBudget` reads them at run time from `instructions/ingest.md` front matter — **and clamps them**, because a corpus is editable content and `attempts_per_page: 500` would spend her money five hundred times. The clamp is the one part that belongs in code: it protects her *from* the file |

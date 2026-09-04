@@ -1,6 +1,6 @@
 import { basename, join } from 'node:path';
 import {
-  jobDir, jobIR, jobSourceDir, parseIngestBudget, planDownscale, tooSmallToRead,
+  jobDir, jobIR, jobSourceDir, parseIngestBudget, tooSmallToRead,
   validatePage, pagesToIR, irToMarkdown, EXTRACTION_JSON_SCHEMA,
   annotateInjection, redact, logger, RampaError, parseIR, formatCost, isUnusuallyExpensive,
   VAULT,
@@ -85,7 +85,15 @@ export async function runIngest(
   const limits = await budget();
 
   onProgress({ stage: 'Leyendo los ficheros' });
-  const read = await readSources(paths);
+  /*
+   * The corpus bound travels **into** the reading (008 FR-616, review COD-05).
+   *
+   * `image_long_edge` was parsed here, typed onto `IngestBudget`, and applied by
+   * nobody: `planDownscale` was imported by this file and never called, so every
+   * photograph went at full resolution. The bound belongs where the pixels are,
+   * and the pixels are in `read.ts`.
+   */
+  const read = await readSources(paths, limits.imageLongEdge);
 
   /*
    * FR-617/FR-612: the page bound is reported, never silently applied. A teacher
@@ -115,6 +123,30 @@ export async function runIngest(
    * where a failed extraction is not. The catalogue carries `vision` per service
    * (009), so this is a fact rather than a probe.
    */
+  /*
+   * A page with neither text nor pixels is nothing to extract (review COD-04).
+   *
+   * This used to be unreachable-looking and was the normal case for a scanned
+   * PDF: `readPdf` produced pages with no `text` and no `image`, `needsVision`
+   * was therefore false, and `extractPage` sent «Página N. Lee esta imagen.» with
+   * `images: undefined` — so the model invented a page or failed, and she paid.
+   *
+   * `read.ts` gives a scanned page its pixels now, so this is the honest
+   * remainder: a page whose bitmap could not be reached at all. It stops the run
+   * **before the provider** rather than charging for a prompt about an image that
+   * is not attached.
+   */
+  const blind = pages.filter((p) => !p.text && !p.image).map((p) => p.page);
+  if (blind.length === pages.length) {
+    throw new RampaError('ingest-unusable',
+      'No he podido sacar ni el texto ni la imagen de ese fichero, así que no he enviado '
+      + 'nada ni te he cobrado. Si es un PDF escaneado raro, prueba a hacerle una foto a '
+      + 'cada página.');
+  }
+  if (blind.length) {
+    logger.warn('ingest.blind-pages', { pages: blind });
+  }
+
   const needsVision = pages.some((p) => p.image && !p.text);
   const caps = await active.provider.capabilities();
   if (needsVision && !caps.vision) {
@@ -144,6 +176,16 @@ export async function runIngest(
       records.push({
         page: page.page, image: stored, verified: false, attempts: 0, flags: [],
         problems: ['La foto es demasiado pequeña para leerla.'],
+      });
+      continue;
+    }
+
+    if (!page.text && !page.image) {
+      // Reported, not sent: she sees which page produced nothing and why, and the
+      // other pages of the same document still run (FR-603).
+      records.push({
+        page: page.page, image: stored, verified: false, attempts: 0, flags: [],
+        problems: ['No he podido sacar ni el texto ni la imagen de esta página.'],
       });
       continue;
     }
@@ -323,11 +365,20 @@ export function parseJsonish(raw: string): unknown {
 }
 
 async function storeSource(jobId: string, page: SourcePage, path?: string): Promise<string | undefined> {
-  if (!page.image || !path) return undefined;
-  // Her photographs live with the material they became (research R5), so she can
-  // open the folder and see the two side by side — and so the verification screen
-  // survives a restart, which 006's whole premise requires.
-  const name = `page-${String(page.page).padStart(2, '0')}-${basename(path)}`;
+  if (!page.image) return undefined;
+  /*
+   * Her photographs live with the material they became (research R5), so she can
+   * open the folder and see the two side by side — and so the verification screen
+   * survives a restart, which `006`'s whole premise requires.
+   *
+   * `path` is optional and used only for the **name**. It has to be: a scanned PDF
+   * is one path and N pages, so `paths[i]` is `undefined` from page two onwards —
+   * and the earlier `if (!path) return undefined` meant every page of a scanned PDF
+   * but the first would have had no stored image and no picture on the verification
+   * screen. She would be asked to check a reading against a blank panel.
+   */
+  const from = path ? basename(path) : `${page.page}.png`;
+  const name = `page-${String(page.page).padStart(2, '0')}-${from}`;
   const target = join(jobSourceDir(jobId), name);
   await currentVault().writeBinary(target, page.image.data);
   return target;
