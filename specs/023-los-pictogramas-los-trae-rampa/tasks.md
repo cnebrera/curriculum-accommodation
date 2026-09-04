@@ -110,6 +110,12 @@ and metadata land where `018`'s reader finds them, and the sheet renders.
   a spec and no plan.md, tasks.md or code — there were no diagrams to be unaffected, so
   «asserted, not assumed» asserted nothing about `022`. The `019` half stands. Re-assert
   the `022` half when `022` actually builds its diagrams (BACKLOG G38).
+  **Re-asserted 2026-09-04**, `022` having been implemented: `figures-never-a-way-in.test.ts`
+  puts a pictogram and a drawn diagram on one page and checks both survive, in HTML and in
+  the linear reading — including the two degraded cases, because those are where one
+  surface swallows the other. A missing pictogram leaves its named gap and the diagram
+  intact; a refused diagram leaves the pictogram and its unremovable attribution intact.
+  `022` T026 owns this from now on.
 - [X] T024 Look at it in two widths and at `xlarge` (`013` FR-1113/FR-1118).
   **Found two things by looking**, which is the whole reason the task exists:
   - The block sat in **480px with a third of the screen empty**, because it was inside

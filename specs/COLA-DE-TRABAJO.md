@@ -373,7 +373,29 @@ sigue siendo el único ítem del lote sin tasks propios (sus tareas viven en spe
       sitio para hacerlas**. Los tres los encontró mirar la página impresa, y los tres
       están arreglados.
       66 casos nuevos + 5 e2e; 13 costuras verificadas por mutación.
-- [x] **3.2 · 022 con plan + tasks ESCRITOS** (P21). Falta solo: implement.
+- [x] **3.2 · `022-material-que-se-ve` IMPLEMENTADA** (P21).
+      **Hecho 2026-09-04, dos commits.** 24 de 27 tareas; las tres abiertas necesitan una
+      fotocopiadora, una PT y una clave real, y están dichas como pendientes.
+      Las cantidades de un diagrama salen del ejercicio ya comprobado y de ningún otro
+      sitio: el tipo `DiagramRequest` **no tiene campo numérico**, así que un modelo que
+      escriba filas y columnas las escribe en nada. El tema lo decide él —y sólo si ella
+      ha apuntado intereses, porque un tema al azar es inventarse un dato de un niño—, y
+      la geometría sale sólo de las cantidades.
+      El muro es código y no corpus (Principio IX): rechaza entero y **nunca limpia**, no
+      hay tipo de salida saneada. Se revalida en cada renderizado porque el vault se edita
+      a mano, y hay una segunda red que compara las cantidades del dibujo con el ejercicio
+      al que acompaña.
+      **Cuatro defectos encontrados de paso:** `Number('')` es 0, así que un ejercicio sin
+      verificar habría llevado una rejilla («la imagen da confianza que la cuenta no
+      merece» es literalmente FR-2003); el tema aterrizaba en `data-theme`, un atributo
+      **invisible** para el chequeo de fuga, así que un nombre podía viajar en un fichero
+      que ella manda por correo; las cajas de los grupos se leían como una sola; y cada
+      diagrama reservaba 9×6cm de papel. Los dos últimos los encontró mirar la página
+      impresa.
+      Y se cierra G38: `023` T023 vuelve a afirmar su mitad aplazada contra diagramas que
+      ahora existen, y la cita de `022` FR-2008 en `pictograms/fetch.ts` nombra otra vez
+      una regla implementada.
+      124 casos nuevos + 7 e2e; 12 costuras verificadas por mutación.
 - [x] **3.3 · Spec ESCRITA → `026-la-conversacion`** (P24). Falta: clarify → plan → tasks → implement.
 - [x] **3.4 · Spec ESCRITA → `028-material-de-estructura`** (P4). Falta: clarify → plan → tasks → implement.
 - [x] **3.5 · Spec ESCRITA → `029-la-normativa-es-un-corpus`** (P3, incluye P8). Falta: clarify → plan → tasks → implement.

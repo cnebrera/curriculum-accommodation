@@ -43,6 +43,8 @@ export * from './compose/exam-gate.js';
 export * from './compose/kind.js';
 export * from './render/figures/validate.js';
 export * from './render/figures/draw.js';
+export * from './compose/figures.js';
+export * from './render/figures/render.js';
 export * from './render/figures/corpus.js';
 export * from './compose/anchor.js';
 export * from './compose/level.js';

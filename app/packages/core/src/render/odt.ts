@@ -1,5 +1,6 @@
 import type { IRDocument, Block } from '../ir/types.js';
 import { draftMark } from './draft.js';
+import { drawFigureBlock, isDrawnFigure } from './figures/render.js';
 import { learnerFacing } from '../ir/parse.js';
 import { zip, type ZipEntry } from './zip.js';
 import { parsePicto } from '../pictograms/apply.js';
@@ -109,7 +110,58 @@ function renderPictos(b: Block, images?: ReadonlyMap<string, ImageBytes>): strin
 /** One pictogram, ready to be written into the package. */
 interface ImageBytes { path: string; data: Uint8Array; mediaType: string }
 
-function renderBlock(b: Block, images?: ReadonlyMap<string, ImageBytes>): string {
+function renderBlock(
+  b: Block, images?: ReadonlyMap<string, ImageBytes>,
+  /** The document's other blocks, for the figure branch's cross-check (`022` T019). */
+  blocks?: readonly Block[],
+  /** Block id → the picture path its drawing was written to. */
+  drawings?: ReadonlyMap<string, string>,
+): string {
+  /*
+   * A drawn figure is a **picture**, with its description as the paragraph beneath.
+   *
+   * The description is unconditional and not a fallback: in the editable document it is
+   * also the thing she can *fix*, and an editor that cannot show the SVG still leaves her
+   * a sheet that says what the picture was. A refused figure exports as its refusal
+   * sentence, the same as HTML — the modalities must not disagree about whether a diagram
+   * exists (FR-2011).
+   */
+  if (isDrawnFigure(b)) {
+    const drawn = drawFigureBlock(b, blocks ?? []);
+    const path = drawings?.get(b.id);
+    if (drawn.svg === null || !path) {
+      return `<text:p text:style-name="Apoyo">${esc(drawn.refusal ?? drawn.description)}</text:p>`;
+    }
+    /*
+     * The frame is sized from the drawing's own aspect ratio — decided by printing it.
+     *
+     * A fixed 9×6cm frame for every kind reserved the same block of paper for a wide,
+     * short number line and a small bar, so a four-diagram sheet ran to two pages with
+     * two thirds of each one blank. The drawing declares its natural size in its
+     * `viewBox`; this scales it to a readable width and lets the height follow.
+     */
+    const box = /viewBox="0 0 ([\d.]+) ([\d.]+)"/.exec(drawn.svg);
+    /*
+     * Twenty units to the centimetre, so a 16-unit cell prints about 8mm across.
+     *
+     * At twelve the cells came out the size of postage stamps and a four-row grid
+     * reserved seven centimetres of paper — one diagram per page, with two thirds of it
+     * blank. Eight millimetres is countable at arm's length and leaves room for the
+     * exercise it belongs to.
+     */
+    const width = Math.min(9, Math.max(2.5, Number(box?.[1] ?? 100) / 20));
+    const height = box ? width * (Number(box[2]) / Number(box[1])) : 6;
+    return [
+      '<text:p text:style-name="Cuerpo">'
+      + `<draw:frame draw:name="${esc(b.id)}" text:anchor-type="as-char"`
+      + ` svg:width="${width.toFixed(2)}cm" svg:height="${height.toFixed(2)}cm">`
+      + `<draw:image xlink:href="${esc(path)}" xlink:type="simple" xlink:show="embed"`
+      + ' xlink:actuate="onLoad"/>'
+      + '</draw:frame></text:p>',
+      `<text:p text:style-name="Apoyo">${esc(drawn.description)}</text:p>`,
+    ].join('\n');
+  }
+
   const style = STYLE_FOR[b.classes.find((c) => c in STYLE_FOR) ?? 'explanation'] ?? 'Cuerpo';
   const number = b.attrs['data-number'];
 
@@ -368,8 +420,33 @@ export function renderODT(doc: IRDocument, opts: OdtOptions = {}): Uint8Array {
     pictures.set(id, { path: `Pictures/${id}.${ext}`, ...decoded });
   }
 
+  /*
+   * The drawn diagrams, into the package as SVG (`022` T019, research R5).
+   *
+   * Today `figure` mapped to the `Cuerpo` paragraph style, so a composed diagram would
+   * have exported as **the raw glyph fence printed as prose** — in the modality `019`
+   * calls the one with the most users, and the one she opens to fix two words before
+   * printing. FR-2012 names audio and braille and is silent on the editable export; the
+   * constitution is not (Principle IV), and «one document, N renderings» with a rendering
+   * that prints markup is the promise broken quietly.
+   *
+   * LibreOffice — the editor this path was designed around — renders embedded SVG
+   * natively, and `zip()` and the manifest already exist. No new dependency.
+   */
+  const drawings = new Map<string, string>();
+  for (const b of doc.blocks) {
+    if (!isDrawnFigure(b)) continue;
+    const drawn = drawFigureBlock(b, doc.blocks);
+    if (drawn.svg === null) continue;
+    const path = `Pictures/${b.id}.svg`;
+    drawings.set(b.id, path);
+    pictures.set(`figure:${b.id}`, {
+      path, mediaType: 'image/svg+xml', data: new TextEncoder().encode(drawn.svg),
+    });
+  }
+
   const body = doc.blocks.filter(learnerFacing)
-    .map((b) => renderBlock(b, pictures)).join('\n');
+    .map((b) => renderBlock(b, pictures, doc.blocks, drawings)).join('\n');
 
   /*
    * And the credit, at the foot, from the sources the document actually used

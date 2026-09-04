@@ -10,9 +10,12 @@ import {
   composeUnverified, verifierFor, UNVERIFIABLE_ES,
   parseProblemProposals, parseExamProposals, verifyProblem,
   examBelowCourse, acsInOverlay, derivedKind, kindMismatched,
+  parseFigureCorpus, parseDiagramRequests, figureQuantities, describeFigure,
+  acceptGlyph, isRefusal,
   type Leveled, type ProposedExercise, type Skill, type ComposeOutcome,
   type Proposal, type ProposedProblem, type ProposedQuestion,
-  type ProblemItem, type ExamQuestion,
+  type ProblemItem, type ExamQuestion, type Figure, type DiagramRequest,
+  type FigureRefusal, type FigureCorpus,
   type AnswerLine, type SheetGroup, type Verifier, type AnchorPassage, type Block,
   type Notice, addCost,
 } from '@rampa/core';
@@ -393,6 +396,18 @@ export async function runCompose(
   const wanted = clampWanted(request.perObjective ?? limits.exercisesPerObjective);
   let costCents: number | null = 0;
 
+  /*
+   * The diagram corpus (`022` T006/T010).
+   *
+   * Read at compose time, never at render time: its judgement is baked into the stamped
+   * block, which is what makes a composed document renderable anywhere, for ever
+   * (FR-2004). Its fallback draws **nothing**, so a corpus that fails to load loses the
+   * feature rather than drawing with bounds nobody declared.
+   */
+  const figures = parseFigureCorpus(await loadInstruction('figures'));
+  const diagramRequests: DiagramRequest[] = [];
+  const figureRefusals: FigureRefusal[] = [];
+
   const groups: SheetGroup[] = [];
   const unverifiedObjectives: string[] = [];
   /*
@@ -456,14 +471,33 @@ export async function runCompose(
     const ask = <T extends Proposal>(
       shape: Parameters<typeof propose<T>>[0]['shape'], withSystem: string, stage: string,
     ) => async (s: Skill, soFar: readonly T[], need: number): Promise<readonly T[]> => {
-      const { proposed, cents } = await propose<T>({
+      const { proposed, cents, raw } = await propose<T>({
         provider, key, known, system: withSystem, shape,
+        /*
+         * Diagrams ride the **exercise** path only.
+         *
+         * A composed problem already tells its own story and a study text has no verified
+         * quantity to draw from — so neither gets the invitation, and neither can produce
+         * a figure request that would point at nothing.
+         */
+        ...(shape.noun === EXERCISE_SHAPE.noun ? { figures } : {}),
         skill: s, objective: text, level: l, need, soFar,
         interests: learner.profile.interests ?? [],
         yearLabel: yearId ? yearLabel(yearId) : undefined,
         onProgress: (detail) => onProgress({ stage, detail }),
       });
       costCents = addCost(costCents, cents);
+      /*
+       * The diagram requests, out of the **same** response (T010, FR-2001).
+       *
+       * No new provider call: they are extra lines the model may add after the exercises,
+       * so a sheet with diagrams costs what a sheet without them costs. Collected across
+       * batches and matched to accepted exercises afterwards — a request pointing at a
+       * proposal the verifier rejected points at nothing.
+       */
+      if (figures.kinds.length > 0) {
+        diagramRequests.push(...parseDiagramRequests(raw, figures));
+      }
       return proposed;
     };
 
@@ -600,6 +634,75 @@ export async function runCompose(
     content = written.blocks;
   }
 
+  /*
+   * The diagrams, matched to the exercises that survived verification
+   * (`022` T008, FR-2001/2002/2003).
+   *
+   * After the loop, because a request pointing at a proposal the verifier rejected points
+   * at nothing — and because the answer, which several kinds need, is only known once the
+   * exercise was accepted. Every quantity here comes from `figureQuantities`, which reads
+   * the expression and the **computed** answer; the model's numbers reach nothing.
+   */
+  const drawn = new Map<string, Figure>();
+  for (const group of groups) {
+    // An unverified group stamps nothing (FR-2003): the same branch that keeps its
+    // answers out of the key. A confident picture beside unchecked arithmetic lends it a
+    // credibility it has not earned.
+    if (group.of !== undefined || group.unverified) continue;
+    for (const item of group.accepted) {
+      const request = diagramRequests.find((r) => same(r.expression, item.exercise.expression));
+      if (!request) continue;
+
+      const quantities = figureQuantities({
+        corpus: figures, kindId: request.kind,
+        expression: item.exercise.expression, answer: item.answer,
+      });
+      if (isRefusal(quantities)) { figureRefusals.push(quantities); continue; }
+
+      const glyph = acceptGlyph(item.exercise.expression, request.glyph);
+      if (isRefusal(glyph)) {
+        /*
+         * The glyph is refused and the figure is **still drawn**, plain.
+         *
+         * The alternative — no diagram because its decoration failed the wall — would
+         * lose a correct picture over a theme, and the theme is the part that matters
+         * least. She is told, so the model's markup is not silently discarded either.
+         */
+        figureRefusals.push(glyph);
+      }
+
+      /*
+       * The stated numbers, where they disagree (FR-2002).
+       *
+       * Said rather than silently corrected: «la cantidad la corregí yo» is a sentence
+       * she can act on, and a silent correction is a model whose mistakes she never
+       * learns about.
+       */
+      const drawnNumbers = numbersIn(quantities);
+      const disagreeing = (request.statedNumbers ?? [])
+        .filter((n) => !drawnNumbers.includes(n));
+      if (disagreeing.length > 0) {
+        figureRefusals.push({
+          of: item.exercise.expression, reason: 'quantities-drifted',
+          detail: `Para «${item.exercise.expression}» pedía un dibujo con `
+            + `${disagreeing.join(', ')}. Lo he dibujado con las cantidades del `
+            + 'ejercicio, que son las que he comprobado.',
+        });
+      }
+
+      drawn.set(item.exercise.expression, {
+        of: item.exercise.expression,
+        quantities,
+        ...(request.theme && (learner.profile.interests ?? []).length > 0
+          ? { theme: request.theme } : {}),
+        ...(!isRefusal(glyph) && glyph.glyph ? { glyph: glyph.glyph } : {}),
+        description: describeFigure(figures, quantities,
+          request.theme && (learner.profile.interests ?? []).length > 0
+            ? request.theme : undefined),
+      });
+    }
+  }
+
   onProgress({ stage: 'Guardando' });
 
   /*
@@ -681,6 +784,13 @@ export async function runCompose(
          + 'dejado como lo pediste: el tipo lo decides tú, y de él dependen las reglas '
          + 'con las que lo adapte después. Si no es lo que querías, dímelo y lo hago otra vez.']
       : []),
+    /*
+     * What happened to each diagram, quoted and located (`022` T012, FR-2011/2015).
+     *
+     * In the notes, which become the report — a refusal she cannot see is a refusal that
+     * teaches her nothing about the material she is about to sign.
+     */
+    ...figureRefusals.map((r) => r.detail),
     ...(unverifiedObjectives.length
       ? [`${UNVERIFIABLE_ES} Concretamente: ${unverifiedObjectives.map((o) => `«${o}»`).join(', ')}.`]
       : []),
@@ -707,6 +817,7 @@ export async function runCompose(
 
   const sheet = buildSheet({
     title, lang: 'es', materialKind: chosenKind, objectives: kept, groups, content, composedOn, notes,
+    ...(drawn.size > 0 ? { figures: drawn } : {}),
     // The kind's own sentences, printed (`021` T022). Corpus, never a literal here.
     ...(kindEntry?.composing?.onDocument.length
       ? { kindNotes: kindEntry.composing.onDocument } : {}),
@@ -820,6 +931,14 @@ async function propose<T extends Proposal>(args: {
   interests: readonly string[];
   yearLabel?: string;
   /**
+   * The diagram corpus, when this path may ask for diagrams (`022` T010/T016).
+   *
+   * Absent for the paths that may not: a study text has no verified quantity to draw
+   * from, and a problem's picture is not in this feature's scope. Absence is what stops
+   * the invitation being sent, so a path that must not offer diagrams cannot.
+   */
+  figures?: FigureCorpus;
+  /**
    * What the model is being asked for, and how to read what comes back
    * (`027` T009/T013).
    *
@@ -837,7 +956,7 @@ async function propose<T extends Proposal>(args: {
     show: (proposal: T) => string;
   };
   onProgress: (detail: string) => void;
-}): Promise<{ proposed: T[]; cents: number | null }> {
+}): Promise<{ proposed: T[]; cents: number | null; raw: string }> {
   const lines: string[] = [
     `Objetivo, con las palabras de la maestra: «${args.objective}».`,
     `Necesito ${args.need} ${args.shape.noun}.`,
@@ -862,6 +981,25 @@ async function propose<T extends Proposal>(args: {
       + 'en la dificultad.');
   }
 
+  /*
+   * The diagram invitation, and **only** from recorded interests (`022` T016, FR-2005/2006).
+   *
+   * With interests: the corpus invites a theme drawn from them — words and simple shapes,
+   * never somebody's artwork. With none: the corpus asks for plain figures and does not
+   * mention theming at all. Themed at random would be **inventing a fact about a child**,
+   * which is the same refusal `011` makes about ages and courses.
+   *
+   * Both sentences are corpus, and so is the request format. What is code is which of the
+   * two is sent, which is a fact about her vault rather than a judgement.
+   */
+  if (args.figures && args.figures.requestFormat) {
+    lines.push(args.figures.requestFormat);
+    const theming = args.interests.length > 0
+      ? args.figures.themeWhenKnown.replace('{interests}', args.interests.join(', '))
+      : args.figures.themeWhenUnknown;
+    if (theming) lines.push(theming);
+  }
+
   if (args.soFar.length) {
     lines.push('Ya tengo estos, no los repitas:',
       args.soFar.map(args.shape.show).join('\n'));
@@ -880,7 +1018,15 @@ async function propose<T extends Proposal>(args: {
     if (chunk.usage) cents = addCost(cents, args.provider.price(chunk.usage));
   }
 
-  return { proposed: args.shape.parse(raw), cents };
+  /*
+   * The raw text comes back too, since `022`.
+   *
+   * The diagram requests are lines in the **same** response — the request rides the
+   * existing propose loop rather than costing a second call (T010) — so the caller needs
+   * the text to parse them out of. Returned rather than parsed here, because this
+   * function knows nothing about figures and should not start to.
+   */
+  return { proposed: args.shape.parse(raw), cents, raw };
 }
 
 /** The three shapes, named once so a call site cannot invent a fourth. */
@@ -1172,6 +1318,24 @@ const judgeQuestion = (
     ...(q.statedAnswer ? { statedAnswer: q.statedAnswer } : {}),
   });
 };
+
+/**
+ * Two expressions are the same exercise (`022` T008).
+ *
+ * Keyed by expression rather than by position, because a recipe that splits a page
+ * renumbers it and `47 × 8` survives that — the answer key learned this in `002`.
+ * Normalised the same way the loop's dedupe is, so `47 × 8` and `47×8` match.
+ */
+const same = (a: string, b: string): boolean =>
+  a.replace(/\s+/g, '').replace(',', '.').toLowerCase()
+  === b.replace(/\s+/g, '').replace(',', '.').toLowerCase();
+
+/** Every number the drawing will actually show, so a disagreement can be named. */
+const numbersIn = (q: Figure['quantities']): number[] =>
+  q.kind === 'grid' ? [q.rows, q.cols, q.rows * q.cols]
+    : q.kind === 'groups' ? [q.groups, q.perGroup, q.groups * q.perGroup]
+      : q.kind === 'number-line' ? [q.start, q.jumps, q.end]
+        : [...q.parts, q.whole];
 
 /** A sheet, not a term's worksheets. Bounded in code because it bounds her money. */
 const clampWanted = (n: number): number =>

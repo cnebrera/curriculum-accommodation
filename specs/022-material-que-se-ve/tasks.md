@@ -35,19 +35,32 @@ is already paid for, and one deterministic drawer serves every modality.
       unreachable through any attribute (no allowed value grammar admits a parenthesis),
       so it is asserted where it can actually appear, in text content, and kept as
       defence in depth with that said out loud.)*
-- [ ] T002 [P] [US3] Write `app/packages/core/test/figures-never-a-way-in.test.ts`
+- [x] T002 [P] [US3] Write `app/packages/core/test/figures-never-a-way-in.test.ts`
       **first**, red: a document whose figure block carries each hostile payload renders
       to a sheet that (a) still exists, minus the diagram, with the refusal reported
       (FR-2011); (b) contains no `<script`, no `on*=`, no `href`, no `url(`, no `http`
       anywhere in the output string (FR-2010); and (c) raw SVG in an **ordinary** block's
       content stays escaped text — the fenced-figure branch is the only road from model
       markup to drawing
-- [ ] T003 [P] [US1] Write `app/packages/core/test/figures-quantities.test.ts` **first**,
+      *(done: `figures-never-a-way-in.test.ts`, 24 cases over ten payloads in three
+      modalities. **The refusal sentences are excluded from the «no reference»
+      assertion**, and that took a failing test to see why: a refusal quotes its
+      offending token («lleva «url(»»), because Principle IX says quoted and never
+      paraphrased — so a refused document legitimately contains `url(` as escaped text.
+      FR-2010 forbids a reference; a quotation is not one, and the quoting is asserted
+      separately.)*
+- [x] T003 [P] [US1] Write `app/packages/core/test/figures-quantities.test.ts` **first**,
       red, from quickstart §2: SC-2001 as an invariant over a generated corpus — every
       diagram's quantities equal its exercise's (FR-2001); a request with disagreeing
       numbers is drawn with the exercise's and reported as corrected (FR-2002); an
       unverified group gets no diagram (FR-2003); rendering twice yields byte-identical
       SVG (FR-2004)
+      *(done: `figures-quantities.test.ts`, 27 cases. It caught a real FR-2003 violation
+      before anything stamped a figure: `Number('')` is **0**, which is finite, so an
+      unverified exercise — whose answer is the empty string, the same branch that keeps
+      it out of the key — would have got a confident grid beside it. And mutation found
+      the other half untested: `buildSheet`'s own unverified-group guard could be
+      removed with the suite green, so it has its own cases now.)*
 
 ---
 
@@ -110,13 +123,19 @@ changed, no provider involved.
 
 ## Phase 3 · User Story 1 · A diagram that is right (P1) 🎯 MVP — ships only with Phase 4
 
-- [ ] T007 [US1] `app/packages/core/src/compose/figures.ts` · `parseDiagramRequests`
+- [x] T007 [US1] `app/packages/core/src/compose/figures.ts` · `parseDiagramRequests`
       over the compose response (`parseProposals`'s tolerance: an unparseable line is no
       request, never a guess). The parsed type has **no numeric field** (data-model.md);
       stated numbers are discarded and, where they disagree with the exercise, surfaced
       for the report (FR-2002). Kind names map from the corpus's declared spellings;
       unknown kind = no request
-- [ ] T008 [US1] `app/packages/core/src/compose/sheet.ts` · `buildSheet` stamps a
+      *(done: `parseDiagramRequests`. `parseProposals`' tolerance exactly — a fence,
+      numbering, a trailing stop — and an unparseable line is **no request**. An unknown
+      `tipo` is no request either, rather than the nearest kind: remapping a pedagogical
+      choice is sanitising it. The stated numbers are read off the whole line and kept
+      **only** to report the disagreement, because there is no numeric field to read
+      them into.)*
+- [x] T008 [US1] `app/packages/core/src/compose/sheet.ts` · `buildSheet` stamps a
       `.figure` block per matched request: `data-figure`, `data-of`, kind-specific
       quantity attributes computed from the **accepted** exercise's operands and verified
       answer (FR-2001), `data-theme`, `data-description` from the corpus template with
@@ -126,34 +145,68 @@ changed, no provider involved.
       to the operation per the corpus table: refused and reported, not remapped. Bound
       exceeded: no diagram plus the bound named — never clamped, a clamped grid is a
       wrong-quantity diagram (FR-2015)
-- [ ] T009 [US1] `app/packages/core/src/render/html.ts` · the figure branch: a `.figure`
+      *(done: `buildSheet` stamps a `.figure` block after the exercise it draws, with
+      `data-figure` (what makes it a drawn figure rather than `001`'s ingested image),
+      `data-of`, the kind's quantity attributes and the corpus description. The figures
+      are assembled by the **caller**, which is the one with the corpus — the same
+      separation `kindNotes` takes. An unverified group stamps nothing.)*
+- [x] T009 [US1] `app/packages/core/src/render/html.ts` · the figure branch: a `.figure`
       block with `data-figure` is drawn via `drawFigure` after **re-validating** the
       glyph (the vault is hand-editable; `007`) and cross-checking `data-of` — if the
       referenced exercise still parses, its operands must match the stamped quantities,
       else the figure is refused with a notice (FR-2016's second net). A refusal renders
       as its sentence and the sheet survives (FR-2011). The fence is never
       markdown-rendered
-- [ ] T010 [US1] `app/packages/shell/src/jobs/compose.ts` · the corpus's request-format
+      *(done: `render/figures/render.ts` + the HTML branch. Two checks on every render,
+      because the vault is hand-editable and a figure block read off disk is content
+      whatever wrote it: the glyph against the wall, and the quantities against the
+      exercise `data-of` names. A **renamed** exercise loses nothing — this check is
+      about numbers that moved, not ids that did, and a recipe that renumbers a page
+      would otherwise delete every diagram for a change that broke nothing.)*
+- [x] T010 [US1] `app/packages/shell/src/jobs/compose.ts` · the corpus's request-format
       section joins the propose prompt (loaded via `loadInstruction('figures')`, never a
       literal — Principle I), responses go through `parseDiagramRequests`, matched
       requests reach `buildSheet`, and every refusal, correction and bound lands in
       `notes` → the report (FR-2002, FR-2011, FR-2015). **No new provider call**: the
       request rides the existing propose loop, asserted by the provider-call count in
       the tests
-- [ ] T011 [US1] Corrections and staleness: correcting a composition re-runs `runCompose`
+      *(done: the corpus's request-format section joins the propose prompt via
+      `loadInstruction('figures')`, the requests are parsed out of the **same** response
+      — no new provider call, so a sheet with diagrams costs what one without them costs
+      — and every refusal, correction and bound lands in `notes` and so in the report.)*
+- [x] T011 [US1] Corrections and staleness: correcting a composition re-runs `runCompose`
       (`021` T026's path), so figures are rebuilt with the sheet — assert in
       `app/packages/shell/test/` that after a correction changing an exercise's numbers,
       no rendering anywhere carries a diagram with the old numbers (FR-2016, `005`
       FR-520's edge case)
-- [ ] T012 [P] [US1] The report says what happened, in her language, quoted and located:
+      *(done as the two guarantees rather than as a check: a correction re-runs
+      `runCompose`, so the sheet and its figures are rebuilt together — there is no path
+      that updates an exercise and keeps its figure — and `buildSheet` is the only place
+      that ever writes a figure block, asserted over the other three job files. The
+      hand-edited-vault case is the render-time cross-check, in
+      `figures-never-a-way-in.test.ts`. **Not** asserted: the end-to-end «correct it and
+      look for old numbers» walk, which needs a provider and is T025.)*
+- [x] T012 [P] [US1] The report says what happened, in her language, quoted and located:
       «la cantidad la corregí yo» (FR-2002), «rechacé un diagrama, y por qué» with the
       offending token (FR-2011), «no dibujé: pasa del límite» with the bound (FR-2015),
       «no dibujé: nada pudo comprobar ese ejercicio» (FR-2003). Sentences from the
       corpus where they are judgement; facts interpolated by code
-- [ ] T013 [US1] `app/e2e/figures.spec.ts` from quickstart §4: compose with diagrams,
+      *(done: every `FigureRefusal.detail` becomes a note. A disagreeing quantity is
+      **named**, not silently corrected: «lo he dibujado con las cantidades del
+      ejercicio» is a sentence she can act on, and a silent correction is a model whose
+      mistakes she never learns about. And a refused glyph loses the theme, not the
+      diagram — losing a correct picture over a decoration trades the part that matters
+      for the part that does not.)*
+- [x] T013 [US1] `app/e2e/figures.spec.ts` from quickstart §4: compose with diagrams,
       view, print — **a real PDF produced, stated, not typechecked** — and the planted
       hostile document loaded in the viewer and the PDF path with zero network requests
       and zero execution, asserted from the request log (FR-2010, SC-2002)
+      *(done: `e2e/figures.spec.ts`, seven walks. It does **not** compose — that needs a
+      key and is T025 — and what it walks instead is the sharper half: a document that
+      already carries a hostile figure block, in the viewer and the print path, with the
+      request log watched. Every payload tries to fetch the same canary host on load,
+      and the assertion is over the log rather than over intentions. The PDF's **size**
+      is asserted, because «a PDF was produced» is a claim about bytes.)*
 
 **Checkpoint**: beside `4 × 3 =` there is a rectangle of twelve cells, because the
 exercise says twelve — but nothing ships until Phase 4 is green (US3 ships with US1 or
@@ -166,17 +219,31 @@ US1 does not ship).
 Most of US3 is already encoded in T001/T002/T004 (written first) and exercised by T013.
 What remains is closing the outer wall and the egress:
 
-- [ ] T014 [US3] Assert the outer defences against a document that tries: the viewer's
+- [x] T014 [US3] Assert the outer defences against a document that tries: the viewer's
       `seal()` (no script permission, no navigation, no remote — `021` T014) and
       `renderPdf`'s `javascript: false` window, over a figure-bearing hostile document —
       extend `app/e2e/composed.spec.ts` or fold into T013's spec. And assert
       `packages/shell/test/boundary.test.ts` still counts the same twelve Electron files:
       this feature adds **no** new Electron surface
-- [ ] T015 [P] [US3] `app/packages/core/test/figures-egress.test.ts` · learner data
+      *(done, inside T013's spec: the viewer's sandboxed frame and `renderPdf`'s
+      `javascript: false` window both walked over figure-bearing hostile documents, with
+      zero requests to the canary. And this feature adds **no** Electron surface — the
+      drawer, the wall and the render branch are all in `packages/core`, which
+      `boundary.test.ts` asserts imports no Electron at all.)*
+- [x] T015 [P] [US3] `app/packages/core/test/figures-egress.test.ts` · learner data
       planted where the model could put it — theme, label, glyph text — is caught by the
       existing egress check on every modality: `checkOutput` strips tags, so SVG `<text>`
       content is visible text to it; assert with a code, a known name and a school
       (FR-2014, `011` FR-910, `015` FR-1306)
+      *(done: `figures-egress.test.ts`, and it found a real hole. A learner fact can
+      arrive in three slots a model fills — theme, label, glyph text — and the theme
+      landed in `data-theme`, an **attribute**, which is invisible to `checkOutput`
+      because that check strips tags to model what the child reads. A name arriving as a
+      theme sat in the rendered file, neither caught nor absent, in a document she
+      emails. The renderer now emits only the two attributes the code wrote; the theme
+      still reaches the page through the drawing and the caption, which are the two
+      places the check can see. The property is asserted as «caught **or** absent»,
+      which is what FR-2014 actually says.)*
 
 **Checkpoint**: SC-2002 — markup trying script, handler and remote reference produces no
 execution, no fetch, and a reported refusal. Now, and only now, US1 can ship.
@@ -185,23 +252,39 @@ execution, no fetch, and a reported refusal. Now, and only now, US1 can ship.
 
 ## Phase 5 · User Story 2 · A diagram that is his (P2)
 
-- [ ] T016 [US2] The propose prompt themes only from recorded interests: with
+- [x] T016 [US2] The propose prompt themes only from recorded interests: with
       `profile.interests` present the corpus section invites a theme drawn from them
       (words and shapes, never artwork); with none recorded the prompt does not invite
       theming and any arriving theme is dropped for **plain** — themed at random is
       inventing a fact about a child (FR-2005, FR-2006). In
       `app/packages/shell/src/jobs/compose.ts` beside the existing «Le interesan:» lines
-- [ ] T017 [P] [US2] `app/packages/core/test/figures-theme.test.ts` · SC-2003 offline:
+      *(done: with interests recorded the corpus invites a theme drawn from them, and
+      with none it asks for plain figures and does not mention theming — and an arriving
+      theme is **dropped** in that case, because a theme with no recorded interest
+      behind it is a fact about the child nobody wrote down. Both sentences are corpus;
+      what is code is which of the two is sent.)*
+- [x] T017 [P] [US2] `app/packages/core/test/figures-theme.test.ts` · SC-2003 offline:
       two profiles, different interests, one objective, mocked proposals → two sheets
       whose quantities agree in every figure and whose themes differ; and the no-interest
       profile gets plain figures. Theme structurally cannot move a quantity: the drawer's
       geometry reads only `quantities` (asserts T005's seam) (FR-2005)
-- [ ] T018 [US2] The property line (FR-2007): the corpus instruction from T006 is sent
+      *(done, offline, in `figures-draw.test.ts`: the same quantities draw the same
+      number of cells themed or plain, **and** the two drawings differ — otherwise the
+      first assertion would pass on a drawer that ignored the theme, which is a
+      different feature failing silently. The structural claim is the drawer's geometry
+      reading only `quantities`; the shell half — theme dropped without interests — is
+      in `figures-compose.test.ts`.)*
+- [x] T018 [US2] The property line (FR-2007): the corpus instruction from T006 is sent
       (assert presence in the prompt, the `no-grade-ever` pattern for prohibitions); the
       structural half is the allowlist — no `image`, no `use`, no external reference
       means no artwork can be embedded (cites T004); and the report notes that a theme
       naming a brand was used **as a theme** («cartas de un juego», not the mark). The
       rest is her review — recorded as a limit, not claimed as solved
+      *(done: the corpus says «el tema, no el personaje» in the words the model reads,
+      and the **structural** half is the allowlist — no `image`, no `use`, no external
+      reference means no artwork can be embedded at all, so the worst a model can do
+      with a character is a rough silhouette of rectangles. The rest is her review,
+      recorded as a limit rather than claimed as solved.)*
 
 **Checkpoint**: the same twelve cells, and they are cards for one child and buses for
 another, and the mathematics is identical.
@@ -210,44 +293,86 @@ another, and the mathematics is identical.
 
 ## Phase 6 · It is a document, so it is every rendering (with US1, not after it)
 
-- [ ] T019 [US1] `app/packages/core/src/render/odt.ts` · the figure branch (research
+- [x] T019 [US1] `app/packages/core/src/render/odt.ts` · the figure branch (research
       R5): the drawer's SVG bytes into the ZIP as `Pictures/<id>.svg` with a manifest
       entry and a `draw:frame`, the description as the paragraph beneath —
       unconditional, it is the sentence she can fix — and a refused figure exports as
       its refusal sentence, agreeing with HTML (FR-2011, FR-2012). Today `figure` maps
       to `Cuerpo` and would print the raw fence as prose — assert the fence appears
       nowhere as text
-- [ ] T020 [P] [US1] `app/packages/core/test/figures-linear.test.ts` · audio-ready and
+      *(done: the drawer's SVG into the ZIP as `Pictures/<id>.svg` with a manifest entry
+      and a `draw:frame`, the description as the paragraph beneath, and a refused figure
+      exporting as its refusal sentence — the modalities must not disagree about whether
+      a diagram exists. The fence appears nowhere as text, which is what it did before:
+      `figure` mapped to `Cuerpo` and would have printed the glyph as prose.)*
+- [x] T020 [P] [US1] `app/packages/core/test/figures-linear.test.ts` · audio-ready and
       braille-ready over a document with all four kinds: each diagram appears **as its
       description** (`data-description`, stamped by T008, consumed by `019`'s
       `renderLinear`), no glyph markup in either text, nothing silently dropped —
       asserted here rather than delegated to `019`, per the review's finding (FR-2012)
-- [ ] T021 [P] [US1] `app/packages/core/test/figures-photocopy.test.ts` · FR-2013 both
+      *(done: `figures-linear.test.ts`, four kinds × two modalities. Asserted here
+      rather than delegated to `019` per the review's finding — `019` treats a `.figure`
+      with a description as *being* its description, which happens to be exactly right,
+      and «happens to be right» is the state that decays when either side changes. The
+      count is asserted too, because «contains the descriptions» passes on a rendering
+      that also lost the exercises.)*
+- [x] T021 [P] [US1] `app/packages/core/test/figures-photocopy.test.ts` · FR-2013 both
       halves: `checkPhotocopy` over a themed sheet reports no colour-collapse between
       figure colours and page colours, and a greyscale-blindness assertion — strip all
       `fill`/`stroke` to black-on-white and every count is still countable (discrete
       shapes, T005's rule), no meaning carried by colour alone (`010` FR-812)
+      *(done: `figures-egress.test.ts`'s second half. `checkPhotocopy` over a themed
+      sheet, plus the greyscale-blindness assertion — strip every fill and stroke to
+      black on white, which is what a photocopier does, and the twelve cells are still
+      twelve. A drawing that distinguished its cells by colour would collapse there, and
+      a black-and-white photocopy is the delivery format, not an edge case.)*
 
 ---
 
 ## Phase 7 · Polish · and the parts that need a person
 
-- [ ] T022 **Look at it** (`013`'s rule): `npm run shots`, plus the exported ODT opened
+- [x] T022 **Look at it** (`013`'s rule): `npm run shots`, plus the exported ODT opened
       **in LibreOffice** — «embedded SVG renders in LibreOffice» is a claim about
       somebody else's software (quickstart §6). A themed grid at arm's length, the recta
       at `xlarge`, a refused diagram's sheet read as a whole page
+      *(done for the **printed** page — the four kinds built from a fixture, exported to
+      ODT, converted with LibreOffice, and looked at. **Two defects found and fixed:**
+      (1) the group boxes sat four units apart and their dashed outlines read as one
+      long mess, so «four groups of three» became «twelve in a box» — the distinction
+      the boxes exist to draw; (2) every diagram got a fixed 9×6cm ODT frame, so a wide
+      short number line and a small bar reserved the same block of paper and a
+      four-diagram sheet ran to two pages with two thirds of each one blank. The frame
+      is now sized from the drawing's own `viewBox` at twenty units to the centimetre —
+      a 16-unit cell prints about 8mm, countable at arm's length. **Not looked at:** the
+      on-screen HTML at 480px and `xlarge`; rastering needs a browser this machine's
+      Playwright has not downloaded, and `npm run shots` photographs the application,
+      which cannot compose without a provider.)*
 - [ ] T023 **SC-2005 needs a photocopier**: quickstart §7, a sheet with all four kinds
       through a real black-and-white photocopy. The second criterion in this project to
       need a physical machine; record the result in `specs/006-desktop-app/validation.md`
       honestly, including «not done» if not done
+      **Pendiente: necesita una fotocopiadora.** The second criterion in this project to
+      need a physical machine. `validation.md` records it as not done rather than as
+      covered — the greyscale-blindness assertion in `figures-egress.test.ts` proves the
+      *drawing* survives being flattened, which is a different claim from «this came out
+      of a real photocopier legible».
 - [ ] T024 **SC-2006 needs a teacher**: the themed sheet and the plain one, no preamble —
       which would she put in front of the child, and why. The only criterion that can
       come back «no» with everything else green, and «why not» is worth more than the
       answer
+      **Pendiente: necesita una PT.** The themed sheet and the plain one, no preamble.
+      The only criterion here that can come back «no» with everything else green, and
+      «por qué no» is worth more than the answer.
 - [ ] T025 [P] Run quickstart §5 with a real key: two learners, one objective, quantities
       agree, themes differ, refusals and corrections legible in the report (SC-2003, and
       the provider-call count unchanged — no new call)
-- [ ] T026 Settle `022`'s record (P21, CONS-01 — the corrections themselves landed on
+      **Pendiente: necesita una clave real y gasta dinero.** What only money can answer:
+      whether a real model's themes are worth having, whether two learners get the same
+      quantities and different themes end to end, and whether the refusals and
+      corrections read legibly in the report. The provider-call count is asserted
+      structurally (the requests ride the existing response) but not measured against a
+      real service.
+- [x] T026 Settle `022`'s record (P21, CONS-01 — the corrections themselves landed on
       2026-09-03; this task is the half they deferred): re-assert the `022` half of
       `specs/023-los-pictogramas-los-trae-rampa/tasks.md` T023 against diagrams that now
       exist — its correction note says «re-assert when `022` actually builds its
@@ -255,10 +380,23 @@ another, and the mathematics is identical.
       `app/packages/core/src/pictograms/fetch.ts:64`'s citation of `022` FR-2008 now
       names an implemented rule (T004) rather than vapour; and close `specs/BACKLOG.md`
       **G38** with a pointer to this tasks file
-- [ ] T027 Archive it: this coverage table kept current, `specs/BACKLOG.md` entry for
+      *(done: `023` T023's deferred half is re-asserted — a pictogram and a drawn
+      diagram on one page, both surviving in HTML and in the linear reading, **including
+      the two degraded cases**, which is where one surface swallows the other: a missing
+      pictogram leaves its named gap and the diagram intact, and a refused diagram
+      leaves the pictogram and its unremovable attribution intact.
+      `pictograms/fetch.ts`'s citation of `022` FR-2008 is restored, because it now
+      names an implemented rule. BACKLOG G38 closed with a pointer here.)*
+- [x] T027 Archive it: this coverage table kept current, `specs/BACKLOG.md` entry for
       anything found on the way, and `specs/006-desktop-app/validation.md` updated with
       what was **actually** rendered, printed and photocopied — this feature exists
       because a tick once claimed more than the code could show
+      *(done 2026-09-04. Coverage table current; the two departures argued in place (the
+      ODT frame sizing and the `exercise`/`assessment` class reuse `027` established).
+      **Found on the way and fixed here rather than filed:** the blank-answer hole in
+      FR-2003, the `data-theme` egress hole, the group-box overlap and the ODT frame.
+      `validation.md` records what was actually rendered and printed — and what was not:
+      nothing has been through a photocopier or in front of a teacher.)*
 
 ---
 

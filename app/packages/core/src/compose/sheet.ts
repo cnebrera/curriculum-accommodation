@@ -1,6 +1,7 @@
 import type { Block, IRDocument } from '../ir/types.js';
 import { irToMarkdown } from '../ingest/to-ir.js';
 import type { Accepted } from './loop.js';
+import type { Figure } from '../render/figures/draw.js';
 import { NO_ANSWERS_ES } from './unverifiable.js';
 
 /**
@@ -153,6 +154,22 @@ export interface SheetInput {
   /** What the content rests on, for a content composition (FR-102). */
   anchor?: string;
   /**
+   * The diagrams to stamp, keyed by the exercise expression (`022` T008).
+   *
+   * Assembled by the caller, which is the one that has the corpus — the same separation
+   * `kindNotes` takes, and for the same reason: this function stays free of any knowledge
+   * about which figure teaches which operation.
+   *
+   * Keyed by **expression** and not by position, because a recipe that splits a page
+   * renumbers it and `47 × 8` survives that (the answer key learned this in `002`).
+   *
+   * Every `Figure` here already has quantities computed from a verified exercise and a
+   * glyph that passed the wall. What this function adds is the block — and the one rule
+   * it enforces itself: **an unverified group stamps nothing** (FR-2003), which is the
+   * same branch that keeps its answers out of the key.
+   */
+  figures?: ReadonlyMap<string, Figure>;
+  /**
    * Whose level this was pitched at (FR-122).
    *
    * Recorded because the level is per learner and the sheet is a file: a composed
@@ -243,6 +260,29 @@ function unverifiedObjectives(
   for (const g of groups) if (g.of !== 'problems' && g.of !== 'questions' && g.unverified) out.add(g.objective);
   for (const e of key) if (!isComputed(e)) out.add(e.objective);
   return [...out];
+}
+
+/**
+ * The quantities as block attributes, kind by kind (`022` data-model.md).
+ *
+ * On the block and not in a side table, so a teacher who opens the vault in Obsidian can
+ * read what the picture claims — and so the render-time cross-check has something to
+ * compare against the exercise (FR-2016).
+ */
+function quantityAttrs(q: Figure['quantities']): Record<string, string> {
+  switch (q.kind) {
+    case 'grid':
+      return { 'data-rows': String(q.rows), 'data-cols': String(q.cols) };
+    case 'groups':
+      return { 'data-groups': String(q.groups), 'data-per-group': String(q.perGroup) };
+    case 'number-line':
+      return {
+        'data-start': String(q.start), 'data-jumps': String(q.jumps),
+        'data-end': String(q.end),
+      };
+    case 'part-whole':
+      return { 'data-parts': q.parts.join(','), 'data-whole': String(q.whole) };
+  }
 }
 
 /** «la 4», «la 4 y la 5», «la 4, la 5 y la 7» — a list a person reads out loud. */
@@ -507,6 +547,42 @@ export function buildSheet(input: SheetInput): ComposedSheet {
         objective: group.objective, number: n,
         expression: item.exercise.expression, verified: !group.unverified,
       });
+
+      /*
+       * The diagram, beside the exercise it draws — and **only** for a verified one.
+       *
+       * One branch, two guarantees: an unverified group's answer stays out of the key and
+       * its exercise gets no picture. A confident diagram beside arithmetic nobody checked
+       * is worse than no diagram, because the picture lends the exercise a credibility it
+       * has not earned (FR-2003).
+       */
+      const figure = group.unverified ? undefined : input.figures?.get(item.exercise.expression);
+      if (figure) {
+        push({
+          id: `${`g${g + 1}-e${n}`}-fig`,
+          classes: ['figure'],
+          attrs: {
+            /*
+             * `data-figure` is what makes a `.figure` block a **drawn** figure rather
+             * than `001`'s ingested-image one. The two coexist and neither path touches
+             * the other: an ingested figure has `data-description` and no `data-figure`.
+             */
+            'data-figure': figure.quantities.kind,
+            'data-of': `g${g + 1}-e${n}`,
+            ...quantityAttrs(figure.quantities),
+            ...(figure.theme ? { 'data-theme': figure.theme } : {}),
+            'data-description': figure.description,
+          },
+          /*
+           * The glyph as a fenced block, and **inert**.
+           *
+           * `markdown-it` runs with `html: false`, so every renderer that does not
+           * deliberately take the figure branch shows escaped text rather than markup.
+           * The failure mode of a forgetful renderer is ugly and visible, not executable.
+           */
+          content: figure.glyph ? `\`\`\`svg\n${figure.glyph}\n\`\`\`` : '',
+        });
+      }
 
       // An unverified group contributes no answer. Not «the model's answer with a
       // caveat»: a proposed result presented as a solution is worse than none,

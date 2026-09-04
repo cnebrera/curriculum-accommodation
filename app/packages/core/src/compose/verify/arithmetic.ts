@@ -43,6 +43,24 @@ const OP: Record<string, Op> = {
 
 interface Parsed { a: string; b: string; op: Op }
 
+/**
+ * The operands and the operator of a verified expression (`022` T008).
+ *
+ * Exported because a diagram's quantities come from the exercise and from nowhere else
+ * (FR-2001), and «the exercise» is `47 × 8` — a string. Without this, the figure code
+ * would have to parse arithmetic a second time, and a second parser is a second answer.
+ *
+ * Returns `null` for anything this file cannot read, which is the honest answer: a figure
+ * with no verified quantity is no figure (FR-2003).
+ */
+export function readOperation(expression: string): { a: number; b: number; op: Op } | null {
+  const p = parse(expression);
+  if (!p) return null;
+  const a = Number(p.a);
+  const b = Number(p.b);
+  return Number.isFinite(a) && Number.isFinite(b) ? { a, b, op: p.op } : null;
+}
+
 function parse(expression: string): Parsed | null {
   const m = EXPR.exec(expression.replace(/\s+/g, ' '));
   if (!m) return null;

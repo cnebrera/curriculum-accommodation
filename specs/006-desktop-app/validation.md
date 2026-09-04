@@ -900,6 +900,41 @@ to avoid.
   first composed sheet a teacher sees will be the real test of whether the report
   and the checklist do what they claim.
 
+## Spec 022 — the diagrams, and what was actually rendered (T027)
+
+**2026-09-04.** `022` puts a drawing on a child's page for the first time, so what was
+and was not put in front of something matters more than usual.
+
+### Rendered, and looked at
+
+- **The ODT, in LibreOffice.** All four kinds — rejilla, grupos, recta, barra — built from
+  a fixture (no provider needed: a figure is a deterministic rendering of an IR document),
+  exported, converted, and **looked at as a printed page**. Two defects found that way and
+  fixed: the group boxes' dashed outlines ran together at four units apart, and every
+  diagram reserved a fixed 9×6cm frame, which sent a four-diagram sheet to two pages with
+  two thirds of each one blank.
+- **The HTML, by assertion.** Twelve cells for `4 × 3`, the description as caption and as
+  `aria-label`, and no reference of any kind in the output string.
+- **A real PDF**, produced through `job:pdf` in the e2e with its **size** asserted —
+  «a PDF was produced» is a claim about bytes.
+- **The hostile document**, in the viewer and the print path, with the request log
+  watched: five payloads that each try to fetch a canary host on load, zero requests.
+
+### NOT rendered, and not claimed
+
+- **The on-screen HTML at 480px and at `xlarge`.** `013` FR-1113/FR-1118's
+  narrow-and-large case is unlooked-at for these two page shapes. Rastering needs a
+  browser this machine's Playwright has not downloaded, and `npm run shots` photographs
+  the application, which cannot compose without a provider.
+- **A real photocopy** (SC-2005, T023). The greyscale assertion proves the *drawing*
+  survives being flattened to black on white; it does not prove a real machine's output
+  is legible. **Not done.**
+- **A teacher's verdict** (SC-2006, T024). Not done.
+- **A composition with a real key** (T025). No diagram in this project has yet been
+  produced by an actual model. Everything above was rendered from fixtures, which proves
+  the drawing and the wall and proves nothing about whether a model's themes are worth
+  having.
+
 ## NOT machine-checkable, and not claimed
 
 - **SC-805 — "it does not look unfinished." NOT MET, and it did not need a

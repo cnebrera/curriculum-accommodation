@@ -116,9 +116,19 @@ function grid(q: { rows: number; cols: number }, glyph?: string): Drawn {
 function groups(q: { groups: number; perGroup: number }, glyph?: string): Drawn {
   const inner = PAD + q.perGroup * (CELL + GAP) - GAP + PAD;
   const boxH = PAD + CELL + PAD;
+  /*
+   * The gap **between groups** is bigger than the gap between cells — decided by
+   * printing the page (T022).
+   *
+   * At `GAP` the dashed outlines of two stacked groups sat four units apart and read as
+   * one long dashed mess: «four groups of three» became «twelve in a box», which is the
+   * distinction the boxes exist to draw. Twice the gap is still compact and the groups
+   * separate at arm's length.
+   */
+  const between = GAP * 3;
   const rows: string[] = [];
   for (let g = 0; g < q.groups; g += 1) {
-    const top = PAD + g * (boxH + GAP);
+    const top = PAD + g * (boxH + between);
     const cells: string[] = [];
     for (let i = 0; i < q.perGroup; i += 1) {
       cells.push(cellAt(PAD + PAD + i * (CELL + GAP), top + PAD, glyph));
@@ -132,7 +142,7 @@ function groups(q: { groups: number; perGroup: number }, glyph?: string): Drawn 
   return {
     svg: rows.join(''),
     w: PAD * 2 + inner,
-    h: PAD * 2 + q.groups * (boxH + GAP) - GAP,
+    h: PAD * 2 + q.groups * (boxH + between) - between,
   };
 }
 

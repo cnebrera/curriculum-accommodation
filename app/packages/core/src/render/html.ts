@@ -1,4 +1,5 @@
 import { draftMark } from './draft.js';
+import { drawFigureBlock, isDrawnFigure } from './figures/render.js';
 import { attributionFor, pictogramAlt, type Attribution } from './attribution.js';
 import { parsePicto } from '../pictograms/apply.js';
 import { createRenderer, learnerFacing } from '../ir/parse.js';
@@ -106,6 +107,13 @@ h1,h2,h3{line-height:1.25;margin:2em 0 .6em;font-weight:700}
 .exercise,.assessment{border:2px solid var(--rule);border-radius:10px;padding:1.4em 1.5em;margin:1.6em 0}
 /* Somewhere to write (027 FR-2503). Two ruled lines, because one is never enough
    for a child's handwriting and three make a ten-question exam four pages. */
+/* A drawn diagram (022). Centred, bounded, and its caption beneath it — the caption is
+   what she can correct by hand and what audio and braille say. */
+figure.figure{margin:1.6em 0;text-align:center}
+figure.figure svg{max-width:100%;height:auto}
+.figure-caption{font-size:.9em;margin:.5em 0 0}
+/* A refused diagram reads as a sentence, not as a broken image: the sheet survives. */
+.figure-refused{border:2px dashed var(--rule);padding:.8em 1em;margin:0;font-size:.9em}
 .answer-space{margin-top:1em}
 .answer-label{display:block;font-size:.85em;letter-spacing:.03em;margin-bottom:.5em}
 .answer-space .rule{display:block;border-bottom:1px solid var(--rule);height:1.9em}
@@ -160,7 +168,26 @@ export function renderBlock(
    * missing picture, with the id it wanted still in `data-picto`.
    */
   images?: ReadonlyMap<string, string>,
+  /**
+   * The document's other blocks, for the figure branch's quantity cross-check
+   * (`022` T009, FR-2016).
+   *
+   * Optional so every existing caller is unchanged. A figure block rendered without them
+   * still validates its glyph and still draws — what it cannot do is notice that the
+   * exercise beside it was edited, which is the second net rather than the first.
+   */
+  blocks?: readonly Block[],
 ): string {
+  /*
+   * A **drawn** figure is drawn, and its fence is never markdown-rendered
+   * (`022` T009, contract §4 rule 2).
+   *
+   * Before anything else in this function, because the fence is inert input and not body
+   * text — and because `001`'s ingested-image figures must keep taking the ordinary path.
+   * `data-figure` is the difference between the two, and neither touches the other.
+   */
+  if (isDrawnFigure(b)) return renderDrawnFigure(b, blocks ?? []);
+
   const cls = b.classes.join(' ');
   const data = Object.entries(b.attrs)
     .filter(([k]) => k.startsWith('data-'))
@@ -170,6 +197,39 @@ export function renderBlock(
   const pictos = renderPictos(b, images);
   return `<section id="${esc(b.id)}" class="${esc(cls)}"${data}>${label}`
     + `${md.render(b.content)}${pictos}${answerSpace(b)}</section>`;
+}
+
+/**
+ * A figure the code drew, or the sentence saying why it did not (`022` FR-2011/2012).
+ *
+ * The refusal renders **as text on the page**, and the sheet survives: a refusal that
+ * lost the whole page would punish her for something the model did. And the description
+ * ships either way — as the `aria-label` on the drawing, and as the visible caption
+ * beneath it, because a picture nobody described is a picture the learner who most needs
+ * it cannot have.
+ */
+function renderDrawnFigure(b: Block, blocks: readonly Block[]): string {
+  const drawn = drawFigureBlock(b, blocks);
+  /*
+   * **Only the two attributes the code wrote reach the page** (FR-2014).
+   *
+   * Every other block passes its whole `data-*` set through, and for a drawn figure that
+   * was a hole: `data-theme` is a **model-written string**, and an attribute value is
+   * invisible to `checkOutput`, which strips tags because it models what the child reads.
+   * So a learner's name arriving as a theme would have sat in the rendered file, neither
+   * caught by the egress check nor absent from the document she emails.
+   *
+   * Found by planting a name in each of the three slots a model fills. The theme still
+   * reaches the page — through the drawing and through the caption, which are exactly the
+   * two places the check *can* see.
+   */
+  const data = ['data-figure', 'data-of']
+    .filter((k) => b.attrs[k] !== undefined)
+    .map((k) => ` ${k}="${esc(b.attrs[k]!)}"`).join('');
+  const body = drawn.svg === null
+    ? `<p class="figure-refused">${esc(drawn.refusal ?? '')}</p>`
+    : `${drawn.svg}<p class="figure-caption">${esc(drawn.description)}</p>`;
+  return `<figure id="${esc(b.id)}" class="figure"${data}>${body}</figure>`;
 }
 
 /**
@@ -231,7 +291,12 @@ export function renderHTML(doc: IRDocument, opts: RenderOptions = {}): string {
   // learnerFacing excludes the model's report notes: structural, not a check the
   // model is asked to respect (007 FR-506's shape applied to T087).
   const body = doc.blocks.filter(learnerFacing)
-    .map((b) => renderBlock(md, b, opts.pictogramImages)).join('\n');
+    /*
+     * The whole block list reaches `renderBlock` since `022`, for the figure branch's
+     * quantity cross-check: a diagram has to be able to look at the exercise it claims
+     * to draw (FR-2016).
+     */
+    .map((b) => renderBlock(md, b, opts.pictogramImages, doc.blocks)).join('\n');
 
   const banner = mark === null ? '' :
     `<div class="draft-banner" role="status">${esc(mark.banner)}</div>`;

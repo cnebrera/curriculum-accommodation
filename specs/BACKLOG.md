@@ -581,7 +581,14 @@ parallel (P31, queue item 0.3) so that a mention no longer counts as coverage.
 
 ## G38 · `022` was cited as shipped without a plan, tasks or code
 
-**Open, added 2026-09-03** (decisions P21/P42, review CONS-01/COD-10).
+**Cerrado 2026-09-04**, added 2026-09-03 (decisions P21/P42, review CONS-01/COD-10).
+
+`022` has been through plan → tasks → implement: `specs/022-material-que-se-ve/tasks.md`
+is the register of what was built and what still needs a person. The two citations the
+entry was about have been settled rather than left dangling — `023` T023's deferred half
+is re-asserted against diagrams that now exist, and `pictograms/fetch.ts`'s reference to
+`022` FR-2008 names an implemented rule again. What remains open in `022` needs a
+photocopier and a teacher, and says so.
 
 `022-material-que-se-ve` (diagrams as markup) had, when the review ran, a spec —
 and nothing else. Yet `023`'s input said «after `022` shipped» and `023` T023

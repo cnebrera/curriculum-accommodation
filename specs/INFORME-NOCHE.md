@@ -861,6 +861,76 @@ habría desbloqueado el gate con una ACNS que la mencionara.
 — cuesta dinero) y T026 (SC-2505: que una PT diga si pondría ese examen delante de su
 grupo con su nombre encima).
 
+### 3.2 · `022` implementada — el diagrama que cuenta lo que dice el ejercicio
+
+**Commits:** `022 · la lista blanca y el dibujante` y `022 · el diagrama que cuenta…`
+**Decisión:** P21 · **Cierra:** BACKLOG G38
+
+El defecto que este feature evita es concreto: **once casillas al lado de `4 × 3 =`**. Un
+niño que se pierde en el enunciado y cuenta el dibujo acaba de aprender que las
+matemáticas no cuadran.
+
+**Las cantidades salen del ejercicio ya comprobado y de ningún otro sitio.** No «ignoramos
+los números que manda el modelo»: `DiagramRequest` **no tiene campo numérico**, así que
+uno que escriba filas y columnas las escribe en nada. Donde los números que dijo no
+coinciden con lo dibujado, se dice — «lo he dibujado con las cantidades del ejercicio» —
+en vez de corregirlo en silencio, porque una corrección callada es un modelo cuyos
+errores ella no llega a conocer.
+
+**El tema lo decide el modelo, y la geometría no lo ve.** Que las casillas sean cartas es
+una decisión sobre este niño y ahí el modelo aporta. Que sean doce lo decide el código: no
+hay una sola expresión en el dibujante donde el tema o el glifo lleguen a una cuenta o a
+una coordenada. Y sin intereses apuntados los dibujos son **sencillos** — un tema al azar
+es inventarse un dato de un niño, la misma negativa que `011` hace con la edad.
+
+**El muro es código y no corpus.** Todo el criterio de `022` vive en
+`instructions/figures.md` porque cada línea es un juicio que una PT puede corregir. La
+lista blanca de marcado no: una frontera de seguridad que se puede editar no es una
+frontera (Principio IX). Rechaza **entero** y no limpia — no hay tipo de salida saneada, a
+propósito, porque reescribir una entrada con forma de ataque esconde el evento que
+interesa ver. Y se revalida en cada renderizado, porque el vault se edita a mano y un
+bloque leído del disco es contenido, lo escribiera quien lo escribiera.
+
+**Cuatro defectos encontrados de paso, ninguno del alcance:**
+
+- **`Number('')` es 0**, que es finito. El camino sin verificar pone `answer: ''` — la
+  misma rama que mantiene su resultado fuera de la clave —, así que un ejercicio que nadie
+  pudo comprobar habría llevado una rejilla al lado. Es literalmente lo que FR-2003 dice:
+  la imagen da una confianza que la cuenta no ha ganado. Lo cazó el test antes de que nada
+  estampara un diagrama.
+- **El tema aterrizaba en `data-theme`**, un atributo. `checkOutput` quita las etiquetas
+  porque modela lo que lee el niño, así que un nombre llegado como tema **se quedaba en el
+  fichero renderizado, ni cazado ni ausente**, en un documento que ella manda por correo.
+  Ahora el renderizador emite sólo los dos atributos que escribió el código; el tema sigue
+  llegando a la página por el dibujo y por el pie, que son los dos sitios donde el chequeo
+  sí mira.
+- **Las cajas de los grupos se leían como una sola.** A cuatro unidades, los trazos
+  discontinuos de dos grupos apilados formaban un churro: «cuatro grupos de tres» se
+  convertía en «doce en una caja», que es justo la distinción que las cajas existen para
+  dibujar.
+- **Cada diagrama reservaba 9×6cm.** Una recta ancha y baja y una barra pequeña se
+  llevaban el mismo trozo de papel, así que una hoja con cuatro diagramas se iba a dos
+  páginas con dos tercios de cada una en blanco. El marco se dimensiona ahora desde el
+  `viewBox` del propio dibujo.
+
+Los dos últimos los encontró **mirar la página impresa**. Lo que no he mirado: el HTML en
+pantalla a 480px y en `xlarge` — rasterizarlo necesita un navegador que el Playwright de
+esta máquina no tiene, y `npm run shots` fotografía la aplicación, que no puede componer
+sin proveedor. Queda dicho en `validation.md` como no hecho.
+
+**Y se cierra G38**, que era la deuda de haber citado `022` como «shipped» cuando sólo
+tenía spec: `023` T023 vuelve a afirmar su mitad aplazada contra diagramas que ahora
+existen — con los dos casos degradados, que es donde una superficie se come a la otra — y
+la cita de `022` FR-2008 en `pictograms/fetch.ts` nombra otra vez una regla implementada.
+
+124 casos nuevos y 7 e2e; 12 costuras verificadas por mutación, dos de las cuales
+encontraron huecos en mis propios tests (cada caso de atributo malo lo cazaba también una
+regla de valor, y la guarda de grupo-sin-verificar de `buildSheet` no tenía test).
+
+**Lo que queda de `022`, en manos de una persona:** T023 (una fotocopiadora de verdad),
+T024 (que una PT diga cuál de las dos hojas pondría delante del niño) y T025 (el paseo con
+clave real: ningún diagrama de este proyecto lo ha producido todavía un modelo).
+
 ## Notas de proceso
 
 - **La instancia que me pediste, y por qué la he reiniciado.** La levanté con `npm run dev`
@@ -898,13 +968,13 @@ grupo con su nombre encima).
 | | |
 |---|---|
 | `npx tsc --noEmit` | verde (línea base) |
-| `npx vitest run` | verde — 1.766 casos |
-| `npm run test:e2e` | verde — 140 casos |
+| `npx vitest run` | verde — 1.926 casos |
+| `npm run test:e2e` | verde — 147 casos |
 | `scripts/check-fr-coverage.sh` | verde (línea base) |
 | `scripts/check-spec-kit.sh` | verde (línea base) |
 
 ---
 
-**Lotes 0, 1 y 2 completos (5/5 · 17/17 · 12/12); Lote 3 con `027` implementada.** Quedan
-**3.10** (`020` US2-US4), **3.13** (notas de BACKLOG) y **10 features** por
-`/speckit-implement` en el orden 022→026→031→032→028→035→033→029→030→034.
+**Lotes 0, 1 y 2 completos (5/5 · 17/17 · 12/12); Lote 3 con `027` y `022` implementadas.**
+Quedan **3.10** (`020` US2-US4), **3.13** (notas de BACKLOG) y **9 features** por
+`/speckit-implement` en el orden 026→031→032→028→035→033→029→030→034.

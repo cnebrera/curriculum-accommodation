@@ -63,12 +63,17 @@ export interface PictogramCandidate {
  * SSRF wearing a JSON field's clothing. An allowlist, and refused rather than
  * sanitised — `007` FR-508's rule for paths.
  *
- * It used to cite `022` FR-2008 beside it as the same rule for markup. Removed,
- * and the removal is the point: `022` has a specification and no implementation,
- * so citing one of its requirements as authority for a decision taken here read
- * as evidence that it had shipped — which is how `023` came to say «after `022`
- * shipped» and tick a task against behaviour that did not exist (review COD-10,
- * decision P42). `scripts/check-spec-kit.sh` rule 4 now catches the shape.
+ * The citation of `022` FR-2008 beside it — «the same rule, for markup» — was removed on
+ * 2026-09-03, and the removal was the point: `022` had a specification and no
+ * implementation, so citing one of its requirements as authority read as evidence that it
+ * had shipped. That is how `023` came to say «after `022` shipped» and tick a task
+ * against behaviour that did not exist (review COD-10, decision P42), and
+ * `scripts/check-spec-kit.sh` rule 4 now catches the shape.
+ *
+ * **Restored 2026-09-04**, because `022` FR-2008 is now code: `render/figures/validate.ts`
+ * refuses model-written markup against an allowlist, whole and never sanitised. Two
+ * surfaces, one rule — an id and a glyph are both untrusted strings from outside, and
+ * both are refused rather than cleaned.
  */
 const ID = /^[A-Za-z0-9_-]{1,40}$/;
 
