@@ -735,7 +735,35 @@ has to.
 
 ## G31 · «One primary control per screen» has never been tested
 
-**Open**, small, and found by looking rather than by running anything.
+**Closed 2026-09-04** (decision P35, review CONS-25). `e2e/primary-control.spec.ts`
+counts visible `.btn-primary` inside `.main` on every rail destination, every section
+inside a learner, every step of preparing something that is reachable without a
+provider, and both of the questions the adapt screen asks — at 1366px and at 900px
+with `xlarge` text, which is the width and scale where `023` broke it.
+
+It found **one** violation on its first run, and the violation was twenty minutes
+old: the pre-spend profile notice (P15) put a strong «Seguir igual» beside the
+screen's own strong «Está bien leído, sigue». Fixed by the rule that reads correctly
+anyway — while she is being asked something, the question is the screen — in one
+expression shared by both gates so a third one cannot forget.
+
+Two more things it changed, and one it cannot reach:
+
+- The **batch list** gave every learner a solid «Revisar y firmar», so three
+  learners meant three. Strong only when there is one row now; with several they
+  are equal choices with the state on their badges.
+- The **record** rows follow the same rule, decided the same way when «Revisar y
+  firmar» was added there (P11).
+- **Not walked by a test:** the batch list itself, because reaching it needs a real
+  provider run. The rule holds there by construction rather than by assertion, and
+  that is stated rather than left to be discovered.
+
+The original text follows, because the reason it went untested for a month is the
+part worth keeping.
+
+---
+
+**Was open**, small, and found by looking rather than by running anything.
 
 `013` FR-1105: «Exactly one control per screen MAY carry primary weight. Emphasis that
 is everywhere is emphasis nowhere.» It is enforced by nobody. Two greps confirm it: no

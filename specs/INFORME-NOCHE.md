@@ -190,6 +190,37 @@ aviso previo.
 
 tsc limpio · 1516 casos · 110 e2e.
 
+### 0.5 · Test del control primario único — P35 (CONS-25, G31)
+
+`013` FR-1105 («exactamente un control primario por pantalla») llevaba desde agosto sin
+guardia, y el propio G31 decía por qué no se escribía: «probablemente falle en varias
+pantallas existentes». Un requisito vigente, con violaciones conocidas, defendido por que
+alguien se acuerde de mirar — y `023` lo rompió en una hora, cazado por una captura a
+900px con texto grande y no por nada que pudiera fallar.
+
+`e2e/primary-control.spec.ts` cuenta `.btn-primary` visibles dentro de `.main` en: los seis
+destinos del raíl, las seis secciones del alumno, los pasos de preparar algo alcanzables
+sin proveedor, y **las dos preguntas** que hace la pantalla de adaptar (el aviso de perfil
+y la puerta de coste) — a 1366px y a 900px con texto `xlarge`.
+
+**Encontró exactamente un fallo, y tenía veinte minutos de vida:** el aviso de perfil que
+acababa de añadir en 0.4 ponía «Seguir igual» en fuerte al lado de «Está bien leído,
+sigue». Que el test estrenado cace el código escrito veinte minutos antes es el argumento
+entero para haberlo escrito. Arreglado con la regla que además se lee bien —*mientras te
+están preguntando algo, la pregunta es la pantalla*— en **una** expresión compartida por
+los dos gates, para que un tercero no se la salte.
+
+De paso, la lista de la tanda daba un botón sólido por alumno: tres alumnos, tres
+primarios. Fuerte solo cuando hay una fila; con varias son elecciones iguales y el estado
+va en las insignias — la misma decisión que tomé en el expediente en 0.1, por la misma
+razón.
+
+**Lo que el test no alcanza, dicho en vez de descubierto:** la lista de la tanda en sí,
+porque llegar a ella necesita una tirada real con proveedor. Ahí la regla se cumple por
+construcción y no por aserción. Anotado en G31, que queda **cerrado**.
+
+tsc limpio · 1516 casos · 115 e2e.
+
 ## Saltados y por qué
 
 _(nada todavía)_
@@ -213,10 +244,10 @@ _(nada todavía)_
 |---|---|
 | `npx tsc --noEmit` | verde (línea base) |
 | `npx vitest run` | verde — 1516 casos |
-| `npm run test:e2e` | verde — 110 casos |
+| `npm run test:e2e` | verde — 115 casos |
 | `scripts/check-fr-coverage.sh` | verde (línea base) |
 | `scripts/check-spec-kit.sh` | verde (línea base) |
 
 ---
 
-**Quedan 20 ítems de la cola.**
+**Lote 0 completo.** Quedan 19 ítems de la cola.

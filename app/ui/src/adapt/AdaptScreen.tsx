@@ -198,6 +198,11 @@ export function AdaptScreen({
   } | null>(null);
   const [profileSeen, setProfileSeen] = useState(false);
   const profileGapFor = useProfileGap();
+  /**
+   * She is being asked something, so the screen's own strong control steps down
+   * (`013` FR-1105). One expression for both gates, so a third one cannot forget.
+   */
+  const gateOpen = Boolean(profileGate || costGate);
   const online = useOnline();
   /** Her name for the child; the code is what is on the sheet, not on this screen. */
   const nameOf = (code: string): string =>
@@ -394,13 +399,13 @@ export function AdaptScreen({
             */}
             {/*
               **Never hidden**, even when the door already picked somebody.
-              
+
               It was, briefly, and the e2e suite caught what that costs: the door
               answers «para quién» with **one** learner, and FR-1411 says the first is
               the first and not the only one. Hiding the control that adds the others
               is FR-1412 broken in the most literal way — the second learner becomes
               unreachable rather than merely feeling like a correction.
-              
+
               The kind is different and stays hidden: there is nothing to add to it.
             */}
             <fieldset className="fieldset-bare">
@@ -588,8 +593,20 @@ export function AdaptScreen({
             </Callout>
           ) : null}
 
+          {/*
+            While she is being asked something, the question is the screen
+            (`013` FR-1105, backlog G31, decision P35).
+
+            Both gates put a strong «Adelante» / «Seguir igual» on screen, and
+            leaving this one strong too gave two solid buttons — «emphasis that is
+            everywhere is emphasis nowhere», and the first thing
+            `e2e/primary-control.spec.ts` caught when it was written. It caught it
+            on the notice added twenty minutes earlier, which is the whole argument
+            for having written the test.
+          */}
           <div className="row">
-            <button className="btn btn-primary" onClick={() => void runAdapt()}>{es.adapt.verifyOk}</button>
+            <button className={gateOpen ? 'btn' : 'btn btn-primary'}
+                    onClick={() => void runAdapt()}>{es.adapt.verifyOk}</button>
             <button className="btn" onClick={() => setStage('compose')}>Corregir el texto</button>
           </div>
         </div>
@@ -655,7 +672,7 @@ export function AdaptScreen({
         ) : (
           /*
              Several learners (005 US2/US3).
-             
+
              One row per learner, each with its own outcome and its own way in.
              Deliberately **not** a table: this is the first screen in the
              application where children appear one under another, and a grid with
@@ -713,8 +730,15 @@ export function AdaptScreen({
                         with FLU-01 is that this is now reachable **again**: the review
                         gives her a way back to this list, and the list itself is derived
                         from the vault rather than from state that navigation destroyed.
+
+                        Strong only when there is one row (`013` FR-1105). Three learners
+                        meant three solid buttons — «emphasis that is everywhere is
+                        emphasis nowhere» — and with several sheets they are three equal
+                        choices anyway, with the state on the badges. Same call as the
+                        record's own «Revisar y firmar», for the same reason.
                       */}
-                      <button className="btn btn-primary btn-sm"
+                      <button className={outcome.results.length === 1
+                                ? 'btn btn-primary btn-sm' : 'btn btn-sm'}
                               onClick={() => onReview(jobId, r.learner, r.result.recipes ?? [])}>
                         {signed[r.learner] ? 'Verla otra vez' : 'Revisar y firmar'}
                       </button>

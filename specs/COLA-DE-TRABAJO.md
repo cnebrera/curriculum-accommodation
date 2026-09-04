@@ -79,8 +79,17 @@ Sin spec nueva: son defectos contra specs vigentes, con decisión tomada. Cada u
       sin observar, cuántas reglas no se activan por eso, y qué mirar en clase — con las palabras
       de `instructions/axes.md`, no de un componente.
       34 casos nuevos, 4 e2e nuevos, 8 costuras verificadas por mutación.
-- [ ] **0.5 · Test del control primario único** (P35). Escribirlo YA aunque falle; sus fallos son
+- [x] **0.5 · Test del control primario único** (P35). Escribirlo YA aunque falle; sus fallos son
       lista de trabajo. Protege las obras de navegación del Lote 3.
+      **Hecho 2026-09-04:** `e2e/primary-control.spec.ts` cuenta `.btn-primary` visibles en
+      `.main` en cada destino del raíl, cada sección del alumno, cada paso de preparar algo
+      alcanzable sin proveedor, y las **dos** preguntas que hace la pantalla de adaptar — a
+      1366px y a 900px con texto `xlarge`, que es donde 023 lo rompió. Encontró **un** fallo, y
+      tenía veinte minutos: el aviso de perfil de 0.4 ponía «Seguir igual» fuerte al lado de
+      «Está bien leído, sigue». Arreglado con la regla que además se lee bien — mientras te
+      preguntan algo, la pregunta es la pantalla — en una expresión compartida por los dos
+      gates. De paso, la lista de la tanda daba un botón sólido por alumno (tres alumnos, tres
+      primarios): fuerte solo con una fila. G31 cerrado, con lo que no alcanza el test escrito.
 
 ## Lote 1 · Enmiendas documentales, de una pasada (baratas, todas decididas)
 
