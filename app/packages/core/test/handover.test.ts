@@ -28,6 +28,9 @@ const learner = (over: Record<string, unknown> = {}): LoadedLearner => ({
     axes_confirmed: { COG: '2026-02-14' },
     works: ['Le funciona hacer el primer ejercicio conmigo, en voz alta'],
     avoid: ['Nada con cuenta atrás'],
+    // One preference dated and one not: both states are the ordinary state, and
+    // the untagged one is every preference already in a vault (decision P44).
+    noted_on: { 'Le funciona hacer el primer ejercicio conmigo, en voz alta': '2025-10-03' },
     interests: ['dinosaurios'],
     response: { default: 'short' },
     language: { instruction: 'es' },
@@ -105,7 +108,7 @@ describe('FR-302 · every claim says how it is known', () => {
      */
     const p = buildPacket(learner(), '2026-2027', 'Resumen.');
     for (const c of p.claims) {
-      expect(['observed', 'inferred', 'reported']).toContain(c.evidence);
+      expect(['from-profile', 'observed', 'inferred', 'reported']).toContain(c.evidence);
       expect(c.date, `${c.text} has a date that is not a date`)
         .toMatch(/^(\d{4}-\d{2}-\d{2})?$/);
     }
@@ -115,8 +118,8 @@ describe('FR-302 · every claim says how it is known', () => {
 
   it('renders the marker in her words, not as an enum', () => {
     const md = packetToMarkdown(buildPacket(learner(), '2026-2027', 'Resumen.'));
-    expect(md).toMatch(/observado|deducido|me lo contaron/);
-    expect(md).not.toMatch(/\bobserved\b|\binferred\b|\breported\b/);
+    expect(md).toMatch(/apuntado en el perfil|observado|deducido|me lo contaron/);
+    expect(md).not.toMatch(/\bobserved\b|\binferred\b|\breported\b|from-profile/);
   });
 
   it('marks everything unconfirmed, because it is', () => {
@@ -126,19 +129,61 @@ describe('FR-302 · every claim says how it is known', () => {
   });
 
   /**
-   * Named rather than asserted, because it cannot be asserted.
+   * The inversion this file used to consecrate (review COD-17, decision P44).
    *
-   * `buildPacket` marks every claim `observed`, including axis levels — a claim
-   * about *how the sending teacher knew*, which the application cannot know. A
-   * level she inferred from one lesson and one she watched for a term both come
-   * out as "observado".
+   * `buildPacket` marked **every** claim `observed` — the strongest of the four —
+   * including axis levels, which is a claim about *how the sending teacher knew*
+   * and something the application cannot know. A level she inferred from one lesson
+   * and one she watched for a term both arrived as «observado». The other two
+   * markers were unreachable: the profile stores no such thing and no screen asks.
    *
-   * A test can check the marker exists. Only a human can check it is true, and
-   * FR-302's value depends on the human doing so.
+   * So the anti-anchoring this whole specification exists for was inverted — the
+   * receiving teacher read maximum confidence for everything, fabricated. **And
+   * this test asserted it**, with `every(c => c.evidence === 'observed')` under a
+   * title that named the problem and a comment saying only a human could check it.
+   * A test that pins the defect is worse than no test, because fixing the defect
+   * then looks like breaking something.
    */
-  it('marks everything observed, which is a claim the application cannot verify', () => {
+  it('says where a claim came from, and never how strong it is', () => {
     const p = buildPacket(learner(), '2026-2027', 'Resumen.');
-    expect(p.claims.every((c) => c.evidence === 'observed')).toBe(true);
+    expect(p.claims.every((c) => c.evidence === 'from-profile')).toBe(true);
+    // Nothing the application wrote claims to have been observed.
+    expect(p.claims.some((c) => c.evidence === 'observed')).toBe(false);
+  });
+
+  it('and says it in her words, which are not a claim about strength', () => {
+    const md = packetToMarkdown(buildPacket(learner(), '2026-2027', 'Resumen.'));
+    expect(md).toContain('apuntado en el perfil');
+    /*
+     * In the «Cómo lo sé» column, which is what anchors her. The section heading
+     * «## Lo observado» stays — it names what the table is about, not how strongly
+     * each row is known.
+     */
+    const rows = md.split('\n').filter((l) => l.startsWith('| ') && !l.startsWith('| Qué'));
+    expect(rows.length).toBeGreaterThan(0);
+    for (const row of rows) expect(row, row).not.toContain('observado');
+  });
+
+  /**
+   * The other half of P44: `works` and `avoid` stamped `date: today()`, **two
+   * lines below** the comment explaining why that would be a fabrication — so a
+   * preference she noted in October reached the receiving teacher dated today, on
+   * the one field whose job is to say how old the claim is.
+   */
+  it('dates a preference when it was noted, or not at all', () => {
+    const p = buildPacket(learner(), '2026-2027', 'Resumen.');
+    const works = p.claims.filter((c) => c.source === 'works');
+    expect(works.length).toBeGreaterThan(0);
+
+    const dated = works.find((c) => c.date !== '');
+    expect(dated?.date, 'a real annotation date').toBe('2025-10-03');
+
+    // And the ones nobody dated carry none, rather than today's.
+    const today = new Date().toISOString().slice(0, 10);
+    for (const c of p.claims) {
+      if (c.date === '2025-10-03' || c.date === '2026-02-14') continue;
+      expect(c.date, `${c.text} was stamped with today`).not.toBe(today);
+    }
   });
 });
 

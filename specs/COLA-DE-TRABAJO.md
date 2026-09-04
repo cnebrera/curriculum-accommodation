@@ -238,8 +238,19 @@ justamente eso.
       3 casos nuevos en `linear.test.ts` y `e2e/essential-figure.spec.ts` (5), que pregunta a
       **las cuatro salidas del mismo documento** y comprueba los dos comportamientos.
       2 costuras verificadas por mutación.
-- [ ] **2.6** Traspaso honesto: «apuntado en el perfil» sin fuerza inventada + fechas reales de
+- [x] **2.6** Traspaso honesto: «apuntado en el perfil» sin fuerza inventada + fechas reales de
       anotación (P44). Reescribir el test que consagraba el 'observed'.
+      **Hecho 2026-09-04, en dos commits** (spec primero). `buildPacket` estampaba
+      `evidence: 'observed'` en el **100%** de las claims y los otros dos marcadores eran
+      inalcanzables, así que el anti-anclaje por el que existe la spec entera estaba
+      invertido: todo llegaba con confianza **máxima**, fabricada. Ahora la claim dice de
+      **dónde viene** («apuntado en el perfil»), y los tres marcadores de fuerza se quedan
+      para la revisión, donde los pone una persona. Y `works`/`avoid` estampaban
+      `date: today()` **dos líneas por debajo** del comentario que explica por qué eso es una
+      fabricación: ahora hay `noted_on`, sellado donde se escribe y **solo para lo nuevo** —
+      una preferencia que ya estaba en el vault se queda sin fecha, porque «no consta» es un
+      dato que la receptora necesita. El test que consagraba el 'observed' reescrito.
+      2 costuras verificadas por mutación.
 - [x] **2.7** Plan de borrado muestra QUÉ sobrevive y por qué (P45).
       **Hecho 2026-09-04.** `planForget` devolvía `sharedKept` con exactamente lo que pide
       FR-1211 desde `014`, y la interfaz `Plan` de la pantalla **omitía el campo**, así que

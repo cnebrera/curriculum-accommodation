@@ -11,7 +11,27 @@ module that implements a good deal of them.
 
 - [x] T001 Write `app/packages/core/test/handover.test.ts` and assert FR-301 (the packet carries profile, notes, a summary and a reference to the official file) and FR-306 (**readable as prose with no tooling** — most receiving teachers will not have this application, so the markdown is the product and the JSON is an implementation detail) *(done. **FR-301 is partly met and the decision is recorded**: the dated notes are not carried, and the summary is where she writes the narrative — arguably better, since a raw dump of a year of notes is the label this spec avoids. The requirement should be amended rather than the code.)*
 - [x] T002 Assert FR-302: every claim carries a date and an evidence marker. Record that a test can check the marker exists and only a human can check it is *true* *(done, incl. that the markers render in her words and not as an enum. Recorded that only a human can check a marker is *true*.)*
+      **Corrected 2026-09-04 (review COD-17, decision P44): recording it was not
+      enough, and this test consecrated the defect.** `buildPacket` stamped
+      `evidence: 'observed'` on **100% of claims** and the other two markers were
+      unreachable — the profile stores no such thing and no screen asks — so the
+      anti-anchoring this whole specification exists for was inverted: everything
+      arrived at the receiving teacher at the *highest* confidence, «visto
+      repetidamente», fabricated. And the assertion was
+      `every(c => c.evidence === 'observed')`, under a title that named the problem.
+      A test that pins a defect is worse than no test, because fixing the defect then
+      looks like breaking something. FR-302 now asks where a claim **comes from**,
+      the packet says «apuntado en el perfil», and `observed`/`inferred`/`reported`
+      stay for the review step, where a person is the one judging.
 - [x] T003 Assert FR-303, and fix what it finds: axis levels carry `last_confirmed`. The current fallback is `?? today()`, which stamps **today** on an axis nobody ever confirmed — a fabrication on the one field whose whole job is to say how old the claim is *(done — **and it found a fabrication.** The fallback was `?? today()`, so an axis nobody had ever confirmed reached the receiving teacher dated today. Now empty, rendered as «sin fecha».)*
+      **And it missed the same fabrication two lines below itself** (review COD-17,
+      decision P44): `works` and `avoid` kept `date: today()`, so a preference she
+      noted in October reached the receiving teacher dated today — the fix applied to
+      the axes was not applied to the preferences in the same function. Preferences
+      carry `noted_on` now, stamped **where they are written** and only for a line
+      that is new: one already in a vault keeps no date, because «no consta» is a
+      fact the receiving teacher needs and a plausible date is not.
+      `e2e/learner.spec.ts` walks both halves.
 - [x] T004 Assert FR-311 (stale past one academic year), FR-312 (no re-identifying mapping) and FR-313 (states that it supplements the official file, and does not replace it) *(done, incl. that `isStale` does not guess at a malformed year.)*
 - [x] T005 Resolve FR-304's shareable variant: `toShareable` strips **every** claim, so it can only ever return an empty packet. Either the concept belongs to `003`'s corpus export and not here, or the function is misleading. Decide, and record the decision rather than leaving a function whose only possible output is nothing *(done. `toShareable` can only ever return an empty packet, because a handover packet is entirely about one learner — the concept belongs to `003`'s corpus export. The flag is gone from the IPC surface: offering her a button whose only possible output is nothing is worse than not having it.)*
 

@@ -2,6 +2,7 @@ import { test, expect, _electron as electron, type Page, type ElectronApplicatio
 import { mkdtemp, mkdir } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { intoLearner, toTab } from './nav.js';
 
 /**
  * One choice, in the real window (011 T019, quickstart §6).
@@ -169,6 +170,71 @@ test.describe('one choice fills three fields', () => {
     expect(saved.year).toBe('es:primaria-5');
     expect(saved.stage).toBe('Primaria');
     expect(saved.age).toBe(10);
+
+    await app.close();
+  });
+});
+
+
+/**
+ * When a preference was noted (`004` FR-303 as amended, decision P44).
+ *
+ * `buildPacket` stamped `date: today()` on every `works` and `avoid` entry — **two
+ * lines below** the comment in the same function explaining why exactly that would
+ * be a fabrication. So a preference she noted in October reached the receiving
+ * teacher dated today, on the one field whose entire job is to say how old the
+ * claim is.
+ *
+ * The fix has to be dated **where it is written**, and the interesting half is what
+ * it must *not* do: a line already in the vault with no date keeps none, because
+ * «no consta» is a fact the receiving teacher needs and a plausible date is not.
+ */
+test.describe('a preference carries the day it was written', () => {
+  test('stamps a new line and leaves an old one alone', async () => {
+    const { app, page, vault } = await launch();
+    await page.evaluate((root) => window.rampa.vault.use(root), vault);
+
+    const code: string = await page.evaluate(() => window.rampa.learners.newCode());
+    // A profile as it would already be in her vault: a preference, and no date for
+    // it, which is every preference written before this existed.
+    await page.evaluate((c) => window.rampa.learners.save({
+      code: c, axes: { COG: 2 }, works: ['Le funciona el primer paso hecho'],
+      avoid: [], interests: [], response: {}, language: { instruction: 'es' },
+    }), code);
+
+    await page.evaluate(() => window.rampa.providers.save('anthropic', 'sk-ant-e2e-not-a-real-key'));
+    await page.reload();
+    await page.waitForLoadState('domcontentloaded');
+    await page.getByRole('navigation', { name: /Secciones/ }).waitFor({ timeout: 15000 });
+
+    await intoLearner(page);
+    await toTab(page, 'who');
+
+    // She adds one, keeping the one that was there.
+    const works = page.locator('#works');
+    await works.fill('Le funciona el primer paso hecho\nLe ayuda leerlo en voz alta');
+    await page.getByRole('button', { name: 'Guardar' }).click();
+    await page.getByText('Guardado').waitFor({ timeout: 15000 });
+
+    /*
+     * The parsed front matter rather than the raw text: what matters is the *map*,
+     * `noted_on`, and reading it as a structure means the assertion does not depend
+     * on how the YAML writer happens to wrap a long line.
+     */
+    const noted = await page.evaluate((c) =>
+      window.rampa.vault.read(`profiles/${c}/profile.yaml`), code) as
+      { data: { noted_on?: Record<string, string> } } | null;
+    const map = noted?.data.noted_on ?? {};
+    const today = new Date().toISOString().slice(0, 10);
+
+    // The line she just wrote is dated today.
+    expect(map['Le ayuda leerlo en voz alta']).toBe(today);
+    /*
+     * And the one that was already in the vault with no date **still has none**.
+     * Inventing one is the fabrication this whole item is about, and it would be
+     * the easy thing to do here — stamp everything on every save.
+     */
+    expect(map).not.toHaveProperty('Le funciona el primer paso hecho');
 
     await app.close();
   });

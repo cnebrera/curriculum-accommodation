@@ -520,6 +520,36 @@ En dos commits, spec primero y corpus+código después, que es lo que el gate se
 cuatro salidas del mismo documento** y comprueba los dos comportamientos — que es la
 aserción que importa aquí. 2 costuras verificadas por mutación.
 
+### 2.6 · El traspaso deja de fabricar confianza — P44 (COD-17)
+
+`buildPacket` estampaba `evidence: 'observed'` en el **100% de las claims**, y los otros
+dos marcadores (`inferred`, `reported`) eran **inalcanzables**: el perfil no guarda esa
+información y ninguna pantalla la pregunta. Así que el anti-anclaje por el que existe la
+spec `004` entera —«un paquete creído al pie de la letra es peor que ningún paquete: la
+maestra nueva deja de observar y el niño se queda dentro de la descripción del año
+pasado»— estaba **invertido**: todo llegaba a la receptora con el nivel de confianza
+**máximo**, «visto repetidamente», fabricado.
+
+Y el test lo **consagraba**: `every(c => c.evidence === 'observed')`, bajo un título que
+nombraba el problema («marks everything observed, which is a claim the application cannot
+verify») y un comentario diciendo que solo un humano podía comprobarlo. Un test que fija un
+defecto es peor que no tener test, porque arreglar el defecto parece romper algo — es el
+segundo de esta noche, después de la tilde.
+
+Ahora la claim dice **de dónde viene** y no cuánto de fuerte es: «apuntado en el perfil»,
+que es lo que la aplicación puede saber de verdad. Los tres marcadores de fuerza se quedan
+en el tipo para el paso de revisión, donde los pone una persona.
+
+**La segunda mitad es peor por lo cerca que estaba del arreglo.** `works` y `avoid`
+estampaban `date: today()` **dos líneas por debajo** del comentario que explica, sobre los
+ejes, por qué eso sería «a fabrication» — y que cita a su vez el mismo razonamiento escrito
+en el almacén de credenciales. Una preferencia anotada en octubre llegaba fechada hoy, en
+el único campo cuyo trabajo es decir la antigüedad. Ahora el perfil guarda `noted_on`,
+sellado **donde se escribe** y solo para lo nuevo: una línea que ya estaba en el vault sin
+fecha se queda sin fecha, porque «no consta» es un dato que la receptora necesita y una
+fecha plausible no lo es. Eso último es la parte fácil de hacer mal —sellar todo en cada
+guardado— y es lo que la mutación comprueba.
+
 ## Saltados y por qué
 
 _(nada todavía)_
@@ -542,11 +572,11 @@ _(nada todavía)_
 | | |
 |---|---|
 | `npx tsc --noEmit` | verde (línea base) |
-| `npx vitest run` | verde — 1585 casos |
-| `npm run test:e2e` | verde — 128 casos |
+| `npx vitest run` | verde — 1587 casos |
+| `npm run test:e2e` | verde — 129 casos |
 | `scripts/check-fr-coverage.sh` | verde (línea base) |
 | `scripts/check-spec-kit.sh` | verde (línea base) |
 
 ---
 
-**Lotes 0 y 1 completos; Lote 2 en 6/12.** Quedan 8 ítems de la cola (Lote 2: 6 · Lote 3: 2 abiertos + 11 features por implementar).
+**Lotes 0 y 1 completos; Lote 2 en 7/12.** Quedan 7 ítems de la cola (Lote 2: 5 · Lote 3: 2 abiertos + 11 features por implementar).

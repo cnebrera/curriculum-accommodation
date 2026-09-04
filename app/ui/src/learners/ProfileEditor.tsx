@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useLoadLearner, useSaveLearner, useNewLearnerCode } from '../data/learners.js';
 import { useResolveName, useSetName } from '../data/names.js';
 import { useStrings } from '../i18n/context.js';
@@ -26,6 +26,23 @@ export function ProfileEditor({ code, onSaved, onConfigure }: {
   const [axes, setAxes] = useState<Record<string, number>>({});
   const [works, setWorks] = useState('');
   const [avoid, setAvoid] = useState('');
+  /**
+   * When each preference was noted (`004` FR-303 as amended, decision P44).
+   *
+   * Carried from the profile and **extended, never rewritten**: a line already in
+   * the vault keeps whatever date it had — including none — and a line she adds
+   * today gets today's. Stamping every line on every save would be the same
+   * fabrication the handover packet was fixed for, moved one file upstream: a
+   * preference noted in October would be dated whenever she last opened the form.
+   */
+  const [notedOn, setNotedOn] = useState<Record<string, string>>({});
+  /**
+   * The preferences as they were on disk, so «new» has a meaning.
+   *
+   * A `ref` and not state: nothing renders from it, and a re-render must not make
+   * a line she has not touched look new.
+   */
+  const loadedPreferences = useRef<Record<string, true>>({});
   /** Who he is (011): age, year and stage, filled by one choice. */
   const [who, setWho] = useState<Who>({});
   const [interests, setInterests] = useState('');
@@ -73,6 +90,9 @@ export function ProfileEditor({ code, onSaved, onConfigure }: {
         setWho({ age, year, stage });
         setWorks((works ?? []).join('\n'));
         setAvoid((avoid ?? []).join('\n'));
+        setNotedOn((l.profile as { noted_on?: Record<string, string> }).noted_on ?? {});
+        loadedPreferences.current = Object.fromEntries(
+          [...(works ?? []), ...(avoid ?? [])].map((t) => [t, true as const]));
         setInterests((interests ?? []).join(', '));
         setResponse(Object.entries(response ?? {}).map(([k, v]) => `${k}: ${v}`).join('\n'));
         setPictos({
@@ -101,6 +121,28 @@ export function ProfileEditor({ code, onSaved, onConfigure }: {
 
   const save = async () => {
     const lines = (s: string) => s.split('\n').map((x) => x.trim()).filter(Boolean);
+    /*
+     * A date for the lines that do not have one **and are new**.
+     *
+     * «New» is «not in what we loaded», which is why `notedOn` is state and not a
+     * derivation: a line that was already in the vault with no date keeps none,
+     * because the packet must be able to say «no consta». And a line she removes
+     * takes its date with it, so the map does not grow for ever with the history
+     * of preferences that are no longer true.
+     */
+    const datedNow = (
+      w: string[], a: string[], previous: Record<string, string>,
+    ): Record<string, string> => {
+      const stamp = new Date().toISOString().slice(0, 10);
+      const out: Record<string, string> = {};
+      for (const text of [...w, ...a]) {
+        const had = previous[text];
+        if (had) { out[text] = had; continue; }
+        // Not in the loaded profile at all: she is writing it now.
+        if (!(text in loadedPreferences.current)) out[text] = stamp;
+      }
+      return out;
+    };
     const responseMap: Record<string, string> = {};
     for (const line of lines(response)) {
       const at = line.indexOf(':');
@@ -117,6 +159,12 @@ export function ProfileEditor({ code, onSaved, onConfigure }: {
       code: current, axes,
       works: lines(works),
       avoid: lines(avoid),
+      /*
+       * Today's date for what is new, and only for that (decision P44). A line
+       * that already had one keeps it; a line that had none and is not new keeps
+       * none, because «no consta» is a fact she needs and a plausible date is not.
+       */
+      noted_on: datedNow(lines(works), lines(avoid), notedOn),
       interests: interests.split(',').map((s) => s.trim()).filter(Boolean),
       response: responseMap,
       language: (carried['language'] as Record<string, string>) ?? { instruction: 'es' },

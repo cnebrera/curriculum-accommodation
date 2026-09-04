@@ -48,6 +48,21 @@ export const profileSchema = z.object({
   axes_confirmed: z.record(z.string(), z.string()).optional(),
   works: z.array(z.string()).default([]),
   avoid: z.array(z.string()).default([]),
+  /**
+   * When a preference was noted (`004` FR-303 as amended, decision P44).
+   *
+   * Text → ISO date, and **optional**: a preference already in a vault has no
+   * recorded date, and a handover packet must say «no consta» rather than stamp
+   * today's. `buildPacket` stamped `date: today()` on every `works` and `avoid`
+   * entry, two lines below the comment explaining why that would be «a
+   * fabrication» — so a preference she noted in October reached the receiving
+   * teacher dated today, on the one field whose entire job is to say how old the
+   * claim is.
+   *
+   * Keyed by the text rather than by position: a list she reorders in her editor
+   * must not shuffle the dates, and the vault is hers to edit.
+   */
+  noted_on: z.record(z.string(), z.string()).optional(),
   interests: z.array(z.string()).default([]),
   response: z.record(z.string(), z.string()).default({}),
   language: z.record(z.string(), z.string()).default({}),

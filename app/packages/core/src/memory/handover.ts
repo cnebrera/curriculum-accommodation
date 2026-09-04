@@ -8,7 +8,23 @@ import type { LoadedLearner } from '../vault/profile.js';
  * observing, and a child is held inside last year's description of them. Some
  * children change precisely because the adaptation worked.
  */
-export type Evidence = 'observed' | 'inferred' | 'reported';
+/**
+ * How much a claim is worth, and **who is allowed to say so** (`004` FR-302 as
+ * amended, decision P44 / review COD-17).
+ *
+ * `from-profile` is new and it is the honest default: it says where the claim came
+ * from, which the application knows, instead of how strong it is, which only a
+ * person can judge. The other three stay, for the packet's review step — where a
+ * person is doing exactly that judging.
+ *
+ * The defect this replaced: `buildPacket` stamped `'observed'` on **100% of
+ * claims**, and the other two were unreachable because the profile stores no such
+ * thing and no screen asks. So the anti-anchoring this specification exists for was
+ * inverted — everything arrived at the receiving teacher at the *highest*
+ * confidence, «seen repeatedly», fabricated. And the test asserted it:
+ * `every(c => c.evidence === 'observed')`.
+ */
+export type Evidence = 'from-profile' | 'observed' | 'inferred' | 'reported';
 export type Confirmation = 'unconfirmed' | 'confirmed' | 'disconfirmed';
 
 export interface PacketClaim {
@@ -36,7 +52,8 @@ export function buildPacket(learner: LoadedLearner, academicYear: string, summar
   for (const [axis, level] of Object.entries(learner.profile.axes ?? {})) {
     claims.push({
       text: `${axis} = ${level}`,
-      evidence: 'observed',
+      // Where it came from, not how strong it is — see `Evidence`.
+      evidence: 'from-profile',
       /*
        * Empty rather than today (004 FR-303).
        *
@@ -58,8 +75,28 @@ export function buildPacket(learner: LoadedLearner, academicYear: string, summar
       confirmation: 'unconfirmed',
     });
   }
-  for (const w of learner.profile.works) claims.push({ text: w, evidence: 'observed', date: today(), confirmation: 'unconfirmed', source: 'works' });
-  for (const a of learner.profile.avoid) claims.push({ text: a, evidence: 'observed', date: today(), confirmation: 'unconfirmed', source: 'avoid' });
+  /*
+   * And the real date, or none (FR-303 as amended, decision P44).
+   *
+   * These two lines said `date: today()`, **two lines below** the comment above
+   * explaining why exactly that would be a fabrication. A preference she noted in
+   * October reached the receiving teacher dated today, on the one field whose job
+   * is to say how old the claim is — and the fix applied to the axes in T003 was
+   * not applied here, in the same function.
+   */
+  const notedOn = (text: string): string => learner.profile.noted_on?.[text] ?? '';
+  for (const w of learner.profile.works) {
+    claims.push({
+      text: w, evidence: 'from-profile', date: notedOn(w),
+      confirmation: 'unconfirmed', source: 'works',
+    });
+  }
+  for (const a of learner.profile.avoid) {
+    claims.push({
+      text: a, evidence: 'from-profile', date: notedOn(a),
+      confirmation: 'unconfirmed', source: 'avoid',
+    });
+  }
   return { code: learner.profile.code, academicYear, createdAt: today(), claims, summary, containsLearnerScope: true };
 }
 
@@ -75,7 +112,18 @@ export function packetToMarkdown(p: Packet): string {
     '## Lo observado', '',
     '| Qué | Cómo lo sé | Desde | Estado |', '|---|---|---|---|',
   ];
-  const label: Record<Evidence, string> = { observed: 'observado', inferred: 'deducido', reported: 'me lo contaron' };
+  /*
+   * The column heading is «Cómo lo sé», and «apuntado en el perfil» is the honest
+   * answer for anything the application put there itself (decision P44). It used to
+   * say «observado» for every row — the strongest of the four — which is precisely
+   * the anchoring this document is designed to prevent.
+   */
+  const label: Record<Evidence, string> = {
+    'from-profile': 'apuntado en el perfil',
+    observed: 'observado',
+    inferred: 'deducido',
+    reported: 'me lo contaron',
+  };
   for (const c of p.claims) {
     // "sin fecha" rather than an empty cell: a blank in a table reads as a
     // rendering fault, and this is a fact — nobody has confirmed this.
