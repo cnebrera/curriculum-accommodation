@@ -792,6 +792,10 @@ mutación.
   `out/`) y la he vuelto a levantar entera con 2.12 y 2.8 dentro. Si la vuelves a necesitar
   después de un cambio mío, avísame y la reinicio: mientras yo esté tocando el main, una
   instancia en caliente se queda a medias.
+  Y un detalle que me costó dos intentos y volverá a pasar: matar `electron-vite dev` **no**
+  mata el Electron que lanzó. Se queda vivo con el candado de instancia única
+  (`requestSingleInstanceLock`, `main.ts:142`), así que el `npm run dev` siguiente arranca,
+  dice «start electron app…» y **sale con código 0** sin abrir nada. Hay que matar los dos.
 - **e2e de 2.12: sí ejecutado**, en la vuelta completa de 2.8 (135 casos verdes).
 - **`.agents/skills/` apareció sin pedirlo** (10 ficheros, espejos de `.claude/skills/` para
   otros agentes). No los he comiteado: no son de ningún ítem de la cola y meterlos con 2.12
