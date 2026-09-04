@@ -315,9 +315,19 @@ justamente eso.
       dato que desbloquea el nivel modificado no llegaba al fichero que lee el modelo. Ahora
       viaja hasta `adaptations.md`, y `unknown` no se registra como ninguno de los dos.
       12 casos nuevos; 3 costuras verificadas por mutación.
-- [ ] **2.12** Compose: system propio para el camino de contenido (sin OUTPUT_FORMAT contradictorio)
+- [x] **2.12** Compose: system propio para el camino de contenido (sin OUTPUT_FORMAT contradictorio)
       + detectar corte por max_tokens (AGE-04/07, decisión implícita en P2: si vamos a construir
       generación nueva, el camino de contenido debe ser fiable).
+      **Hecho 2026-09-04.** Dos defectos, los dos en la misma llamada. `composeContent` usaba
+      el system de aritmética («devuelve únicamente una línea por ejercicio… sin texto
+      alrededor») mientras su mensaje pedía bloques IR: los dos intentos fallaban, ella pagaba
+      dos llamadas de 4.000 tokens y el error la culpaba de su ancla. Y ningún proveedor leía
+      `stop_reason`, así que un texto cortado por el techo de tokens pasaba los dos checks —
+      un corte dentro de un objetivo deja bloques con `data-objective` y `data-anchor`
+      válidos — y se escribía en la hoja: el fallo propio del tipo `study`, «enseñar menos sin
+      que se note», generado por nosotros. Ahora la capa de juicio se comparte y el formato
+      no, los tres adaptadores emiten `truncated` y un texto cortado dos veces no se entrega.
+      15 casos nuevos; 5 costuras verificadas por mutación.
 
 ## Lote 3 · Specs nuevas (flujo Spec Kit completo: specify → clarify → plan → tasks → implement)
 

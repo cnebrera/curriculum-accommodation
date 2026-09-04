@@ -218,6 +218,12 @@ export function compatibleProvider(spec: CompatibleSpec): Provider {
             const ev = JSON.parse(payload) as Record<string, any>;
             const delta = ev['choices']?.[0]?.['delta']?.['content'];
             if (typeof delta === 'string' && delta) yield { text: delta };
+            /*
+             * The ceiling was hit (review AGE-07). Every OpenAI-compatible service
+             * spells it the same way, which is the point of this adapter — and
+             * none of them was being read.
+             */
+            if (ev['choices']?.[0]?.['finish_reason'] === 'length') yield { truncated: true };
             if (ev['usage']) {
               usage.inputTokens = ev['usage']['prompt_tokens'] ?? usage.inputTokens;
               usage.outputTokens = ev['usage']['completion_tokens'] ?? usage.outputTokens;

@@ -662,9 +662,70 @@ sin evidencia, que es la peor dirección para equivocarse en este campo.
 
 12 casos nuevos; 3 costuras verificadas por mutación.
 
+### 2.12 · Un texto de estudio cortado por el techo de tokens se publicaba como completo
+
+**Commit:** `compose: system propio para el contenido y un corte que no se entrega`
+**Hallazgos:** AGE-04 (🔴 alta) y AGE-07 (🟠 media)
+
+Dos defectos, y los dos vivían en la misma llamada.
+
+**El system era el de aritmética.** `composeContent` recibía `systemPrompt()`, que acaba en
+«Devuelve únicamente una línea por ejercicio… sin numerar, sin explicaciones, sin texto
+alrededor», mientras su propio mensaje de usuario pedía bloques IR con `data-objective` y
+`data-anchor`. Un modelo que obedeciera el system devolvía algo que `parseIR` no entiende: los
+dos intentos fallaban, ella pagaba dos llamadas de 4.000 tokens y recibía un error que
+diagnosticaba mal el fallo — «se apoyaba en cosas que no me diste. Prueba a darme un poco
+más» — y la mandaba a arreglar su ancla cuando la culpa era nuestra.
+
+El arreglo separa las dos cosas que estaban pegadas: `judgementLayer()` (hard-rules +
+`compose.md`) llega **idéntica** a los dos caminos, porque es el criterio pedagógico y el
+Principio I dice dónde vive; el formato de salida ya no. `contentSystemPrompt()` dice además
+qué es la llamada — «material de estudio, no una lista de ejercicios» — para que el modelo no
+tenga que deducirlo de un mensaje que sólo describe marcado. Y el error final distingue el
+corte del anclaje, porque un diagnóstico equivocado le cuesta también el intento siguiente.
+
+**Y un truncado pasaba los dos checks.** Ningún adaptador leía `stop_reason`, así que un texto
+cortado a los 4.000 tokens llegaba con la misma pinta que uno terminado. La red es más fina de
+lo que parece: un corte *dentro* del desarrollo de un objetivo deja bloques con su
+`data-objective` y su `data-anchor` válidos, y `checkObjectives` no comprueba que cada objetivo
+pedido tenga bloques — sólo que no haya objetivos inventados y que haya *algún* bloque. Es
+exactamente el fallo que `material-kinds.md` atribuye al tipo `study`, «enseñar menos sin que
+se note», generado por nosotros y sin nada que lo vea.
+
+Los tres adaptadores emiten ahora `truncated` — `stop_reason: max_tokens` en Anthropic,
+`finish_reason: length` dentro de `choices` en los compatibles, `finishReason: MAX_TOKENS` en
+el candidato de Google — el camino de contenido lo trata como un problema más (reintenta una
+vez con el problema dicho, y si vuelve a cortarse **no escribe nada**) y le pide que pida menos
+de una vez o que lo divida en dos.
+
+En el camino de aritmética el corte se queda sin red **a propósito**: una línea perdida es una
+propuesta menos, el bucle vuelve a pedir y `budgetExhausted` ya se lo cuenta. Añadir ahí una
+negativa costaría intentos y no evitaría nada.
+
+**Un lateral que conviene decir:** exporté `judgementLayer`, `systemPrompt` y
+`contentSystemPrompt` para poder probarlas. Es la lección de `mostUsedFirst` de esta misma
+noche — una función que no se puede llamar desde un test es una función que sobrevive a que la
+borres.
+
+15 casos nuevos (7 de proveedores contra `fetch` simulado, 8 del camino de contenido); 5
+costuras verificadas por mutación: los tres `yield { truncated: true }`, el system del sitio de
+llamada y el lector de `chunk.truncated`.
+
 ## Saltados y por qué
 
 _(nada todavía)_
+
+## Notas de proceso
+
+- **e2e no re-ejecutado en 2.12.** Me pediste dejar una instancia levantada para enseñarla, y
+  `npm run test:e2e` empieza por `npm run build`, que escribe en el mismo `out/` que está
+  usando el `electron-vite dev` de esa instancia: podría reiniciarte la aplicación en mitad de
+  la demo. 2.12 no toca UI ni pantallas (proveedores y el job de compose, todo en el proceso
+  principal), así que lo he dejado para cuando la instancia esté libre. Queda dicho aquí en
+  vez de darlo por verde.
+- **`.agents/skills/` apareció sin pedirlo** (10 ficheros, espejos de `.claude/skills/` para
+  otros agentes). No los he comiteado: no son de ningún ítem de la cola y meterlos con 2.12
+  sería mezclar. Están sin trackear, decides tú.
 
 ## Preguntas para Carlos
 
@@ -684,11 +745,13 @@ _(nada todavía)_
 | | |
 |---|---|
 | `npx tsc --noEmit` | verde (línea base) |
-| `npx vitest run` | verde — 1620 casos |
-| `npm run test:e2e` | verde — 129 casos |
+| `npx vitest run` | verde — 1.635 casos |
+| `npm run test:e2e` | verde — 129 casos, en 2.11. **No re-ejecutado en 2.12**: ver abajo |
 | `scripts/check-fr-coverage.sh` | verde (línea base) |
 | `scripts/check-spec-kit.sh` | verde (línea base) |
 
 ---
 
-**Lotes 0 y 1 completos; Lote 2 en 10/12.** Quedan 4 ítems de la cola (Lote 2: 2 · Lote 3: 2 abiertos + 11 features por implementar).
+**Lotes 0 y 1 completos; Lote 2 en 11/12.** Queda **2.8** (borrador de ACNS: guardar en el
+vault, imprimir con marca, firmar — P46) para cerrar el Lote 2, y el Lote 3 entero: 3.10
+(`020` US2-US4), 3.13 (notas de BACKLOG) y las 11 features con plan y tasks escritos.

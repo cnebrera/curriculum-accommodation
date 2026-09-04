@@ -20,7 +20,34 @@ export interface Request {
   model?: string;
 }
 
-export interface Chunk { text?: string; usage?: Usage; }
+export interface Chunk {
+  text?: string;
+  usage?: Usage;
+  /**
+   * The answer stopped because it hit the token ceiling (review AGE-07).
+   *
+   * **Nobody read this before**, because nobody produced it: `anthropic.ts` and
+   * `compatible.ts` both set `max_tokens` and neither looked at `stop_reason` or
+   * `finish_reason`. For the arithmetic path the cost is small — a truncated line
+   * is one fewer proposal. For the **content** path it is the failure the `study`
+   * kind exists to name: `material-kinds.md` says its own failure mode is
+   * «teaching less without it showing», and a text cut off at 4.000 tokens mid-way
+   * through an objective leaves blocks that still carry a valid `data-objective`
+   * and `data-anchor`, so both checks pass and it goes on the sheet.
+   *
+   * The review was conservative about the net, too: `checkObjectives` emits
+   * `unknown-objective`, `no-objective` and `no-blocks` — it never checks that each
+   * objective *asked for* has blocks. A cut that removed a whole objective's blocks
+   * would pass as well, as long as something was generated.
+   *
+   * A boolean and not a reason string: the only question a caller has is «is this
+   * answer complete», and a provider-specific enum would be a second vocabulary to
+   * map. Absent means «the provider did not say», which is not the same as `false`
+   * — and callers treat it as «no evidence of truncation» rather than as proof of
+   * completeness.
+   */
+  truncated?: boolean;
+}
 
 export interface Provider {
   readonly id: string;

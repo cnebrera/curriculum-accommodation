@@ -96,6 +96,11 @@ export const google: Provider = {
     const text = (json['candidates']?.[0]?.['content']?.['parts'] ?? [])
       .map((p: Record<string, unknown>) => p['text'] ?? '').join('');
     if (text) yield { text };
+    /*
+     * The ceiling was hit (review AGE-07). Google spells it `MAX_TOKENS` on the
+     * candidate, and it was not being read here either.
+     */
+    if (json['candidates']?.[0]?.['finishReason'] === 'MAX_TOKENS') yield { truncated: true };
 
     const um = json['usageMetadata'] ?? {};
     yield { usage: { model: 'gemini-free', inputTokens: um['promptTokenCount'] ?? 0, outputTokens: um['candidatesTokenCount'] ?? 0 } };

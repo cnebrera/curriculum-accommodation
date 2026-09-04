@@ -83,6 +83,29 @@ the project with no original to compare against, so what replaces
 - [x] T017 [US1] Require an approved anchor for content composition, and **refuse without one** — unchanged from the spec, and it was right *(done: `assertAnchor` in `packages/core/src/compose/anchor.ts`, and it fires **before the provider is resolved** — nothing is sent and nothing is charged. The message asks for the least she can give rather than for a source: a teacher with nothing to hand abandons a screen that demands a document, and will type three sentences.)*
 - [x] T018 [US1] Run the injection and hidden-text detectors over the anchor: it is material, and material is data (Principle IX) *(done, and it needed a detector that did not exist. `detectHidden` needs spans from the extraction layer — font size, colour, position — which only exist for a file we read. An anchor she **pastes** has none, and the analogue there is text invisible by encoding rather than by styling: zero-width joiners, bidi overrides, soft hyphens, tag characters. `detectInvisible` reports them, quoting the **visible** neighbourhood — quoting an invisible character shows her empty quotes, which reads as a bug in Rampa rather than as something in her text. Reported, never stripped: one of them may be legitimate typesetting, and removing them silently would change her text and hide the event.)*
 - [x] T019 [US2] Trace each generated block to the anchor passage it rests on *(done: passages get **our** ids (`a1`, `a2`), each block carries `data-anchor`, and `checkAnchored` refuses both the block that cites nothing and the block that cites a passage she never gave. Exercises are exempt — `47 × 8` asserts nothing that could be false — and so are scaffolding and the report notes. The sheet also rewrites what the model sent: our id, and only the two attributes that trace it, because left alone a model could add `data-recipe` and `data-axis` and the report would show an adaptation decision no recipe ever made.)*
+      **Corrección 2026-09-04 (AGE-04/AGE-07, ítem 2.12 de la cola).** Los dos checks de
+      T018/T019 estaban bien y su red era más fina de lo que parecía, por dos motivos que no
+      son de este task pero se apoyaban en él:
+      - **El system era el de aritmética.** `composeContent` recibía `systemPrompt()`, que
+        termina en «devuelve únicamente una línea por ejercicio… sin texto alrededor», mientras
+        su mensaje de usuario pedía bloques IR. Dos formatos contradictorios en la misma
+        llamada: los dos intentos fallaban, ella pagaba dos llamadas de 4.000 tokens y el
+        error la mandaba a arreglar su ancla («se apoyaba en cosas que no me diste»), que no
+        era el fallo. Ahora el camino de contenido tiene su propio system —
+        `contentSystemPrompt()` — que comparte la capa de juicio (hard-rules + `compose.md`,
+        Principio I) y **no** el formato de salida, y el error final distingue el corte del
+        anclaje.
+      - **Un truncado pasaba los dos checks.** Ningún proveedor leía `stop_reason`, así que un
+        texto cortado a los 4.000 tokens llegaba con la misma pinta que uno terminado: un corte
+        *dentro* del desarrollo de un objetivo deja bloques con su `data-objective` y su
+        `data-anchor` válidos, y `checkObjectives` no comprueba que cada objetivo pedido tenga
+        bloques. Es exactamente el fallo propio del tipo `study` — «enseñar menos sin que se
+        note» — generado por nosotros. Los tres adaptadores emiten ahora `truncated`, el camino
+        de contenido lo trata como problema (reintenta una vez y si vuelve a cortarse no
+        escribe nada) y le dice que pida menos de una vez. 15 casos nuevos; 5 costuras
+        verificadas por mutación.
+      En el camino de aritmética el corte se queda sin red **a propósito**: una línea perdida
+      es una propuesta menos, el bucle vuelve a pedir y `budgetExhausted` ya se lo cuenta.
 - [x] T020 [US2] The review checklist leads with **content** verification and says the effort is higher than for an adaptation *(done: `checklists/review.md` gains a **section 0**, before section 1, and asserted by `checklist-generated.test.ts` over the shipped file. The requirement was never «a section about generated material exists» — it existed, as section 6 of 9, behind four sections that assume there was an original. A teacher working down the list in order reached it having already ticked «fidelidad de la lectura» about a document that was never read from anything. Section 0 names the two sections that do not apply, so a tick is not a false comfort, and separates «que la cita exista lo comprueba el programa» from «que diga lo que el bloque afirma, no».)*
 
 ---

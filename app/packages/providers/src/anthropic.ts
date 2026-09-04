@@ -127,6 +127,14 @@ export const anthropic: Provider = {
             usage.cacheWriteTokens = ev['message']['usage']['cache_creation_input_tokens'] ?? undefined;
           }
           if (ev['usage']?.['output_tokens']) usage.outputTokens = ev['usage']['output_tokens'];
+          /*
+           * The ceiling was hit (review AGE-07). Reported as its own chunk so the
+           * caller sees it whatever it does with the text — and *before* the final
+           * `usage` chunk, because a caller that stops reading on usage would
+           * otherwise miss it.
+           */
+          const stop = ev['delta']?.['stop_reason'] ?? ev['message']?.['stop_reason'];
+          if (stop === 'max_tokens') yield { truncated: true };
         } catch { /* a partial frame; the next read completes it */ }
       }
     }
