@@ -134,9 +134,26 @@ adopt this at all, and it is where the legal basis lives.
 
 - **FR-301**: The system MUST produce a handover packet containing profile, notes,
   a plain-language summary and a reference to the official adaptation document.
-- **FR-302**: Every claim MUST carry a date and an evidence marker: `observed`,
-  `inferred` or `reported`.
-- **FR-303**: Axis levels MUST carry `last_confirmed`.
+- **FR-302**: Every claim MUST carry a date and MUST say **where it comes from**,
+  never how strong it is. A claim taken from the profile travels as
+  `from-profile`, which is what the application can actually know; `observed`,
+  `inferred` and `reported` are markers only a person can set, and the packet
+  offers them where a person is setting one.
+  *(Amended 2026-09-04, decision P44 / review COD-17. `buildPacket` stamped
+  `evidence: 'observed'` on **100% of claims**, and the other two markers were
+  unreachable because the profile stores no such thing and no screen asks. So the
+  anti-anchoring this whole specification exists for was inverted: everything
+  arrived at the receiving teacher at the **highest** confidence — «seen
+  repeatedly» — fabricated. And the test consecrated it, asserting
+  `every(c => c.evidence === 'observed')`.)*
+- **FR-303**: Axis levels MUST carry `last_confirmed`, and a claim with no
+  recorded date MUST carry none rather than today's.
+  *(The second half was already the code's behaviour for axes and **not** for
+  `works`/`avoid`, which stamped `date: today()` — two lines below the comment
+  explaining why that would be «a fabrication» (decision P44). A preference she
+  noted in October arrived at the receiving teacher dated today, on the one field
+  whose entire job is to say how old the claim is. Preferences now carry their own
+  annotation date, and the ones already in a vault carry none.)*
 - **FR-304**: The packet MUST exclude corpus-scope journal entries and anything
   the sending teacher removes in review.
 - **FR-305**: The packet MUST NOT send without the sending teacher's review.
