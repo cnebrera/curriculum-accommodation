@@ -264,8 +264,22 @@ justamente eso.
       alumno. Costura verificada por mutación.
 - [ ] **2.8** Borrador de ACNS: guardar en vault, imprimir con marca, firmar (P46).
 - [ ] **2.9** Lematización determinista mínima para pictogramas (P20).
-- [ ] **2.10** Recetas mono-eje nuevas: DEC solo, PER-A, ATE solo, LIN solo (P1). Corpus; validar
+- [x] **2.10** Recetas mono-eje nuevas: DEC solo, PER-A, ATE solo, LIN solo (P1). Corpus; validar
       contenido pedagógico con una PT cuando se pueda (reviewed_by_teacher).
+      **Hecho 2026-09-04.** Cuatro recetas: `decoding-load` (DEC>=2), `spoken-is-not-enough`
+      (PER-A>=2 — **ninguna receta mencionaba ese eje**, así que un alumno sordo no activaba
+      nada en absoluto), `how-much-at-once` (ATE>=2) y `one-idea-per-sentence` (LIN>=2). El
+      `AND` de `axes:` se mantiene, como decidiste: la respuesta a «esto necesita dos ejes»
+      son dos recetas. Las cuatro dicen **en su propio texto** que no las ha leído una PT —
+      las escribí desde `instructions/axes.md` y el orden de resolución, no desde criterio
+      clínico— y un test lo comprueba, porque una receta con autoridad no ganada es peor que
+      una que falta: llega a la hoja de un niño.
+      Los snapshots de `selection-baseline` actualizados **solo con adiciones, sin una sola
+      retirada**, y la tabla del diff escrita en el docblock del fichero, que es para lo que
+      existe. De paso, el e2e de la parada por selección vacía usaba `DEC:2` como caso
+      canónico: ya no lo es, así que ahora usa `REG:2`, que es donde queda el hueco.
+      7 casos nuevos. **Pendiente de validación pedagógica por una PT real** (ya estaba en
+      «fuera de la cola, con dueño humano»).
 - [ ] **2.11** Parada por adaptación significativa: gatillo por lo que la petición cambiaría +
       ACS registrada desbloquea (P12). Toca adapt.md + enmienda 001 + código del gate.
 - [ ] **2.12** Compose: system propio para el camino de contenido (sin OUTPUT_FORMAT contradictorio)

@@ -550,6 +550,39 @@ fecha se queda sin fecha, porque «no consta» es un dato que la receptora neces
 fecha plausible no lo es. Eso último es la parte fácil de hacer mal —sellar todo en cada
 guardado— y es lo que la mutación comprueba.
 
+### 2.10 · Las cuatro recetas que faltaban — P1 (PROD-01)
+
+El hallazgo no era «una receta está mal». Era que **los perfiles más comunes de un aula de
+apoyo no seleccionaban nada**, porque el corpus tenía nueve recetas y todas las que habrían
+ayudado querían dos ejes a la vez:
+
+- **Dislexia** (`DEC` 2-3 con `LIN` 0-1): solo `keep-curricular-terms`, que es una
+  **restricción** sobre las demás y no una adaptación — así que nada cambiaba la página.
+- **Sordera**: **ninguna receta mencionaba `PER-A`**. Un alumno con `PER-A:3` («lo hablado
+  no le llega») no activaba absolutamente nada.
+- **ATE solo** y **LIN solo**: tampoco. `one-task-per-page` quiere COG>=2 **y** ATE>=2;
+  `lectura-facil-es` quiere DEC>=2 **y** LIN>=2.
+
+Cuatro recetas nuevas: `decoding-load`, `spoken-is-not-enough`, `how-much-at-once` y
+`one-idea-per-sentence`. El `AND` de `axes:` se mantiene, como decidiste: la respuesta a
+«esto necesita dos ejes» son dos recetas, y escribirlas separadas suele ser lo honesto de
+todas formas.
+
+**Las cuatro dicen en su propio texto que no las ha leído una PT**, y hay un test que lo
+comprueba. Las escribí desde `instructions/axes.md` y el orden de resolución, no desde
+criterio clínico — y una receta con autoridad no ganada es peor que una que falta, porque
+esta llega a la hoja de un niño. Esto sigue en «fuera de la cola, con dueño humano».
+
+Los snapshots de `selection-baseline` —el fichero que existe «para ser un diff»—
+actualizados **solo con adiciones y sin una sola retirada**, con la tabla del cambio escrita
+en su docblock: un hueco que se llena, no un comportamiento que cambia.
+
+De paso: el e2e de la parada por selección vacía usaba `DEC:2` como caso canónico. Ya no lo
+es —que es precisamente el objetivo— así que ahora usa `REG:2`, que es donde queda el hueco
+(nada keyea sobre `REG` solo).
+
+7 casos nuevos.
+
 ## Saltados y por qué
 
 _(nada todavía)_
@@ -572,11 +605,11 @@ _(nada todavía)_
 | | |
 |---|---|
 | `npx tsc --noEmit` | verde (línea base) |
-| `npx vitest run` | verde — 1587 casos |
+| `npx vitest run` | verde — 1594 casos |
 | `npm run test:e2e` | verde — 129 casos |
 | `scripts/check-fr-coverage.sh` | verde (línea base) |
 | `scripts/check-spec-kit.sh` | verde (línea base) |
 
 ---
 
-**Lotes 0 y 1 completos; Lote 2 en 7/12.** Quedan 7 ítems de la cola (Lote 2: 5 · Lote 3: 2 abiertos + 11 features por implementar).
+**Lotes 0 y 1 completos; Lote 2 en 8/12.** Quedan 6 ítems de la cola (Lote 2: 4 · Lote 3: 2 abiertos + 11 features por implementar).

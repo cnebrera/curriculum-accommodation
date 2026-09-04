@@ -31,6 +31,25 @@ import { parseRecipe, selectRecipes, inScope, type Recipe, type Profile } from '
  *
  * The `after` snapshots are the same four profiles against three real documents.
  * The difference between the two sets is the review.
+ *
+ * ## Updated 2026-09-04, in the commit that wrote the four missing mono-axis recipes
+ *
+ * PROD-01, decision P1. **Only additions, and no removals anywhere** — which is what
+ * makes this a gap being filled rather than behaviour being changed:
+ *
+ * | Profile | Gains |
+ * |---|---|
+ * | `COG:3 ATE:2` | `how-much-at-once` |
+ * | `EJE:3 DEC:2` | `decoding-load` |
+ * | `PER-V:3` | nothing (no `PER-A`, and that is correct) |
+ * | `DEC:3 LIN:2` | `decoding-load`, `one-idea-per-sentence` |
+ *
+ * What the review found: a typical dyslexia profile (`DEC` 2–3, `LIN` 0–1) selected
+ * **nothing at all**, no recipe mentioned `PER-A` so a deaf learner activated
+ * nothing whatsoever, and `ATE` or `LIN` alone selected nothing either — because
+ * every recipe that would have helped needed a second axis as well. The four new
+ * recipes are all mono-axis, all marked «not yet reviewed by a practising teacher»
+ * in their own text, and the `AND` semantics of `axes:` are unchanged (also P1).
  */
 const repoRoot = join(dirname(new URL(import.meta.url).pathname), '..', '..', '..', '..');
 
@@ -316,5 +335,91 @@ describe('conflicts are declared, so they are recorded rather than guessed', () 
      */
     const body = find('conflict-decoding-vs-minimal-page').body;
     expect(body).not.toMatch(/pictogram/i);
+  });
+});
+
+
+/**
+ * The four gaps the review found, closed (PROD-01, decision P1).
+ *
+ * The finding was not «a recipe is wrong». It was that the commonest profiles in a
+ * support classroom selected **nothing**, because the corpus had nine recipes and
+ * every one that would have helped wanted two axes at once. A PT opening this
+ * application for a child with dyslexia got a sheet almost identical to the
+ * original, and her conclusion in week one would be «esta herramienta no hace
+ * nada» — which `0.4`'s pre-spend notice now says out loud, and which these recipes
+ * are what stops being true.
+ *
+ * `axes:` stays **AND** (also P1): the answer to «this needs two axes» is two
+ * recipes, and writing them separately is the honest outcome anyway.
+ */
+describe('the profiles that used to select nothing', () => {
+  const ids = (axes: Record<string, 0 | 1 | 2 | 3>, classes?: string[]): string[] =>
+    selectRecipes(corpus, profile('B09', axes), 'es', classes).selected.map((r) => r.id);
+
+  it('dyslexia: reads it, and the letters cost him the meaning', () => {
+    /*
+     * The canonical case. `DEC:2` with `LIN:1` selected only
+     * `keep-curricular-terms` — which is a **constraint** on the other recipes and
+     * not an adaptation, so nothing changed the page.
+     */
+    const chosen = ids({ DEC: 2, LIN: 1 }, ['explanation', 'exercise']);
+    expect(chosen).toContain('decoding-load');
+    // And it is not the language recipe: simplifying vocabulary he can already read
+    // removes content without removing the barrier.
+    expect(chosen).not.toContain('one-idea-per-sentence');
+  });
+
+  it('deafness: nothing in the corpus mentioned this axis at all', () => {
+    const chosen = ids({ 'PER-A': 3 } as never, ['instruction', 'exercise']);
+    expect(chosen).toContain('spoken-is-not-enough');
+  });
+
+  it('attention alone: he is not there at exercise four', () => {
+    // `one-task-per-page` wants `COG>=2` **and** `ATE>=2`, so this profile got an
+    // unadapted sheet.
+    expect(ids({ ATE: 2 }, ['exercise'])).toContain('how-much-at-once');
+  });
+
+  it('language alone: he decodes it and loses the long sentence', () => {
+    // `lectura-facil-es` wants `DEC>=2` **and** `LIN>=2`.
+    const chosen = ids({ LIN: 2 }, ['explanation']);
+    expect(chosen).toContain('one-idea-per-sentence');
+    expect(chosen).not.toContain('decoding-load');
+  });
+
+  it('and none of them fires for a learner without that barrier', () => {
+    // A recipe that fires on everybody is a recipe that says nothing, and the axis
+    // levels are what this whole corpus is keyed on.
+    const none = ids({ 'PER-V': 1 } as never, ['explanation', 'instruction', 'exercise']);
+    for (const id of ['decoding-load', 'spoken-is-not-enough',
+                      'how-much-at-once', 'one-idea-per-sentence']) {
+      expect(none, `${id} fired with no barrier to justify it`).not.toContain(id);
+    }
+  });
+
+  it('every one of them says it has not been read by a teacher', () => {
+    /*
+     * `docs/axis-calibration.md`'s standard, applied to what I wrote: I assembled
+     * these from `instructions/axes.md` and the conflict order, not from clinical
+     * judgement. A recipe with unearned authority is worse than a missing one,
+     * because it reaches a child's worksheet.
+     */
+    for (const id of ['decoding-load', 'spoken-is-not-enough',
+                      'how-much-at-once', 'one-idea-per-sentence']) {
+      const r = corpus.find((x) => x.id === id);
+      expect(r, `${id} is not in the corpus`).toBeDefined();
+      expect(r!.body, `${id} claims authority it has not earned`)
+        .toMatch(/[Nn]ot yet reviewed by a practising teacher/);
+    }
+  });
+
+  it('and every one of them carries its anti-patterns', () => {
+    // The mandatory half, per `recipes/README.md`: they are what keeps an adaptation
+    // from quietly stripping the curriculum out of a child's worksheet.
+    for (const id of ['decoding-load', 'spoken-is-not-enough',
+                      'how-much-at-once', 'one-idea-per-sentence']) {
+      expect(corpus.find((x) => x.id === id)!.body).toMatch(/##\s*Anti-patterns/);
+    }
   });
 });

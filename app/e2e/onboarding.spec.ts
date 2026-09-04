@@ -186,10 +186,20 @@ test.describe('the first ten minutes', () => {
     await page.evaluate((root) => window.rampa.vault.use(root), vaultRoot);
 
     const code = await page.evaluate(() => window.rampa.learners.newCode());
-    // DEC 2 and nothing else: descifrar le come la comprensión, and no recipe in
-    // the corpus applies on DEC alone (item 2.10 writes the ones that should).
+    /*
+     * `REG:2` and nothing else — saturation, and no recipe keys on it alone.
+     *
+     * This used to be `DEC:2`, which was the canonical empty case: a dyslexia
+     * profile selected nothing at all. **Item 2.10 fixed that** by writing the four
+     * mono-axis recipes the corpus was missing, so `DEC:2` now selects
+     * `decoding-load` and is no longer an example of anything. The stop still has to
+     * be tested, and `REG` is where the remaining gap is: `conflict-salience-vs-
+     * sensory-load` wants `ATE>=2` **and** `REG>=2`, and nothing else mentions the
+     * axis — which is itself worth knowing, and is why the notice this run produces
+     * names the axes.
+     */
     await page.evaluate((c) => window.rampa.learners.save({
-      code: c, axes: { DEC: 2 }, works: [], avoid: [],
+      code: c, axes: { REG: 2 }, works: [], avoid: [],
       interests: [], response: {}, language: { instruction: 'es' },
     }), code);
 

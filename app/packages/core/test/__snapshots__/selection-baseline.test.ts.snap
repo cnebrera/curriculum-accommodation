@@ -3,19 +3,23 @@
 exports[`selection after scope filtering > a study text: explanation only · cognitive load and attention 1`] = `
 [
   "chunk-the-prose",
+  "how-much-at-once",
 ]
 `;
 
 exports[`selection after scope filtering > a study text: explanation only · executive function 1`] = `
 [
+  "decoding-load",
   "signpost-the-page",
 ]
 `;
 
 exports[`selection after scope filtering > a study text: explanation only · reading, in Spanish 1`] = `
 [
+  "decoding-load",
   "keep-curricular-terms",
   "lectura-facil-es",
+  "one-idea-per-sentence",
 ]
 `;
 
@@ -27,12 +31,14 @@ exports[`selection after scope filtering > a study text: explanation only · vis
 
 exports[`selection after scope filtering > a worksheet: instructions and exercises · cognitive load and attention 1`] = `
 [
+  "how-much-at-once",
   "one-task-per-page",
 ]
 `;
 
 exports[`selection after scope filtering > a worksheet: instructions and exercises · executive function 1`] = `
 [
+  "decoding-load",
   "explicit-steps",
   "signpost-the-page",
 ]
@@ -40,8 +46,10 @@ exports[`selection after scope filtering > a worksheet: instructions and exercis
 
 exports[`selection after scope filtering > a worksheet: instructions and exercises · reading, in Spanish 1`] = `
 [
+  "decoding-load",
   "keep-curricular-terms",
   "lectura-facil-es",
+  "one-idea-per-sentence",
 ]
 `;
 
@@ -54,12 +62,14 @@ exports[`selection after scope filtering > a worksheet: instructions and exercis
 exports[`selection after scope filtering > an exam: assessments and a figure · cognitive load and attention 1`] = `
 [
   "exam-access-not-difficulty",
+  "how-much-at-once",
   "one-task-per-page",
 ]
 `;
 
 exports[`selection after scope filtering > an exam: assessments and a figure · executive function 1`] = `
 [
+  "decoding-load",
   "exam-access-not-difficulty",
   "explicit-steps",
   "signpost-the-page",
@@ -68,9 +78,11 @@ exports[`selection after scope filtering > an exam: assessments and a figure · 
 
 exports[`selection after scope filtering > an exam: assessments and a figure · reading, in Spanish 1`] = `
 [
+  "decoding-load",
   "exam-access-not-difficulty",
   "keep-curricular-terms",
   "lectura-facil-es",
+  "one-idea-per-sentence",
 ]
 `;
 
@@ -85,12 +97,14 @@ exports[`selection today, per profile > cognitive load and attention — before 
 [
   "chunk-the-prose",
   "exam-access-not-difficulty",
+  "how-much-at-once",
   "one-task-per-page",
 ]
 `;
 
 exports[`selection today, per profile > executive function — before scope filtering 1`] = `
 [
+  "decoding-load",
   "exam-access-not-difficulty",
   "explicit-steps",
   "signpost-the-page",
@@ -99,9 +113,11 @@ exports[`selection today, per profile > executive function — before scope filt
 
 exports[`selection today, per profile > reading, in Spanish — before scope filtering 1`] = `
 [
+  "decoding-load",
   "exam-access-not-difficulty",
   "keep-curricular-terms",
   "lectura-facil-es",
+  "one-idea-per-sentence",
 ]
 `;
 
