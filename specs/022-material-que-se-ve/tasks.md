@@ -17,7 +17,7 @@ is already paid for, and one deterministic drawer serves every modality.
 
 ## Phase 1 · Setup · the US3 tests, red, before anything can pass them
 
-- [ ] T001 [US3] Write `app/packages/core/test/figures-refuse.test.ts` **first**, red,
+- [x] T001 [US3] Write `app/packages/core/test/figures-refuse.test.ts` **first**, red,
       per [quickstart.md](quickstart.md) §1: markup containing a script, an event
       handler, `href`/`xlink:href`, `<image>`, `<use>`, `url()`, a `data:` scheme,
       `<style>`, `<foreignObject>`, an entity, a comment, CDATA — and an **allowed**
@@ -25,6 +25,16 @@ is already paid for, and one deterministic drawer serves every modality.
       **Refused, not sanitised** (FR-2008, FR-2009): assert no output resembles a cleaned
       version of the input, because rewriting attacker-shaped input hides the event worth
       seeing (`007` FR-508's rule, applied here)
+      *(done: `figures-refuse.test.ts`, 66 cases — 31 hostile payloads, each asserted
+      **refused with its token quoted**, plus a case that asserts the verdict type has
+      no «cleaned» field at all, because a validator that returned one would pass every
+      other case here and still put attacker-shaped markup on a child's sheet.
+      **Mutation found two of its own gaps:** every bad-attribute case was also caught
+      by a value rule, so turning the attribute allowlist off left the file green — now
+      two cases have innocuous values (`onload="init"`, `data-x="1"`); and `url(` was
+      unreachable through any attribute (no allowed value grammar admits a parenthesis),
+      so it is asserted where it can actually appear, in text content, and kept as
+      defence in depth with that said out loud.)*
 - [ ] T002 [P] [US3] Write `app/packages/core/test/figures-never-a-way-in.test.ts`
       **first**, red: a document whose figure block carries each hostile payload renders
       to a sheet that (a) still exists, minus the diagram, with the refusal reported
@@ -46,21 +56,36 @@ is already paid for, and one deterministic drawer serves every modality.
 **Blocking**: Phases 3-6 do not start until T001 is green against T004 and T003's
 determinism case is green against T005.
 
-- [ ] T004 [US3] `app/packages/core/src/render/figures/validate.ts` · `validateGlyph`
+- [x] T004 [US3] `app/packages/core/src/render/figures/validate.ts` · `validateGlyph`
       per [contracts/figures.md](contracts/figures.md): the closed element list, the
       attribute list, the **value rules** (paints without `url(`, numeric path grammar,
       no `<`/`&`/`http`/`javascript`/`data:` in any value), the fragment bounds
       (elements, bytes, depth). In code, not corpus: a structural defence (Principle IX)
       is not teacher-editable. Verdict type carries the quoted offending token, in her
       language
-- [ ] T005 `app/packages/core/src/render/figures/draw.ts` · `drawFigure(fig)` → inline
+      *(done: `render/figures/validate.ts`. Three gates, not one — the element list, the
+      attribute list and the **value rules**, because `<rect fill="url(#g)">` is every
+      attribute on the list and a reference to something else. Comments, CDATA,
+      processing instructions and entities are caught before the tag walk, since a
+      walker does not see them as elements at all; a **bare** attribute is caught before
+      the name=value scan, since `onload` with no value parses as no attribute to a pair
+      scanner — a hole exactly where the handlers are. In code and not corpus: a
+      security boundary a teacher can edit is not a boundary.)*
+- [x] T005 `app/packages/core/src/render/figures/draw.ts` · `drawFigure(fig)` → inline
       SVG for the four kinds (grid, groups, number-line, part-whole). Deterministic and
       pure (FR-2004): geometry only from `quantities`; glyph/theme choose what a cell
       looks like, structurally never how many (FR-2005). Repetition by inlining — no
       `defs`/`use`, so T002's «no `href` anywhere» stays a one-line assertion. Counting
       rides on discrete outlined shapes, never on colour (FR-2013). `role="img"` +
       `aria-label` = description. Plain built-in glyphs when no theme (FR-2006)
-- [ ] T006 [P] `instructions/figures.md` · the judgement layer, plus its parser
+      *(done: `render/figures/draw.ts`, the four kinds. Repetition by **inlining** the
+      glyph rather than `defs`+`use`, which is what keeps «the output contains no
+      `href`, no `url(`, no `http`» a one-line assertion. Counting rides on discrete
+      outlined shapes: the photocopy test flattens every fill and stroke to black on
+      white and the count is unchanged. And the drawer **re-validates the glyph itself**
+      and falls back to the plain shape — the caller is the one that refuses and
+      reports, but «the caller always asks» is true until it is not.)*
+- [x] T006 [P] `instructions/figures.md` · the judgement layer, plus its parser
       `app/packages/core/src/render/figures/corpus.ts` (the `parseAudioCorpus` pattern):
       which kind suits which operation; the bounds past which a diagram stops being one
       (`max_cells` etc., clamped in code against typos — `compose.md`'s budget pattern,
@@ -69,6 +94,14 @@ determinism case is green against T005.
       personaje» — no third party's characters, logos or property, names included
       (FR-2007). Corpus because every one of these is a judgement a PT may correct —
       except the allowlist, which deliberately is not here
+      *(done: `instructions/figures.md` + `render/figures/corpus.ts`. The kinds table,
+      the bounds, the per-kind description templates, the request-format section the
+      prompt sends, and «el tema, no el personaje». Its fallback **draws nothing** — the
+      opposite of `audio.md`'s, and deliberately: an empty kinds list loses a feature
+      and cannot produce a wrong picture, where failing open would draw with bounds and
+      suitability nobody declared. A kind missing any of its four fields is dropped
+      rather than defaulted: one with no `for` would suit every operation and one with
+      no `describe` would draw a picture audio and braille cannot say.)*
 
 **Checkpoint**: T001 green, T003's determinism green, offline suite passing, no caller
 changed, no provider involved.
