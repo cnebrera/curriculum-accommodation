@@ -185,8 +185,15 @@ justamente eso.
       ahora hay control en los dos estados de la guía, ausente —no deshabilitado— mientras no
       haya documento, y volver de ella regresa al documento y no al listado.
       4 e2e nuevos; 3 costuras verificadas por mutación.
-- [ ] **2.3** Reimprimir: el expediente ofrece el PDF/render antiguo (`documents.rendered` gana su
+- [x] **2.3** Reimprimir: el expediente ofrece el PDF/render antiguo (`documents.rendered` gana su
       lector) (FLU-06, decisión implícita en el tema 7 — confirmada por el texto de offline).
+      **Hecho 2026-09-04.** `documents.rendered` estaba declarado, tipado, poblado por
+      `entryFor` desde `014` y **leído por nadie** (G36 otra vez): la fila ofrecía el markdown,
+      el informe, el IR y la reutilización, y **no el PDF que se fotocopia**. La fila abre ahora
+      el PDF que tiene y imprime uno donde no lo hay, las dos cosas **offline** — que es lo que
+      `es.errors.offline` («puedes leer tus notas y volver a imprimir») venía prometiendo.
+      3 e2e nuevos, incluida la escritura real del fichero sin red; costura verificada por
+      mutación.
 - [ ] **2.4** Pictogramas: atribución derivada del set real + fuente por pictograma en el catálogo
       (P40); persistir popularity y ordenar el selector (P41); incrustar pictogramas+atribución en
       ODT (P47); pantalla del override por niño (P48, puede ir al final del lote).

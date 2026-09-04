@@ -393,6 +393,26 @@ residuo de sesión que heredar — y el e2e nuevo lo comprueba de paso.
 
 tsc limpio · 1560 casos · 119 e2e.
 
+### 2.3 · Reimprimir una hoja del mes pasado — FLU-04
+
+`documents.rendered: string[]` estaba declarado, tipado, **poblado** por `entryFor` desde
+`014` y leído por nadie: G36 otra vez, y con una consecuencia de las caras. La fila del
+expediente ofrecía «Lo adaptado» (markdown), el informe, el IR y la reutilización, y **no el
+PDF que se fotocopia**. El único «Guardar como PDF» vive en la pantalla de revisión, que
+antes de 0.1 solo se alcanzaba durante una adaptación recién hecha — así que reimprimir la
+hoja firmada del mes pasado, que es de las tareas más frecuentes del curso (se perdió la
+fotocopia), era imposible.
+
+Y mientras tanto `es.errors.offline` prometía «puedes leer tus notas y **volver a
+imprimir**»: texto de interfaz mintiendo sobre lo que la aplicación podía hacer.
+
+La fila abre ahora el PDF que ya tiene y ofrece imprimir uno donde no lo hay, con la
+etiqueta honesta en cada caso. Las dos cosas funcionan **sin red**: `job:render` escribe el
+HTML y `job:pdf` es el `printToPDF` de Chromium, los dos locales — y el e2e lo comprueba
+escribiendo el fichero de verdad en una instalación sin clave.
+
+3 e2e nuevos; costura verificada por mutación.
+
 ## Saltados y por qué
 
 _(nada todavía)_
@@ -416,10 +436,10 @@ _(nada todavía)_
 |---|---|
 | `npx tsc --noEmit` | verde (línea base) |
 | `npx vitest run` | verde — 1560 casos |
-| `npm run test:e2e` | verde — 119 casos |
+| `npm run test:e2e` | verde — 122 casos |
 | `scripts/check-fr-coverage.sh` | verde (línea base) |
 | `scripts/check-spec-kit.sh` | verde (línea base) |
 
 ---
 
-**Lotes 0 y 1 completos; Lote 2 en 2/12.** Quedan 12 ítems de la cola (Lote 2: 10 · Lote 3: 2 abiertos + 11 features por implementar).
+**Lotes 0 y 1 completos; Lote 2 en 3/12.** Quedan 11 ítems de la cola (Lote 2: 9 · Lote 3: 2 abiertos + 11 features por implementar).

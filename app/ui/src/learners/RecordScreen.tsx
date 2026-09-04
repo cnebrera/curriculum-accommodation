@@ -5,6 +5,7 @@ import { Badge } from '../components/Badge.js';
 import { Callout } from '../components/Callout.js';
 import { useRecord, useRebuildRecord, type RecordEntry } from '../data/record.js';
 import { useOpenInVault } from '../data/vault.js';
+import { useRender, usePdf } from '../data/jobs.js';
 
 /**
  * Everything ever made for one learner (014 T014-T018).
@@ -36,9 +37,25 @@ function human(iso: string): string {
   return d && m && y ? `${d}/${m}/${y}` : (iso || 'sin fecha');
 }
 
-function Entry({ entry, onOpen, onReuse, onReview }: {
+function Entry({ entry, onOpen, onReuse, onReview, onPrint, printing }: {
   entry: RecordEntry;
   onOpen: (path: string) => void;
+  /**
+   * Print it again (FLU-04).
+   *
+   * `documents.rendered: string[]` has been declared, typed and populated by
+   * `entryFor` since `014` — and **read by nothing**: the enésima instance of the
+   * defect this repository catalogues as «a field written, typed and read by
+   * nothing» (G36). The consequence is one of the commonest tasks of the year:
+   * the photocopy was lost, and reprinting the sheet she already signed was
+   * impossible. The only «Guardar como PDF» lives on the review screen, which
+   * before `0.1` could only be reached during a fresh adaptation.
+   *
+   * Worse, `es.errors.offline` promises «puedes leer tus notas y volver a
+   * imprimir» — interface text lying about what the application can do.
+   */
+  onPrint?: (jobId: string, learner: string) => void;
+  printing?: boolean;
   /** «Hazlo otra vez para otro alumno» (016 T018, FR-1409). */
   onReuse?: (jobId: string, kind: string) => void;
   /**
@@ -54,6 +71,13 @@ function Entry({ entry, onOpen, onReuse, onReview }: {
   onReview?: (jobId: string, learner: string) => void;
 }) {
   const gone = (path: string): boolean => entry.missing.includes(path);
+  /*
+   * The newest print, if she has one. `rendered` lists everything under
+   * `output/<job>/<code>/` — `sheet.html`, `sheet.pdf`, an ODT, a braille-ready
+   * text — so the PDF is picked by extension rather than by position.
+   */
+  const rendered = [...entry.documents.rendered].sort().reverse()
+    .find((path) => path.toLowerCase().endsWith('.pdf'));
   /* Pulled out of the JSX because a closure loses the narrowing on a
      discriminated union, and `!` inside a handler is how a real null gets in. */
   const brought = entry.source.of === 'file' ? entry.source.paths[0] : undefined;
@@ -127,6 +151,24 @@ function Entry({ entry, onOpen, onReuse, onReview }: {
         ) : null}
 
         {/* The key, for a composed job. Hers, and never on his sheet (`002` T014). */}
+        {/*
+          The PDF she already has, if there is one — opening it costs nothing and
+          works with no network, which is what the offline sentence promises. When
+          there is none, printing it is still offline (Chromium renders locally),
+          so the two are the same control with the honest label for each case.
+        */}
+        {rendered ? (
+          <button className="btn btn-sm" disabled={gone(rendered)} onClick={() => onOpen(rendered)}>
+            El PDF
+          </button>
+        ) : null}
+        {onPrint && entry.documents.adapted && !gone(entry.documents.adapted) ? (
+          <button className="btn btn-sm" disabled={printing} aria-busy={printing}
+                  onClick={() => onPrint(entry.jobId, entry.learner)}>
+            {rendered ? 'Volver a imprimirlo' : 'Guardar como PDF'}
+          </button>
+        ) : null}
+
         {entry.documents.answers ? (
           <button className="btn btn-sm" onClick={() => onOpen(entry.documents.answers!)}>
             Las soluciones
@@ -226,6 +268,26 @@ export function RecordScreen({ code, name, onBack, onReuse, onReview }: {
   const open = useOpenInVault();
   const rebuild = useRebuildRecord();
   const [rebuiltTo, setRebuiltTo] = useState<string | null>(null);
+  /*
+   * Printing, from here (FLU-04). Both calls are local: `job:render` writes the
+   * HTML and `job:pdf` is Chromium's own `printToPDF`, so «volver a imprimir»
+   * genuinely works with no network — which is what the offline message has been
+   * promising all along.
+   */
+  const renderJob = useRender();
+  const pdf = usePdf();
+  const [printedTo, setPrintedTo] = useState<string | null>(null);
+  const [printingWhich, setPrintingWhich] = useState<string | null>(null);
+
+  const print = (jobId: string, learner: string): void => {
+    const which = `${jobId}-${learner}`;
+    setPrintingWhich(which);
+    setPrintedTo(null);
+    void renderJob.run(jobId, learner)
+      .then((r) => (r ? pdf.run(jobId, learner) : undefined))
+      .then((path) => { if (path) setPrintedTo(path); })
+      .finally(() => setPrintingWhich(null));
+  };
 
   return (
     <Page title={`Lo que he preparado para ${name ?? code}`}
@@ -253,6 +315,8 @@ export function RecordScreen({ code, name, onBack, onReuse, onReview }: {
                   {entries.filter((e) => e.schoolYear === year).map((e) => (
                     <Entry key={`${e.jobId}-${e.learner}`} entry={e}
                            onOpen={(path) => void open.run(path)}
+                           onPrint={print}
+                           printing={printingWhich === `${e.jobId}-${e.learner}`}
                            {...(onReuse ? { onReuse } : {})}
                            {...(onReview ? { onReview } : {})} />
                   ))}
@@ -260,6 +324,11 @@ export function RecordScreen({ code, name, onBack, onReuse, onReview }: {
               ))}
 
               {open.error ? <Callout intent="danger">{open.error.message}</Callout> : null}
+              {renderJob.error ? <Callout intent="danger">{renderJob.error.message}</Callout> : null}
+              {pdf.error ? <Callout intent="danger">{pdf.error.message}</Callout> : null}
+              {printedTo ? (
+                <p className="small muted" role="status">Guardado en <code>{printedTo}</code></p>
+              ) : null}
 
               {/*
                 `record.md` is written for her, in her folder, and Rampa never

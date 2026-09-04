@@ -55,6 +55,8 @@ async function seed(page: Page, vault: string): Promise<string> {
         `---\n${review}adapted_on: "${date}"\nschool_year: "${year}"\nkind: "${kind}"\n`
         + `subject: "Naturales"\n---\n\n::: {#b1 .explanation}\nHola\n:::\n`);
       await window.rampa.vault.write(`material/${job}/${c}/report.md`, '# Informe\n');
+      // A print she already has, for the reprint row (FLU-04).
+      if (signed) await window.rampa.vault.write(`output/${job}/${c}/sheet.pdf`, '%PDF-1.4\n');
     }, [...j, code]);
   }
 
@@ -154,6 +156,63 @@ test.describe('everything ever made for one learner', () => {
     // The rail resets the screen, which is what "Mis alumnos" has to mean.
     await openRecord(page);
     expect(await page.locator('.main').innerText()).toBe(before);
+
+    await app.close();
+  });
+});
+
+
+/**
+ * Reprinting a sheet from last month (FLU-04).
+ *
+ * `documents.rendered: string[]` has been declared, typed and populated by
+ * `entryFor` since `014` — and **read by nothing**. The enésima instance of the
+ * defect this repository catalogues as «a field written, typed and read by
+ * nothing» (G36), and the consequence is one of the commonest tasks of the school
+ * year: the photocopy was lost, and reprinting the sheet she already signed was
+ * impossible. The only «Guardar como PDF» lived on the review screen, which before
+ * `0.1` could not be reached for a job from last month at all.
+ *
+ * And `es.errors.offline` promises «puedes leer tus notas y volver a imprimir» —
+ * interface text that was lying about what the application could do.
+ */
+test.describe('printing it again', () => {
+  test('the row offers the PDF she already has', async () => {
+    const { app, page, vault } = await launch();
+    await seed(page, vault);
+    await openRecord(page);
+
+    await expect(page.getByRole('button', { name: 'El PDF' }).first()).toBeVisible();
+    await app.close();
+  });
+
+  test('and offers to print one where there is none', async () => {
+    const { app, page, vault } = await launch();
+    await seed(page, vault);
+    await openRecord(page);
+
+    // The unsigned row of the seed has no `output/` directory, so its label is
+    // the honest one: there is nothing to reopen, and printing is still offline.
+    await expect(page.getByRole('button', { name: 'Guardar como PDF' }).first()).toBeVisible();
+    await app.close();
+  });
+
+  test('reprinting writes a PDF, with no network at all', async () => {
+    /*
+     * The assertion the offline promise needs: `job:render` writes HTML and
+     * `job:pdf` is Chromium's own `printToPDF`, both local. So this test runs with
+     * no key and no connection and still produces a file.
+     */
+    const { app, page, vault } = await launch();
+    const code = await seed(page, vault);
+    await openRecord(page);
+
+    await page.getByRole('button', { name: 'Volver a imprimirlo' }).first().click();
+    await expect(page.getByText(/Guardado en/)).toBeVisible({ timeout: 30000 });
+
+    const files = await page.evaluate((c) =>
+      window.rampa.vault.list(`output/job-20260228T090000/${c}`), code) as string[];
+    expect(files, 'no PDF was written').toContain('sheet.pdf');
 
     await app.close();
   });
