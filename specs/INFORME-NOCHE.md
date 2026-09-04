@@ -256,6 +256,50 @@ compartiendo vault por OneDrive con builds distintos — el viejo sobreescribe a
 9 casos en `packages/core/test/vault-version.test.ts`. Dos costuras verificadas por
 mutación: bajar el número (1 rojo) y escribir al leer (4 rojos).
 
+### 1.11, 1.12, 1.13, 1.16 · el resto del Lote 1 — P36, P27, P28, y un hallazgo directo
+
+**1.11 · «por hoja adaptada» (P36, CONS-34).** Dos MUST en tensión y nadie podía saber cuál
+ganaba: `012` FR-1011 dice que la interfaz deje de llamar «ficha» a todo —porque quien lo lee
+en todas partes concluye que la herramienta no hace exámenes y no lo intenta— y el literal
+«Unos 3 céntimos por ficha» estaba en la **primera** pantalla que ve. En dos commits, spec y
+después i18n+test, que es lo que el gate de Spec Kit separa. De paso apareció una **tercera**
+redacción de esa misma frase: `onboarding.connectOk` («por documento»), escrita por nadie y
+leída por nadie desde que 009 se quedó con el asistente. Retirada, y el test cuenta cuántas
+redacciones de «✓ Conectado» existen — un gemelo rancio de la frase que acabábamos de
+enmendar, esperando a que alguien tirase de él, es el defecto-firma llegando a la capa de copy.
+
+**1.12 · conflictos declarados (P27, CONS-08).** `one-task-per-page` manda partir las
+subpreguntas «también», y `exam-access-not-difficulty` tiene «partir una respuesta de dos
+partes en dos de una» entre sus anti-patrones. Las dos se seleccionan sobre el mismo bloque
+`.assessment` y ninguna declaraba a la otra: la contradicción la resolvía lo que el modelo
+leyese primero. Ahora se declaran mutuamente (versión 2 las dos) y en un examen gana la
+**guarda** —la regla 0 del resolutor no la descarta— con el conflicto **escrito** en el
+informe. Y receta nueva `conflict-decoding-vs-minimal-page` para DEC≥2 + ATE≥2: dislexia +
+TDAH es el par más común de un aula de apoyo y no tenía ninguna, así que se resolvía en
+silencio, igual de mal cada semana. Va marcada en su propio texto como **no revisada por una
+PT** — la escribí desde las definiciones de los ejes y el orden de resolución, no desde
+criterio clínico. `pictograms-not-automatic.test.ts` cazó su primer borrador nombrando
+pictogramas, que es exactamente lo que `018` prohíbe: una receta que nombra un apoyo es ese
+apoyo encendido por un eje.
+
+**1.13 · regla dura 12 (P28).** Decía que el material adaptado **y** lo que se le dice a la
+docente van en el idioma del material. El caso más normal de un colegio español lo rompía: una
+ficha de inglés producía notas de informe en inglés, dentro de un esqueleto que la aplicación
+escribe en español fijo. Informe bilingüe sobre su propia aula. Partida en los dos hechos que
+son: el material conserva su idioma, lo que se le dice a ella va en español. «Español» dicho y
+no derivado, porque este corpus **es** el corpus del mercado español; cuando el idioma sea un
+ajuste declarado (`033`) la línea pasa a ser «el que ella haya elegido».
+
+**1.16 · la tilde.** «Válida cada una» (adjetivo) donde va el imperativo «Valida», en una de
+las frases que se **imprimen en la cabecera del examen**. Lo que importaba del hallazgo no era
+la tilde: **había un test que la consagraba**, pidiendo «válida» en el texto impreso. Un test
+que fija un error es peor que no tener test, porque arreglar el error parece romper algo.
+Reescrito con límite de palabra y una nota de por qué.
+
+Con esto el **Lote 1 está completo** (17/17).
+
+tsc limpio · 1537 casos · 115 e2e.
+
 ## Saltados y por qué
 
 _(nada todavía)_
@@ -278,11 +322,11 @@ _(nada todavía)_
 | | |
 |---|---|
 | `npx tsc --noEmit` | verde (línea base) |
-| `npx vitest run` | verde — 1526 casos |
+| `npx vitest run` | verde — 1537 casos |
 | `npm run test:e2e` | verde — 115 casos |
 | `scripts/check-fr-coverage.sh` | verde (línea base) |
 | `scripts/check-spec-kit.sh` | verde (línea base) |
 
 ---
 
-**Lote 0 completo.** Quedan 18 ítems de la cola.
+**Lotes 0 y 1 completos.** Quedan 14 ítems de la cola (Lote 2: 12 · Lote 3: 2 abiertos + 11 features por implementar).

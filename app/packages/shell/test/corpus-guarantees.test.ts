@@ -290,4 +290,25 @@ describe('what the corpus says to her crosses to the screen', () => {
     expect(mapping, 'on_document is printed by buildSheet, in this process')
       .not.toMatch(/onDocument:/);
   });
+
+  /**
+   * And what gets printed is spelled correctly (review AGE-09).
+   *
+   * `composing.on_document` is the one family of phrases that ends up **on the
+   * paper**, in the header of an exam, because paper outlives the screen. It said
+   * «Válida cada una antes de usarlas» — the adjective, where the imperative
+   * «Valida» belongs — and the same sentence two fields above gets it right («tú
+   * validas»), which is what makes it an erratum rather than a choice.
+   *
+   * A spelling mistake printed on an assessment, in front of teachers, costs
+   * exactly the thing this application is asking them for. Small, and asserted
+   * because the file is hand-edited corpus and nothing else would see it.
+   */
+  it('prints the imperative, not the adjective', async () => {
+    // The shipped bundle, which is what actually reaches a printer.
+    const raw = await readFile(join(corpus, 'instructions', 'material-kinds.md'), 'utf8');
+    const printed = raw.replace(/\s+/g, ' ');
+    expect(printed).toContain('Valida cada una antes de usarlas');
+    expect(printed, 'the adjective is back on an exam header').not.toContain('Válida cada');
+  });
 });

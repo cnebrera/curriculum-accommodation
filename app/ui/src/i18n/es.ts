@@ -39,7 +39,14 @@ export const es = {
     connectGet: 'Abrir la página para conseguir la clave',
     connectPaste: 'Pega aquí la clave',
     connectCheck: 'Comprobar',
-    connectOk: (cost: string) => `✓ Conectado. ${cost} por documento.`,
+    /*
+     * `connectOk` used to live here — a **third** wording of the same sentence
+     * («por documento»), written by nobody and read by nobody: `009` replaced the
+     * onboarding paste box with its own wizard, and `connect.connectedCost` is the
+     * sentence that actually reaches her. Removed rather than left, because the
+     * amendment P36 just made to that sentence would have had a stale twin sitting
+     * beside it waiting for somebody to reach for it.
+     */
     noCard: 'sin tarjeta',
     learnerTitle: 'Tu primer alumno',
     learnerWhy: 'Cuéntame cómo va en clase. No hace falta ningún diagnóstico: con lo que ves tú es suficiente.',
@@ -86,7 +93,7 @@ export const es = {
     colService: 'Servicio',
     colCard: '¿Tarjeta?',
     colFree: '¿Hay algo gratis?',
-    colCost: 'Coste por ficha',
+    colCost: 'Coste por hoja adaptada',
     colWhere: '¿Dónde se procesa?',
     colTrains: '¿Entrena con lo que envías?',
     colPhotos: '¿Lee fotos?',
@@ -136,7 +143,16 @@ export const es = {
 
     /** FR-724: the cost comes from the entry, never from a hardcoded three. */
     connectedFree: '✓ Conectado. Este servicio es gratis dentro de su límite.',
-    connectedCost: (cost: string) => `✓ Conectado. ${cost} por ficha, estimado.`,
+    /*
+     * «Por hoja adaptada», not «por ficha» (decision P36, review CONS-34).
+     *
+     * `012` FR-1011 says the interface must stop calling everything «una ficha»,
+     * because a teacher who reads it everywhere concludes the application does not
+     * do exams and never tries. This sentence is on the **first** screen she sees,
+     * so it was the loudest place the two MUSTs contradicted each other. Resolved
+     * by changing the copy, with no exception to the rule.
+     */
+    connectedCost: (cost: string) => `✓ Conectado. ${cost} por hoja adaptada, estimado.`,
   },
 
   learner: {

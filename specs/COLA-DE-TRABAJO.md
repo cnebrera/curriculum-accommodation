@@ -96,8 +96,9 @@ Sin spec nueva: son defectos contra specs vigentes, con decisión tomada. Cada u
 Un solo commit de specs/corpus puede llevarlas todas. Sin código salvo donde se indica.
 
 **2026-09-03: ejecutados los 12 ítems puramente documentales** (guardianes en verde; entradas nuevas
-G38–G41 en BACKLOG). Quedan los 5 que tocan código/i18n/corpus-con-front-matter: 1.11, 1.12, 1.13,
-1.16, 1.17 — para la fase de implementación (1.17 lo construye la 032 como prerequisito propio).
+G38–G41 en BACKLOG). **2026-09-04: ejecutados los 5 que tocaban código/i18n/corpus — Lote 1
+completo.** 1.11 en dos commits (spec, luego i18n+test) porque el gate de Spec Kit separa
+justamente eso.
 
 - [x] **1.1** Prefijo de spec obligatorio al citar FRs → AGENTS.md + plantilla; corregir 021:201 (P22).
 - [x] **1.2** 007 FR-511 → «destinos declarados en el corpus», nota fechada → 023 (P23).
@@ -112,14 +113,33 @@ G38–G41 en BACKLOG). Quedan los 5 que tocan código/i18n/corpus-con-front-matt
 - [x] **1.8** 024 FR-2218 anotado «aplazado, ver G35» hasta la spec del segundo eje (P34).
 - [x] **1.9** FR-122/FR-129: escribir la lectura reconciliadora (curso→corpus = input de ella) (P32).
 - [x] **1.10** FR-707a: «mejor medido entre elegibles y con soporte de fotos, ambas ramas» (P33).
-- [ ] **1.11** Copy de conexión → «por hoja adaptada» (spec + i18n + test) (P36).
-- [ ] **1.12** Recetas: declarar conflicts: one-task-per-page ↔ exam-access; escribir receta de
+- [x] **1.11** Copy de conexión → «por hoja adaptada» (spec + i18n + test) (P36).
+      **Hecho 2026-09-04.** Spec enmendada en su propio commit (006 US1-2, 009 US4 y FR-724),
+      i18n y test después. De paso: `onboarding.connectOk` era una **tercera** redacción de la
+      misma frase («por documento»), escrita por nadie y leída por nadie desde que 009 se quedó
+      con el asistente — retirada, con un test que cuenta cuántas redacciones de «✓ Conectado» hay.
+- [x] **1.12** Recetas: declarar conflicts: one-task-per-page ↔ exam-access; escribir receta de
       conflicto DEC+ATE (P27). Corpus, no código.
-- [ ] **1.13** Regla dura 12 → el informe habla siempre en el idioma de la docente (P28-parte).
+      **Hecho 2026-09-04.** Las dos se declaran mutuamente (versión 2 ambas, porque cambia lo
+      que hacen): en un examen gana la **guarda** —la regla 0 del resolutor no la descarta— y el
+      conflicto queda **escrito** en el informe en vez de resolverse por lo que el modelo leyera
+      primero. Receta nueva `conflict-decoding-vs-minimal-page` (DEC>=2 + ATE>=2): dislexia +
+      TDAH es el par más común de un aula de apoyo y no tenía ninguna. Marcada en su propio
+      texto como **no revisada por una PT**. `pictograms-not-automatic.test.ts` cazó su primer
+      borrador nombrando pictogramas, que es lo que 018 prohíbe.
+- [x] **1.13** Regla dura 12 → el informe habla siempre en el idioma de la docente (P28-parte).
+      **Hecho 2026-09-04.** La regla se parte en dos hechos: el material conserva su idioma
+      (traducirlo es un cambio que nadie pidió) y **lo que se le dice a la docente va en
+      español**, sea cual sea el idioma de la hoja. El caso que la rompía es el más normal de un
+      colegio español: una ficha de inglés producía notas en inglés dentro de un esqueleto que la
+      aplicación escribe en español.
 - [x] **1.14** Cooficiales: mensaje honesto al detectar la lengua + deuda registrada (P51).
 - [x] **1.15** Firma de código: entrada BACKLOG con criterio «sin firma no hay release pública
       mac/Windows» (P52).
-- [ ] **1.16** Tilde «Válida→Valida» del texto impreso en exámenes (AGE, sin P — hallazgo directo).
+- [x] **1.16** Tilde «Válida→Valida» del texto impreso en exámenes (AGE, sin P — hallazgo directo).
+      **Hecho 2026-09-04.** Y lo que importaba: **había un test que consagraba la errata** —
+      pedía «válida» en el texto impreso. Un test que fija un error es peor que no tener test,
+      porque arreglarlo parece romper algo. Reescrito con límite de palabra.
 - [x] **1.17** Marcador de versión de esquema en el vault (P50). Pequeño código + test; va aquí
       porque debe existir ANTES de los cambios de forma de los lotes 2-3.
       **Hecho 2026-09-04 vía `032` T003**, que es donde vive la decisión (research R5): la

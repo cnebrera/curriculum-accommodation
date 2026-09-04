@@ -1,9 +1,9 @@
 ---
 id: exam-access-not-difficulty
-version: 1
+version: 2
 axes: []
 scope: [assessment]
-conflicts: []
+conflicts: [one-task-per-page]
 evidence: "Access arrangements vs. modification of the assessed criterion"
 ---
 
@@ -59,7 +59,11 @@ it goes in the official file, and a teaching team makes it. Not an agent.
   PDF and looks like a good adaptation. It is the failure mode with the worst
   consequences: the learner passes an exam that certifies something untrue.
 - **Splitting a two-part answer into two one-part answers** on an assessment.
-  Fine on an exercise; on an exam it changes what is measured.
+  Fine on an exercise; on an exam it changes what is measured. `one-task-per-page`
+  says to split sub-questions «too», and both recipes can be selected over the same
+  `.assessment` block — so they declare each other and this one wins, because it is
+  a guard (review CONS-08, decision P27). One item per page stays; the item stays
+  whole.
 - **Adding a worked example** to an exam. That is scaffolding, and scaffolding on
   an assessment is answering it.
 - Applying `explicit-steps` to an assessment where the sequencing is what is being

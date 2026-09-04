@@ -233,3 +233,88 @@ describe('what changed, stated rather than left to the snapshots', () => {
     expect(inScope(unscoped, [])).toBe(true);
   });
 });
+
+/**
+ * The conflict machinery, over the shipped corpus (review CONS-08, decision P27).
+ *
+ * ## What was silent
+ *
+ * `one-task-per-page` is scoped `[exercise, assessment]` and says «when one
+ * exercise contains several sub-questions, split those too». `exam-access-not-
+ * difficulty` lists «splitting a two-part answer into two one-part answers on an
+ * assessment» among its anti-patterns. **Both are selected over the same
+ * `.assessment` block**, neither declared the other, and the review's own note is
+ * the point: the machinery was not dead — `lectura-facil` declares one conflict —
+ * it was under-used, one declaration in ten recipes, so this pair was resolved by
+ * whichever text the model happened to follow.
+ *
+ * And the commonest pair in a support classroom, dyslexia plus ADHD, had no
+ * conflict recipe at all: `DEC>=2` asks for more on the page and `ATE>=2` asks for
+ * less, and nothing in the corpus said who wins.
+ */
+describe('conflicts are declared, so they are recorded rather than guessed', () => {
+  const find = (id: string): Recipe => corpus.find((r) => r.id === id)!;
+
+  it('the exam pair declares itself, in both directions', () => {
+    // Both directions, because the resolver walks each recipe's own list: a
+    // one-sided declaration resolves only when that one happens to be visited.
+    expect(find('one-task-per-page').conflicts).toContain('exam-access-not-difficulty');
+    expect(find('exam-access-not-difficulty').conflicts).toContain('one-task-per-page');
+  });
+
+  it('and on an exam the guard is kept, with the constraint written down', () => {
+    // `COG:3 ATE:2` selects `one-task-per-page`; the guard applies to every
+    // `.assessment` block regardless of profile.
+    const exam = ['assessment', 'instruction'];
+    const sel = selectRecipes(corpus, byName('cognitive load and attention'), 'es', exam);
+    const ids = sel.selected.map((r) => r.id);
+
+    // Rule 0: a guard is never dropped, and neither is the recipe it constrains.
+    expect(ids).toContain('exam-access-not-difficulty');
+    expect(ids).toContain('one-task-per-page');
+
+    const line = sel.resolved.find((x) => x.kept === 'exam-access-not-difficulty');
+    expect(line, 'the conflict was resolved silently').toBeDefined();
+    expect(line!.because).toMatch(/guarda/);
+    expect(line!.because).toContain('one-task-per-page');
+  });
+
+  it('a version bump travels with the change, so provenance is not a moving target', () => {
+    // `data-recipe: id@version` is what a teacher reads back. Declaring a conflict
+    // changes what a recipe does, so both went to 2.
+    expect(find('one-task-per-page').version).toBeGreaterThanOrEqual(2);
+    expect(find('exam-access-not-difficulty').version).toBeGreaterThanOrEqual(2);
+  });
+
+  it('dyslexia and ADHD together now select the recipe that settles them', () => {
+    /*
+     * `DEC>=2` wants shorter lines, wider spacing and the text broken up; `ATE>=2`
+     * wants nothing on the page that is not the task. Before this there was no
+     * conflict recipe for the pair, so the contradiction was resolved the same
+     * wrong way every week — and it is the commonest pair in a support classroom.
+     */
+    const p = profile('B07', { DEC: 2, ATE: 2 });
+    const ids = selectRecipes(corpus, p, 'es', ['explanation', 'exercise']).selected
+      .map((r) => r.id);
+    expect(ids).toContain('conflict-decoding-vs-minimal-page');
+  });
+
+  it('and not for a learner who has only one of the two', () => {
+    for (const axes of [{ DEC: 2 }, { ATE: 2 }] as Array<Record<string, 2>>) {
+      const ids = selectRecipes(corpus, profile('B08', axes), 'es', ['exercise']).selected
+        .map((r) => r.id);
+      expect(ids, 'a conflict recipe fired without a conflict')
+        .not.toContain('conflict-decoding-vs-minimal-page');
+    }
+  });
+
+  it('names no particular support, because that would be one enabled by an axis', () => {
+    /*
+     * `018`'s rule, and `pictograms-not-automatic.test.ts` caught this file's own
+     * first draft breaking it: a recipe that named a support would be that support
+     * switched on by an axis, whatever its prose said.
+     */
+    const body = find('conflict-decoding-vs-minimal-page').body;
+    expect(body).not.toMatch(/pictogram/i);
+  });
+});

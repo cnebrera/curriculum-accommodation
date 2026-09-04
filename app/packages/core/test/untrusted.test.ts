@@ -273,6 +273,27 @@ describe('FR-502 · the instructional half, labelled as such', () => {
   it('tells it not to delete what it finds, which is FR-504', () => {
     expect(hardRules).toMatch(/do not delete it/i);
   });
+
+  /**
+   * Rule 12, corrected (review CONS-10, decision P28).
+   *
+   * It used to say the adapted material **and** what you say to the teacher are
+   * both in the language of the source material — and the commonest case in a
+   * Spanish school broke it: an English-subject worksheet produced English report
+   * notes, sitting inside a report skeleton the application writes in Spanish. She
+   * got a bilingual report about her own classroom.
+   *
+   * The two halves are different facts: the material keeps its language because
+   * translating it is a change nobody asked for; the report is hers because she is
+   * the one reading it.
+   */
+  it('keeps the material in its language and speaks to the teacher in hers', () => {
+    // The material half survives, because it was right.
+    expect(hardRules).toMatch(/do not translate it unless asked/i);
+    // And the report half no longer follows the material.
+    expect(hardRules).toMatch(/say \*to the teacher\*[^.]*\*\*in Spanish\*\*/i);
+    expect(hardRules).toMatch(/whatever language the worksheet is in/i);
+  });
 });
 
 /* ── FR-515 · a fixture per documented vector ────────────────────────────── */

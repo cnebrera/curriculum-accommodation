@@ -184,7 +184,7 @@ test.describe('the connection step', () => {
     await page.getByRole('button', { name: 'Ver todos y comparar' }).click();
     await page.getByRole('heading', { name: 'Todos los servicios' }).waitFor();
 
-    for (const col of ['¿Tarjeta?', '¿Hay algo gratis?', 'Coste por ficha',
+    for (const col of ['¿Tarjeta?', '¿Hay algo gratis?', 'Coste por hoja adaptada',
                        '¿Dónde se procesa?', '¿Entrena con lo que envías?',
                        '¿Lee fotos?', '¿Para quién?']) {
       await expect(page.getByRole('columnheader', { name: col })).toBeVisible();

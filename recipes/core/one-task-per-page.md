@@ -1,9 +1,9 @@
 ---
 id: one-task-per-page
-version: 1
+version: 2
 axes: [COG>=2, ATE>=2]
 scope: [exercise, assessment]
-conflicts: []
+conflicts: [exam-access-not-difficulty]
 evidence: "Working-memory load; reduction of on-page distractors"
 ---
 
@@ -21,6 +21,15 @@ adapted sheets carry 4, 5 and 6 — not 1, 2 and 3. The class works out loud on
 
 When one exercise contains several sub-questions, split those too and number them
 `4a`, `4b`, keeping the mapping in the report.
+
+**Not on an assessment.** `exam-access-not-difficulty` lists «splitting a two-part
+answer into two one-part answers on an assessment» among its anti-patterns, and
+this recipe told you to split sub-questions «too». Both could be selected over the
+same `.assessment` block and neither declared the other, so the contradiction was
+resolved by whichever the model happened to follow — silently (review CONS-08,
+decision P27). They now declare each other: on an exam the **guard wins**, one item
+per page stays, and the sub-questions stay whole. Pagination is an access
+arrangement; splitting what is answered is a change of criterion.
 
 ## Before
 
@@ -59,3 +68,5 @@ When one exercise contains several sub-questions, split those too and number the
 - **Using the space freed up to add more.** The blank space *is* the adaptation.
 - Applying this to `.explanation` blocks. Explanations are chunked, not
   paginated one-sentence-per-page — that destroys the thread.
+- **Splitting sub-questions on an assessment.** One item per page: yes. `4a` and
+  `4b` as separate items: no, that is what is being measured.

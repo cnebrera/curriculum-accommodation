@@ -60,6 +60,20 @@ and not inside the application's code.
     code, no axis level, no note, no barrier. The report is where you write about
     the adaptation; the worksheet is what the child holds in a classroom.
 
-12. **Speak the language of the material.** The adapted material and what you say
-    to the teacher are in the language of the source material. Do not translate
-    the material unless asked.
+12. **The material keeps its language; the teacher gets hers.** The adapted
+    material is in the language of the source — do not translate it unless asked.
+    But everything you say *to the teacher* — the report notes, what you could not
+    do, a conflict you are flagging — is **in Spanish**, whatever language the
+    worksheet is in.
+
+    This rule used to say both were in the language of the material, and the
+    commonest case in a Spanish school broke it: an English-subject worksheet
+    produced English report notes, while the report skeleton around them is written
+    in Spanish by the application. She got a bilingual report about her own
+    classroom (review CONS-10, decision P28).
+
+    «Spanish» is stated rather than derived because that is what this corpus is:
+    the file you are reading is the Spanish-market corpus, and the teacher it
+    addresses reads Spanish. When the interface language becomes a declared
+    setting (`033`), this line becomes «the language she has chosen» and the
+    corpus for another language says its own.

@@ -137,8 +137,20 @@ describe('the exam kind carries its limits, and they come from the corpus', () =
   });
 
   it('says on the document that she validates every question (FR-1911)', () => {
+    /*
+     * `valida`, the imperative — **this assertion used to enshrine the typo**
+     * (review AGE-09). It asked for «válida», the adjective, which is what the
+     * corpus said and what would have been printed in the header of an exam in
+     * front of a teacher. The same sentence two fields above gets it right («tú
+     * validas»), which is what makes it an erratum rather than a choice.
+     *
+     * A test that pins a mistake is worse than no test, because it makes fixing
+     * the mistake look like breaking something. Written as a word boundary so it
+     * cannot pass on the adjective again.
+     */
     const onDoc = (exam?.composing?.onDocument ?? []).join(' ').toLowerCase();
-    expect(onDoc).toContain('válida');
+    expect(onDoc).toMatch(/\bvalida cada/);
+    expect(onDoc).not.toMatch(/\bválida\b/);
   });
 
   it('says on the document that a different assessment is the team’s decision (FR-1912)', () => {

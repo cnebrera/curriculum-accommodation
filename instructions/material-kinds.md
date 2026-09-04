@@ -56,7 +56,7 @@ kinds:
         esto sea un examen.
       on_document:
         - >
-          Estas preguntas las he propuesto yo. Válida cada una antes de usarlas: yo no
+          Estas preguntas las he propuesto yo. Valida cada una antes de usarlas: yo no
           sé qué se ha dado en clase.
         - >
           Poner a un alumno una prueba distinta de la del grupo lo decide el equipo
