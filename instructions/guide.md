@@ -93,10 +93,24 @@ acns_sections:
       lo que ella use y Rampa no haya visto.
   - id: desfase
     label: Desfase curricular
-    sourceable: none
+    # `partial` desde 2026-09-05 (032 FR-3004). Antes era `none`, y seguía siéndolo
+    # con razón: el desfase de la normativa sale de una evaluación psicopedagógica.
+    # Lo que ha cambiado no es eso — es que ahora ella puede tener apuntado en el
+    # perfil el nivel curricular **de esa área**, y ese apunte es suyo.
+    #
+    # Así que el borrador cita lo que ella escribió, diciendo que es lo que ella
+    # escribió, y sigue diciendo que el desfase que pide la normativa lo pone ella
+    # a partir de la evaluación. Un apunte del perfil presentado como conclusión de
+    # una evaluación sería falsificar el qué (Principio III).
+    #
+    # De un área que no tiene apuntada no sale nada: la sección se marca como que
+    # falta, exactamente como antes.
+    sourceable: partial
     from: >
-      Es un juicio profesional que sale de una evaluación. Rampa no tiene nada con
-      lo que armarlo y no lo intenta.
+      El desfase que pide la normativa sale de una evaluación psicopedagógica y lo
+      pones tú. Lo que Rampa puede ordenar es lo que tú misma tengas apuntado en el
+      perfil sobre el nivel curricular de esa área, que no es lo mismo y va dicho
+      como tuyo.
 ---
 
 # La adaptación curricular

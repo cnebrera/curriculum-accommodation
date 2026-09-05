@@ -72,14 +72,62 @@ describe('nothing may look filed', () => {
 });
 
 describe('what cannot be sourced is named, never filled', () => {
-  /** FR-1514, and «desfase curricular» is the one that cannot be sourced at all. */
-  it('names desfase curricular as hers, with the corpus\'s own reason', () => {
+  /**
+   * FR-1514, and «desfase curricular» is the one Rampa must not draft.
+   *
+   * ## Updated 2026-09-05, in the commit that made the section `partial` (`032` FR-3004)
+   *
+   * The claim has not been weakened; it has been split, because a fact appeared that did
+   * not exist before. What Rampa still refuses to write is the **desfase the regulation
+   * asks for** — that comes from a psycho-pedagogical evaluation, and the corpus's own
+   * sentence still says so beneath whatever the draft prints.
+   *
+   * What it may now order is the note **she herself** made about the curricular level of
+   * that área, attributed to her in as many words. A profile note printed as the
+   * conclusion of an evaluation would be falsifying the *what* (Principle III), so the
+   * two assertions below are the ones that matter: her sentence says «tú tienes
+   * apuntado», and the «lo pones tú» line survives regardless.
+   */
+  it('never drafts the desfase itself, and says who has to', () => {
     const { markdown, missing } = draftAcns({ ...base, record: [entry()] });
 
+    // Nothing recorded ⇒ exactly the old behaviour: named as missing, left empty.
     expect(missing).toContain('Desfase curricular');
     expect(markdown).toContain('Esto lo tienes que poner tú');
     // The reason comes from `instructions/guide.md`, not from this code.
-    expect(markdown).toContain('juicio profesional');
+    expect(markdown).toContain('evaluación psicopedagógica');
+  });
+
+  it('and when she has recorded a level, it is printed as hers, not as a finding', () => {
+    const { markdown, missing } = draftAcns({
+      ...base, record: [entry()], subject: 'Matemáticas',
+      desfase: { cur: 2, fromPair: true },
+    });
+
+    expect(markdown).toContain('Tú tienes apuntado');
+    expect(markdown).toContain('Matemáticas');
+    expect(markdown).toContain('con contenidos de cursos anteriores');
+    /*
+     * And the section is **still** flagged as needing her, because what is printed is
+     * her note and not the desfase. `partial` is exactly that pair: what exists, plus a
+     * marked gap.
+     */
+    expect(missing).toContain('Desfase curricular (en parte)');
+    expect(markdown).toContain('evaluación psicopedagógica');
+  });
+
+  it('and the general standing in for an unassessed área says so', () => {
+    const { markdown } = draftAcns({
+      ...base, record: [entry()], subject: 'Inglés',
+      desfase: { cur: 2, fromPair: false },
+    });
+    /*
+     * The sharpest case in the whole feature: an ACNS is a document somebody signs, and
+     * a general value quietly presented as this área's observation is a claim about a
+     * child that nobody made.
+     */
+    expect(markdown).toContain('No tienes nada apuntado para **Inglés**');
+    expect(markdown).toContain('en general');
   });
 
   /**

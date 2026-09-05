@@ -177,7 +177,7 @@ const api = {
     apply: (learner: string, measures: unknown[], document: string,
             omitted?: string[], kind?: string) =>
       invoke('guide:apply', learner, measures, document, omitted, kind),
-    acns: (learner: string) => invoke('guide:acns', learner),
+    acns: (learner: string, subject?: string) => invoke('guide:acns', learner, subject),
     /** The draft as a document: saved, printable, signable (FR-1516, P46). */
     acnsSave: (learner: string) => invoke('guide:acnsSave', learner),
     acnsRead: (learner: string) => invoke('guide:acnsRead', learner),

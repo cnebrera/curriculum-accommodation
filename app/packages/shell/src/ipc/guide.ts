@@ -54,7 +54,13 @@ export function registerGuideIpc(getWindow: () => BrowserWindow | null): void {
    * `020`'s screen shows the gaps and the sources before she decides to keep it, and a
    * preview that saved would put a document in her vault for having looked.
    */
-  handle('guide:acns', async (learnerCode: string) => draftAcnsJob(learnerCode));
+  /*
+   * `subject` since `032` (FR-3004): an ACNS is per área in the regulation, and the
+   * curricular level she has recorded for Matemáticas is not the one for Lengua.
+   * Optional — without it the draft uses the general value and says that it did.
+   */
+  handle('guide:acns', async (learnerCode: string, subject?: string) =>
+    draftAcnsJob(learnerCode, subject));
 
   /** The same draft, as a document in the vault (FR-1516, P46). */
   handle('guide:acnsSave', async (learnerCode: string) => saveAcnsDraft(learnerCode));

@@ -8,6 +8,7 @@ import {
   type GuideRead, type Measure, type Turn,
 } from '../data/guide.js';
 import { DocumentViewer } from '../viewer/DocumentViewer.js';
+import { useKnownAreas } from '../data/learners.js';
 
 /**
  * The adaptación curricular (017 T012, T014-T018, T023-T026).
@@ -296,6 +297,16 @@ export function AcnsDraftScreen({ learnerCode, learnerName, onBack }: {
 }) {
   const draft = useDraftAcns();
   const [result, setResult] = useState<Awaited<ReturnType<typeof draft.run>>>(undefined);
+  /**
+   * Which área this ACNS is for (`032` FR-3004).
+   *
+   * The regulation writes an ACNS **per área**, and the curricular level she has recorded
+   * for Matemáticas is not the one for Lengua — so a draft that ignores the subject cites
+   * the wrong gap for one of them. Optional: without it the draft uses the general value
+   * and says, in the document, that it did.
+   */
+  const [subject, setSubject] = useState('');
+  const areas = useKnownAreas(learnerCode);
 
   return (
     <Page
@@ -305,7 +316,8 @@ export function AcnsDraftScreen({ learnerCode, learnerName, onBack }: {
         <Actions
           primary={
             <button className="btn btn-primary" disabled={draft.busy} aria-busy={draft.busy}
-                    onClick={() => void draft.run(learnerCode).then(setResult)}>
+                    onClick={() => void draft.run(learnerCode, subject.trim() || undefined)
+                      .then(setResult)}>
               {result ? 'Volver a hacerlo' : 'Hacer el borrador'}
             </button>
           }>
@@ -314,6 +326,26 @@ export function AcnsDraftScreen({ learnerCode, learnerName, onBack }: {
       }>
 
       {draft.error ? <Callout intent="danger">{draft.error.message}</Callout> : null}
+
+      <Section title="¿De qué área?"
+               lede="La normativa hace una ACNS por área. Si me la dices, cito lo que tengas apuntado de esa; si no, el nivel general.">
+        <Field label="Área" htmlFor="acns-area">
+          <input className="input" id="acns-area" style={{ maxWidth: '22em' }}
+                 value={subject} onChange={(e) => setSubject(e.target.value)} />
+          {/* Buttons, never a `<datalist>` — see the note in `AxisEditor.tsx`. */}
+          {(areas.state === 'ready' ? areas.value : []).length ? (
+            <div className="row gap2" style={{ flexWrap: 'wrap', alignItems: 'center' }}>
+              <span className="small muted">Las que ya usas:</span>
+              {(areas.state === 'ready' ? areas.value : []).map((a) => (
+                <button type="button" className="btn btn-sm" key={a}
+                        aria-pressed={subject === a} onClick={() => setSubject(a)}>
+                  {a}
+                </button>
+              ))}
+            </div>
+          ) : null}
+        </Field>
+      </Section>
 
       {result ? (
         <>

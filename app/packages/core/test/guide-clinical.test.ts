@@ -181,8 +181,23 @@ describe('the corpus fails closed', () => {
     expect(guide.clinicalTerms.length).toBeGreaterThan(20);
     expect(guide.acnsSections.length).toBeGreaterThan(5);
     expect(acs.proposalPhrases.length).toBeGreaterThan(10);
-    // And one section that cannot be sourced at all, which is the honest one.
-    expect(guide.acnsSections.some((s) => s.sourceable === 'none')).toBe(true);
+    /*
+     * And the section Rampa must not write for her.
+     *
+     * Was «at least one section is `sourceable: none`», which `desfase` satisfied. On
+     * 2026-09-05 it became `partial` (`032` FR-3004): Rampa may now order the note **she
+     * herself** made about that área's curricular level, and still may not draft the
+     * desfase, which comes from a psycho-pedagogical evaluation.
+     *
+     * So the assertion names the section instead of counting shapes — which is stronger,
+     * not weaker: «some section is none» was satisfiable by any section at all, and
+     * would have kept passing if `desfase` had quietly become `full`.
+     */
+    const desfase = guide.acnsSections.find((s) => s.id === 'desfase');
+    expect(desfase, 'the regulation asks for it, so the corpus must know it').toBeDefined();
+    expect(desfase!.sourceable).not.toBe('full');
+    expect(desfase!.from).toContain('evaluación psicopedagógica');
+    expect(desfase!.from).toContain('lo pones tú');
   });
 });
 

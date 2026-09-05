@@ -4,7 +4,7 @@ import {
   nextAcnsRevision,
   readGuide, guideSection, appendGuideSection, draftAcns, requireRecordedWork,
   requireEvaluation, checkDeclines, parseGuideCorpus, parseAcsCorpus,
-  recordFor, loadLearner, findYear, logger, RampaError,
+  recordFor, loadLearner, findYear, curFor, logger, RampaError,
   type Candidate, type GuideReading, type Measure, addCost,
 } from '@rampa/core';
 import { sendRedacted } from '@rampa/providers';
@@ -210,7 +210,7 @@ export async function applyGuide(args: {
 }
 
 /** The ACNS draft (T019-T022). Assembled, never generated. */
-export async function draftAcnsJob(learnerCode: string): Promise<{
+export async function draftAcnsJob(learnerCode: string, subject?: string): Promise<{
   markdown: string; missing: string[]; sources: string[];
 }> {
   const vault = currentVault();
@@ -238,9 +238,26 @@ export async function draftAcnsJob(learnerCode: string): Promise<{
     if (ids.length) recipesByJob[entry.jobId] = [...new Set(ids)];
   }
 
+  /*
+   * The curricular level of **this** área (`032` FR-3004).
+   *
+   * Through `curFor`, like every other consumer — the ACNS conversation is exactly where
+   * the general value standing in for an unassessed subject would be least visible and
+   * most consequential, because what comes out is a document somebody signs.
+   */
+  const cur = curFor(learner.profile, subject);
+
   return draftAcns({
     learnerCode,
     ...(found ? { year: found.year.label, stage: found.stage.label } : {}),
+    ...(subject ? { subject } : {}),
+    ...(cur !== null
+      ? { desfase: {
+          cur,
+          fromPair: subject !== undefined
+            && learner.profile.cur_areas?.[subject] !== undefined,
+        } }
+      : {}),
     record,
     overlay: learner.overlay,
     sections: corpus.acnsSections,

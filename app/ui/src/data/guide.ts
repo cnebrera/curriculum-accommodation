@@ -48,7 +48,8 @@ export function useApplyGuide() {
 }
 
 export function useDraftAcns() {
-  return useCommand((learner: string) => window.rampa.guide.acns(learner) as Promise<AcnsDraft>);
+  return useCommand((learner: string, subject?: string) =>
+    window.rampa.guide.acns(learner, subject) as Promise<AcnsDraft>);
 }
 
 /**

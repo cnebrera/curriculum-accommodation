@@ -251,3 +251,67 @@ test.describe('recording that he is at level in one subject and behind in anothe
     await app.close();
   });
 });
+
+/**
+ * The ACNS draft, per área, through the real channel (032 T015/T017, FR-3004).
+ *
+ * ## Why this is an e2e and not a shell unit test
+ *
+ * The seam is one expression — `curFor(learner.profile, subject)` in `draftAcnsJob` — and
+ * replacing it with `curFor(learner.profile)` compiles, passes the whole offline suite,
+ * and silently drafts every área's ACNS with the general value. `jobs/guide.ts` reaches
+ * for `currentVault()`, so a unit test would have to mock the vault, the corpus and the
+ * record to reach one line; the channel is right there and exercises all of it.
+ */
+test.describe('the ACNS draft cites the gap of the área under discussion', () => {
+  const seedWork = (page: Page, code: string) => page.evaluate(async (c) => {
+    await window.rampa.vault.write('material/job-1/ir.md',
+      '---\nsource: "pegado"\n---\n\n::: {#b1 .explanation}\nEnunciado\n:::\n');
+    await window.rampa.vault.write(`material/job-1/${c}/adapted.md`,
+      '---\nadapted_on: "2026-03-03"\nschool_year: "2025-2026"\nkind: "worksheet"\n'
+      + '---\n\n::: {#b1 .explanation}\nHola\n:::\n');
+    await window.rampa.vault.write(`material/job-1/${c}/report.md`, '# Informe\n');
+  }, code);
+
+  const draft = (page: Page, code: string, subject?: string) => page.evaluate((args) => {
+    const [c, s] = args as [string, string | undefined];
+    return window.rampa.guide.acns(c, s) as Promise<{ markdown: string; missing: string[] }>;
+  }, [code, subject] as [string, string | undefined]);
+
+  test('Matemáticas cites Mates, Lengua cites Lengua, and neither cites the other', async () => {
+    const { app, page, vault } = await launch();
+    const code = await seed(page, vault);
+    await seedWork(page, code);
+    await page.evaluate((c) => window.rampa.learners.save({
+      code: c, axes: { CUR: 2 }, cur_areas: { 'Matemáticas': 2, 'Lengua': 0 },
+      works: [], avoid: [], interests: [], response: { default: 'short' },
+      language: { instruction: 'es' }, age: 11, year: 'es:primaria-5', stage: 'Primaria',
+    }), code);
+
+    const mates = await draft(page, code, 'Matemáticas');
+    expect(mates.markdown).toContain('Tú tienes apuntado');
+    expect(mates.markdown).toContain('con contenidos de cursos anteriores');
+    expect(mates.markdown).not.toContain('**Lengua**');
+
+    const lengua = await draft(page, code, 'Lengua');
+    expect(lengua.markdown).toContain('al nivel de su curso');
+    /*
+     * The failure this replaces, in the document that gets signed: with one CUR per
+     * learner, Marco's Lengua ACNS cited a two-course gap his teacher had explicitly
+     * recorded as not existing in that subject.
+     */
+    expect(lengua.markdown).not.toContain('con contenidos de cursos anteriores');
+
+    // And an área she never detailed says so rather than borrowing another one's number.
+    const ingles = await draft(page, code, 'Inglés');
+    expect(ingles.markdown).toContain('No tienes nada apuntado para **Inglés**');
+
+    // Whatever it cites, the desfase itself stays hers.
+    for (const d of [mates, lengua, ingles]) {
+      expect(d.markdown).toContain('evaluación psicopedagógica');
+      expect(d.missing.join(' ')).toContain('Desfase curricular');
+    }
+
+    await app.close();
+  });
+});

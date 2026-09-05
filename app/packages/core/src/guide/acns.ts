@@ -63,6 +63,23 @@ export interface AcnsInput {
   recipesByJob?: Readonly<Record<string, readonly string[]>>;
   /** The sections the regulation requires, from the corpus (FR-1517). */
   sections: readonly AcnsSection[];
+  /**
+   * What she has recorded about the curricular level **of this área** (`032` FR-3004).
+   *
+   * Resolved by the caller with `curFor`, so «no pair for this área means the general»
+   * is the one rule the whole application shares. `undefined` when she has recorded
+   * nothing at all — and then the section is named as missing, exactly as before.
+   *
+   * **It is not the desfase the regulation asks for.** That comes from a
+   * psycho-pedagogical evaluation and she writes it. This is her own note, and the draft
+   * says so in as many words: a profile note presented as the conclusion of an
+   * evaluation would be falsifying the *what* (Principle III).
+   */
+  desfase?: {
+    cur: 0 | 1 | 2 | 3;
+    /** True when it came from her pair for this área rather than from the general. */
+    fromPair: boolean;
+  };
   /** Passed in, never read from a clock (Principle II). */
   on: string;
 }
@@ -234,6 +251,36 @@ function sectionBody(
           ...(years.length ? [`- Curso escolar: ${years.sort().join(', ')}.`] : []),
         ],
         sources: ['las fechas del registro'],
+      };
+    }
+
+    case 'desfase': {
+      /*
+       * What she wrote, said as hers (`032` FR-3004).
+       *
+       * Nothing here is drafted **as** the desfase curricular: that is a professional
+       * judgement from an evaluation, and the corpus's own `from` still says so — which
+       * is why this section stays `partial` and always prints the «falta lo tuyo» line
+       * beneath. What the draft adds is the note she already made, attributed to her, so
+       * that a tutor filling the section is looking at her observation instead of
+       * hunting for it in another screen.
+       *
+       * With nothing recorded, `null`: the section is named as missing and stays empty,
+       * exactly as it did before this feature existed.
+       */
+      if (!input.desfase) return null;
+      const level = ['al nivel de su curso', 'por debajo pero dentro del curso',
+                     'con contenidos de cursos anteriores',
+                     'muy alejado de su curso'][input.desfase.cur];
+      const where = input.subject ?? 'este área';
+      return {
+        lines: input.desfase.fromPair
+          ? [`- Tú tienes apuntado en el perfil que en **${where}** está ${level}.`]
+          : [
+            `- No tienes nada apuntado para **${where}** en concreto.`,
+            `- Lo que tienes apuntado en general es que está ${level}.`,
+          ],
+        sources: ['el perfil'],
       };
     }
 

@@ -143,18 +143,18 @@ normativa actually conditions on.
 **Independent Test**: draft normative documents for two areas of one learner with
 different CURs; each cites its own area's gap.
 
-- [ ] T015 [US2] `app/packages/core/src/guide/acns.ts` + its caller in
+- [x] T015 [US2] `app/packages/core/src/guide/acns.ts` + its caller in
       `packages/shell/src/ipc/`: the desfase the draft cites is
       `curFor(profile, input.subject)` — the area's pair, the general **only** when no
       pair exists, and the draft says which it used (FR-3004). The «desfase curricular is
       not sourceable» sentence survives for areas nobody assessed: named as missing,
       never filled (`011` no-guessing, `017` FR-1514's spirit).
-- [ ] T016 [US2] The guide conversation surface (`017`, and `029`'s corpus sections):
+- [x] T016 [US2] The guide conversation surface (`017`, and `029`'s corpus sections):
       where the ACNS orientation conditions on «desfase en esa área», the datum passed is
       the area's (FR-3004) — and an at-level area (pair = 0) never has an ACNS suggested
       for it. Judgement stays in `instructions/guide.md`; code only stops handing it the
       wrong number.
-- [ ] T017 [US2] `app/packages/core/test/acns-gap-by-area.test.ts` from quickstart §4 —
+- [x] T017 [US2] `app/packages/core/test/acns-gap-by-area.test.ts` from quickstart §4 —
       fixtures for multi-area profiles, both drafts, the wrong-area absence (SC-3003).
 
 **Checkpoint**: Marco's ACNS conversation about Mates cites his Mates gap; nothing
