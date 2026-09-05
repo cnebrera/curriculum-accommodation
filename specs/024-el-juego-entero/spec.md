@@ -216,12 +216,14 @@ fetches only the difference.
   not something a person can choose between.
 - **FR-2218**: Changing a choice MUST mark the sheets made from the old one as stale
   rather than rewriting them (`005` FR-520).
-  **DEFERRED 2026-09-03 (decision P34): satisfied by `031-el-segundo-eje-de-frescura`.**
-  Not implemented today — staleness compares `ir.md`'s fingerprint, which a vocabulary
-  change does not touch (BACKLOG G35 has the history, including the period when screen
-  and `vocabulario.md` claimed otherwise). The second freshness axis is its own spec
-  because `005`'s data model has exactly one axis today; until `031` lands, the screen
-  says what actually happens. See G35/P34.
+  **SATISFIED 2026-09-05 by `031-el-segundo-eje-de-frescura`** (deferred 2026-09-03,
+  decision P34). Sheets now record which drawing each word got, and the record derives a
+  second freshness axis from it: changing a choice leaves every sheet byte-identical —
+  signature included — and the rows say «lleva un dibujo que ya no usas: casa». She is
+  told how many sheets that will be *before* she decides, and it is the same number
+  (`031` FR-2905). `005`'s data model carries the dated amendment; BACKLOG G35 has the
+  history, including the period when the screen and `vocabulario.md` claimed the
+  opposite of what the code did. See `specs/031-el-segundo-eje-de-frescura/`.
 - **FR-2219**: Her vocabulary MUST travel in a handover (`004`); her licence acceptance
   MUST NOT.
 - **FR-2220**: Her vocabulary MUST be per language.
