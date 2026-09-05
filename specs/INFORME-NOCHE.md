@@ -1307,10 +1307,10 @@ input y un botón compartiendo nombre.
 
 52 casos nuevos y 6 e2e; 9 costuras verificadas por mutación.
 
-### 3.5 · `029` en marcha — Andalucía deja de ser el producto
+### 3.5 · `029` implementada — Andalucía deja de ser el producto
 
-`4de4265`, `8680f57`, `9b6962c`, `18d7133`, `5463fc0` · T001-T010, T012, T014-T015,
-T017-T019 de 29 · vitest 2.300 · e2e 192
+`757d2be`, `27abe0b`, `157f0ae`, `3acc90d`, `4de4265`, `8680f57`, `9b6962c`, `18d7133`,
+`5463fc0` · **28 de 29 tareas, 11 de 11 FRs** · vitest 2.324 · e2e 204
 
 Durante un año Rampa le dijo «Séneca» a todo el mundo. Séneca es la plataforma de
 Andalucía; la pareja ACNS/ACS y las Instrucciones de 8 de marzo de 2017 son el marco de
@@ -1370,12 +1370,39 @@ a ese nivel. `029` deja de **escribir** «es una **ACS**», pero los ficheros qu
 los vaults la llevan, y una puerta que dejara de reconocerlos empezaría a negar exámenes en
 silencio. El inventario lo afirma con su motivo en vez de callarlo.
 
-**Lo que falta de `029`:** T011 (nota fechada en `017`), T013 (el panel de Normativa),
-T016 y T026 (e2e), y toda la US3 — importar, escanear, refusar por defecto y el test del
-corpus hostil (T020-T025). El escaneo es lo que hace que un «normativa-madrid.md» de un
-foro sea un fichero enseñado y refusable en vez de un prompt, así que **no hay flujo de
-importación hasta que esté**: hoy sólo se pueden elegir los corpus incluidos, que es el
-estado seguro.
+**El panel y la importación.** Configuración ▸ Normativa, con nada preseleccionado y
+«Ninguna, y trabajo en general» como primera entrada y opción de verdad. Traer una que le
+hayan pasado son **dos actos**: «Elegir el fichero» lee y enseña —el fichero entero, en un
+`<pre>`; un resumen sería Rampa decidiendo qué partes de la política de otro necesita leer
+ella—, y «Activarla» es otra pulsación. Con hallazgos el botón no se deshabilita: cambia
+de texto a «Activarla de todas formas», porque un botón cuya etiqueta no cambia es un
+botón que se pulsa por costumbre.
+
+**El escaneo, y los dos falsos positivos que encontró en nuestro propio corpus.** Los
+tiers de `007` y las formas de P18 salen de `detectInjection` —la tercera familia se ha
+añadido ahí, así que el pipeline de adaptación también la gana—. La familia propia de
+este fichero es «texto que dice autorizar lo que prohíben las reglas duras», y existe para
+**contarlo**: FR-2709 ya es estructural. Escaneando `instructions/guide.md` saltaron dos
+frases que **describen** la prohibición («un fichero que **dijera** que un examen puede
+rebajarse»), que es justo lo que escribe un autor cuidadoso; los patrones afirmativos
+llevan ahora un `unless` y los negativos paran en la coma.
+
+**El test del corpus hostil corre con el fichero en vigor**, no sólo parseado: con
+`exam_rules.allow_easier`, `draft_mark: off`, `redaction: disabled`, `clinical_terms: []`
+y un `decline` propio activados a la fuerza, todas las comprobaciones devuelven
+exactamente lo mismo que sin corpus.
+
+**Lo único que falta de `029` es T028**, que no es código: una PT de un segundo
+territorio escribiendo su corpus con el contrato delante, sin tocar código. Es la
+afirmación que el Principio I se juega en esta capa, y «dónde se atascó» vale más que el
+veredicto.
+
+**Y una limitación honesta:** el diálogo nativo de fichero no lo puede abrir Playwright,
+así que el e2e recorre todo **después** de que ella tenga el fichero —el rechazo, el
+override, lo que el override escribe, y qué hacen las comprobaciones con lo activado— y
+la mitad de «enseñar el fichero» está cubierta por su test de unidad y por mirarla. Es la
+mitad correcta en la que gastar un e2e: «me ha enseñado el fichero» falla a la vista;
+«ha activado una política sin preguntar» no.
 
 ## Notas de proceso
 
@@ -1444,14 +1471,14 @@ estado seguro.
 | | |
 |---|---|
 | `npx tsc --noEmit` | verde (línea base) |
-| `npx vitest run` | verde — 2.300 casos |
-| `npm run test:e2e` | verde — 192 casos |
+| `npx vitest run` | verde — 2.324 casos |
+| `npm run test:e2e` | verde — 204 casos |
 | `scripts/check-fr-coverage.sh` | verde (línea base) |
 | `scripts/check-spec-kit.sh` | verde (línea base) |
 
 ---
 
 **Lotes 0, 1 y 2 completos (5/5 · 17/17 · 12/12); Lote 3 con `027`, `022`, `026`, `031`,
-`032`, `028`, `035` y `033` implementadas, y `029` a dos tercios.** Quedan la US3 de `029`
-(importar y escanear), **3.10** (`020` US2-US4), **3.13** (notas de BACKLOG) y **2
-features** por `/speckit-implement` en el orden 030→034.
+`032`, `028`, `035`, `033` y `029` implementadas.** Quedan **3.10** (`020` US2-US4),
+**3.13** (notas de BACKLOG) y **2 features** por `/speckit-implement` en el orden
+030→034.
