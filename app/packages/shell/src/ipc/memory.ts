@@ -2,7 +2,8 @@ import {
   VAULT, loadJournal, writeIndex, houseStyleOverflowing, appendNote, loadLearner,
   saveProfile, buildPacket, packetToMarkdown, toShareable, planForget, executeForget,
   tombstone, listLearners, loadRoster, saveRoster, rosterNameRisk, generateCode, validateCode,
-  rosterSchema, profileSchema, buildProposals, learnerNotes, type Profile,
+  rosterSchema, profileSchema, buildProposals, learnerNotes, knownAreas,
+  recordFor, type Profile,
 } from '@rampa/core';
 import { currentVault } from './vault.js';
 import { handle } from './wrap.js';
@@ -187,4 +188,26 @@ export function registerMemoryIpc(): void {
   handle('learners:newCode', async () => generateCode(await listLearners(currentVault())));
   handle('learners:validateCode', (code: string) => validateCode(code));
   handle('learners:nameRisk', async () => rosterNameRisk((await loadRoster(currentVault())).roster));
+
+  /**
+   * The subjects this vault already knows (`032` FR-3007, research R2).
+   *
+   * One channel rather than two calls from the screen: the record scan is O(jobs), and
+   * `020` FR-1828's rule — one read of the material directory, not one per learner —
+   * applies to any screen that would otherwise ask twice. The vocabulary itself is
+   * `knownAreas` in `core`, so what is here is only the reading.
+   *
+   * **The record's `subject` is content** (Principle IX): it was read out of a document
+   * somebody else wrote. It arrives at the screen as a suggestion and is rendered as
+   * plain text there, the same rule `RecordScreen` already keeps for the same field.
+   */
+  handle('learners:areas', async (code?: string): Promise<string[]> => {
+    const vault = currentVault();
+    const { roster } = await loadRoster(vault);
+    const fromRoster = roster.learners.flatMap((l) => l.subjects ?? []);
+    const fromRecord = code
+      ? (await recordFor(vault, code)).map((e) => e.subject).filter((s): s is string => !!s)
+      : [];
+    return knownAreas({ roster: fromRoster, record: fromRecord });
+  });
 }

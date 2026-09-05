@@ -90,3 +90,20 @@ export function useSaveLearner() {
 export function useNewLearnerCode() {
   return useCommand(() => window.rampa.learners.newCode() as Promise<string>);
 }
+
+/**
+ * The subjects this vault already knows, to suggest areas from (`032` FR-3007).
+ *
+ * One channel, not two calls: the record scan behind it is O(jobs), and a screen that
+ * asked for the roster and the record separately would read the material directory once
+ * per learner it displays — `020` FR-1828's rule, one directory up.
+ *
+ * **Suggestions, never a taxonomy.** There is no fixed list of Spanish school subjects
+ * anywhere in this: what counts as an área is judgement (Principle I), so the vocabulary
+ * is what she has actually written in her roster and what her sheets say they are about.
+ * And a sheet's `subject` was read out of a document somebody else wrote, so whatever
+ * renders these renders them as plain text (Principle IX).
+ */
+export function useKnownAreas(code?: string): Loadable<string[]> {
+  return useAsync(async () => (await window.rampa.learners.areas(code)) as string[], [code]);
+}

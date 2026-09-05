@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { useLoadLearner, useSaveLearner, useNewLearnerCode } from '../data/learners.js';
+import { useLoadLearner, useSaveLearner, useNewLearnerCode, useKnownAreas } from '../data/learners.js';
 import { useResolveName, useSetName } from '../data/names.js';
 import { useStrings } from '../i18n/context.js';
 import { AxisEditor } from './AxisEditor.js';
@@ -24,6 +24,14 @@ export function ProfileEditor({ code, onSaved, onConfigure }: {
   const [current, setCurrent] = useState<string>(code ?? '');
   const [name, setName] = useState('');
   const [axes, setAxes] = useState<Record<string, number>>({});
+  /**
+   * Per-area CUR (`032` FR-3001). Empty until she details one, and **written only when
+   * non-empty** — an empty map sent on every save would bump her vault's schema version
+   * for nothing (FR-3005).
+   */
+  const [curAreas, setCurAreas] = useState<Record<string, number>>({});
+  /** The subjects this vault already knows, to suggest from (FR-3007). */
+  const areaVocabulary = useKnownAreas(code ?? undefined);
   const [works, setWorks] = useState('');
   const [avoid, setAvoid] = useState('');
   /**
@@ -83,10 +91,11 @@ export function ProfileEditor({ code, onSaved, onConfigure }: {
       void loadLearner.run(code).then((raw) => {
         if (!raw) return;
         const l = raw as any;
-        const { code: _c, axes, works, avoid, interests, response,
+        const { code: _c, axes, cur_areas, works, avoid, interests, response,
                 age, year, stage, age_recorded: _ar, pictograms, ...rest } = l.profile ?? {};
         setCurrent(l.profile.code);
         setAxes(axes ?? {});
+        setCurAreas(cur_areas ?? {});
         setWho({ age, year, stage });
         setWorks((works ?? []).join('\n'));
         setAvoid((avoid ?? []).join('\n'));
@@ -157,6 +166,12 @@ export function ProfileEditor({ code, onSaved, onConfigure }: {
       // edits everything else.
       _pictoOverrides: undefined,
       code: current, axes,
+      /*
+       * Only when she has detailed one (FR-3005). The alternative — sending `{}` always
+       * — would mark her whole vault as carrying a shape older readers do not know, on
+       * the first save of any profile, for a field nobody used.
+       */
+      ...(Object.keys(curAreas).length ? { cur_areas: curAreas } : {}),
       works: lines(works),
       avoid: lines(avoid),
       /*
@@ -226,7 +241,9 @@ export function ProfileEditor({ code, onSaved, onConfigure }: {
       */}
       <YearPicker value={who} onChange={setWho} />
 
-      <AxisEditor axes={axes} onChange={setAxes} />
+      <AxisEditor axes={axes} onChange={setAxes}
+                  curAreas={curAreas} onCurAreasChange={setCurAreas}
+                  knownAreas={areaVocabulary.state === 'ready' ? areaVocabulary.value : []} />
 
       <div>
         <label htmlFor="works">{es.learner.works}</label>

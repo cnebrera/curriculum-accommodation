@@ -92,7 +92,7 @@ and for an unnamed one; each targets its own level, the unnamed uses the general
       accent-insensitive, prefix containment («Mates»/«Matemáticas») — that **flags and
       never merges** (FR-3007, research R2). Accent-insensitivity tested explicitly: it
       is this project's known blind spot.
-- [ ] T008 [US1] `app/ui/src/learners/ProfileEditor.tsx` (+ `AxisEditor.tsx`): the CUR
+- [x] T008 [US1] `app/ui/src/learners/ProfileEditor.tsx` (+ `AxisEditor.tsx`): the CUR
       row shows the general **and** the pairs at a glance, editable without ceremony
       (FR-3001, SC-3004 groundwork); adding an area suggests from T007, creating a new
       one is explicit, a near-duplicate gets a flag and a choice, and **her spelling wins

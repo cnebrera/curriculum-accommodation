@@ -89,6 +89,8 @@ const api = {
     newCode: () => invoke('learners:newCode'),
     validateCode: (c: string) => invoke('learners:validateCode', c),
     nameRisk: () => invoke('learners:nameRisk'),
+    /** The subjects this vault already knows, to suggest areas from (`032` FR-3007). */
+    areas: (code?: string) => invoke('learners:areas', code),
   },
   /**
    * Her pictogram set (`018`, `023`).
