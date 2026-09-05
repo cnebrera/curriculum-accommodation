@@ -109,7 +109,7 @@ disabled — printed, signed sample, zero requests, zero cost.
       no-provider state in `app/ui/src/App.tsx` offer «probar con un ejemplo» **alongside**
       connecting — two doors, neither pre-chosen, and the teacher with her key already in
       hand is never routed through fiction (spec edge case).
-- [ ] T012 [US1] The rehearsal stays reachable after a provider is connected (FR-3304),
+- [x] T012 [US1] The rehearsal stays reachable after a provider is connected (FR-3304),
       from the connection screen in `app/ui/src/settings/` — for showing a colleague —
       still marked, still separate; re-entry re-seeds through T004.
 - [x] T013 [US1] `app/ui/src/ensayo/` · the journey's screens inside `EnsayoFrame`
@@ -187,12 +187,12 @@ in CI.
       resolvable (T007), decisions explained — not lorem ipsum, because it is the first
       report she ever reads and it teaches her what reviewing decisions (Principle VI)
       feels like.
-- [ ] T023 [US3] Real and simulated, told apart in her language (FR-3309): the two served
+- [x] T023 [US3] Real and simulated, told apart in her language (FR-3309): the two served
       steps say «simulado — con tu clave, aquí trabajaría la IA»; the deterministic
       features (`028` materials, the profile, the record) say «esto ya funciona de verdad
       sin clave». Copy in `app/ui/src/i18n/es.ts`; asserted over the walk — the rehearsal
       never claims more, and never less, than the product.
-- [ ] T024 [P] [US3] The barriers are experienced, not narrated (FR-3311), asserted in
+- [x] T024 [P] [US3] The barriers are experienced, not narrated (FR-3311), asserted in
       `app/e2e/ensayo.spec.ts`: the sheet arrives marked and prints marked until she
       signs; signing one sheet unsigns nothing else; the name question fired at least
       once in every complete walk. Principle VII, felt.

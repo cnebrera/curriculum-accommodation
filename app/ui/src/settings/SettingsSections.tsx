@@ -34,12 +34,14 @@ import type { SettingsPane } from '../nav/route.js';
  * home would be the seventh instance of two copies of one truth here, and the copy she
  * found first would be the one that felt broken.
  */
-export function SettingsSections({ pane, onReconnect }: {
+export function SettingsSections({ pane, onReconnect, onEnsayo }: {
   pane: SettingsPane;
   /** App state: the reconnect wizard is `009`'s and stays there (FR-2307). */
   onReconnect: (serviceId: string) => void;
+  /** Open the rehearsal, after connecting — for showing a colleague (`035` FR-3304). */
+  onEnsayo: (startedAt: string) => void;
 }) {
-  if (pane === 'service') return <ConnectionScreen onReconnect={onReconnect} />;
+  if (pane === 'service') return <ConnectionScreen onReconnect={onReconnect} onEnsayo={onEnsayo} />;
   if (pane === 'about') return <AboutScreen />;
   return (
     <Page

@@ -84,6 +84,29 @@ export function EnsayoScreen({ startedAt, onLeave }: {
 
         {step === 'reading' ? (
           <>
+            {/*
+              Real and simulated, told apart in her language (T023, FR-3309).
+
+              The rehearsal must never claim more than the product — and never **less**.
+              Two of the steps are pre-answered because they would cost money; the rest of
+              what she is about to use works exactly like this with no key at all, and a
+              teacher who leaves thinking the whole thing needs a subscription has been
+              told less than the truth.
+            */}
+            <Callout intent="info" title="Qué es de verdad y qué está simulado aquí">
+              <p>
+                <strong>Simulados</strong>: leer la foto y adaptar la hoja. Son los dos
+                pasos que le pido a la IA, así que aquí te los traigo escritos. Con tu
+                clave, en esos dos sitios trabajaría la IA de verdad.
+              </p>
+              <p>
+                <strong>De verdad, y sin clave</strong>: todo lo demás. Los perfiles, el
+                expediente, comprobar la lectura, el aviso de nombres, firmar, imprimir,
+                y las agendas y secuencias con pictogramas. Eso ya te funciona hoy aunque
+                no conectes nada.
+              </p>
+            </Callout>
+
             <Section title="Esto es lo que he leído de la foto"
                      lede="Antes de adaptar nada, comprueba que lo he leído bien. Aquí es donde se arreglan las cosas, no en la hoja del niño.">
               <Loaded from={reading}>
@@ -154,6 +177,14 @@ export function EnsayoScreen({ startedAt, onLeave }: {
           </>
         ) : (
           <>
+            <Callout intent="info" title="Este paso estaba simulado">
+              <p>
+                La hoja de abajo te la traigo escrita: es lo que la IA habría contestado.
+                Con tu clave, aquí es donde habría trabajado de verdad — y lo que viene
+                después (revisarla, firmarla, imprimirla) es lo mismo en los dos casos.
+              </p>
+            </Callout>
+
             <Section title="Así se la he adaptado"
                      lede="Ésta es la hoja que le darías. Fíjate en que dice que es un ejemplo: eso lo lleva el documento, así que también sale impreso.">
               <Loaded from={adaptation}>

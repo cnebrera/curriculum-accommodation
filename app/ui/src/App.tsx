@@ -556,7 +556,8 @@ export function App() {
               <SettingsSections pane={route.pane}
                                 onReconnect={(id) => go({
                                   type: 'settings', pane: 'service', reconnecting: id,
-                                })} />
+                                })}
+                                onEnsayo={setRehearsing} />
             )
         ) : null}
       </main>

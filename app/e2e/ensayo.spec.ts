@@ -99,6 +99,15 @@ test.describe('the rehearsal, with nothing connected', () => {
     await expect(page.getByText(/Estás en un ensayo/)).toBeVisible();
     await expect(page.getByText(/el alumno no existe/)).toBeVisible();
 
+    /*
+     * Real and simulated, told apart (FR-3309). The rehearsal must never claim more than
+     * the product **and never less**: a teacher who leaves thinking the whole thing needs
+     * a subscription has been told less than the truth, and the half that works today
+     * without a key is most of it.
+     */
+    await expect(page.getByText(/Qué es de verdad y qué está simulado/)).toBeVisible();
+    await expect(page.getByText(/De verdad, y sin clave/)).toBeVisible();
+
     // The reading, with the invitation to look at it rather than the answer.
     await expect(page.getByRole('heading', { name: /Esto es lo que he leído/ })).toBeVisible();
     await expect(page.getByText(/algo que he leído mal/)).toBeVisible();
@@ -197,6 +206,39 @@ test.describe('the rehearsal, with nothing connected', () => {
      */
     expect(await hashTree(vault)).toBe(before);
     // And the rehearsal did happen: its root exists, with the sample in it.
+    expect(await exists(join(userData, 'ensayo', 'material', 'ensayo-1', 'ir.md'))).toBe(true);
+
+    await app.close();
+  });
+
+  test('and it is still there after she connects, for showing a colleague (FR-3304)', async () => {
+    const { app, page, userData } = await launch();
+    await page.evaluate(() =>
+      window.rampa.providers.save('anthropic', 'sk-ant-e2e-not-a-real-key'));
+    await page.evaluate(async () => {
+      const c: string = await window.rampa.learners.newCode();
+      await window.rampa.learners.save({
+        code: c, axes: { COG: 2 }, works: [], avoid: [], interests: [],
+        response: { default: 'short' }, language: { instruction: 'es' },
+      });
+    });
+    await page.reload();
+    await page.waitForLoadState('domcontentloaded');
+    await page.getByRole('navigation', { name: /Secciones/ }).waitFor({ timeout: 15000 });
+
+    await page.getByRole('button', { name: 'Configuración' }).click();
+    await page.getByRole('button', { name: 'Mi servicio de IA' }).click();
+
+    /*
+     * She connected in September; in November a colleague asks what this does. Without
+     * this, showing him means spending her own money on a demonstration or opening a real
+     * child's folder in front of him — and the second is what actually happens, because
+     * it is free.
+     */
+    await expect(page.getByRole('heading', { name: 'Enseñárselo a alguien' })).toBeVisible();
+    await page.getByRole('button', { name: 'Abrir el ejemplo' }).click();
+    await expect(page.getByText(/Estás en un ensayo/)).toBeVisible();
+    // Still its own root, still marked.
     expect(await exists(join(userData, 'ensayo', 'material', 'ensayo-1', 'ir.md'))).toBe(true);
 
     await app.close();

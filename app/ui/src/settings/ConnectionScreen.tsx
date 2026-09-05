@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useConnectionsCommand, useActivateProvider, useForgetProvider } from '../data/providers.js';
-import { Page } from '../shell/Page.js';
+import { Page, Section } from '../shell/Page.js';
 import { useStrings } from '../i18n/context.js';
 import { Callout } from '../components/Callout.js';
+import { useStartEnsayo } from '../data/ensayo.js';
 import { Badge } from '../components/Badge.js';
 import { loadServices, formatDate, type Service } from '../data/services.js';
 
@@ -20,7 +21,11 @@ import { loadServices, formatDate, type Service } from '../data/services.js';
  */
 interface Connection { serviceId: string; verifiedAt: string }
 
-export function ConnectionScreen({ onReconnect }: { onReconnect: (serviceId: string) => void }) {
+export function ConnectionScreen({ onReconnect, onEnsayo }: {
+  onReconnect: (serviceId: string) => void;
+  /** Open the rehearsal — for showing a colleague (`035` FR-3304). */
+  onEnsayo: (startedAt: string) => void;
+}) {
   const { t: es } = useStrings();
   const c = es.connect;
 
@@ -31,6 +36,7 @@ export function ConnectionScreen({ onReconnect }: { onReconnect: (serviceId: str
   const connections_ = useConnectionsCommand();
   const activate = useActivateProvider();
   const forget = useForgetProvider();
+  const startEnsayo = useStartEnsayo();
 
   const refresh = async () => {
     const s = await connections_.run() as { active: string | null; connected: Connection[] } | undefined;
@@ -153,6 +159,30 @@ export function ConnectionScreen({ onReconnect }: { onReconnect: (serviceId: str
         </div>
         <p className="small">{c.residual}</p>
       </div>
+
+      {/*
+        The rehearsal, still reachable (`035` T012, FR-3304).
+        
+        She connected a service in September and in November a colleague asks what this
+        thing does. Showing him means either spending her own money on a demonstration or
+        opening a real child's folder in front of him — and the second is the one that
+        actually happens, because it is free.
+        
+        Re-entering re-seeds from the authored sample, so what he sees is the same
+        rehearsal she saw, still marked and still in its own root.
+      */}
+      <Section title="Enseñárselo a alguien"
+               lede="El ejemplo sigue estando ahí después de conectar. Sirve para enseñárselo a un compañero sin gastar y sin abrir la carpeta de ningún alumno.">
+        <div className="row">
+          <button className="btn" disabled={startEnsayo.busy}
+                  onClick={() => {
+                    const now = new Date().toISOString();
+                    void startEnsayo.run(now).then((ok) => { if (ok) onEnsayo(now); });
+                  }}>
+            Abrir el ejemplo
+          </button>
+        </div>
+      </Section>
     </Page>
   );
 }
