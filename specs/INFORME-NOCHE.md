@@ -1254,6 +1254,59 @@ red (una petición metida en el camino del ensayo lo pone rojo).
 como T031 de `026`); T020 está bloqueada porque `034` no existe todavía; T026 son dos
 veredictos que sólo pueden dar personas.
 
+### 3.9 · `033` implementada — la marca de lengua vehicular
+
+24 de 26 tareas y **10 de 10 requisitos**, tres commits. Las dos abiertas son una pregunta
+de producto y un veredicto de una maestra, las dos dichas con su motivo.
+
+**El apaño que muere aquí.** Un alumno que llega en marzo sin el idioma del aula no
+encajaba en ningún eje, así que se le ponía `LIN: 2` «para que salga algo». Funcionaba
+—activaba recetas— y a cambio escribía *dificultad de comprensión lingüística* en un
+expediente que le acompaña años. En junio, cuando ya seguía la clase, el `LIN` seguía
+puesto: una discapacidad anotada donde había una transición, y no la anotó nadie — la
+anotó la falta de un sitio donde poner la verdad. La frontera está ahora escrita y fechada
+en `instructions/axes.md`.
+
+- **La marca vive al lado de los ejes, nunca dentro.** Los diez describen barreras que
+  viajan con el niño entre asignaturas y años; ésta es un estado con una fecha en la que
+  deja de ser verdad. Metida en `AXES` habría fluido a cada `AXES.map` de la aplicación
+  —la línea del prompt, el mapa del renderer, la rejilla del editor— y cada uno estaría
+  describiendo una transición como una barrera.
+- **Ausente, cero, y la diferencia.** Ausente es que nadie miró. `0` es ella diciendo que
+  se acabó, con la fecha. Hay un caso que lo prueba: una condición `vehicular<=0` encuentra
+  el segundo y no el primero — si fueran el mismo valor, ninguna receta futura podría
+  distinguirlos. Y en el editor, pulsar el nivel que ya tiene **borra** la marca, que es
+  «no debí marcarlo» y no «se acabó».
+- **Cierra la parada P1 en su forma más nítida.** Ese perfil seleccionaba **cero** recetas:
+  «voy a hacerte 0 adaptaciones» era lo que se le decía sobre el niño para el que existe
+  esta feature. Ahora son tres, y ninguna por un eje — comprobado por el propio
+  `job:profileGap`, la pantalla que ella ve antes de gastar.
+- **El puente lo resuelve el código o no se resuelve.** La unión es un id de pictograma:
+  dos palabras que apuntan al mismo dibujo publicado. Una palabra con dos dibujos no
+  recibe nada — «banco» es asiento y entidad, y el significado equivocado en un alfabeto
+  que ella no lee es peor que ninguno, porque no puede mirarlo y ver que está mal.
+- **Traducir la hoja entera se rechaza con el motivo**, y en `hard-rules.md` y no en las
+  recetas: las recetas sólo llegan a quien tiene la marca, y esa pregunta se puede hacer
+  de cualquier alumno.
+- **Viaja en el traspaso con la fecha en que ella lo escribió**, no con la de hoy: una
+  marca de febrero leída en junio habla de un niño con cuatro meses más de idioma.
+
+**Tres guardianes saltaron y los tres tenían razón.** El de pictogramas en recetas: mi
+receta los mencionaba para decir que **no** los activa, y el guardián tiene razón por
+encima de mi prosa — el cuerpo de una receta es texto que el modelo recibe, así que
+mencionarlos es activarlos. El de `028` sobre los lectores del índice del juego, que
+ahora nombra `bridge.ts` como cuarto lector legítimo con su motivo. Y **mi propio
+tripwire**, escrito vacío antes de que existiera nada, que saltó con el primer lector de
+`vehicular.languages`.
+
+**Dos mutaciones sobrevivieron y las dos eran fixtures míos**: el caso de ambigüedad
+pasaba porque el árabe no tenía ninguno de los dos dibujos, y el de normalización pedía
+«no hay glosa», que es lo que pasa con y sin normalizar. Y dos veces me equivoqué con el
+mismo nombre accesible — primero dos botones «Añadir» idénticos en una pantalla, luego un
+input y un botón compartiendo nombre.
+
+52 casos nuevos y 6 e2e; 9 costuras verificadas por mutación.
+
 ## Notas de proceso
 
 - **La instancia que me pediste, y por qué la he reiniciado.** La levanté con `npm run dev`
@@ -1299,6 +1352,18 @@ veredictos que sólo pueden dar personas.
   lápida sigue llevando el código, así que `verifyForgotten` la reportaría como residuo para
   siempre. Si querías que el roster guardara memoria de que hubo un alumno, eso vive en
   `.rampa/erasures.md` (fecha + código, nada suyo dentro). Dime si preferías otra cosa.
+- **`033` · ¿De dónde sale el vocabulario clave de una unidad?** El puente está construido,
+  probado y enchufado al prompt, y **no se le da de comer**. `bridgeWords` resuelve glosas
+  a partir de una lista de palabras clave, y qué palabras son clave es un juicio sobre la
+  unidad — `018` ya decidió que se pasa y nunca se adivina («inferirlo de la frecuencia
+  pondría un dibujo al lado de lo que se repita»), y hoy **nadie llena esa lista**:
+  `ApplyOptions.vocabulary` existe para lo mismo y tampoco la llena ningún llamante.
+  Las opciones que veo: (a) un campo en el perfil o en el trabajo donde ella escriba las
+  palabras de la unidad; (b) que el modelo declare cuáles de **sus** palabras son clave y
+  el código resuelva las glosas después, en una segunda vuelta; (c) dejarlo sin glosas y
+  que el apoyo sea sólo visual. No la he inventado. T023 (ampliar la metadata de idiomas
+  del publicador) va con esta decisión: sin fuente de palabras, sería un campo escrito y
+  no leído.
 - **Un directorio `.agents/` sin seguimiento, que no he tocado.** Apareció en la raíz con
   copias de las skills de Spec Kit (`.agents/skills/speckit-*/SKILL.md`). No lo he creado ni
   lo he commiteado: no sé si es tuyo, de una actualización de la herramienta, o basura. Si
@@ -1309,13 +1374,13 @@ veredictos que sólo pueden dar personas.
 | | |
 |---|---|
 | `npx tsc --noEmit` | verde (línea base) |
-| `npx vitest run` | verde — 2.170 casos |
-| `npm run test:e2e` | verde — 186 casos |
+| `npx vitest run` | verde — 2.224 casos |
+| `npm run test:e2e` | verde — 192 casos |
 | `scripts/check-fr-coverage.sh` | verde (línea base) |
 | `scripts/check-spec-kit.sh` | verde (línea base) |
 
 ---
 
 **Lotes 0, 1 y 2 completos (5/5 · 17/17 · 12/12); Lote 3 con `027`, `022`, `026`, `031`,
-`032`, `028` y `035` implementadas.** Quedan **3.10** (`020` US2-US4), **3.13** (notas de
-BACKLOG) y **4 features** por `/speckit-implement` en el orden 033→029→030→034.
+`032`, `028`, `035` y `033` implementadas.** Quedan **3.10** (`020` US2-US4), **3.13**
+(notas de BACKLOG) y **3 features** por `/speckit-implement` en el orden 029→030→034.
