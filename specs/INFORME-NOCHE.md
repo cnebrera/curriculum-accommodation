@@ -1109,6 +1109,10 @@ requisitos necesita una clave real ni el juicio de una PT.
   lápida sigue llevando el código, así que `verifyForgotten` la reportaría como residuo para
   siempre. Si querías que el roster guardara memoria de que hubo un alumno, eso vive en
   `.rampa/erasures.md` (fecha + código, nada suyo dentro). Dime si preferías otra cosa.
+- **Un directorio `.agents/` sin seguimiento, que no he tocado.** Apareció en la raíz con
+  copias de las skills de Spec Kit (`.agents/skills/speckit-*/SKILL.md`). No lo he creado ni
+  lo he commiteado: no sé si es tuyo, de una actualización de la herramienta, o basura. Si
+  debe versionarse, dilo; si no, tal vez merezca una línea en `.gitignore`.
 
 ## Estado de la verificación
 
