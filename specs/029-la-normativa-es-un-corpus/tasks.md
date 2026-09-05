@@ -59,13 +59,13 @@ pre-extraction shape would be built twice.
 - [x] T005 [P] `instructions/normative/README.md`: points at the contract, and states
       the hierarchy where corpora are documented — **hard rules outrank every corpus**
       (FR-2709, spec edge case), in the teacher's language
-- [ ] T006 Parser `app/packages/core/src/normative/parse.ts` per
+- [x] T006 Parser `app/packages/core/src/normative/parse.ts` per
       [data-model.md](data-model.md): repair-not-reject for structure (`011` FR-907's
       rule), unknown fields preserved, a file with no usable id/label not offered — and
       the structural assertion beside it: **no parsed field reaches any guard**;
       `checkDeclines`, the clinical base list, the output checks and the draft-mark path
       take no corpus input (FR-2709)
-- [ ] T007 Resolver `app/packages/core/src/normative/resolve.ts` returning
+- [x] T007 Resolver `app/packages/core/src/normative/resolve.ts` returning
       `ResolvedNormative`: precedence learner ▸ configuración ▸ generic (`024` FR-2215's
       chain); `normative_corpus: none` forces generic; a selected-but-missing corpus is
       generic **with the notice**, never another corpus; the provenance line is composed
