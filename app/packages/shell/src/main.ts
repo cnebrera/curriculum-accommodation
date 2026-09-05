@@ -11,6 +11,7 @@ import { registerAdaptIpc } from './ipc/adapt.js';
 import { registerComposeIpc } from './ipc/compose.js';
 import { registerPictogramIpc } from './ipc/pictograms.js';
 import { registerStructureIpc } from './ipc/structure.js';
+import { registerEnsayoIpc } from './ensayo/ipc.js';
 import { registerGuideIpc } from './ipc/guide.js';
 import { registerConversationIpc } from './ipc/conversation.js';
 import { registerIngestIpc } from './ipc/ingest.js';
@@ -162,6 +163,7 @@ else {
     registerComposeIpc(getWindow);
     registerPictogramIpc(getWindow);
     registerStructureIpc(getWindow);
+    registerEnsayoIpc();
     registerGuideIpc(getWindow);
     registerConversationIpc(getWindow);
   registerIngestIpc(getWindow);

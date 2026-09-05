@@ -185,6 +185,27 @@ const api = {
     story: (args: unknown) => invoke('structure:story', args),
   },
   /**
+   * The rehearsal (`035`): the first night does not depend on a key.
+   *
+   * Nothing here can spend or send. The two steps that would cost money are **served**
+   * from an authored sample rather than faked with a provider-shaped object, and the
+   * whole thing lives in its own root — see `ensayo/store.ts`.
+   */
+  ensayo: {
+    state: () => invoke('ensayo:state'),
+    /** `startedAt` from here: the main process reads no clock. */
+    start: (startedAt: string) => invoke('ensayo:start', startedAt),
+    advance: (step: string) => invoke('ensayo:advance', step),
+    /** She finished, or connected a real service. The root goes entirely. */
+    discard: () => invoke('ensayo:discard'),
+    reading: (startedAt: string) => invoke('ensayo:reading', startedAt),
+    adaptation: (startedAt: string) => invoke('ensayo:adaptation', startedAt),
+    /** What a real run **would** cost. Written to no ledger. */
+    wouldCost: () => invoke('ensayo:wouldCost'),
+    /** The real name detector, offline — the gate she will meet on her first note. */
+    checkNames: (text: string) => invoke('ensayo:checkNames', text),
+  },
+  /**
    * The adaptación curricular (`017`).
    *
    * **No `ingest` here on purpose**: a guide comes in through `job:ingest` and

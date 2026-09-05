@@ -29,7 +29,7 @@ pointed at the rehearsal vault.
       (provider calls leave through undici in the main process — a `webRequest` counter
       alone would pass while a request escaped), read back over a diagnostics channel and
       asserted zero across a full rehearsal.
-- [ ] T002 [P] Write the **SC-3303** half of `app/e2e/ensayo-invariants.spec.ts` **first**,
+- [x] T002 [P] Write the **SC-3303** half of `app/e2e/ensayo-invariants.spec.ts` **first**,
       red, per quickstart §1 (FR-3306): hash every byte of the real vault, rehearse
       completely — including typing a note and printing — hash again, **identical**; then
       connect a provider, run one real adaptation, and sweep vault and ledger for any
@@ -70,7 +70,7 @@ IPC written before the vault-parameter refactor would be written *around*
 - [x] T006 `app/scripts/bundle-corpus.mjs` bundles `sample/` beside `recipes/`,
       `instructions/` and `checklists/`, under the same licence gate — the sample is
       content and ships with attribution like the rest of the commons.
-- [ ] T007 [P] `app/packages/shell/test/ensayo-sample.test.ts` · the sample tells the
+- [x] T007 [P] `app/packages/shell/test/ensayo-sample.test.ts` · the sample tells the
       truth, per quickstart §3 (FR-3310): every cited recipe resolves in the bundled
       corpus at that version; the manifest's flaw exists at the authored spot and nowhere
       else; the profile declares itself and carries no surname and no diagnosis
@@ -89,22 +89,22 @@ bring → verify → adapt (simulated) → review → sign → print, marked at 
 **Independent Test**: quickstart §4 on a machine with no provider; §6 with networking
 disabled — printed, signed sample, zero requests, zero cost.
 
-- [ ] T008 [US1] `app/packages/shell/src/ensayo/ipc.ts` · the `ensayo:*` channels
+- [x] T008 [US1] `app/packages/shell/src/ensayo/ipc.ts` · the `ensayo:*` channels
       (FR-3301, FR-3302): state/start/resume/discard over the store, `bring` (the sample
       photo), the reading and the pre-computed adaptation **served, behind a staged
       progress that says «simulado»** — never a fake `Provider`, never an entry in the
       credential store (research R2). Registered in `app/packages/shell/src/main.ts`;
       T001's boundary test now bites: this module imports neither `currentVault` nor
       `@rampa/providers`.
-- [ ] T009 [US1] `app/ui/src/data/ensayo.ts` · the hook layer for the `ensayo:*` channels
+- [x] T009 [US1] `app/ui/src/data/ensayo.ts` · the hook layer for the `ensayo:*` channels
       — components never call `window.rampa` (`013`, `ui/test/data-layer.test.ts` already
       asserts it and must keep passing).
-- [ ] T010 [US1] `app/ui/src/ensayo/EnsayoFrame.tsx` · the mark, structurally (FR-3305,
+- [x] T010 [US1] `app/ui/src/ensayo/EnsayoFrame.tsx` · the mark, structurally (FR-3305,
       SC-3304): every rehearsal screen renders inside it and no rehearsal screen exists
       outside it, so «100% of screens marked» is a property of the component tree. Built
       from `ui/src/shell/` pieces — a frame that invents its own layout is a fact about
       the shell (`013`).
-- [ ] T011 [US1] The offer, beside the wall and never a step (FR-3301, `016`'s no-default
+- [x] T011 [US1] The offer, beside the wall and never a step (FR-3301, `016`'s no-default
       rule): with no provider connected, `app/ui/src/onboarding/ConnectStep.tsx` and the
       no-provider state in `app/ui/src/App.tsx` offer «probar con un ejemplo» **alongside**
       connecting — two doors, neither pre-chosen, and the teacher with her key already in
@@ -112,7 +112,7 @@ disabled — printed, signed sample, zero requests, zero cost.
 - [ ] T012 [US1] The rehearsal stays reachable after a provider is connected (FR-3304),
       from the connection screen in `app/ui/src/settings/` — for showing a colleague —
       still marked, still separate; re-entry re-seeds through T004.
-- [ ] T013 [US1] `app/ui/src/ensayo/` · the journey's screens inside `EnsayoFrame`
+- [x] T013 [US1] `app/ui/src/ensayo/` · the journey's screens inside `EnsayoFrame`
       (FR-3301): meet the learner (the profile shown as the first example of a good one,
       its inventedness visible — FR-3307), bring the sample photo, **verify the reading
       against the photo** — real comparison over the rehearsal vault, where T005's flaw
@@ -124,19 +124,19 @@ disabled — printed, signed sample, zero requests, zero cost.
       the printed PDF says «material de ejemplo» on the paper because the document does
       (T005), with no renderer branch. Output lands under the rehearsal root, nowhere
       else.
-- [ ] T015 [US1] Would-be costs (FR-3303): each simulated step shows what an equivalent
+- [x] T015 [US1] Would-be costs (FR-3303): each simulated step shows what an equivalent
       real run would cost, from the sample's manifest, labelled as an estimate, in `006`
       FR-403's register («esto habría costado unos 3 céntimos») — and **nothing is
       written to any ledger**: her real month-badge is unchanged (asserted in T002's walk)
       and the rehearsal root has no ledger file at all (asserted in T004).
-- [ ] T016 [US1] The name question fires, offline (FR-3308, FR-3311): a note she types
+- [x] T016 [US1] The name question fires, offline (FR-3308, FR-3311): a note she types
       goes through core's deterministic detector
       (`app/packages/core/src/redact/names.ts`) before the simulated adapt — the sample's
       authored note guarantees she sees it fire once even if she types nothing — and the
       screen says the other half out loud: nothing was sent anywhere, because there is
       nowhere to send it. What she typed lives under the rehearsal root and dies with the
       discard.
-- [ ] T017 [US1] `app/e2e/ensayo.spec.ts` · the walk from quickstart §4, all eight steps —
+- [x] T017 [US1] `app/e2e/ensayo.spec.ts` · the walk from quickstart §4, all eight steps —
       including finding the flaw, the name question, the unchanged month-badge — plus the
       SC-3304 inventory: every screen in the walk carries the ensayo mark. This is also
       what T001/T002 run their counters and hashes across.

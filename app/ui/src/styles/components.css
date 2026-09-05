@@ -799,3 +799,27 @@ body { container: window / inline-size; }
   text-align: center;
   overflow-wrap: anywhere;
 }
+
+/* ── El ensayo (035) ──────────────────────────────────────────────────────────
+   La marca es una franja fija arriba de todo lo que hay dentro del ensayo, no un
+   aviso por pantalla: «todas las pantallas están marcadas» tiene que ser una
+   propiedad del árbol de componentes y no algo que alguien recuerde.
+
+   Color y **palabras**: `010` FR-812 prohíbe que el color sea el único portador, y
+   aquí menos que en ningún sitio — lo que está en juego es que no confunda una hoja
+   de ejemplo con la de su alumno. */
+.ensayo-frame { display: flex; flex-direction: column; min-height: 100%; }
+.ensayo-mark {
+  position: sticky; top: 0; z-index: 20;
+  display: flex; flex-wrap: wrap; align-items: center; gap: .6rem;
+  padding: .6rem 1rem;
+  background: var(--accent-soft); border-bottom: 3px solid var(--accent);
+  font-size: .92rem; line-height: 1.4;
+}
+.ensayo-mark strong { white-space: nowrap; }
+.ensayo-mark .btn { margin-left: auto; }
+@media print {
+  /* En papel no hace falta: el documento lleva «material de ejemplo» dentro, así que
+     lo dice la hoja y no la pantalla que la imprimió (FR-3305). */
+  .ensayo-mark { display: none; }
+}

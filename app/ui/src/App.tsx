@@ -20,6 +20,8 @@ import { NotesScreen } from './notes/NotesScreen.js';
 import { SettingsSections } from './settings/SettingsSections.js';
 import { VaultStep } from './onboarding/VaultStep.js';
 import { ConnectStep } from './onboarding/ConnectStep.js';
+import { EnsayoScreen } from './ensayo/EnsayoScreen.js';
+import { useStartEnsayo, useDiscardEnsayo } from './data/ensayo.js';
 import { ProfileEditor } from './learners/ProfileEditor.js';
 import { Page } from './shell/Page.js';
 import { CostBadge } from './components/CostBadge.js';
@@ -43,6 +45,16 @@ import { detectStep, loadState, saveState, type Step } from './data/onboarding.j
 export function App() {
   const { t: es, locale, setLocale, locales } = useStrings();
   const [step, setStep] = useState<Step | null>(null);
+  /**
+   * The rehearsal she is in, or `null` (`035`).
+   *
+   * Its `startedAt` doubles as the identity of the run: the main process reads no clock,
+   * so the value the renderer minted when she pressed the button is what every later call
+   * is about.
+   */
+  const [rehearsing, setRehearsing] = useState<string | null>(null);
+  const startEnsayo = useStartEnsayo();
+  const discardEnsayo = useDiscardEnsayo();
   const [route, go] = useReducer(reduceRoute, undefined, startRoute);
   /** Her caseload, for the learner's heading — the join already lives here (`013` FR-1107). */
   const roster = useLearners();
@@ -138,6 +150,25 @@ export function App() {
     );
   }
 
+  /*
+   * The rehearsal, offered **beside** the wall (`035` T011, FR-3301).
+   *
+   * `016`'s no-default rule, applied to the hardest step of the product: connecting a
+   * service and trying an example are two doors, and neither is pre-chosen. She may be
+   * here at half past nine having just remembered a pupil, with no account anywhere; she
+   * may also be here with a key already in her hand, and that teacher is never routed
+   * through fiction — the connect step is exactly where it was.
+   *
+   * Not a step of its own in the sequence: a rehearsal that had to be finished before
+   * connecting would be a wall of a different shape.
+   */
+  if (rehearsing) {
+    return (
+      <EnsayoScreen startedAt={rehearsing}
+                    onLeave={() => { void discardEnsayo.run(); setRehearsing(null); }} />
+    );
+  }
+
   if (step !== 'done') {
     const order: Step[] = ['vault', 'connect', 'learner'];
     return (
@@ -160,7 +191,31 @@ export function App() {
         {step === 'vault' ? (
           <VaultStep onDone={(root) => { saveState({ step: 'connect', vaultRoot: root }); setStep('connect'); }} />
         ) : step === 'connect' ? (
-          <ConnectStep onDone={(id) => { saveState({ step: 'learner', providerId: id }); setStep('learner'); }} />
+          <div className="stack gap4">
+            <ConnectStep onDone={(id) => { saveState({ step: 'learner', providerId: id }); setStep('learner'); }} />
+            {/*
+              The other door. Below the connect step and not above it, because she came
+              here to set the thing up — but visible without scrolling past anything, and
+              worded as what it is rather than as a consolation.
+            */}
+            <div className="stack gap2" style={{ borderTop: '1px solid var(--rule)', paddingTop: 'var(--s4)' }}>
+              <strong>¿Prefieres verlo antes de decidir?</strong>
+              <p className="small">
+                Puedo enseñarte lo que hago con un ejemplo inventado: una hoja, un alumno
+                que no existe, de principio a fin. No hace falta que conectes nada, no
+                cuesta dinero y no sale nada de tu ordenador.
+              </p>
+              <div className="row">
+                <button className="btn" disabled={startEnsayo.busy}
+                        onClick={() => {
+                          const now = new Date().toISOString();
+                          void startEnsayo.run(now).then((ok) => { if (ok) setRehearsing(now); });
+                        }}>
+                  Probar con un ejemplo
+                </button>
+              </div>
+            </div>
+          </div>
         ) : (
           <div className="stack">
             <h2>{es.onboarding.learnerTitle}</h2>
