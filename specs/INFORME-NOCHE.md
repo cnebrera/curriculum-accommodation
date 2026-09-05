@@ -1192,6 +1192,68 @@ con la historia social tres centímetros más abajo diciendo lo contrario.
 75 casos nuevos y 14 e2e; 9 costuras verificadas por mutación. Suites de aislamiento e
 inyección verdes.
 
+### 3.12 · `035` implementada — la primera noche no depende de una clave
+
+23 de 26 tareas y **11 de 11 requisitos**, cinco commits. Las tres abiertas están dichas
+con su motivo, no dobladas dentro de otra: una necesita una clave real, otra está
+bloqueada por `034`, y las dos últimas son veredictos de personas.
+
+**El primer paso del producto era el más hostil**: crear una cuenta en un proveedor,
+poner una tarjeta, pegar una clave — y hasta ahora no había forma de ver siquiera qué hace
+Rampa sin eso. Ahora hay otra puerta **al lado**, ninguna preelegida (`016`): un ejemplo
+inventado de principio a fin, sin conexión y sin gastar. La maestra que llega a las nueve y
+media acordándose de un alumno tiene a dónde ir; la que llega con su clave en la mano no
+pasa por ninguna ficción.
+
+- **La separación es un directorio, no una bandera.** Un ensayo en su vault detrás de un
+  `ensayo: true` estaría a una consulta de meter un niño inventado en un aula real, y «una
+  consulta» es un camino que alguien escribe un martes. Todo lo que recibe un `Vault` corre
+  sobre la raíz del ensayo sin cambiar, y lo único que decide qué vault es la capa de IPC.
+  Por eso «su vault no cambia ni un byte» se comprueba con un **hash del árbol entero**
+  antes y después — no «no aparecieron ficheros del ensayo», *nada cambió*.
+- **Los dos pasos que costarían dinero se sirven, no se falsean.** Un proveedor de mentira
+  es un objeto con forma de proveedor a un refactor de quedar registrado para trabajo real,
+  y metería el «como si» dentro de la capa cuyo único trabajo es ser el sitio por donde
+  sale una petición.
+- **Cero peticiones, en las dos pilas.** Las llamadas a un proveedor salen del proceso
+  principal por el `fetch` de Node, no por la sesión de Chromium: un contador sobre una
+  sola marcaría cero durante un ensayo entero mientras algo se escapa por la otra. Sólo se
+  instala bajo `RAMPA_TEST`, y fuera contesta `null` — un contador ausente y un contador a
+  cero son hechos distintos, y el segundo es el reconfortante y falso.
+- **La marca es una propiedad del árbol de componentes**, con un test que lee los imports.
+  Lo que está en juego no es que se confunda: es que imprima el ejemplo y se lo dé a un
+  niño. Por eso los documentos llevan «material de ejemplo» dentro y el papel lo dice
+  aunque ninguna pantalla lo dijera.
+- **El juego de ejemplo está escrito a mano** —es la única adaptación que verá todo el que
+  abra Rampa por primera vez— con **un** fallo puesto a propósito en la lectura. Sin ese
+  fallo, la pantalla de comprobar la lectura enseña que es un trámite. Y firma e imprime
+  de verdad: un ensayo que se saltara la firma le enseñaría que la firma es un trámite
+  también.
+- **Dice qué está simulado y qué no**, que es la mitad que se olvida: no puede prometer más
+  que el producto y tampoco menos. Dos pasos simulados; el resto —perfiles, expediente,
+  comprobar la lectura, aviso de nombres, firmar, imprimir, agendas— funciona hoy sin
+  clave.
+
+**Tres guardianes existentes saltaron y los tres tenían razón**: el del corpus de sólo
+lectura (leer y escribir son ahora dos módulos), el del tamaño de la superficie Electron
+(dos extracciones antes de subirlo 25 puntos, con el motivo escrito) y el del **único
+escritor de firmas** — llegué copiando `stampSignedOff` y ahora hay uno y dos que lo
+llaman. Ese último es el que más importa: una segunda manera de quitar la marca de
+borrador es la firma de una maestra dejando de significar nada, y un ensayo es justamente
+donde alguien piensa que una copia es inofensiva.
+
+**Y lo que encontró mirarlo es el hallazgo de la feature.** La primera pantalla de su
+primera noche le enseñaba el IR crudo —`--- source: photos ---`, `::: {#b1 .instruction}`—
+en la pantalla que existe para convencerla de que esto es una herramienta seria. Y los
+`**` y los `#` salían impresos, la misma corrección que `031` hizo una pantalla antes.
+
+52 casos nuevos y 6 e2e; 5 costuras verificadas por mutación, incluida la del contador de
+red (una petición metida en el camino del ensayo lo pone rojo).
+
+**Lo que queda de `035`, con su motivo:** T018 necesita una clave real (paseo de pago,
+como T031 de `026`); T020 está bloqueada porque `034` no existe todavía; T026 son dos
+veredictos que sólo pueden dar personas.
+
 ## Notas de proceso
 
 - **La instancia que me pediste, y por qué la he reiniciado.** La levanté con `npm run dev`
@@ -1247,13 +1309,13 @@ inyección verdes.
 | | |
 |---|---|
 | `npx tsc --noEmit` | verde (línea base) |
-| `npx vitest run` | verde — 2.153 casos |
-| `npm run test:e2e` | verde — 180 casos |
+| `npx vitest run` | verde — 2.170 casos |
+| `npm run test:e2e` | verde — 186 casos |
 | `scripts/check-fr-coverage.sh` | verde (línea base) |
 | `scripts/check-spec-kit.sh` | verde (línea base) |
 
 ---
 
 **Lotes 0, 1 y 2 completos (5/5 · 17/17 · 12/12); Lote 3 con `027`, `022`, `026`, `031`,
-`032` y `028` implementadas.** Quedan **3.10** (`020` US2-US4), **3.13** (notas de
-BACKLOG) y **5 features** por `/speckit-implement` en el orden 035→033→029→030→034.
+`032`, `028` y `035` implementadas.** Quedan **3.10** (`020` US2-US4), **3.13** (notas de
+BACKLOG) y **4 features** por `/speckit-implement` en el orden 033→029→030→034.
