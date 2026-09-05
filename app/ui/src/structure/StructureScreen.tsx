@@ -113,7 +113,13 @@ export function StructureScreen({ learnerCode, learnerName, onMade }: {
   return (
     <Page
       title={`El día y las rutinas de ${learnerName ?? learnerCode}`}
-      lede="Una agenda o una secuencia de pasos, con sus dibujos. La hago aquí mismo: no cuesta dinero y no hace falta internet."
+      /*
+        Corrected by looking at it: the lede said «no cuesta dinero y no hace falta
+        internet» with the social story sitting three centimetres below saying the
+        opposite. Two of the three are free and one is not, and a page that overstates
+        the free part is a page whose next sentence she has less reason to believe.
+      */
+      lede="Una agenda, una secuencia de pasos o una historia social. Las dos primeras las hago yo aquí mismo: sin internet y sin gastar."
       actions={
         <Actions
           primary={kind === 'historia' ? (
