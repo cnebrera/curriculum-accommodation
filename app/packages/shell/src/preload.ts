@@ -89,6 +89,20 @@ const api = {
      */
     checkForUpdate: () => invoke('corpus:checkForUpdate'),
   },
+  /**
+   * Which normativa she works under (029).
+   *
+   * `list` carries labels, origin and review status and **no raw file**: the corpus
+   * body is reading material for the model, and a screen that could render it is a
+   * screen that could be told something by it (Principle IX).
+   */
+  normative: {
+    list: () => invoke('normative:list'),
+    /** By corpus id; nothing deselects. Never by territory string. */
+    select: (id: string | null) => invoke('normative:select', id),
+    /** What a document drafted right now would say about where its wording came from. */
+    resolve: (learnerChoice?: string) => invoke('normative:resolve', learnerChoice),
+  },
   learners: {
     list: () => invoke('learners:list'),
     roster: () => invoke('learners:roster'),

@@ -21,6 +21,17 @@ export const currentVault = (): Vault => {
   return vault;
 };
 
+/**
+ * The vault, or nothing — for the callers that have a real answer without one.
+ *
+ * `currentVault` throws, which is right for every handler that is about to read or
+ * write a learner's file: there is no such thing as «adaptar sin vault». The normative
+ * layer is the first caller with an honest answer when there is no vault yet — the
+ * bundled corpora are readable, and the resolved normativa is generic — so it takes
+ * this instead of catching an exception to reach the same place.
+ */
+export const maybeVault = (): Vault | null => vault;
+
 export const setVault = (root: string): Vault => { vault = new Vault(root); return vault; };
 
 /**

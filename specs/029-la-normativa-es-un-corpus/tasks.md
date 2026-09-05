@@ -71,7 +71,7 @@ pre-extraction shape would be built twice.
       generic **with the notice**, never another corpus; the provenance line is composed
       here and nowhere else, from review status + derived origin (FR-2701, FR-2702,
       FR-2711, research R2/R5)
-- [ ] T008 Shell loader `app/packages/shell/src/corpus/normative.ts`: bundled corpora via
+- [x] T008 Shell loader `app/packages/shell/src/corpus/normative.ts`: bundled corpora via
       `readBundledDir('instructions', 'normative')`, vault corpora from `normative/`,
       the selection and activation log in `normative/selection.md`, origin derived
       (bundled | subido | modificado-by-hash), IPC handlers registered from
