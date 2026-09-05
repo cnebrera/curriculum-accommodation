@@ -14,6 +14,13 @@ const api = {
     defaultPath: () => invoke('vault:default'),
     current: () => invoke('vault:current'),
     read: (p: string) => invoke('vault:read', p),
+    /**
+     * This folder holds shapes this build does not know (`032` FR-3008, P50).
+     *
+     * The shared-folder case: a colleague on a newer version wrote something here. It is
+     * reported and never refused — her work is in there.
+     */
+    isNewer: () => invoke('vault:isNewer'),
     write: (p: string, c: string) => invoke('vault:write', p, c),
     /** Open a document from the vault in her own editor (014). */
     open: (p: string) => invoke('vault:open', p),

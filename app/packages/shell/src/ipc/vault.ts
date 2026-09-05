@@ -1,6 +1,6 @@
 import { app, dialog, shell, BrowserWindow } from 'electron';
 import { watch as chokidarWatch, type FSWatcher } from 'chokidar';
-import { Vault, resolveInVault, RampaError, VAULT, logger } from '@rampa/core';
+import { Vault, resolveInVault, RampaError, VAULT, logger, vaultIsNewer, vaultSchema } from '@rampa/core';
 import { join } from 'node:path';
 import { homedir } from 'node:os';
 import { handle } from './wrap.js';
@@ -96,6 +96,23 @@ export function registerVaultIpc(getWindow: () => BrowserWindow | null): void {
     await saveDisplay(app.getPath('userData'), display as never);
     return true;
   });
+
+  /**
+   * Was this vault written by a newer build than this one? (`032` FR-3008, P50.)
+   *
+   * The case that motivated the marker: a PT and a tutor sharing a vault over OneDrive
+   * with different versions installed. The older application reads shapes it does not
+   * know — per-area CUR today, whatever comes next tomorrow — and shows less than the
+   * folder contains, **with nothing on screen to say so**.
+   *
+   * `vaultIsNewer` existed from the day the marker was built and nothing called it: a
+   * function written, typed and read by nobody, which is this repository's most-found
+   * defect. This is its reader.
+   *
+   * It reports; it never refuses. Her work is in there, and `014` already survives files
+   * it cannot fully parse.
+   */
+  handle('vault:isNewer', async () => vaultIsNewer(await vaultSchema(currentVault())));
 
   handle('vault:read', async (relPath: string) => {
     const doc = await currentVault().readDoc(relPath);

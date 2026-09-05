@@ -164,13 +164,13 @@ suggests one for Lengua.
 
 ## Phase 5 · The packets (both stories ride on this)
 
-- [ ] T018 Per-area CUR travels in handover (`004`) and coordination (`030`) packets as
+- [x] T018 Per-area CUR travels in handover (`004`) and coordination (`030`) packets as
       the profile data it is (FR-3008, research R4): pairs ride the profile/deltas the
       packets already carry, name-free (egress redaction applies to area names as to any
       string), each pair individually acceptable on import with provenance (`030`
       FR-2804/2805); the packet states the vault schema version it was written under
       (T003). No parallel channel for one field.
-- [ ] T019 [P] `app/packages/core/test/packet-cur-areas.test.ts` from quickstart §5 —
+- [x] T019 [P] `app/packages/core/test/packet-cur-areas.test.ts` from quickstart §5 —
       including the older-receiver simulation: `cur_areas` carried verbatim, general in
       effect, and the version mismatch producing a sentence rather than a silence (the
       spec's edge case, made a test).

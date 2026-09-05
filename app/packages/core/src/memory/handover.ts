@@ -43,11 +43,29 @@ export interface Packet {
   summary: string;
   /** Never present in a shareable packet. */
   containsLearnerScope: boolean;
+  /**
+   * The vault schema version this packet was written under (`032` FR-3008, P50).
+   *
+   * Stated so a receiver on an older build can say «este paquete trae datos de una
+   * versión más nueva; verás el valor general» — **a sentence instead of a silent
+   * difference**. Without it the degradation is real but invisible: her colleague's
+   * application quietly shows less than the packet contains and neither of them can tell.
+   *
+   * Not a wall. `004` FR-314 makes inheritance declinable item by item, and refusing a
+   * whole packet over a version number would take that choice away from her.
+   */
+  schema: number;
 }
 
 const today = () => new Date().toISOString().slice(0, 10);
 
-export function buildPacket(learner: LoadedLearner, academicYear: string, summary: string): Packet {
+export function buildPacket(
+  learner: LoadedLearner,
+  academicYear: string,
+  summary: string,
+  /** The version the sending vault is at. Absent means 1, like the marker itself. */
+  schema = 1,
+): Packet {
   const claims: PacketClaim[] = [];
   for (const [axis, level] of Object.entries(learner.profile.axes ?? {})) {
     claims.push({
@@ -76,6 +94,36 @@ export function buildPacket(learner: LoadedLearner, academicYear: string, summar
     });
   }
   /*
+   * Per-area CUR travels as the profile data it is (`032` FR-3008, research R4).
+   *
+   * One claim per pair, beside the axes, with the same evidence and the same
+   * item-by-item acceptance — **no parallel channel for one field**, which is the
+   * two-copies defect in transit. `004` FR-314 makes inheritance declinable item by item,
+   * and a pair is exactly the size of thing she should be able to decline: «lo de Mates
+   * lo he visto yo, lo de Lengua me lo dijeron y prefiero mirarlo».
+   *
+   * An área name is a subject, not a child — the packet's no-names rule and the egress
+   * redaction apply to it as to any string, and nothing here exempts it.
+   *
+   * A receiver on an older build simply does not build these claims: `cur_areas` is an
+   * unknown key it carries verbatim, and the general value is what takes effect. Less
+   * detail, never wrong detail — which is R1's shape paying off rather than luck.
+   */
+  for (const [area, level] of Object.entries(learner.profile.cur_areas ?? {})) {
+    claims.push({
+      text: `CUR en ${area} = ${level}`,
+      evidence: 'from-profile',
+      /*
+       * No date. `axes_confirmed` is keyed by axis and there is no per-area equivalent,
+       * so stamping one would be the fabrication `noted_on` was fixed for two paragraphs
+       * below — a claim she made in October arriving dated today, on the field whose
+       * whole job is to say how old it is. «No consta» is a fact she needs.
+       */
+      date: '',
+      confirmation: 'unconfirmed',
+    });
+  }
+  /*
    * And the real date, or none (FR-303 as amended, decision P44).
    *
    * These two lines said `date: today()`, **two lines below** the comment above
@@ -97,14 +145,18 @@ export function buildPacket(learner: LoadedLearner, academicYear: string, summar
       confirmation: 'unconfirmed', source: 'avoid',
     });
   }
-  return { code: learner.profile.code, academicYear, createdAt: today(), claims, summary, containsLearnerScope: true };
+  return { code: learner.profile.code, academicYear, createdAt: today(), claims, summary,
+           containsLearnerScope: true, schema };
 }
 
 /** Prose first: most receiving teachers will not have this application. */
 export function packetToMarkdown(p: Packet): string {
   const l: string[] = [
     `# Traspaso · ${p.code}`, '',
-    `Curso ${p.academicYear} · preparado el ${p.createdAt}`, '',
+    `Curso ${p.academicYear} · preparado el ${p.createdAt}`
+    // Stated, so an older receiver can say what it is not showing rather than show less
+    // in silence (`032` FR-3008).
+    + ` · formato ${p.schema}`, '',
     '> **Esto son observaciones de otra aula, no un diagnóstico.**',
     '> Trátalas como hipótesis que confirmar en las primeras semanas.',
     '> Si algo ya no encaja, no está mal escrito: el niño ha cambiado.', '',

@@ -2,7 +2,7 @@ import {
   VAULT, loadJournal, writeIndex, houseStyleOverflowing, appendNote, loadLearner,
   saveProfile, buildPacket, packetToMarkdown, toShareable, planForget, executeForget,
   tombstone, listLearners, loadRoster, saveRoster, rosterNameRisk, generateCode, validateCode,
-  rosterSchema, profileSchema, buildProposals, learnerNotes, knownAreas,
+  rosterSchema, profileSchema, buildProposals, learnerNotes, knownAreas, vaultSchema,
   recordFor, type Profile,
 } from '@rampa/core';
 import { currentVault } from './vault.js';
@@ -137,8 +137,11 @@ export function registerMemoryIpc(): void {
    * Leaving the flag would have offered her a button whose only output is nothing.
    */
   handle('memory:handoverDraft', async (code: string, year: string, summary: string) => {
-    const learner = await loadLearner(currentVault(), code);
-    const packet = buildPacket(learner, year, summary);
+    const vault = currentVault();
+    const learner = await loadLearner(vault, code);
+    // The version the sending vault is at (`032` FR-3008): a receiver on an older build
+    // says what it is not showing instead of showing less in silence.
+    const packet = buildPacket(learner, year, summary, await vaultSchema(vault));
     return { packet, markdown: packetToMarkdown(packet) };
   });
 
@@ -154,7 +157,7 @@ export function registerMemoryIpc(): void {
   ) => {
     const vault = currentVault();
     const learner = await loadLearner(vault, code);
-    const full = buildPacket(learner, year, summary);
+    const full = buildPacket(learner, year, summary, await vaultSchema(vault));
     const kept = new Set(keep);
     const reviewed = { ...full, claims: full.claims.filter((c) => kept.has(c.text)) };
     const markdown = packetToMarkdown(reviewed);

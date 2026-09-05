@@ -8,7 +8,7 @@ import { AxisStrip } from './AxisStrip.js';
 import { Badge } from '../components/Badge.js';
 import { Callout } from '../components/Callout.js';
 import { useStrings } from '../i18n/context.js';
-import { useLearners, type LearnerRow } from '../data/learners.js';
+import { useLearners, useVaultIsNewer, type LearnerRow } from '../data/learners.js';
 import { RosterFilters, whyNothingMatched } from './RosterFilters.js';
 import { filterRoster, searchRoster, facetsOf, groupRoster, type RosterFilter }
   from '../../../packages/core/src/roster/filter.js';
@@ -104,6 +104,14 @@ export function LearnersScreen({ onOpen, onNew }: {
    * no error branch at all. `learners:list` rejecting left it loading for ever.
    */
   const roster = useLearners();
+  /*
+   * A colleague on a newer build wrote in this folder (`032` FR-3008, P50).
+   *
+   * On the opening screen because it is about the **folder**, not about one learner, and
+   * because the alternative is her noticing that two laptops disagree about a child and
+   * having nothing to attribute it to.
+   */
+  const newer = useVaultIsNewer();
   const learners: LearnerRow[] = roster.state === 'ready' ? roster.value : [];
   const refresh = roster.reload;
 
@@ -159,6 +167,24 @@ export function LearnersScreen({ onOpen, onNew }: {
           lede={learners.length > 0
             ? `${learners.length} ${learners.length === 1 ? 'alumno' : 'alumnos'}. Los nombres solo los ves tú: en los ficheros va un código.`
             : 'Los nombres solo los ves tú: en los ficheros va un código.'}>
+      {/*
+        `info`, not `decide` — corrected by looking at it. The `decide` badge reads
+        «Necesita tu decisión», and there is no decision here: nothing in this application
+        can change what another build wrote. What she needs is the fact and the reason her
+        screen may differ from her colleague's.
+      */}
+      {newer.state === 'ready' && newer.value ? (
+        <Callout intent="info" title="Esta carpeta la ha tocado una versión más nueva">
+          <p>
+            Alguien ha guardado aquí con una versión de Rampa posterior a la tuya. No he
+            tocado nada y todo tu trabajo sigue ahí, pero puede que <strong>yo no te
+            enseñe algo que sí está en los ficheros</strong> — por ejemplo un nivel
+            curricular apuntado por área. Si trabajáis los dos sobre la misma carpeta,
+            actualiza y vuelve a mirar.
+          </p>
+        </Callout>
+      ) : null}
+
       <Loaded
         from={roster}
         busyLabel="Un momento, que busco tus alumnos…"

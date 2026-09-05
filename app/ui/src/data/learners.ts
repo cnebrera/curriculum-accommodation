@@ -107,3 +107,16 @@ export function useNewLearnerCode() {
 export function useKnownAreas(code?: string): Loadable<string[]> {
   return useAsync(async () => (await window.rampa.learners.areas(code)) as string[], [code]);
 }
+
+/**
+ * Her folder was written by a newer version of Rampa than this one (`032` FR-3008).
+ *
+ * The case P50's marker exists for: a PT and a tutor sharing a vault over OneDrive with
+ * different builds installed. The older one reads shapes it does not know — per-area CUR
+ * today, whatever comes next tomorrow — and shows **less than the folder contains**. A
+ * sentence instead of a silent difference is the whole point; without it neither of them
+ * can tell why the two screens disagree.
+ */
+export function useVaultIsNewer(): Loadable<boolean> {
+  return useAsync(async () => (await window.rampa.vault.isNewer()) as boolean, []);
+}
