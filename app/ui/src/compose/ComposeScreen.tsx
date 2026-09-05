@@ -3,7 +3,9 @@ import { Page, Section, Field, Actions } from '../shell/Page.js';
 import { useMaterialKinds } from '../data/corpus.js';
 import { Loaded } from '../data/Loaded.js';
 import { DocumentViewer } from '../viewer/DocumentViewer.js';
-import { useDocumentHtml, useAnswerKeyHtml } from '../data/jobs.js';
+import { useDocumentHtml, useAnswerKeyHtml, useLevelQuestion } from '../data/jobs.js';
+import { useKnownAreas } from '../data/learners.js';
+import { useEducationSystems } from '../data/corpus.js';
 import { useCorrectComposition } from '../data/compose.js';
 import { ScopeQuestion } from '../review/ScopeQuestion.js';
 import { Callout } from '../components/Callout.js';
@@ -74,12 +76,29 @@ export function ComposeScreen({ learners, onComposed, onBack }: {
   const [kind, setKind] = useState<string | null>(null);
   const [objectives, setObjectives] = useState('');
   const [anchor, setAnchor] = useState('');
+  /**
+   * What subject this is for (`032` FR-3003). Optional — a job with no área uses the
+   * general CUR, which is a fallback and never a refusal.
+   */
+  const [subject, setSubject] = useState('');
+  /** Her answer to «¿a qué nivel?», when it was worth asking. `she-chose` if given. */
+  const [level, setLevel] = useState('');
   const [howMany, setHowMany] = useState<number | null>(null);
   const [sessions, setSessions] = useState(1);
   const [minutes, setMinutes] = useState(45);
   const [progress, setProgress] = useState<{ stage: string; detail?: string } | null>(null);
   const compose = useCompose();
   const online = useOnline();
+  const areas = useKnownAreas(learners[0]);
+  /*
+   * Whether the enrolled course is contradicted by her own note about **this** subject.
+   *
+   * Recomputed when the área changes, because that is precisely what it depends on:
+   * «Lengua» and «Matemáticas» can give different answers for the same child, which is
+   * the whole of `032`.
+   */
+  const question = useLevelQuestion(learners[0], subject.trim() || undefined);
+  const asking = question.state === 'ready' && question.value.ask;
 
   useJobProgress(setProgress);
 
@@ -129,6 +148,13 @@ export function ComposeScreen({ learners, onComposed, onBack }: {
       sessions,
       minutesPerSession: minutes,
       ...(anchor.trim() ? { anchor: anchor.trim() } : {}),
+      ...(subject.trim() ? { subject: subject.trim() } : {}),
+      /*
+       * Only if she answered. Not answering composes at the enrolled course exactly as
+       * before, with the report naming who did not choose — asking is never blocking
+       * (`032` FR-3006).
+       */
+      ...(level ? { targetYear: level } : {}),
     });
     if (result) onComposed(jobId, result);
   };
@@ -250,6 +276,46 @@ export function ComposeScreen({ learners, onComposed, onBack }: {
                    onChange={(e) => setHowMany(Number(e.target.value) || 1)} />
           </Field>
         ) : null}
+
+        {/*
+          Which subject, and only then whether the course on record still holds
+          (`032` FR-3003).
+
+          Optional, and placed after the objectives rather than before: she came to
+          prepare material about something, and asking «¿de qué asignatura?» before
+          «¿qué tiene que aprender?» puts a filing question in front of the work. A job
+          with no área uses the general CUR — fallback, never a refusal.
+        */}
+        <Field label="¿De qué asignatura es?" htmlFor="asignatura"
+               help="Opcional. Si la dices, uso su nivel curricular de esa área en vez del general.">
+          <input className="input" id="asignatura"
+                 style={{ maxWidth: '22em' }} value={subject}
+                 onChange={(e) => { setSubject(e.target.value); setLevel(''); }} />
+          {/*
+            Buttons, never a `<datalist>`: typing one real key into a datalist-linked
+            input killed the renderer, and every test that used `fill()` missed it
+            because `fill()` sets a value without pressing a key. See the longer note in
+            `AxisEditor.tsx`.
+
+            Suggestions are plain text: a sheet's `subject` was read out of a document
+            somebody else wrote (Principio IX).
+          */}
+          {(areas.state === 'ready' ? areas.value : []).length ? (
+            <div className="row gap2" style={{ flexWrap: 'wrap', alignItems: 'center' }}>
+              <span className="small muted">Las que ya usas:</span>
+              {(areas.state === 'ready' ? areas.value : []).map((a) => (
+                <button type="button" className="btn btn-sm" key={a}
+                        aria-pressed={subject === a}
+                        onClick={() => { setSubject(a); setLevel(''); }}>
+                  {a}
+                </button>
+              ))}
+            </div>
+          ) : null}
+        </Field>
+
+        {asking ? <LevelAnswer because={question.state === 'ready' ? question.value.because : null}
+                               value={level} onChange={setLevel} /> : null}
 
         {/*
           Her plan, for every kind (FR-1926).
@@ -477,5 +543,57 @@ export function ComposeSummary({ result, learners, jobId, onAdapt, onDiscard }: 
         <p className="small">{result.answersPath}</p>
       </Section>
     </Page>
+  );
+}
+
+/**
+ * «Tú misma tienes apuntado que en Matemáticas trabaja contenidos de cursos anteriores»
+ * (032 FR-3003, T010).
+ *
+ * ## An offer, never a gate
+ *
+ * There is no «continue» button here and no way for this to block: leaving the select
+ * empty composes at the enrolled course exactly as it always did, with the report naming
+ * that nobody chose the level. Most learners in an aula de apoyo are one or two courses
+ * behind — a mandatory stop keyed on that would refuse the ordinary case, which is P12's
+ * condemned profile-keyed refusal reborn at finer grain (FR-3006).
+ *
+ * ## Why it shows a course list rather than deriving one
+ *
+ * CUR 2 is «contenidos de cursos anteriores» — how many, nobody wrote down. Turning that
+ * into `enrolled − 2` would put an invented number on a child's worksheet, and it is
+ * precisely the kind of number a teacher cannot check at a glance and has no reason to
+ * suspect. She is the only person who can name it, so she names it, and her answer
+ * arrives as `she-chose`: P32 intact, FR-129 intact.
+ */
+function LevelAnswer({ because, value, onChange }: {
+  because: string | null;
+  value: string;
+  onChange: (yearId: string) => void;
+}) {
+  const loaded = useEducationSystems();
+  if (loaded.state !== 'ready') return null;
+  const systems = loaded.value as Array<{
+    id: string; stages: Array<{ label: string; years: Array<{ id: string; label: string }> }>;
+  }>;
+  const system = systems[0];
+  if (!system) return null;
+  const years = system.stages.flatMap((st) => st.years.map((y) => ({ stage: st.label, ...y })));
+
+  return (
+    <Field label="¿A qué nivel lo preparo?" htmlFor="nivel"
+           help="Si lo dejas en blanco lo preparo para su curso, y el informe dirá que nadie eligió el nivel.">
+      {/* Her own recorded observation, said back to her. The sentence comes from the same
+          `explainTarget` the report prints, so the screen and the file cannot disagree. */}
+      {because ? <p className="small">{because}</p> : null}
+      <select className="select" id="nivel" value={value}
+              style={{ maxWidth: '22em' }}
+              onChange={(e) => onChange(e.target.value)}>
+        <option value="">Su curso (nadie lo elige)</option>
+        {years.map((y) => (
+          <option key={y.id} value={y.id}>{y.label} · {y.stage}</option>
+        ))}
+      </select>
+    </Field>
   );
 }

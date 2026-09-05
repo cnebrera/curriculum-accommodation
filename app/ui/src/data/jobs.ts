@@ -271,3 +271,23 @@ export function useSignOff() {
   return useCommand((id: string, learner: string, role: string) =>
     window.rampa.job.signOff(id, learner, role));
 }
+
+/**
+ * Ask her the level before spending? (`032` FR-3003.)
+ *
+ * Costs nothing and sends nothing — it reads her profile and her adaptations document.
+ * Asked of the main process rather than worked out here because the answer needs the
+ * overlay, and because the sentence she reads before composing has to be the sentence
+ * the report prints afterwards: one derivation, not two that agree until one is edited.
+ *
+ * `ask: false` means say nothing at all. Most compositions are for learners one or two
+ * courses behind, and a warning on every one of them is a warning she stops reading.
+ */
+export function useLevelQuestion(learnerCode?: string, subject?: string):
+    Loadable<{ ask: boolean; because: string | null }> {
+  return useAsync(async () => {
+    if (!learnerCode) return { ask: false, because: null };
+    return (await window.rampa.job.levelQuestion(learnerCode, subject)) as
+      { ask: boolean; because: string | null };
+  }, [learnerCode, subject]);
+}

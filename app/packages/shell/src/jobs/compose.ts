@@ -1,7 +1,8 @@
 import {
   jobDir, jobIR, jobAnswers, jobComposeReport, jobComposeRequest, parseComposeBudget,
   readObjectives, type Vault,
-  levelFrom, explainLevel, targetYear, explainTarget, composeExercises, explainOutcome,
+  levelFrom, explainLevel, targetYear, explainTarget, worthAsking, composeExercises,
+  explainOutcome, curFor,
   arithmetic, buildSheet,
   renderAnswerKey, buildComposeReport, assertObjectives, parseIR, logger, RampaError,
   parseProposals,
@@ -204,6 +205,13 @@ export interface ComposeRequest {
    */
   targetYear?: string;
   /**
+   * What subject this is for (`032` FR-3003), suggested from the vault's own vocabulary.
+   *
+   * **Optional, and never a refusal**: a job with no area uses the general CUR. Written
+   * to the sheet as `subject`, the field the record has read since `014`.
+   */
+  subject?: string;
+  /**
    * What the content must rest on (FR-102): her notes, the textbook page, the
    * three sentences she would say in class.
    *
@@ -309,6 +317,15 @@ export async function runCompose(
     ...(request.targetYear ? { chosen: request.targetYear } : {}),
     ...(yearInOverlay(learner.overlay) ? { fromOverlay: yearInOverlay(learner.overlay)! } : {}),
     ...(learner.profile.year ? { enrolled: learner.profile.year } : {}),
+    /*
+     * The CUR governing **this job's area** (`032` FR-3003).
+     *
+     * Read through `curFor` and nowhere else, so «no pair for this area means the
+     * general» is one rule rather than one per consumer. It decides only whether the
+     * silent `enrolled` fallback is honest; no year is derived from it anywhere.
+     */
+    cur: curFor(learner.profile, request.subject),
+    ...(request.subject ? { area: request.subject } : {}),
   });
   const yearId = target.yearId;
   const found = yearId ? await findYearInCorpus(yearId) : null;
@@ -827,6 +844,7 @@ export async function runCompose(
     ...(request.minutesPerSession && request.minutesPerSession > 0
       ? { minutesPerSession: Math.min(240, Math.round(request.minutesPerSession)) } : {}),
     ...(anchorRaw ? { anchor: anchorSummary(anchorRaw) } : {}),
+    ...(request.subject ? { subject: request.subject } : {}),
     composedFor: { code: request.learnerCode, ...(yearId ? { yearId } : {}) },
   });
 
@@ -1234,6 +1252,65 @@ function stripFence(raw: string): string {
  * level from a sentence in a document is precisely the judgement FR-129 says is not
  * the application's to make.
  */
+/**
+ * Should the screen ask her the level before spending, and what does it say?
+ * (`032` T010, FR-3003/3006.)
+ *
+ * ## Why this is asked of the main process rather than worked out on the screen
+ *
+ * The answer depends on three things the screen does not have: her overlay (which may
+ * already state a year, in which case there is nothing to ask), the enrolled course, and
+ * the CUR governing this area. A screen that guessed with two of the three would ask a
+ * question she has already answered in her own adaptations document.
+ *
+ * More importantly it would be a **second derivation** of «is the fallback honest», and
+ * the sentence she reads before composing has to be the sentence the report prints
+ * afterwards. So both come from one `targetYear` call over the same inputs — the same
+ * discipline `031` applies to freshness and `curFor` to the area fallback.
+ *
+ * **Never blocking.** This returns a question, not a gate: `ask` false means say nothing,
+ * `ask` true means offer, and composing without answering is the same request it always
+ * was. A mandatory stop keyed on CUR ≥ 2 would be P12's condemned profile-keyed refusal
+ * reborn at finer grain (FR-3006).
+ */
+export async function levelQuestion(
+  vault: Vault,
+  learnerCode: string,
+  subject?: string,
+): Promise<{ ask: boolean; because: string | null }> {
+  const learner = await loadLearner(vault, learnerCode);
+  const overlayYear = yearInOverlay(learner.overlay);
+  const target = targetYear({
+    ...(overlayYear ? { fromOverlay: overlayYear } : {}),
+    ...(learner.profile.year ? { enrolled: learner.profile.year } : {}),
+    cur: curFor(learner.profile, subject),
+    ...(subject ? { area: subject } : {}),
+  });
+  if (!worthAsking(target)) return { ask: false, because: null };
+
+  /*
+   * The same sentence the report prints — **rendered for a screen** (T009, looked at).
+   *
+   * Two things were wrong when this first reached the window, and both are the shape of
+   * «a report sentence shown to a person»:
+   *
+   * - it read «Nivel: es:primaria-5», an internal id, because `explainTarget` labels the
+   *   year only when a caller hands it a labeller and this one did not;
+   * - and it showed literal `**Nadie lo ha elegido**`, because the report is Markdown and
+   *   a screen is not.
+   *
+   * Resolved and stripped here rather than by writing a second sentence: one derivation,
+   * so what she reads before composing cannot drift from what the file says afterwards.
+   */
+  const found = target.yearId ? await findYearInCorpus(target.yearId) : null;
+  const label = (id: string): string =>
+    (found && id === target.yearId ? found.year.label : id);
+  return {
+    ask: true,
+    because: explainTarget(target, label).replace(/\*\*/g, ''),
+  };
+}
+
 export function yearInOverlay(overlay: string | null): string | undefined {
   return /\b([a-z]{2}:[a-z]+-[a-z0-9]+)\b/.exec(overlay ?? '')?.[1];
 }

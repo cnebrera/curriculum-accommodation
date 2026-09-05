@@ -224,6 +224,14 @@ const api = {
     correctComposition: (id: string, corrections: string[]) =>
       invoke('job:correctComposition', id, corrections),
     composeDocs: (id: string) => invoke('job:composeDocs', id),
+    /**
+     * Ask her the level first? (`032` FR-3003.) Costs nothing and sends nothing.
+     *
+     * Never a gate: `ask: false` means say nothing, `ask: true` means offer. Composing
+     * without answering is the same request it always was (FR-3006).
+     */
+    levelQuestion: (learnerCode: string, subject?: string) =>
+      invoke('job:levelQuestion', learnerCode, subject),
     /** One learner or several — 005 FR-501. */
     adapt: (id: string, learners: string | string[]) => invoke('job:adapt', id, learners),
     /** Re-run with what she just corrected, on this worksheet, now. */

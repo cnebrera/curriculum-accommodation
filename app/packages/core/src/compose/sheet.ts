@@ -213,6 +213,14 @@ export interface SheetInput {
    */
   composedOn: string;
   /**
+   * What subject this is for (`032` FR-3003), when she said.
+   *
+   * **No new field**: it is written as `subject`, which `record/scan.ts` has read
+   * best-effort since `014`. A reader that has existed for a year finally gains a
+   * writer — which is also what makes the record show it without any change there.
+   */
+  subject?: string;
+  /**
    * Things the model must be told and she must be shown: a level that could not
    * be checked, an objective that produced nothing. They land in `report-notes`,
    * which is never learner-facing.
@@ -688,6 +696,7 @@ export function buildSheet(input: SheetInput): ComposedSheet {
       ...(input.sessions ? { sessions: input.sessions } : {}),
       ...(input.minutesPerSession ? { minutes_per_session: input.minutesPerSession } : {}),
       ...(input.anchor ? { anchor: input.anchor } : {}),
+      ...(input.subject ? { subject: input.subject } : {}),
       ...(input.composedFor ? { composed_for: input.composedFor.code } : {}),
       ...(input.composedFor?.yearId ? { level_from: input.composedFor.yearId } : {}),
       /*

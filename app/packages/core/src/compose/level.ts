@@ -48,6 +48,24 @@ export type TargetSource = 'she-chose' | 'overlay' | 'enrolled';
 export interface Target {
   yearId: string | undefined;
   from: TargetSource;
+  /**
+   * Her own recorded observation contradicts the course on record (`032` FR-3003).
+   *
+   * Set **only** on the `enrolled` fallback, and only when the CUR that governs this
+   * job's area says «contenidos de cursos anteriores» or «muy alejado de su curso». The
+   * enrolled course is then not a neutral record: it is disproved by something she
+   * herself wrote down, for this subject.
+   *
+   * It carries no year. CUR 2 and 3 are deliberately unquantified, and mapping
+   * «contenidos de cursos anteriores» to `enrolled − 2` would put an invented number on
+   * a child's worksheet — the one property of composed material a teacher cannot check
+   * at a glance and has no reason to suspect.
+   */
+  contradicted?: {
+    /** The area whose value said so, when the job has one. */
+    area?: string;
+    cur: 2 | 3;
+  };
 }
 
 /**
@@ -62,11 +80,46 @@ export function targetYear(input: {
   /** A year id the overlay states, extracted by the caller from her own document. */
   fromOverlay?: string;
   enrolled?: string;
+  /**
+   * The CUR governing this job's area — `curFor(profile, subject)`, computed by the
+   * caller (`032` FR-3003). Read **only** to decide whether the silent fallback is
+   * honest; it never contributes a year.
+   */
+  cur?: 0 | 1 | 2 | 3 | null;
+  /** The job's area, so the sentence can name it. */
+  area?: string;
 }): Target {
   if (input.chosen) return { yearId: input.chosen, from: 'she-chose' };
   if (input.fromOverlay) return { yearId: input.fromOverlay, from: 'overlay' };
-  return { yearId: input.enrolled, from: 'enrolled' };
+  /*
+   * The fallback, and whether it is being taken over her own objection.
+   *
+   * At 0 or 1 the enrolled course **is** the level, by her observation, and nothing is
+   * said — a warning on every ordinary composition is a warning she stops reading. At 2
+   * or 3 she has recorded that this area sits in earlier courses, so composing at the
+   * enrolled one silently is the exact invisible wrong answer `targetYear` exists to
+   * make visible.
+   */
+  const contradicted = input.cur === 2 || input.cur === 3
+    ? { cur: input.cur, ...(input.area ? { area: input.area } : {}) }
+    : undefined;
+  return {
+    yearId: input.enrolled, from: 'enrolled',
+    ...(contradicted ? { contradicted } : {}),
+  };
 }
+
+/**
+ * Worth asking her the level before composing — and **never a refusal** (`032` FR-3006).
+ *
+ * A predicate, so the screen decides what to do with it and the answer travels back as
+ * `chosen`, which is `she-chose`: P32 intact, FR-129 intact, no inference anywhere. A
+ * mandatory gate keyed on CUR ≥ 2 would be P12's condemned profile-keyed stop reborn at
+ * finer grain — most learners in an aula de apoyo are one or two courses behind, and
+ * refusing to compose for them is refusing the ordinary case.
+ */
+export const worthAsking = (t: Target): boolean =>
+  t.from === 'enrolled' && t.contradicted !== undefined;
 
 /** What the report says about where the level came from (FR-129). */
 export function explainTarget(t: Target, yearLabel?: (id: string) => string): string {
@@ -76,9 +129,26 @@ export function explainTarget(t: Target, yearLabel?: (id: string) => string): st
       return `Nivel: ${say}, porque tú lo elegiste.`;
     case 'overlay':
       return `Nivel: ${say}, según su documento de adaptaciones.`;
-    case 'enrolled':
-      return `Nivel: ${say}, que es el curso en el que está matriculado. **Nadie lo ha `
-        + 'elegido**: si le llevas dos cursos de desfase, dime a qué nivel lo quieres.';
+    case 'enrolled': {
+      const head = `Nivel: ${say}, que es el curso en el que está matriculado. `
+        + '**Nadie lo ha elegido**';
+      if (!t.contradicted) {
+        return `${head}: si le llevas dos cursos de desfase, dime a qué nivel lo quieres.`;
+      }
+      /*
+       * Her own words back to her, about **this** subject (`032` FR-3003).
+       *
+       * The generic sentence asks «si le llevas dos cursos de desfase» — a conditional
+       * she has already answered, in the profile, for this area. Repeating the question
+       * she answered is how a report teaches her that reports are boilerplate.
+       */
+      const where = t.contradicted.area ? `en ${t.contradicted.area}` : 'en esta área';
+      const said = t.contradicted.cur === 2
+        ? 'trabaja contenidos de cursos anteriores'
+        : 'está muy alejado de su curso';
+      return `${head}, y tú misma tienes apuntado que ${where} ${said}. Dime a qué nivel `
+        + 'lo quieres y lo compongo ahí.';
+    }
   }
 }
 

@@ -99,8 +99,22 @@ function CurByArea({ areas, onChange, known }: {
   known: readonly string[];
 }) {
   const [typed, setTyped] = useState('');
+  /**
+   * Areas she has named but not levelled yet — **added without a value invented**.
+   *
+   * The first version defaulted a new área to 0 and let the level buttons toggle, the way
+   * the axes do. Two things were wrong with that, and an e2e walk found both: adding
+   * «Lengua» silently asserted «al nivel de su curso» about a subject she had only just
+   * named, and then pressing 0 to *confirm* it cleared the pair again — so the one value
+   * US1 exists to record was the one value she could not set by pressing its button.
+   *
+   * Now a new área has no level until she gives it one, the card says what governs it
+   * meanwhile, and removing is «Quitar» — one meaning per control.
+   */
+  const [pending, setPending] = useState<string[]>([]);
   const cur = AXES.find((a) => a.key === 'CUR')!;
-  const entries = Object.entries(areas).sort(([a], [b]) => a.localeCompare(b, 'es'));
+  const named = [...new Set([...Object.keys(areas), ...pending])]
+    .sort((a, b) => a.localeCompare(b, 'es'));
 
   /*
    * The flag, against what she already has **and** what the vault knows.
@@ -115,17 +129,25 @@ function CurByArea({ areas, onChange, known }: {
 
   const add = (name: string): void => {
     const n = name.trim();
-    if (!n || areas[n] !== undefined) return;
-    onChange({ ...areas, [n]: 0 });
+    if (!n || areas[n] !== undefined || pending.includes(n)) return;
+    setPending((p) => [...p, n]);
     setTyped('');
   };
 
+  /*
+   * Pressing a level sets it. It does not toggle: «Quitar» is how a pair goes away, and a
+   * control with two meanings is a control she has to experiment with.
+   */
   const set = (area: string, level: number): void => {
+    onChange({ ...areas, [area]: level });
+    setPending((p) => p.filter((a) => a !== area));
+  };
+
+  const remove = (area: string): void => {
     const next = { ...areas };
-    // Same rule as an axis: pressing the current level clears the pair, and a cleared
-    // pair falls back to the general — which is not the same as zero.
-    if (next[area] === level) delete next[area]; else next[area] = level;
+    delete next[area];
     onChange(next);
+    setPending((p) => p.filter((a) => a !== area));
   };
 
   return (
@@ -145,12 +167,19 @@ function CurByArea({ areas, onChange, known }: {
         as «Nivel curricular» itself.
       */}
       <div className="axis-grid">
-      {entries.map(([area, level]) => (
+      {named.map((area) => {
+        const level = areas[area];
+        return (
         <div className="axis-cell" key={area}>
           {/* Plain text: a subject suggested from the record was read out of a document
               somebody else wrote (Principio IX). */}
           <strong>{area}</strong>
-          <div className="small muted" style={{ minHeight: '2.6em' }}>{cur.levels[level]}</div>
+          <div className="small muted" style={{ minHeight: '2.6em' }}>
+            {level === undefined
+              /* What governs it until she says. Never «0» standing in for «no lo sé». */
+              ? 'Sin decir: vale el general'
+              : cur.levels[level]}
+          </div>
           <div className="levels">
             {[0, 1, 2, 3].map((n) => (
               <button key={n} type="button" aria-pressed={level === n} title={cur.levels[n]}
@@ -168,21 +197,44 @@ function CurByArea({ areas, onChange, known }: {
               looking at the heading (`010` FR-812's reasoning, applied to a label).
             */}
             <button type="button" className="btn btn-ghost" aria-label={`Quitar ${area}`}
-                    onClick={() => { const next = { ...areas }; delete next[area]; onChange(next); }}>
+                    onClick={() => remove(area)}>
               Quitar
             </button>
           </div>
         </div>
-      ))}
+        );
+      })}
       </div>
 
+      {/*
+        Buttons, **not** a `<datalist>` — and this is a crash, not a preference.
+        
+        The first version linked this input to a `<datalist>` of her subjects. Typing a
+        single real key into it killed the renderer: her window vanishes mid-sentence,
+        with whatever she had not saved. It survived every test that used Playwright's
+        `fill()`, which sets the value without a key event — so it took pressing a key by
+        hand, in the built application, to see it. There is no `<datalist>` anywhere in
+        this application now.
+        
+        It is also the better control for this. Most of the time the área she wants is one
+        she already has, and one press beats typing it correctly; a name she does not have
+        yet is a plain input with nothing hidden behind it.
+      */}
+      {known.filter((k) => !named.includes(k)).length ? (
+        <div className="row gap2" style={{ flexWrap: 'wrap', alignItems: 'center' }}>
+          <span className="small muted">De las que ya usas:</span>
+          {known.filter((k) => !named.includes(k)).map((k) => (
+            <button type="button" className="btn btn-sm" key={k} onClick={() => add(k)}>
+              {k}
+            </button>
+          ))}
+        </div>
+      ) : null}
+
       <div className="row gap2">
-        <input className="input" list="rampa-areas" value={typed} placeholder="Añadir un área"
+        <input className="input" value={typed} placeholder="…o escribe otra"
                aria-label="Añadir un área" style={{ maxWidth: '22em' }}
                onChange={(e) => setTyped(e.target.value)} />
-        <datalist id="rampa-areas">
-          {known.map((k) => <option key={k} value={k} />)}
-        </datalist>
         <button type="button" className="btn" disabled={!typed.trim()}
                 onClick={() => add(typed)}>
           Añadir

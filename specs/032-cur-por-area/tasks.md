@@ -99,13 +99,13 @@ and for an unnamed one; each targets its own level, the unnamed uses the general
       if she insists** (FR-3007). Suggestions sourced from record `subject`s render as
       plain text — that field was read out of a document somebody else wrote (Principle
       IX, the `RecordScreen` rule).
-- [ ] T009 [US1] The compose flow gains the job's area: asked in
+- [x] T009 [US1] The compose flow gains the job's area: asked in
       `app/ui/src/compose/`'s screen (suggested from T007, optional), carried on
       `ComposeRequest`, and written by `app/packages/shell/src/jobs/compose.ts` to the
       sheet's front matter as **`subject`** — the field `record/scan.ts` has read
       best-effort since `014`. No new field, no new taxonomy; a job with no area uses the
       general (FR-3003 fallback half).
-- [ ] T010 [US1] `app/packages/core/src/compose/level.ts` + `jobs/compose.ts`: the
+- [x] T010 [US1] `app/packages/core/src/compose/level.ts` + `jobs/compose.ts`: the
       `enrolled` fallback becomes area-aware through `curFor` (FR-3003, research R3).
       Area at 0/1/`null`: enrolled stands as today. Area at ≥2: the screen asks her the
       target level before composing — her answer arrives as `she-chose`, P32 intact —
@@ -114,7 +114,7 @@ and for an unnamed one; each targets its own level, the unnamed uses the general
       because a mandatory gate keyed on CUR would be the profile-keyed stop reborn
       (FR-3006). No arithmetic from CUR to a year, anywhere — CUR 2 is «cursos
       anteriores», count unknown, and a computed year is an invented number.
-- [ ] T011 [US1] `app/packages/core/test/compose-level-by-area.test.ts` from quickstart
+- [x] T011 [US1] `app/packages/core/test/compose-level-by-area.test.ts` from quickstart
       §3 — the six cases, including the tripwire absence and the never-zero fallback
       (SC-3001).
 - [ ] T012 [P] [US1] The compose report says which area's CUR was consulted and whether
@@ -126,7 +126,7 @@ and for an unnamed one; each targets its own level, the unnamed uses the general
       (`curFor`), with the general and the remaining pairs named as data (FR-3001, US1's
       «nothing about Lengua is treated as delayed» — otherwise it fails in the prompt
       while succeeding in compose). Data, not policy: no adaptation rule moves into code.
-- [ ] T014 [US1] `app/e2e/cur-areas.spec.ts` from quickstart §6: record «bien en Lengua,
+- [x] T014 [US1] `app/e2e/cur-areas.spec.ts` from quickstart §6: record «bien en Lengua,
       dos cursos en Mates» from the profile screen; the near-duplicate flag; the vault
       file readable by eye; the untouched profile writing nothing.
 

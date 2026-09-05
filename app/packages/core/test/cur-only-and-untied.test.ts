@@ -130,3 +130,30 @@ describe('the significant-adaptation stop stays keyed on the request (FR-3006, P
     expect(adapt).not.toMatch(/CUR\s*(>=|≥|de)\s*2[^\n]{0,40}(para|stop|niega|rehúsa)/i);
   });
 });
+
+describe('no `<datalist>` anywhere, because typing into one kills the window', () => {
+  it('is absent from every source file', () => {
+    /*
+     * A crash, found by pressing a key in the built application (032 T009/T021).
+     *
+     * An `<input list="…">` linked to a `<datalist>` opens a suggestion popup on the
+     * first real keystroke, and that popup takes the renderer down with it: her window
+     * disappears mid-sentence, with whatever she had not saved.
+     *
+     * **Every automated test missed it**, and the reason is worth more than the fix:
+     * Playwright's `fill()` sets an input's value without dispatching key events, so a
+     * suite can type into a datalist input all day and never open the popup. What found
+     * it was `press('L')` — one key, by hand, in the real window.
+     *
+     * Guarded rather than remembered because the control is genuinely tempting: a list of
+     * her own subjects beside a text box is exactly what `<datalist>` is for. The
+     * replacement — buttons for what she has, a plain input for what she does not — costs
+     * nothing and reads better besides.
+     */
+    const offenders = sources()
+      .filter(({ text }) => /<datalist|\blist=["{]/.test(code(text)))
+      .map(({ path }) => path);
+    expect(offenders, 'an <input list> popup crashes the renderer on the first keystroke')
+      .toEqual([]);
+  });
+});

@@ -2,7 +2,7 @@ import { type BrowserWindow } from 'electron';
 import { jobAnswers, jobComposeReport, RampaError } from '@rampa/core';
 import { currentVault } from './vault.js';
 import { handle } from './wrap.js';
-import { runCompose, correctComposition, type ComposeRequest } from '../jobs/compose.js';
+import { runCompose, correctComposition, levelQuestion, type ComposeRequest } from '../jobs/compose.js';
 import { refreshRecord } from './record.js';
 import { materialKind } from '../corpus/index.js';
 
@@ -66,6 +66,17 @@ export function registerComposeIpc(getWindow: () => BrowserWindow | null): void 
     await refreshRecord(request.learnerCode);
     return result;
   });
+
+  /**
+   * Whether to ask her the level before spending (`032` FR-3003), and what to say.
+   *
+   * Costs nothing and sends nothing: it reads her profile and her overlay. Asked of the
+   * main process rather than worked out on the screen because the answer needs the
+   * overlay, and because the sentence she reads before composing must be the sentence
+   * the report prints afterwards — one derivation, not two.
+   */
+  handle('job:levelQuestion', async (learnerCode: string, subject?: string) =>
+    levelQuestion(currentVault(), learnerCode, subject));
 
   /**
    * The key and the report, read back for the summary screen.
