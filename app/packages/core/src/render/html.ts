@@ -151,10 +151,19 @@ figure.figure svg{max-width:100%;height:auto}
    own «.picto-word» is hidden in these blocks and only in these: the block's text is
    already the word, sitting directly under the drawing, and printing it twice reads
    as a fault rather than as emphasis. */
-.agenda-moment,.secuencia-step{display:flex;flex-direction:column-reverse;
-  align-items:center;text-align:center;gap:.3em;padding:.6em;
+.agenda-moment,.secuencia-step{display:flex;gap:.3em;padding:.6em;
   border:2px solid var(--rule);border-radius:8px;break-inside:avoid;
-  min-width:40mm;font-size:1.05em;font-weight:600}
+  font-size:1.05em;font-weight:600}
+.agenda-moment{flex-direction:column-reverse;align-items:center;text-align:center;
+  min-width:40mm}
+/* A sequence is a **row**, not a card: number, drawing, label, read left to right in
+   the order the steps happen. Stacked like the agenda's cells it lost exactly the thing
+   that distinguishes it — a sequence is one thing after another, and a grid of squares
+   says «choose one» rather than «then this». */
+.secuencia-step{flex-direction:row;align-items:center;width:100%}
+.secuencia-step .pictos{order:2}
+.secuencia-step .n{order:1;min-width:2em;text-align:right}
+.secuencia-step p{order:3;text-align:left;flex:1}
 .agenda-moment .pictos,.secuencia-step .pictos{margin:0}
 .agenda-moment .picto img,.secuencia-step .picto img{width:35mm;height:35mm}
 .agenda-moment .picto-missing .picto-gap,
@@ -165,6 +174,7 @@ figure.figure svg{max-width:100%;height:auto}
 /* The strip. «wrap» because a day with nine moments has to fit on one sheet, and a
    row that runs off the page is a row she cannot photocopy. */
 main:has(.agenda-moment){display:flex;flex-wrap:wrap;gap:.8em;align-items:stretch}
+main:has(.secuencia-step){display:flex;flex-direction:column;gap:.5em}
 /* The licence line. Small, at the foot, and there is no setting for it. */
 .picto-credit{margin-top:2.5em;padding-top:.8em;border-top:1px solid var(--rule);
   font-size:.75em;color:var(--ink)}

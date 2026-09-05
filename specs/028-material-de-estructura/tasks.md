@@ -121,24 +121,24 @@ and erasure removes it.
 **Independent Test**: quickstart §5 — build, save, close, reopen, reprint: identical.
 Record shows the entry.
 
-- [ ] T016 [US2] `app/packages/core/src/render/html.ts` · the sequence template:
+- [x] T016 [US2] `app/packages/core/src/render/html.ts` · the sequence template:
       `secuencia-step` rows with `data-number` — number, picto, short label — legible in
       greyscale, passing `checkPhotocopy` (**FR-2607**)
-- [ ] T017 [US2] Sequence assembly in the builder screen (`app/ui/src/structure/`):
+- [x] T017 [US2] Sequence assembly in the builder screen (`app/ui/src/structure/`):
       steps, numbering shown, reordering renumbers — the numbers are positions, not
       labels she maintains
-- [ ] T018 [US2] The reprint invariant, `app/packages/core/test/structure-reprint.test.ts`:
+- [x] T018 [US2] The reprint invariant, `app/packages/core/test/structure-reprint.test.ts`:
       render of a saved sequence today equals render of the same file later — including
       **after her vocabulary changes**, because saved material does not chase the
       vocabulary (`024`'s already-made-sheets rule; **FR-2603**, SC-2602)
-- [ ] T019 [US2] The record surfaces it: kind, date and reprint access in
+- [x] T019 [US2] The record surfaces it: kind, date and reprint access in
       `app/ui/src/learners/` record view, reprinting through the resolved document —
       no new render path (**FR-2604**)
-- [ ] T020 [P] [US2] Erasure: `app/packages/core/src/memory/forget.ts`'s planner covers a
+- [x] T020 [P] [US2] Erasure: `app/packages/core/src/memory/forget.ts`'s planner covers a
       structure job via `entryFor` — test that erasing the learner removes it with
       everything else, and that a structure-only learner (no adaptations ever) is not
       missed (**FR-2604**)
-- [ ] T021 [US2] E2E `app/e2e/structure-sequence.spec.ts` per quickstart §5: save, close,
+- [x] T021 [US2] E2E `app/e2e/structure-sequence.spec.ts` per quickstart §5: save, close,
       reopen from the record, reprint identical; vocabulary change does not alter it
       (**FR-2603**, **FR-2604**)
 

@@ -413,6 +413,36 @@ every moment should have a spec. What it added beyond the seams pass:
    journey sentence → T094). Handover *import* (004 US2) recorded as deliberately
    deferred rather than silently missing.
 
+## G48 · «Borrar todo lo suyo» no llegaba a lo que Rampa le había escrito sin adaptar
+
+**Closed 2026-09-05** by `028` T020. **Necesita validación de protección de datos.**
+
+`planForget` recorría `material/` haciendo una pregunta: «¿existe
+`material/<trabajo>/<código>/`?». Es la pregunta correcta para una hoja **adaptada**,
+porque una adaptación vive en un directorio con el nombre del niño.
+
+Es la pregunta equivocada para todo lo que Rampa escribió *para* un alumno sin adaptarlo,
+que no tiene directorio y lleva el código en el front matter de `ir.md`:
+
+- un documento de estructura — una agenda, una secuencia, una historia (`028`);
+- y **una composición que ella no ha adaptado todavía**, que es suya desde que se escribe
+  — `016` T006 las metió en el expediente por esa misma razón.
+
+O sea que la segunda mitad de este fallo es anterior a `028` y lleva ahí desde `016`. La
+consecuencia es la que `003` FR-215 existe para evitar: ella pulsa «borrar todo lo suyo»,
+la pantalla dice que no queda nada, y en su carpeta se queda un fichero con el código de
+ese niño dentro.
+
+Arreglado leyendo `startedFor(ir.md)` además del directorio, con las dos direcciones
+comprobadas: lo suyo se va, y la agenda de otro niño **no** se toca — borrar a un alumno
+no puede llevarse la tira que otro lee cada mañana.
+
+**Pendiente de una persona**: si el resultado satisface el derecho de supresión de datos
+de un menor es un juicio de protección de datos, no un resultado de test. Igual que el
+hallazgo 0.2 de esta misma noche, queda para quien lleve protección de datos o legal.
+
+---
+
 ## G47 · Un `<datalist>` mata la ventana, y `fill()` no lo ve
 
 **Closed 2026-09-05** by `032`, and the lesson is about the test rather than the control.

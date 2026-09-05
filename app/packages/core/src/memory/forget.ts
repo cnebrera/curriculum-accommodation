@@ -1,5 +1,7 @@
 import type { Vault } from '../vault/io.js';
-import { VAULT, learnerDir, jobDir, jobLearnerDir, outputDir } from '../vault/paths.js';
+import { VAULT, learnerDir, jobDir, jobIR, jobLearnerDir, outputDir } from '../vault/paths.js';
+import { startedFor } from '../vault/document.js';
+import { parseFrontMatter } from '../vault/parse.js';
 import { learnersOf } from '../record/scan.js';
 import { loadRoster, saveRoster } from '../vault/profile.js';
 import { rm } from 'node:fs/promises';
@@ -79,9 +81,29 @@ export async function planForget(vault: Vault, code: string): Promise<ForgetPlan
     // Adaptations live under the learner's code (T092b), so removing a learner
     // removes their sheets and leaves any other learner's sheets for the same
     // worksheet untouched.
-    if (await vault.exists(jobLearnerDir(job, code))) {
-      paths.push(jobLearnerDir(job, code));
-      paths.push(outputDir(job, code));
+    /*
+     * His, without a directory named after him (`028` T020, and older than `028`).
+     *
+     * The loop asked one question — «is there a `material/<job>/<code>/`?» — which is
+     * right for an **adapted** sheet and wrong for everything Rampa wrote *for* a learner
+     * without adapting it: a structure document (an agenda, a sequence, a story) and a
+     * composed sheet she has not adapted yet. Both carry the code in `ir.md`'s front
+     * matter and neither has a directory, so neither was planned for deletion.
+     *
+     * The consequence is the one `003` FR-215 exists to prevent: she pressed «borrar todo
+     * lo suyo», was told it was all gone, and a file with that child's code stayed in her
+     * folder. The composed half of it has been true since `016` T006 made unadapted
+     * compositions appear in the record — which is to say, since they started being his.
+     */
+    const irRaw = await vault.readRaw(jobIR(job));
+    const startedForHim = irRaw !== null
+      && startedFor(parseFrontMatter(irRaw, jobIR(job)).data) === code;
+
+    if (await vault.exists(jobLearnerDir(job, code)) || startedForHim) {
+      if (await vault.exists(jobLearnerDir(job, code))) {
+        paths.push(jobLearnerDir(job, code));
+        paths.push(outputDir(job, code));
+      }
 
       /*
        * Does anybody else still read this source?

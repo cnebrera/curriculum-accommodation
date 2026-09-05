@@ -1,5 +1,5 @@
 import { parseIR } from '../ir/parse.js';
-import { isSignedOff } from '../ir/types.js';
+import { isSignedOff, isGenerated } from '../ir/types.js';
 import { readingFingerprint } from '../ir/reading.js';
 import { sheetFreshness, type CurrentState, type DocumentFreshness } from '../ir/freshness.js';
 import { startedFor } from '../vault/document.js';
@@ -204,8 +204,23 @@ export async function entryFor(
    * derivations that can disagree about whether a sheet is stale. The verification
    * screen and this row read the same function.
    */
-  const freshness: DocumentFreshness | undefined = adapted !== null && irRaw !== null
-    ? sheetFreshness(adapted, {
+  /*
+   * **The document this row is about** (`028` T021).
+   *
+   * The adaptation when there is one — and the `ir.md` when there is not, which is the
+   * case for structure material and for a composition she has not adapted yet. Those
+   * rows had no freshness at all, so an agenda whose «secar» no longer matched her
+   * vocabulary said nothing: the one material where a stale drawing matters most, because
+   * a child reads it every morning, was the one nobody was told about.
+   *
+   * Only for material Rampa produced. An ingested reading is not a sheet and has no
+   * recorded drawings to compare.
+   */
+  const subject = adapted ?? (irRaw !== null && isGenerated({ frontMatter: irFm })
+    ? parseIR(irRaw) : null);
+
+  const freshness: DocumentFreshness | undefined = subject !== null && irRaw !== null
+    ? sheetFreshness(subject, {
         reading: readingFingerprint(parseIR(irRaw)),
         drawingFor: drawings?.drawingFor ?? (() => undefined),
         /*
