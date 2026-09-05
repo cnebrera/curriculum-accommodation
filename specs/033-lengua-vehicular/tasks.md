@@ -146,7 +146,7 @@ with real dates on every change.
 **Independent Test**: same source at intensities 3, 2, 1, 0 — supports decrease
 monotonically and the WHAT never changes.
 
-- [ ] T017 [US2] `app/packages/core/test/vehicular-intensity.test.ts` · quickstart
+- [x] T017 [US2] `app/packages/core/test/vehicular-intensity.test.ts` · quickstart
       §4: monotonic decrease across 3→0 over the fixture source; at 0 no vehicular
       recipe applies and the block persists with its date — the mark expires by
       observation, not by deletion (**FR-3107**); completeness green at every
@@ -160,17 +160,17 @@ monotonically and the WHAT never changes.
 
 ## Phase 5 · Honesty around it · refusal, attribution, travel
 
-- [ ] T019 `instructions/hard-rules.md` · rule 12 amended, **dated**: the report
+- [x] T019 `instructions/hard-rules.md` · rule 12 amended, **dated**: the report
       speaks the teacher's language (P28's correction), and **full-document
       translation is refused with the reason** — unverifiable fidelity;
       scaffolding beats substitution, the recipes' own argument, citable
       (**FR-3109**). One amendment in the file the application already sends with
       every request; the recipes cite it rather than restate it — two copies of
       one rule is how this repository has produced defects before
-- [ ] T020 [US1] Test the refusal path in `app/packages/core/test/` and the e2e: a
+- [x] T020 [US1] Test the refusal path in `app/packages/core/test/` and the e2e: a
       request to translate the whole sheet produces a refusal **with the reason**,
       not a translated document and not a silent omission (**FR-3109**)
-- [ ] T021 [P] The mark travels in handover and coordination packets as profile
+- [x] T021 [P] The mark travels in handover and coordination packets as profile
       data with its real dates — asserted over `004`'s and `030`'s exporters in
       `app/packages/shell/test/` (**FR-3110**). Expected to be mostly a test: the
       packets already carry the profile; what the test pins is that the block

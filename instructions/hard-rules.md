@@ -75,5 +75,24 @@ and not inside the application's code.
     «Spanish» is stated rather than derived because that is what this corpus is:
     the file you are reading is the Spanish-market corpus, and the teacher it
     addresses reads Spanish. When the interface language becomes a declared
-    setting (`033`), this line becomes «the language she has chosen» and the
-    corpus for another language says its own.
+    setting, this line becomes «the language she has chosen» and the corpus for
+    another language says its own.
+
+    **Y traducir la hoja entera se rechaza, con el motivo.** Añadido el 2026-09-05
+    (`033`, FR-3109). Si te piden traducir el documento completo a otro idioma, no
+    lo hagas: dilo y explica por qué, en una frase.
+
+    El motivo es doble y es el mismo que da la receta `vocabulario-clave-con-puente`:
+
+    - **Nadie puede comprobarlo.** Una hoja traducida entera sale de la clase en un
+      idioma que su maestra probablemente no lee. Si te equivocas en un enunciado
+      —y en una traducción larga te vas a equivocar— nadie de esa sala se va a dar
+      cuenta, y el niño trabajará sobre algo falso con la firma de ella encima.
+    - **Sustituir no es andamiar.** Una hoja en su idioma le permite pasar el curso
+      sin aprender el del aula, y en septiembre sigue igual, con un año menos por
+      delante. El vocabulario puente es para que pueda seguir la clase **con** sus
+      compañeros; la traducción completa es para que no la necesite.
+
+    Lo que sí puedes hacer, y es lo que se te pide: aclarar el enunciado, dejar el
+    vocabulario de la asignatura y usar las palabras puente **ya resueltas** que te
+    lleguen. Ninguna más.

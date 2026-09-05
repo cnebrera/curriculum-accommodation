@@ -153,3 +153,56 @@ describe('the receiver on an older build', () => {
     expect(packetToMarkdown(packet)).toContain('CUR en Matemáticas = 2');
   });
 });
+
+describe('the vehicular mark travels too (033 FR-3110)', () => {
+  const amina = (): LoadedLearner => ({
+    profile: {
+      code: 'V01', axes: {}, works: [], avoid: [], interests: [], response: {}, language: {},
+      vehicular: { intensity: 2, languages: ['árabe'], noted_on: '2026-02-10' },
+    } as unknown as Profile,
+    notes: '', overlay: null, repairs: [],
+  });
+
+  it('as an observation, with the date she wrote it', () => {
+    /*
+     * `noted_on` rather than today. The date is what tells the receiving teacher whether
+     * this is still true: a mark from February, read in June, is a claim about a child
+     * who has had four months of the language since — and stamping today would erase
+     * exactly the fact that lets her judge it.
+     */
+    const packet = buildPacket(amina(), '2026-2027', '', VAULT_SCHEMA_V1);
+    const claim = packet.claims.find((c) => c.text.includes('idioma del aula'));
+    expect(claim).toBeDefined();
+    expect(claim!.date).toBe('2026-02-10');
+    expect(claim!.evidence).toBe('from-profile');
+  });
+
+  it('and says it is a transition, not a difficulty', () => {
+    /*
+     * The half that matters most in a handover. The receiving teacher is being told about
+     * a child she has not met, and «nivel 2» beside nine axis claims reads as a tenth
+     * barrier — which is the confusion this whole feature exists to end, arriving by post.
+     */
+    const packet = buildPacket(amina(), '2026-2027', '', VAULT_SCHEMA_V1);
+    const claim = packet.claims.find((c) => c.text.includes('idioma del aula'))!;
+    expect(claim.text).toContain('Está aprendiendo');
+    expect(claim.text).toContain('árabe');
+  });
+
+  it('and «ya lo sigue» travels as the observation it is, not as an absence', () => {
+    const over = amina();
+    (over.profile as unknown as { vehicular: { intensity: number; noted_on: string } })
+      .vehicular = { intensity: 0, noted_on: '2026-06-12' } as never;
+    const packet = buildPacket(over, '2026-2027', '', VAULT_SCHEMA_V1);
+    const claim = packet.claims.find((c) => c.text.includes('idioma del aula'))!;
+    expect(claim.text).toContain('Ya sigue la clase');
+    expect(claim.date).toBe('2026-06-12');
+  });
+
+  it('and a learner with no mark carries no claim about one', () => {
+    // Absent is «nobody observed it», and a packet that said so would be reporting an
+    // observation nobody made.
+    const plain = buildPacket(learner(), '2026-2027', '', VAULT_SCHEMA_V1);
+    expect(plain.claims.some((c) => c.text.includes('idioma del aula'))).toBe(false);
+  });
+});

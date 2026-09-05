@@ -94,6 +94,31 @@ export function buildPacket(
     });
   }
   /*
+   * The vehicular mark travels too (`033` FR-3110), and with its real date.
+   *
+   * It is an observation like any other and it belongs in a handover more than most: a
+   * child who arrived in February is exactly the child whose next teacher needs to know
+   * why last year's sheets look the way they do — and, just as much, that what she is
+   * reading is a **transition and not a disability**. So the claim says so in words.
+   *
+   * `noted_on` rather than today: the date she wrote it is what tells the receiving
+   * teacher whether this is still true. A mark from October on a packet read in June is
+   * a claim about a child who has had eight months of the language since.
+   */
+  if (learner.profile.vehicular) {
+    const mark = learner.profile.vehicular;
+    claims.push({
+      text: mark.intensity === 0
+        ? 'Ya sigue la clase en el idioma del aula (lo apuntó ella)'
+        : `Está aprendiendo el idioma del aula · nivel ${mark.intensity} de 3`
+          + (mark.languages.length ? ` · habla ${mark.languages.join(', ')}` : ''),
+      evidence: 'from-profile',
+      date: mark.noted_on,
+      confirmation: 'unconfirmed',
+    });
+  }
+
+  /*
    * Per-area CUR travels as the profile data it is (`032` FR-3008, research R4).
    *
    * One claim per pair, beside the axes, with the same evidence and the same

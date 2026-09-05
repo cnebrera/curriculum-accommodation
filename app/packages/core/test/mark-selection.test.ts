@@ -1,4 +1,6 @@
 import { describe, it, expect } from 'vitest';
+import { readFileSync } from 'node:fs';
+import { join, dirname } from 'node:path';
 import {
   parseRecipe, parseMarkCondition, selectRecipes, applies, isGuard, buildAdaptPrompt,
   type Recipe, type Profile,
@@ -234,5 +236,53 @@ describe('the mark reaches the model as what it is (T011, FR-3101/3106)', () => 
      */
     const out = promptFor({ intensity: 3, languages: ['ar'] }, []);
     expect(out).not.toContain('Vocabulario puente');
+  });
+});
+
+describe('translating the whole sheet is refused, with the reason (T019/T020, FR-3109)', () => {
+  const repo = join(dirname(new URL(import.meta.url).pathname), '..', '..', '..', '..');
+  const rules = readFileSync(join(repo, 'instructions', 'hard-rules.md'), 'utf8');
+
+  it('the refusal is in the file sent with every request', () => {
+    /*
+     * In `hard-rules.md` and not in the three recipes, because the recipes only reach a
+     * learner who has the mark — and «traduce la hoja entera» can be asked about any
+     * learner. A rule that only travels with the recipes is a rule that is absent exactly
+     * when somebody asks the question for the first time.
+     */
+    expect(rules).toContain('traducir la hoja entera se rechaza');
+    expect(rules).toMatch(/dilo y explica por qué/);
+  });
+
+  it('and it carries both reasons, because a refusal without one is a wall', () => {
+    /*
+     * The two arguments are the ones a teacher can weigh and disagree with, which is what
+     * makes this a position rather than a restriction:
+     *
+     * — nobody in the room can check a long translation, and the sheet has her name on it;
+     * — a sheet in his own language lets him pass the year without the classroom's, and in
+     *   September he is where he was with one year less ahead of him.
+     */
+    expect(rules).toContain('Nadie puede comprobarlo');
+    expect(rules).toContain('Sustituir no es andamiar');
+  });
+
+  it('and it says what to do instead, so the answer is not only «no»', () => {
+    expect(rules).toMatch(/Lo que sí puedes hacer/);
+    expect(rules).toContain('ya resueltas');
+  });
+
+  it('and the recipe cites the rule rather than restating it', () => {
+    /*
+     * Two copies of one rule is how this repository has produced defects before: they
+     * drift, and the one nobody edited is the one that keeps being sent. The recipe makes
+     * the same argument in its own words for its own scope — key vocabulary, not whole
+     * sheets — and the hard rule is where the refusal itself lives.
+     */
+    const recipeText = readFileSync(
+      join(repo, 'recipes', 'core', 'vocabulario-clave-con-puente.md'), 'utf8');
+    expect(recipeText).toContain('No es traducir la hoja');
+    // …and it does not try to be the rule: no imperative refusal of its own.
+    expect(recipeText).not.toContain('se rechaza');
   });
 });
