@@ -206,6 +206,16 @@ describe('the structural rule: one lookup, in one place (T006)', () => {
     expect(readers, 'a second lookup is how four rungs become five').toEqual([
       // Resolves a word to a drawing. The one ladder: override ▸ vocabulary ▸ set ▸ nothing.
       'packages/core/src/pictograms/match.ts',
+      /*
+       * Asks the index the **opposite** question (`033`): «what does this id mean in
+       * another language». It never resolves a word to a drawing — it takes an id the
+       * ladder already produced and looks up the other language's word for it, which is
+       * the join a bridge gloss is made of.
+       *
+       * A fourth reader arriving is exactly the conversation this list exists to force,
+       * and it was forced: this test went red the moment `bridge.ts` existed.
+       */
+      'packages/core/src/pictograms/bridge.ts',
       // Offers the candidates she chooses between — the question `matchWord` refuses.
       'packages/shell/src/pictograms/bring.ts',
       // Says which languages a folder contains. Never asks about a word.

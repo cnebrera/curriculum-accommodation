@@ -47,12 +47,12 @@ shape.
       block = `null`, never 0; `isGuard()` becomes «no axes *and* no marks» —
       without this a vehicular recipe would be an undroppable, always-applying
       guard (**FR-3104**'s activation mechanics, FR-3107's scaling substrate)
-- [ ] T005 [P] `scripts/check-fr-coverage.sh` untouched;
+- [x] T005 [P] `scripts/check-fr-coverage.sh` untouched;
       `scripts/validate-recipes.sh` learns the `marks:` grammar and accepts an
       «Anti-patrones» heading — the corpus is Spanish-source now (P28) and a
       validator that only reads English headings would fail every new recipe.
       Deterministic script, offline, no model (Principle II)
-- [ ] T006 [P] The mark's level descriptions live in the corpus and are parsed
+- [x] T006 [P] The mark's level descriptions live in the corpus and are parsed
       deterministically: extend `instructions/axes.md` parsing
       (`app/packages/core/src/axes/parse.ts`) so the mark's own section — outside
       the ten `AXES`, never an eleventh entry — reaches the editor as labels, the
@@ -72,14 +72,14 @@ the curriculum intact and the report attributing every support to the mark.
 applied, WHAT untouched through the existing completeness gate, report names the
 recipes and the mark.
 
-- [ ] T007 [US1] `recipes/core/apoyo-visual-instrucciones.md` — **in Spanish (P28),
+- [x] T007 [US1] `recipes/core/apoyo-visual-instrucciones.md` — **in Spanish (P28),
       `reviewed_by_teacher: false`**, `marks: [vehicular>=1]`, scope
       `[instruction]`: visual and structural support on instructions; uses the
       pictogram layer **only where she enabled it** («Nunca: activar esta familia
       desde un eje del perfil» holds for the mark, `018` SC-1603); states in its
       own text that the WHAT is untouched (**FR-3105**) and carries before/after
       and anti-patterns (**FR-3104**)
-- [ ] T008 [P] [US1] `recipes/core/vocabulario-clave-con-puente.md` — Spanish,
+- [x] T008 [P] [US1] `recipes/core/vocabulario-clave-con-puente.md` — Spanish,
       `reviewed_by_teacher: false`, `marks: [vehicular>=1]`: key content
       vocabulary kept and bridged to a language the profile names; **glosses only
       from the sources this recipe defines** — the set's own metadata — and the
@@ -87,14 +87,14 @@ recipes and the mark.
       translation, with the reason citable (**FR-3104**, **FR-3106**, FR-3109's
       argument at the recipe level). Anti-patterns include the invented gloss and
       the whole-sheet translation
-- [ ] T009 [P] [US1] `recipes/core/lenguaje-claro-transitorio.md` — Spanish,
+- [x] T009 [P] [US1] `recipes/core/lenguaje-claro-transitorio.md` — Spanish,
       `reviewed_by_teacher: false`, `marks: [vehicular>=1]`, graduated by
       intensity in its own text: short direct sentences, one idea per sentence,
       thinning as intensity drops; **explicitly not lectura fácil** and declared
       distinct from it (`conflicts:` with `lectura-facil-es` so the multi-axis
       case resolves in the recorded order, P27); Principle III stated per
       **FR-3105**; anti-patterns include removing or diluting curricular content
-- [ ] T010 [US1] `app/packages/core/src/pictograms/bridge.ts` · the deterministic
+- [x] T010 [US1] `app/packages/core/src/pictograms/bridge.ts` · the deterministic
       gloss lookup per data-model: material-language keyword → pictogram ids →
       bridge language's keywords for the same id; returns `BridgeGloss[]` plus
       named `BridgeAbsence`s (`no-set`, `language-not-in-set`,
@@ -110,7 +110,7 @@ recipes and the mark.
       from disability-driven adaptations — his record never reads as if a
       disability was observed (**FR-3108**); degradations to visual-only named in
       her words with the language that lacked a bridge (**FR-3106**)
-- [ ] T013 [US1] `instructions/axes.md` · the **dated** boundary amendment
+- [x] T013 [US1] `instructions/axes.md` · the **dated** boundary amendment
       (**FR-3103**): LIN is disorder in the material's language; the vehicular
       mark is acquisition; a learner acquiring the language is marked, never
       scored on LIN for it — the falsified-profile workaround dies in writing.
@@ -122,7 +122,7 @@ recipes and the mark.
       pre-filled from any other field (**FR-3101**, **FR-3102**); pictograms
       remain her separate click — the screen may point at the setting, never
       press it
-- [ ] T015 [US1] `app/packages/core/test/bridge.test.ts` from quickstart §3: gloss
+- [x] T015 [US1] `app/packages/core/test/bridge.test.ts` from quickstart §3: gloss
       resolved via shared id; `language-not-in-set` degrades with zero glosses;
       no profile languages → lookup not consulted and no gloss section; prompt
       gloss data is exactly the resolved list (**FR-3106**, SC-3103)

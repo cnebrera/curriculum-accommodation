@@ -41,6 +41,20 @@ for f in "${files[@]}"; do
         done
     fi
 
+    # marks: [vehicular>=1] — a profile fact that is not one of the ten axes (`033`).
+    #
+    # Optional, and validated the same way the axes are: an unreadable condition is a
+    # recipe that is silently never selected, which is the defect this whole file exists
+    # to catch early. The known marks are listed here **and** in `recipes/index.ts`; the
+    # two are checked against each other by `mark-selection.test.ts`.
+    marks=$(printf '%s\n' "$fm" | sed -n 's/^marks:[[:space:]]*\[\(.*\)\]$/\1/p')
+    if [ -n "$marks" ]; then
+        for m in $(printf '%s' "$marks" | tr -d ' ' | tr ',' ' '); do
+            printf '%s' "$m" | grep -qE '^(vehicular)(>=|<=|=)[0-3]$' \
+                || fail "$f" "bad mark condition '$m'"
+        done
+    fi
+
     conflicts=$(printf '%s\n' "$fm" | sed -n 's/^conflicts:[[:space:]]*\[\(.*\)\]$/\1/p')
     for c in $(printf '%s' "$conflicts" | tr -d ' ' | tr ',' ' '); do
         [ -z "$c" ] && continue
@@ -48,11 +62,16 @@ for f in "${files[@]}"; do
             || fail "$f" "conflicts with unknown recipe '$c'"
     done
 
-    grep -qiE '^#+[[:space:]]*Anti-?patterns' "$f" \
+    # «Anti-patrones» as well as «Anti-patterns» (`033` T005, decision P28).
+    #
+    # The corpus is Spanish-source from now on, and a validator that only reads English
+    # headings would reject every new recipe — which is the shape of check that gets
+    # switched off rather than obeyed.
+    grep -qiE '^#+[[:space:]]*Anti-?(patterns|patrones)' "$f" \
         || fail "$f" "no anti-patterns section — see recipes/README.md"
 
     # An empty anti-patterns heading is the same as none.
-    awk 'tolower($0) ~ /^#+[[:space:]]*anti-?patterns/{f=1;next} f&&/^#/{exit} f&&NF{n++} END{exit !(n>0)}' "$f" \
+    awk 'tolower($0) ~ /^#+[[:space:]]*anti-?(patterns|patrones)/{f=1;next} f&&/^#/{exit} f&&NF{n++} END{exit !(n>0)}' "$f" \
         || fail "$f" "anti-patterns section is empty"
 done
 
