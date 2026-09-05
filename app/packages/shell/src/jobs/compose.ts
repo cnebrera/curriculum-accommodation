@@ -10,6 +10,7 @@ import {
   composeUnverified, verifierFor, UNVERIFIABLE_ES,
   parseProblemProposals, parseExamProposals, verifyProblem,
   examBelowCourse, acsInOverlay, derivedKind, kindMismatched,
+  archivePrevious,
   parseFigureCorpus, parseDiagramRequests, figureQuantities, describeFigure,
   acceptGlyph, isRefusal,
   type Leveled, type ProposedExercise, type Skill, type ComposeOutcome,
@@ -1389,12 +1390,12 @@ export async function correctComposition(
       + 'que aprenda y lo preparo.');
   }
 
-  // Keep what was there, like an adaptation's revisions (FR-1918).
-  const previous = await vault.readRaw(jobIR(jobId));
-  if (previous !== null) {
-    const n = await nextComposedRevision(vault, jobId);
-    await vault.writeRaw(`${jobDir(jobId)}/ir.r${n}.md`, previous);
-  }
+  /*
+   * Keep what was there, like an adaptation's revisions (FR-1918) — and through the
+   * **same** mechanism since `026` T003. This had its own `nextComposedRevision`; the
+   * adaptation had `nextRevision`; the difference between them was the file stem.
+   */
+  await archivePrevious(vault, { dir: jobDir(jobId), stem: 'ir' });
 
   /*
    * Her correction reaches the model as part of what she is asking for, and it is
@@ -1406,12 +1407,4 @@ export async function correctComposition(
   return runCompose(jobId, { ...request, objectives: asked }, onProgress);
 }
 
-/** The next `ir.rN.md`, so a correction never overwrites what she had. */
-async function nextComposedRevision(vault: Vault, jobId: string): Promise<number> {
-  const files: string[] = await vault.list(jobDir(jobId));
-  const used = files
-    .map((f) => /^ir\.r(\d+)\.md$/.exec(f)?.[1])
-    .filter((n): n is string => n !== undefined)
-    .map(Number);
-  return used.length === 0 ? 1 : Math.max(...used) + 1;
-}
+

@@ -80,6 +80,8 @@ export * from './guide/overlay.js';
 export * from './guide/acns.js';
 export * from './guide/acns-document.js';
 export * from './vault/signature.js';
+export * from './vault/revisions.js';
+export * from './ir/diff.js';
 export * from './pictograms/set.js';
 export * from './pictograms/lemma.js';
 export * from './pictograms/match.js';

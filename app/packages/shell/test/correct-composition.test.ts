@@ -63,10 +63,18 @@ describe('it composes again rather than adapting', () => {
 
 describe('what it keeps and what it drops', () => {
   it('keeps the previous version', () => {
-    // FR-1918, like an adaptation's revisions. She compares «before I told it» with
-    // «after», which is how she decides whether the correction landed.
-    expect(compose).toMatch(/ir\.r\$\{n\}\.md/);
-    expect(compose).toMatch(/nextComposedRevision/);
+    /*
+     * FR-1918, like an adaptation's revisions. She compares «before I told it» with
+     * «after», which is how she decides whether the correction landed.
+     *
+     * Asserted through the **shared** mechanism since `026` T003. This used to look for
+     * `ir.r${n}.md` and `nextComposedRevision` — a private copy of «archive the previous,
+     * number the next», beside the adaptation's own copy. Two copies is what made the
+     * third one likely, so both converged on `core/vault/revisions.ts` and this asserts
+     * the call rather than the string it used to build.
+     */
+    expect(compose).toMatch(/archivePrevious\(vault, \{ dir: jobDir\(jobId\), stem: 'ir' \}\)/);
+    expect(compose).not.toContain('nextComposedRevision');
   });
 
   it('refuses rather than guessing when it does not know what was asked', () => {

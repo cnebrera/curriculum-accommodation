@@ -13,12 +13,17 @@ third, one diff instead of the model's word, one egress instead of a new one.
 
 ## Phase 1 · Setup · the two invariants, red first
 
-- [ ] T001 Write `app/packages/core/test/revision-never-mutated.test.ts` **first**, red,
+- [x] T001 Write `app/packages/core/test/revision-never-mutated.test.ts` **first**, red,
       per [quickstart.md](quickstart.md) §1. Both halves of SC-2403: every revision a turn
       produces carries the draft mark until its own sign-off — no `review` block survives a
       turn — and a signed revision's file is byte-identical after any number of later turns
       and restores (026 FR-2403, 005 FR-511). Checked over the vault, not the UI, because
       the UI is not what a photocopier reads
+      *(done: `revision-never-mutated.test.ts`, 15 cases over a real vault. Both halves
+      of SC-2403, plus T025's restore path — restoring a **signed** revision restores a
+      signed document, and that is not a special case: the signature is in the content,
+      so copying the content copies it. Which is exactly why nothing here has to *move*
+      a signature, the operation that would land one on a document nobody read.)*
 - [ ] T002 [P] Write `app/packages/core/test/quantities-never-from-the-model.test.ts`
       **first**, red, from quickstart §1: SC-2402 as an invariant swept over every revision
       on disk — no verifiable exercise unverified, no quantity differing from what the
@@ -35,18 +40,31 @@ mechanism exists twice today (`jobs/adapt.ts` `nextRevision`, `jobs/compose.ts`
 `nextComposedRevision`); writing `runTurn` against either copy is how the third copy
 happens.
 
-- [ ] T003 `app/packages/core/src/vault/revisions.ts` · `listRevisions`,
+- [x] T003 `app/packages/core/src/vault/revisions.ts` · `listRevisions`,
       `archivePrevious`, `restoreRevision`, generalised over the document's stem
       (`adapted`/`ir`, from `resolveDocument`) per research R4 — and converge the two
       existing copies in `app/packages/shell/src/jobs/adapt.ts` and
       `app/packages/shell/src/jobs/compose.ts` onto it, with the structural check that no
       other file constructs an `.rN.md` path (026 FR-2402)
-- [ ] T004 [P] `app/packages/core/src/ir/diff.ts` · `revisionDiff(before, after)` over
+      *(done: `core/vault/revisions.ts`, and **both existing copies converged on it**.
+      `nextRevision` (adapted) and `nextComposedRevision` (ir) were the same arithmetic
+      differing in a file stem; writing `runTurn` against either would have made a
+      third. Restore archives the current file first, so «volver a la uno» never costs
+      her the three, and numbers only grow — which is what lets the record say which
+      revision was signed *and* that later unsigned ones exist.)*
+- [x] T004 [P] `app/packages/core/src/ir/diff.ts` · `revisionDiff(before, after)` over
       parsed IR and its sentences in her language, per research R3: kept/changed/added/
       removed by block id, quantity changes flagged distinctly, empty diff detected
       (026 FR-2404 — derived from the files, never from what the model says it did,
       `004`'s anti-fabrication rule). Cases from quickstart §2, including the model's own
       change summary being treated as content
+      *(done: `core/ir/diff.ts`. Block-level, in her units — «he quitado 3 ejercicios
+      (e7, e8, e9)» rather than nine log lines or a line-based diff of formatting noise.
+      **Quantity changes get their own sentence**, because she has a verified key in her
+      hand and «he cambiado los números» is what makes her check it; folded into «he
+      cambiado e4» it would be the line she skims. The model's own account of what it
+      did is just another block to this: asserted with a boasting `report-notes` that
+      claims three removals where there were none.)*
 - [ ] T005 [P] `instructions/iterate.md` · the judgement layer of a turn, corpus so a
       teacher can read and correct it (Principle I): a turn changes the HOW, never the
       WHAT; refusal is keyed on **what the request would change**, never on the profile

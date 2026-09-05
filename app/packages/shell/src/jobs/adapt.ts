@@ -1,5 +1,6 @@
 
 import {
+  archivePrevious,
   Vault, VAULT, jobDir, jobIR, jobLearnerDir, jobAdapted, jobAdaptedRevision,
   jobRejected, jobReport, parseIR, annotateInjection, checkBounds, isVerified,
   selectRecipes, loadLearner, buildReport, loadForRun, RampaError, isGenerated,
@@ -228,11 +229,18 @@ export async function runAdaptation(
   // "after" is how she decides whether the correction landed, and losing the
   // earlier version to save a file would take that away.
   await vault.ensureDir(jobLearnerDir(jobId, learnerCode));
-  const revision = await nextRevision(vault, jobId, learnerCode);
-  if (revision > 1) {
-    const previous = await vault.readRaw(jobAdapted(jobId, learnerCode));
-    if (previous) await vault.writeRaw(jobAdaptedRevision(jobId, learnerCode, revision - 1), previous);
-  }
+  /*
+   * One revision mechanism, in `core/vault/revisions.ts` (`026` T003).
+   *
+   * This was `nextRevision`, a private copy of «archive the previous, number the next»;
+   * `jobs/compose.ts` had a second one for `ir.rN.md`. Two copies is the drift `021`'s
+   * research warned about, and writing `026`'s turn against either would have made a
+   * third. Same behaviour, one place — asserted by a test that no other file builds an
+   * `.rN.md` path.
+   */
+  const site = { dir: jobLearnerDir(jobId, learnerCode), stem: 'adapted' };
+  const archived = await archivePrevious(vault, site);
+  const revision = (archived ?? 0) + 1;
 
   const system = await systemPrompt();
   const known = await knownNames();
@@ -520,13 +528,4 @@ export async function applyPictogramsIfSheSaidSo(
   return { used: applied.used, skipped: applied.skipped };
 }
 
-/** Revision 1 is the first attempt; each re-run after a correction adds one. */
-async function nextRevision(vault: Vault, jobId: string, learnerCode: string): Promise<number> {
-  const files = await vault.list(jobLearnerDir(jobId, learnerCode));
-  const revisions = files
-    .map((f) => /^adapted\.r(\d+)\.md$/.exec(f))
-    .filter((m): m is RegExpExecArray => m !== null)
-    .map((m) => Number(m[1]));
-  const existing = files.includes('adapted.md') ? 1 : 0;
-  return Math.max(existing, ...revisions, 0) + 1;
-}
+
