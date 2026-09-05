@@ -186,10 +186,10 @@ between her and the provider.
 
 ## Phase 6 · Polish
 
-- [ ] T028 `npm run shots` and **look at them** (quickstart §6): the strip at print
+- [x] T028 `npm run shots` and **look at them** (quickstart §6): the strip at print
       width, the numbers before the drawings, the gap that looks deliberate, the SAAC
       hint that reads as honesty. No assertion answers these
-- [ ] T029 Run the full suites — `npm test`, `test:isolation`, `test:injection`, the
+- [x] T029 Run the full suites — `npm test`, `test:isolation`, `test:injection`, the
       Playwright walks — and record in this file's coverage notes what was genuinely
       verified and what was not, in `specs/006-desktop-app/validation.md`'s spirit
 

@@ -1135,6 +1135,63 @@ pantalla de perfil, decirle sólo «apunta que va bien en Lengua y lleva dos cur
 desfase en Mates», y cronometrarlo: menos de un minuto es el criterio). Es el eje que un
 tutor actualiza tras una evaluación; si tiene ceremonia no se actualizará.
 
+### 3.4 · `028` implementada — la agenda, la secuencia y la historia
+
+29 de 29 tareas, cuatro commits. Ninguna queda en manos de una persona.
+
+**Lo que faltaba era una puerta, no una capacidad.** Lo primero que monta una PT con un
+alumno TEA nuevo no es una ficha adaptada: es el día en una tira, los pasos de una rutina
+y a veces una historia sobre una situación concreta. El juego de pictogramas local, el
+render determinista y el perfil ya estaban. Es una **tercera entrada dentro del alumno**,
+no una opción dentro de «Preparar»: adaptar parte de un documento y componer parte de un
+objetivo; una agenda parte de la forma de un día, y por cualquiera de las dos puertas
+tendría que contestar «¿qué tipo de material?» y «¿qué tiene que aprender?» antes de
+llegar a la única pregunta que importa.
+
+- **El constructor no resuelve nada.** Cada dibujo sale de `matchWord` —override ▸
+  vocabulario ▸ juego ▸ nada—, en ese fichero no hay ninguna búsqueda, y hay un test de
+  fuente que lo afirma. Una segunda búsqueda es cómo la misma palabra acaba con dibujos
+  distintos en una agenda y en una ficha, con las dos pareciendo correctas por separado.
+- **Lo guardado es lo que se reimprime.** Reconstruir desde su vocabulario al imprimir
+  suena a «mantenerlo al día» y significa reescribir en enero una tira que un niño lee
+  cada día encima del lavabo. El fichero no se toca; el expediente sí avisa, que es el
+  segundo eje de `031` haciendo su trabajo en el material donde más importa.
+- **Negarse antes que adivinar**, y un nombre no recibe ni dibujo ni línea de informe:
+  informarlo pondría el nombre de un niño en un informe.
+- **La agenda y la secuencia no pueden gastar**, afirmado dos veces: un test de fuente
+  sobre los imports y un e2e sobre el libro de gastos, arrancando sin claves. «Cero
+  céntimos» también sería verdad de una llamada que falló, así que lo que se comprueba es
+  que no entra ninguna entrada.
+- **La historia social es la única que llega a un proveedor**, con el criterio en
+  `instructions/social-story.md` —primera persona, frases cortas, descriptivas antes que
+  directivas, y las cuatro cosas prohibidas— más un ejemplo y un antipatrón. La
+  advertencia de detalles inventados se lee de ahí, no se copia.
+
+**Un guardián mío saltó exactamente como estaba diseñado.** Escribí `runStory` en
+`jobs/structure.ts`, que es donde lo ponían las tareas, y los dos tests de T010 se
+pusieron rojos: un solo `import { sendRedacted }` en un fichero compartido hacía falsa la
+frase «una agenda no puede gastar» para los tres tipos a la vez. Su propio comentario
+había predicho el movimiento. La línea es ahora una frontera de fichero, y son dos
+canales para que ella vea cuál gasta mirando el botón.
+
+**Y salió un fallo de borrado anterior a esta spec** (G48). `planForget` preguntaba
+«¿existe `material/<trabajo>/<código>/`?», que es correcto para una hoja adaptada y falso
+para todo lo que Rampa escribió *para* un alumno sin adaptarlo: una agenda, y **una
+composición que ella no ha adaptado todavía**, que es suya desde `016` T006. Ella pulsaba
+«borrar todo lo suyo», la pantalla decía que no quedaba nada, y en su carpeta se quedaba
+un fichero con el código de ese niño. Arreglado leyendo `startedFor(ir.md)`, con las dos
+direcciones comprobadas. **Queda pendiente de validación de protección de datos**, como el
+0.2 de esta misma noche.
+
+Tres cosas más las encontró mirar: la tira imprimía la palabra dos veces (y el primer
+arreglo fue un `display:none` que habría dejado el papel bien y a un lector de pantalla
+diciéndola dos veces); el hueco declarado salía como un rectángulo vacío que se lee como
+una imagen que no cargó; y la entradilla decía «no cuesta dinero y no hace falta internet»
+con la historia social tres centímetros más abajo diciendo lo contrario.
+
+75 casos nuevos y 14 e2e; 9 costuras verificadas por mutación. Suites de aislamiento e
+inyección verdes.
+
 ## Notas de proceso
 
 - **La instancia que me pediste, y por qué la he reiniciado.** La levanté con `npm run dev`
@@ -1190,13 +1247,13 @@ tutor actualiza tras una evaluación; si tiene ceremonia no se actualizará.
 | | |
 |---|---|
 | `npx tsc --noEmit` | verde (línea base) |
-| `npx vitest run` | verde — 2.095 casos |
-| `npm run test:e2e` | verde — 166 casos |
+| `npx vitest run` | verde — 2.153 casos |
+| `npm run test:e2e` | verde — 180 casos |
 | `scripts/check-fr-coverage.sh` | verde (línea base) |
 | `scripts/check-spec-kit.sh` | verde (línea base) |
 
 ---
 
-**Lotes 0, 1 y 2 completos (5/5 · 17/17 · 12/12); Lote 3 con `027`, `022`, `026`, `031` y
-`032` implementadas.** Quedan **3.10** (`020` US2-US4), **3.13** (notas de BACKLOG) y **6
-features** por `/speckit-implement` en el orden 028→035→033→029→030→034.
+**Lotes 0, 1 y 2 completos (5/5 · 17/17 · 12/12); Lote 3 con `027`, `022`, `026`, `031`,
+`032` y `028` implementadas.** Quedan **3.10** (`020` US2-US4), **3.13** (notas de
+BACKLOG) y **5 features** por `/speckit-implement` en el orden 035→033→029→030→034.

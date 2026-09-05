@@ -421,7 +421,31 @@ sigue siendo el único ítem del lote sin tasks propios (sus tareas viven en spe
       Y una sola mecánica de revisiones: `nextRevision` y `nextComposedRevision` eran la
       misma aritmética con otro nombre de fichero, y ahora convergen.
       66 casos nuevos + 7 e2e; 10 costuras verificadas por mutación.
-- [x] **3.4 · Spec ESCRITA → `028-material-de-estructura`** (P4). Falta: clarify → plan → tasks → implement.
+- [x] **3.4 · `028-material-de-estructura` IMPLEMENTADA** (P4).
+      **Hecho 2026-09-05, cuatro commits.** 29 de 29 tareas.
+      Lo primero que monta una PT con un alumno TEA nuevo no es una ficha adaptada: es el
+      día en una tira, los pasos de una rutina y a veces una historia sobre una situación.
+      Todas las piezas estaban —juego local, render determinista, el perfil— y faltaba la
+      puerta. Es una tercera entrada dentro del alumno y no una opción dentro de
+      «Preparar»: una agenda no parte de un documento ni de un objetivo, parte de la forma
+      de un día, y por cualquiera de las dos puertas tendría que contestar antes preguntas
+      que no le aplican.
+      **El constructor no resuelve nada**: cada dibujo sale de `matchWord` y en ese fichero
+      no hay ninguna búsqueda — hay un test de fuente que lo afirma, porque una segunda
+      búsqueda es cómo la misma palabra acaba con dibujos distintos en una agenda y en una
+      ficha. Y lo guardado es lo que se reimprime: reconstruir desde el vocabulario al
+      imprimir sonaría a «mantenerlo al día» y significaría reescribir en enero una tira
+      que un niño lee cada día. El expediente **sí** avisa (el segundo eje de `031`).
+      **La agenda y la secuencia no pueden gastar**, afirmado dos veces: un test de fuente
+      sobre los imports y un e2e sobre el libro de gastos, arrancando sin claves. La
+      historia social es la única que llega a un proveedor, con el criterio en
+      `instructions/social-story.md` y la advertencia de detalles inventados leída de ahí.
+      **Un guardián mío saltó como estaba diseñado**: metí `runStory` en el fichero de la
+      agenda —donde lo ponían las tareas— y un solo `import { sendRedacted }` hizo falsa la
+      promesa para los tres tipos. La línea es ahora una frontera de fichero.
+      Y salió un fallo de borrado **anterior a esta spec** (G48): «borrar todo lo suyo» no
+      alcanzaba ni una agenda ni una composición sin adaptar, porque preguntaba por un
+      directorio con el nombre del niño. Pendiente de validación de protección de datos.
 - [x] **3.5 · Spec ESCRITA → `029-la-normativa-es-un-corpus`** (P3, incluye P8). Falta: clarify → plan → tasks → implement.
 - [x] **3.6 · Spec ESCRITA → `030-el-paquete-de-coordinacion`** (P5/P7/P13). Falta: clarify → plan → tasks → implement.
 - [x] **3.7 · `031-el-segundo-eje-de-frescura` IMPLEMENTADA** (P34, G35).
