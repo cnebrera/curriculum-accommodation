@@ -19,10 +19,11 @@ import { join, dirname } from 'node:path';
  *
  * ## Written before anything moves
  *
- * This is red today, deliberately, and at every site the extraction has to touch — the
- * corpus files, the TypeScript, and the drafts the suite renders in generic mode. A grep
- * written after a refactor is a grep written to fit it: it finds what the refactor
- * happened to move and is silent about what it left.
+ * The inventory was pinned at every site the extraction has to touch — the corpus
+ * files, the TypeScript, and the drafts the suite renders in generic mode — **before**
+ * the first file moved. A grep written after a refactor is a grep written to fit it: it
+ * finds what the refactor happened to move and is silent about what it left. Each
+ * extracted site empties one line of the lists below, in a diff, where it can be read.
  *
  * ## What the allowlist is, and what it is not
  *
@@ -102,24 +103,21 @@ describe('the base corpus is the product, not one community', () => {
    * **new** site appears, which is precisely how «España» and «Andalucía» became synonyms
    * in this source in the first place.
    *
-   * ## Nineteen files, and each is a place a teacher in Vigo meets a platform she has not got
+   * ## The corpus half is done (`029` T003/T004); the source half is what remains
    *
-   * Five corpus files and fourteen source files. The corpus ones are edits; the source
-   * ones are the reason this is a feature rather than a documentation pass — a sentence
-   * about Séneca compiled into the application cannot be replaced by a teacher choosing
-   * her own corpus.
+   * Five corpus files were on this list and none is now: the Andalusian vocabulary
+   * lives in `instructions/normative/es-an.md` and the base corpus speaks of «el
+   * documento de adaptación vigente en tu territorio» and «tu plataforma de registro».
+   *
+   * The fourteen source files are the reason this is a feature rather than a
+   * documentation pass — a sentence about one community's platform compiled into the
+   * application cannot be replaced by a teacher choosing her own corpus.
    */
-  it('the corpus files that name a territory are exactly these, for now', () => {
+  it('no corpus file outside instructions/normative names a territory', () => {
     const files = walk(join(repoRoot, 'instructions'), (f) => f.endsWith('.md'))
       .filter((f) => !f.includes(join('instructions', 'normative')));
     const found = [...new Set(offenders(files, false).map((o) => o.path))].sort();
-    expect(found).toEqual([
-      'instructions/acs.md',            // the ACS/ACNS pair, Séneca, the 2017 Instrucciones
-      'instructions/adapt.md',          // «la línea que separa una ACNS de una ACS»
-      'instructions/guide.md',          // `acns_sections`, the printed phrases, the register
-      'instructions/iterate.md',        // an ACS mentioned as the case that changes objectives
-      'instructions/material-kinds.md', // an ACNS named in a kind's own rule
-    ]);
+    expect(found).toEqual([]);
   });
 
   it('and the source files are exactly these, which is why this is code and not prose', () => {
@@ -146,12 +144,12 @@ describe('the base corpus is the product, not one community', () => {
     ]);
   });
 
-  it('and nothing has crept in outside those nineteen', () => {
+  it('and nothing has crept in outside the fourteen that are left', () => {
     /*
-     * The half that guards the future rather than the past. Until the extraction lands,
-     * the two lists above are the permitted state — and a **twentieth** file is a new
-     * place a teacher in Vigo meets a platform she has not got, arriving after this was
-     * written down.
+     * The half that guards the future rather than the past. Until the extraction
+     * finishes, the list above is the permitted state — and a **fifteenth** file is a
+     * new place a teacher in Vigo meets a platform she has not got, arriving after this
+     * was written down.
      */
     const corpusFiles = walk(join(repoRoot, 'instructions'), (f) => f.endsWith('.md'))
       .filter((f) => !f.includes(join('instructions', 'normative')));
@@ -161,6 +159,6 @@ describe('the base corpus is the product, not one community', () => {
       ...offenders(corpusFiles, false).map((o) => o.path),
       ...offenders(sourceFiles, true).map((o) => o.path),
     ]);
-    expect(total.size).toBe(19);
+    expect(total.size).toBe(14);
   });
 });

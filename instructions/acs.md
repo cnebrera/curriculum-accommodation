@@ -1,11 +1,16 @@
 ---
 id: acs
-label: La adaptación significativa
-last_checked: "2026-08-31"
+label: La adaptación que modifica objetivos
+last_checked: "2026-09-05"
 
 # Falso hasta que un PT o un orientador en ejercicio esté en DESACUERDO con algo
 # concreto. Y aquí importa más que en ningún otro fichero del corpus: lo que se
-# decide mal en una ACS le cambia la escolarización a un niño, no una ficha.
+# decide mal en un documento de estos le cambia la escolarización a un niño, no una
+# ficha.
+#
+# Este fichero NO es de ningún territorio. Cómo se llame el documento que modifica
+# objetivos lo dice `instructions/normative/`; negarse a decidir qué objetivos se
+# quitan es el Principio III, y eso vale en todas partes.
 reviewed_by_teacher: false
 
 # La frase con la que Rampa se niega cuando se le pide que decida.
@@ -52,7 +57,7 @@ proposal_phrases:
   - sugiero reducir el objetivo
 ---
 
-# La adaptación significativa
+# La adaptación que modifica objetivos
 
 ## Por qué este fichero existe aparte
 
@@ -60,9 +65,9 @@ Porque es la única parte de Rampa que toca **el qué**.
 
 Todo lo demás en esta herramienta cambia cómo se ve algo, cuánto hay por página, en
 qué orden se lee y cómo se contesta. El Principio III lo dice en una línea: adapta el
-cómo, nunca falsees el qué. Una ACS **modifica objetivos y criterios de evaluación**,
-así que es la excepción — y las excepciones a un principio se escriben con más
-cuidado que la regla.
+cómo, nunca falsees el qué. Hay un documento —cada territorio le pone su nombre— que
+**modifica objetivos y criterios de evaluación**, así que es la excepción; y las
+excepciones a un principio se escriben con más cuidado que la regla.
 
 ## Lo que Rampa hace aquí
 
@@ -77,16 +82,20 @@ y a que el documento diga quién lo firma.
 decides, pero». Si se le pide, se niega con la frase de arriba y dice quién decide.
 
 **No redacta sin evaluación psicopedagógica.** Si no consta que exista, el documento
-no puede seguir adelante y Rampa lo dice. **No redacta alrededor.** Una ACS sin ese
-informe es nula de procedimiento, y un documento que *parece* completo invita a
+no puede seguir adelante y Rampa lo dice. **No redacta alrededor.** Un documento así
+sin ese informe suele ser nulo de procedimiento, y uno que *parece* completo invita a
 alguien a archivarlo — y quien sale perjudicado es el niño, no el archivo.
+
+Qué evaluación exige exactamente tu normativa está en su fichero de
+`instructions/normative/`, si lo has elegido. Que sin evaluación no se redacta no
+depende de eso.
 
 **No resume el informe psicopedagógico**, ni lo da por existente, ni escribe algo que
 se lea como si existiera.
 
-**No firma.** El documento nombra al **PT como autor**, al profesor del área como
-colaborador y a Orientación como asesora, porque eso es lo que dice la normativa. Y
-dice que **no está presentado hasta que esté en Séneca**.
+**No firma.** El documento dice quién lo autoriza y quién lo asesora según la
+normativa que hayas elegido; si no has elegido ninguna, dice que eso lo verificas tú.
+Y dice siempre que **no está presentado**: Rampa no registra nada en ninguna parte.
 
 ## Por qué la negativa está en el código y no sólo aquí
 

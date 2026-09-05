@@ -896,8 +896,13 @@ describe('what the corpus says stops a run', () => {
     expect(adaptMd).toMatch(/quita el ejercicio 5/);
   });
 
-  it('says a registered ACS unblocks the modified level', () => {
-    expect(adaptMd).toMatch(/Cuando la ACS ya está decidida/);
+  it('says an already-decided modification unblocks the modified level', () => {
+    /*
+     * Named by what the document **does** rather than by one community's acronym
+     * (`029` T004). The exception is the same one; «ACS» was Andalucía's word for it,
+     * and a teacher in Vigo reading it here learned nothing about her own case.
+     */
+    expect(adaptMd).toMatch(/Cuando ya está decidido que se modifican objetivos/);
     expect(adaptMd).toMatch(/sigue, y dilo en el informe/i);
   });
 
@@ -905,10 +910,10 @@ describe('what the corpus says stops a run', () => {
     /*
      * The line that keeps the exception from being a loophole: proceeding at a
      * modified level is not permission to decide which objectives are modified,
-     * nor to modify one the ACS does not name, nor to make an exam easier whose
+     * nor to modify one that document does not name, nor to make an exam easier whose
      * criterion is not modified there.
      */
     expect(adaptMd).toMatch(/te autoriza a decidir qué objetivos se modifican/);
-    expect(adaptMd).toMatch(/que la ACS no nombre/);
+    expect(adaptMd).toMatch(/que ese documento no nombre/);
   });
 });

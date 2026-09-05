@@ -130,9 +130,18 @@ describe('the sentence she reads is corpus, not code', () => {
   });
 
   it('and it names what unlocks it, so the refusal is actionable', () => {
-    // A refusal she cannot act on is a wall. This one says «tráeme la ACS».
-    expect(kinds.find((k) => k.id === 'exam')!.composing!.belowLevel!).toContain('ACS');
-    expect(kinds.find((k) => k.id === 'exam')!.composing!.belowLevel!).toContain('equipo docente');
+    /*
+     * A refusal she cannot act on is a wall. This one says «tráemela», and names the
+     * screen it is brought through — which is what makes it actionable in any
+     * territory. It used to say «tráeme la ACS»; that is Andalucía's name for the
+     * document and nobody else's (`029` T004), and the refusal has to work for a
+     * teacher whose normativa calls it something else.
+     */
+    const said = kinds.find((k) => k.id === 'exam')!.composing!.belowLevel!;
+    expect(said).toContain('Su adaptación curricular');
+    expect(said).toContain('equipo docente');
+    // And it does not go back to naming one community's document.
+    expect(said).not.toMatch(/\bACS\b/);
   });
 
   it('and only the exam has one, because the others exist to go lower', () => {

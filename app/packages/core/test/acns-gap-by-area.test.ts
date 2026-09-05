@@ -44,7 +44,7 @@ const draftFor = (subject?: string) => {
   const cur = curFor(marco, subject);
   return draftAcns({
     learnerCode: 'M01', year: '5.º de Primaria', stage: 'Primaria',
-    sections: corpus.acnsSections, on: '2026-06-12', overlay: null,
+    sections: corpus.draftSections, on: '2026-06-12', overlay: null,
     record: [entry()],
     ...(subject ? { subject } : {}),
     ...(cur !== null
@@ -122,7 +122,7 @@ describe('what the draft still refuses to write', () => {
   it('and a learner with nothing recorded gets the empty section, exactly as before', () => {
     const blank = { code: 'B01', axes: {}, cur_areas: undefined } as unknown as Profile;
     const { markdown, missing } = draftAcns({
-      learnerCode: 'B01', sections: corpus.acnsSections, on: '2026-06-12',
+      learnerCode: 'B01', sections: corpus.draftSections, on: '2026-06-12',
       overlay: null, record: [entry({ learner: 'B01' })], subject: 'Matemáticas',
       // `curFor` answers null, so the caller passes no `desfase` — the pre-`032` state.
       ...(curFor(blank, 'Matemáticas') !== null ? { desfase: { cur: 0 as const, fromPair: false } } : {}),

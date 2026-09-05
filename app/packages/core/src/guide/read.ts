@@ -115,7 +115,7 @@ export function readGuide(
     });
   }
 
-  const missingSections = corpus.acnsSections
+  const missingSections = corpus.draftSections
     .filter((s) => opts.sectionsFound !== undefined
       && !opts.sectionsFound.some((f) => normaliseForMatch(f).includes(normaliseForMatch(s.label))))
     .map((s) => s.label);

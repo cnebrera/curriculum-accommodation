@@ -260,7 +260,7 @@ export async function draftAcnsJob(learnerCode: string, subject?: string): Promi
       : {}),
     record,
     overlay: learner.overlay,
-    sections: corpus.acnsSections,
+    sections: corpus.draftSections,
     recipesByJob,
     on: new Date().toISOString().slice(0, 10),
   });

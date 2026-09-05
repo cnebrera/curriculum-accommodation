@@ -2,15 +2,22 @@ import { parseFrontMatter } from '../vault/parse.js';
 import { logger } from '../log.js';
 
 /**
- * The guide corpus (017 T002/T005/T006/T007, FR-1517).
+ * The generic guide corpus — the base layer, the one that is always sent
+ * (017 T002/T005/T006/T007, FR-1517; rewritten generic by 029 T004, FR-2703).
  *
- * Three lists that are judgement rather than logic, so all three are Markdown a PT
+ * Four things that are judgement rather than logic, so all four are Markdown a PT
  * can correct without touching TypeScript (Principle I):
  *
- * - **which Spanish terms are clinical** — and a DIAC from another comunidad will
- *   use words this list does not have, which is precisely why it is editable;
- * - **the sections the regulation requires**, because a change in Séneca must be a
- *   Markdown edit and not a release;
+ * - **which Spanish terms are clinical** — the *base* list, the one that is true
+ *   everywhere. A territory's own words are added by its normative corpus's
+ *   `clinical_terms_extra`, which can only add;
+ * - **the sections of the generic draft** — deliberately not any regulation's
+ *   section list, but what Rampa can actually source from the record. A selected
+ *   corpus's document sections replace them, because which sections a document
+ *   requires is exactly what varies between territories;
+ * - **the printed sentences**, in territory-neutral wording («tu plataforma de
+ *   registro»). Four of these used to be string literals in TypeScript naming one
+ *   community's platform — a latent Principle I violation that 029 T009 carried out;
  * - **the phrasings that constitute a proposal about objectives**, which is the one
  *   list whose incompleteness is stated in the file itself.
  *
@@ -22,7 +29,7 @@ import { logger } from '../log.js';
  * code — so a list that fails to load falls back to a built-in minimum and logs.
  */
 
-export interface AcnsSection {
+export interface DraftSection {
   id: string;
   label: string;
   /** `full`, `partial` or `none` — can Rampa source it from what it has? */
@@ -33,7 +40,13 @@ export interface AcnsSection {
 
 export interface GuideCorpus {
   clinicalTerms: string[];
-  acnsSections: AcnsSection[];
+  draftSections: DraftSection[];
+  /**
+   * The generic printed sentences, by key — `not-filed`, `name-line`, the headings,
+   * `generic-statement`. Read through {@link phraseOf} so a missing key is one
+   * logged fallback rather than `undefined` reaching a document.
+   */
+  phrases: Record<string, string>;
 }
 
 /**
@@ -59,7 +72,7 @@ export function parseGuideCorpus(raw: string, file = 'instructions/guide.md'): G
     logger.error('guide.no-clinical-terms', { file });
   }
 
-  const acnsSections: AcnsSection[] = (Array.isArray(data['acns_sections']) ? data['acns_sections'] : [])
+  const draftSections: DraftSection[] = (Array.isArray(data['draft_sections']) ? data['draft_sections'] : [])
     .map((entry) => {
       if (!entry || typeof entry !== 'object') return null;
       const e = entry as Record<string, unknown>;
@@ -75,15 +88,77 @@ export function parseGuideCorpus(raw: string, file = 'instructions/guide.md'): G
       }
       return { id, label, sourceable, from: str(e['from']) };
     })
-    .filter((s): s is AcnsSection => s !== null);
+    .filter((s): s is DraftSection => s !== null);
 
-  if (acnsSections.length === 0) logger.error('guide.no-sections', { file });
+  if (draftSections.length === 0) logger.error('guide.no-sections', { file });
+
+  const phrases = phraseMap(data['phrases']);
+  if (Object.keys(phrases).length === 0) logger.error('guide.no-phrases', { file });
 
   return {
     clinicalTerms: clinicalTerms.length > 0 ? clinicalTerms : MINIMUM_CLINICAL,
-    acnsSections,
+    draftSections,
+    phrases,
   };
 }
+
+/**
+ * The generic sentences, used when nothing better is available.
+ *
+ * Same failing-closed posture as {@link MINIMUM_CLINICAL}: a document assembled with
+ * `undefined` where its «this is not filed» line should be would be a draft that
+ * looks filed, which is the one thing `017` exists to prevent. So every key a
+ * document prints has a built-in answer, and a missing key is logged, not silent.
+ */
+export const MINIMUM_PHRASES: Record<string, string> = {
+  'draft-heading': 'BORRADOR de documento de adaptación curricular',
+  'signed-heading': 'Documento de adaptación curricular',
+  'unsigned-note': '**Sin firmar.** Mientras no la firmes, esto es un borrador.',
+  'not-filed': '**Esto no está presentado.** Rampa no presenta nada: esto es material '
+    + 'para llevar a donde se registre en tu territorio.',
+  'authorship-footer': '**Rampa no ha escrito esta adaptación**: ha ordenado lo que ya '
+    + 'habías hecho para este alumno.',
+  'name-line': 'El nombre lo pones tú donde lo registres — yo no lo guardo.',
+  'report-note': 'Esto no está registrado. Si esta adaptación va al expediente, se '
+    + 'registra donde diga la normativa de tu territorio, y eso lo haces tú.',
+  'acs-footer': '**Esto es un borrador y no está presentado.**',
+  'draft-banner': 'BORRADOR — sin firmar · no lo presentes todavía',
+  'draft-watermark': 'BORRADOR — SIN FIRMAR',
+  'generic-statement': 'No tienes ninguna normativa elegida, así que esto es un '
+    + 'borrador genérico: qué documento exige tu territorio, quién lo firma y dónde se '
+    + 'registra lo verificas tú con tu orientador u orientadora.',
+};
+
+/**
+ * One reader for every printed sentence, so no caller invents its own default.
+ *
+ * A corpus phrase wins; the generic file's is next; the built-in minimum is last and
+ * logs. Three tiers rather than two because that is exactly the precedence the layer
+ * has — a territory's wording, the neutral wording, and the wording that exists so a
+ * broken file cannot produce a document with a hole in it.
+ */
+export function phraseOf(key: string, ...sources: ReadonlyArray<Record<string, string> | undefined>): string {
+  for (const source of sources) {
+    const found = source?.[key];
+    if (typeof found === 'string' && found.trim() !== '') return found.trim();
+  }
+  const fallback = MINIMUM_PHRASES[key];
+  if (fallback === undefined) {
+    logger.error('guide.unknown-phrase', { key });
+    return '';
+  }
+  logger.warn('guide.phrase-missing', { key });
+  return fallback;
+}
+
+const phraseMap = (v: unknown): Record<string, string> => {
+  if (!v || typeof v !== 'object' || Array.isArray(v)) return {};
+  const out: Record<string, string> = {};
+  for (const [k, value] of Object.entries(v as Record<string, unknown>)) {
+    if (typeof value === 'string' && value.trim() !== '') out[k] = value.trim();
+  }
+  return out;
+};
 
 /** The one sentence Rampa declines with, and the phrasings it refuses to show. */
 export interface AcsCorpus {

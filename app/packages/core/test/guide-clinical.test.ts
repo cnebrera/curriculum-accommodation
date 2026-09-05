@@ -172,14 +172,14 @@ describe('the corpus fails closed', () => {
   it('a section whose sourceability is unreadable is treated as not sourceable', () => {
     // Named as missing rather than assembled from a guess.
     const odd = parseGuideCorpus(
-      '---\nclinical_terms: [x]\nacns_sections:\n  - id: a\n    label: A\n    sourceable: quizá\n---\n\n# x\n',
+      '---\nclinical_terms: [x]\ndraft_sections:\n  - id: a\n    label: A\n    sourceable: quizá\n---\n\n# x\n',
       'test.md');
-    expect(odd.acnsSections[0]!.sourceable).toBe('none');
+    expect(odd.draftSections[0]!.sourceable).toBe('none');
   });
 
   it('the shipped corpus carries both lists', () => {
     expect(guide.clinicalTerms.length).toBeGreaterThan(20);
-    expect(guide.acnsSections.length).toBeGreaterThan(5);
+    expect(guide.draftSections.length).toBeGreaterThan(5);
     expect(acs.proposalPhrases.length).toBeGreaterThan(10);
     /*
      * And the section Rampa must not write for her.
@@ -193,7 +193,7 @@ describe('the corpus fails closed', () => {
      * not weaker: «some section is none» was satisfiable by any section at all, and
      * would have kept passing if `desfase` had quietly become `full`.
      */
-    const desfase = guide.acnsSections.find((s) => s.id === 'desfase');
+    const desfase = guide.draftSections.find((s) => s.id === 'desfase');
     expect(desfase, 'the regulation asks for it, so the corpus must know it').toBeDefined();
     expect(desfase!.sourceable).not.toBe('full');
     expect(desfase!.from).toContain('evaluación psicopedagógica');

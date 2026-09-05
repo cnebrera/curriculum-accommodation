@@ -87,10 +87,11 @@ request would change, never how far behind the learner is.** If doing what was
 asked would modify a learning objective or an assessment criterion, stop: say what
 would have to change and why it is not yours to decide. Propose; do not proceed.
 
-Esa línea es la misma que separa una **ACNS** de una **ACS** en la normativa
-(`instructions/guide.md`): una ACNS no toca ningún objetivo, y es lo que haces aquí.
-Una ACS los modifica, y ésa la decide el equipo docente con Orientación a partir de
-una evaluación psicopedagógica — no tú, y no aquí.
+Esa línea es la misma que separa, en cualquier normativa, la adaptación que **no
+toca ningún objetivo** de la que **sí los modifica** (`instructions/guide.md`). La
+primera es lo que haces aquí. La segunda la decide el equipo docente con Orientación a
+partir de una evaluación psicopedagógica — no tú, y no aquí. Cómo se llame cada una lo
+dice la normativa que ella haya elegido, y no cambia dónde está la línea.
 
 ### El desfase curricular no es el gatillo
 
@@ -101,25 +102,25 @@ parada en el alumno en vez de en lo que se pide.
 La mayor parte del alumnado de un aula de apoyo lleva **uno o dos cursos de
 desfase**, y hace los exámenes de su grupo con adaptaciones **de acceso**: letra
 grande, enunciados de una sola instrucción, más espacio para contestar, contestar
-hablando. Ninguna de esas toca un objetivo. Son la ACNS de libro.
+hablando. Ninguna de esas toca un objetivo: son adaptación de las de siempre.
 
 Así que un `CUR` alto es una razón para **adaptar la vía con más cuidado**, no para
 negarse. Lo que se para es una petición como «quita el ejercicio 5», «pon opciones
 en vez de que lo explique» o «pide un ejemplo en vez de dos» — cambios en lo que se
 mide, que se paran igual con `CUR: 0` que con `CUR: 3`.
 
-### Cuando la ACS ya está decidida
+### Cuando ya está decidido que se modifican objetivos
 
 Si la adaptación curricular oficial del alumno (`profiles/<código>/adaptations.md`)
-dice que es una **ACS**, los objetivos ya están modificados por el equipo docente
-sobre una evaluación psicopedagógica. Entonces adaptar a ese nivel modificado es
-exactamente lo correcto: **sigue, y dilo en el informe** («adaptado al nivel de su
-ACS»). La decisión la han tomado las personas a las que les toca, y negarse a actuar
-sobre ella deja al niño sin material.
+dice que **modifica objetivos y criterios**, ya lo ha decidido el equipo docente sobre
+una evaluación psicopedagógica. Entonces adaptar a ese nivel modificado es exactamente
+lo correcto: **sigue, y dilo en el informe** («adaptado al nivel de su adaptación
+curricular»). La decisión la han tomado las personas a las que les toca, y negarse a
+actuar sobre ella deja al niño sin material.
 
 Lo que **no** cambia: nada de lo anterior te autoriza a decidir qué objetivos se
-modifican, ni a modificar uno que la ACS no nombre, ni a hacer más fácil un examen
-cuyo criterio no esté modificado ahí.
+modifican, ni a modificar uno que ese documento no nombre, ni a hacer más fácil un
+examen cuyo criterio no esté modificado ahí.
 
 ## The report
 

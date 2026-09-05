@@ -43,7 +43,7 @@ const entry = (): RecordEntry => ({
 
 const draft = () => draftAcns({
   learnerCode: 'A1B2', year: '5.º de Primaria', stage: 'Primaria',
-  sections: corpus.acnsSections, on: '2026-06-12', overlay: null, record: [entry()],
+  sections: corpus.draftSections, on: '2026-06-12', overlay: null, record: [entry()],
 }).markdown;
 
 const stored = () => acnsDocument(draft(), 'A1B2', '2026-06-12');

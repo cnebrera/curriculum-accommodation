@@ -28,7 +28,7 @@ const entry = (over: Partial<RecordEntry> = {}): RecordEntry => ({
 
 const base = {
   learnerCode: 'A1B2', year: '5.º de Primaria', stage: 'Primaria',
-  sections: corpus.acnsSections, on: '2026-06-12', overlay: null,
+  sections: corpus.draftSections, on: '2026-06-12', overlay: null,
 };
 
 describe('no recorded work, no draft', () => {

@@ -63,7 +63,7 @@ const golden = draftAcns({
     'job-1': ['how-much-at-once@1', 'chunk-the-prose@1'],
     'job-2': ['exam-access-not-difficulty@2'],
   },
-  sections: corpus.acnsSections,
+  sections: corpus.draftSections,
   on: '2026-06-12',
   desfase: { cur: 2, fromPair: true },
 });

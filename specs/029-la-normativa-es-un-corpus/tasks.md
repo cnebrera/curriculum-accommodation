@@ -41,7 +41,7 @@ runs.
 extraction rewrites the base corpus every consumer reads; screens built against the
 pre-extraction shape would be built twice.
 
-- [ ] T003 Write `instructions/normative/es-an.md` per
+- [x] T003 Write `instructions/normative/es-an.md` per
       [contracts/normative-corpus.md](contracts/normative-corpus.md): everything
       Andalusian moved from `instructions/guide.md`/`acs.md` — the ACNS/ACS table, the
       `acns_sections` list as `documents:`, Séneca as `register`, the printed phrases
@@ -49,14 +49,14 @@ pre-extraction shape would be built twice.
       8-3-2017 provenance comment, and territory clinical terms as
       `clinical_terms_extra`. `reviewed_by_teacher: false`; `last_checked` from
       `docs/normativa-andalucia.md` (FR-2704)
-- [ ] T004 Rewrite `instructions/guide.md` and `instructions/acs.md` as **the generic
+- [x] T004 Rewrite `instructions/guide.md` and `instructions/acs.md` as **the generic
       product** (research R3): «el documento de adaptación vigente en tu territorio»,
       «tu plataforma de registro»; keep the clinical base list, the decline and
       `proposal_phrases` (universal, not territorial); gain the generic draft scaffold —
       its own section list of only what Rampa can source — and the generic
       statement-plus-orientador-pointer and provenance-line templates the drafts print
       (FR-2703, FR-2704)
-- [ ] T005 [P] `instructions/normative/README.md`: points at the contract, and states
+- [x] T005 [P] `instructions/normative/README.md`: points at the contract, and states
       the hierarchy where corpora are documented — **hard rules outrank every corpus**
       (FR-2709, spec edge case), in the teacher's language
 - [ ] T006 Parser `app/packages/core/src/normative/parse.ts` per

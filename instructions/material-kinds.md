@@ -65,9 +65,9 @@ kinds:
       #
       # Componer un examen a un curso inferior no es cambiar CÓMO se evalúa: es cambiar
       # QUÉ se evalúa, y eso es una adaptación significativa. La decide el equipo docente
-      # sobre una evaluación psicopedagógica, y queda registrada como ACS — que es
-      # exactamente lo que desbloquea esto. Sin ACS registrada no es que Rampa no sepa:
-      # es que no le corresponde.
+      # sobre una evaluación psicopedagógica, y queda registrada en el documento que su
+      # normativa llame — que es exactamente lo que desbloquea esto. Sin esa adaptación
+      # registrada no es que Rampa no sepa: es que no le corresponde.
       #
       # El gatillo es LA PETICIÓN, no el perfil (P12): un CUR alto es razón para adaptar
       # con más cuidado, nunca para negarse. Esta frase sólo se dice cuando lo que se
@@ -75,7 +75,7 @@ kinds:
       below_level: >
         Un examen de un curso distinto al suyo evalúa otras cosas, y eso lo decide el
         equipo docente con una evaluación psicopedagógica, no yo. Si ya está decidido y
-        hay una ACS, tráela con «Su adaptación curricular» y entonces compongo a ese
+        hay una adaptación que lo recoja, tráela con «Su adaptación curricular» y compongo a ese
         nivel. Si no, dime a qué curso y te preparo material de apoyo, no un examen.
     forbids: [question-demand, item-count, curricular-demand, numbering]
     rule: >

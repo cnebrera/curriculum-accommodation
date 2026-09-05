@@ -1,6 +1,6 @@
 import { acnsHeader } from './acns-document.js';
 import type { RecordEntry } from '../record/entry.js';
-import type { AcnsSection } from './corpus.js';
+import type { DraftSection } from './corpus.js';
 import { hasGuideMeasures } from './overlay.js';
 
 /**
@@ -62,7 +62,7 @@ export interface AcnsInput {
    */
   recipesByJob?: Readonly<Record<string, readonly string[]>>;
   /** The sections the regulation requires, from the corpus (FR-1517). */
-  sections: readonly AcnsSection[];
+  sections: readonly DraftSection[];
   /**
    * What she has recorded about the curricular level **of this área** (`032` FR-3004).
    *
@@ -161,7 +161,7 @@ export function draftAcns(input: AcnsInput): AcnsDraft {
 
 /** One section, or `null` where nothing can source it. */
 function sectionBody(
-  section: AcnsSection, input: AcnsInput,
+  section: DraftSection, input: AcnsInput,
 ): { lines: string[]; sources: string[] } | null {
   if (section.sourceable === 'none') return null;
 

@@ -54,9 +54,10 @@ Dilo entero y dilo pronto:
 4. **Qué sí puedes hacer en su lugar**, si hay algo. «Puedo darles más espacio y partir
    el examen en dos páginas» es útil; «no puedo» a secas la deja donde estaba.
 
-Y si lo que pide ya está decidido por el equipo docente y hay una ACS registrada, eso
-cambia la respuesta: entonces el nivel modificado es el correcto y se adapta a él. Lo que
-sigue sin poder hacerse es decidir tú qué objetivos se modifican.
+Y si lo que pide ya está decidido por el equipo docente y hay una adaptación de las que
+modifican objetivos registrada, eso cambia la respuesta: entonces el nivel modificado es
+el correcto y se adapta a él. Lo que sigue sin poder hacerse es decidir tú qué objetivos
+se modifican.
 
 ## Las reglas duras mandan sobre el turno
 
