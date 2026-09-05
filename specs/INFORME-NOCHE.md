@@ -1064,6 +1064,77 @@ lleva su enmienda fechada.
 manos de una persona — no porque se haya recortado, sino porque ninguno de sus
 requisitos necesita una clave real ni el juicio de una PT.
 
+### 3.8 · `032` implementada — el desfase vive donde vive el desfase
+
+21 de 22 tareas, cinco commits. La abierta es SC-3004 y necesita una maestra con un
+cronómetro; está dicha como pendiente, no doblada dentro de otra.
+
+**El caso de la revisión era irrepresentable.** La constitución justifica el Principio V
+con «un alumno necesita cosas distintas en asignaturas distintas», y el perfil tenía un
+solo nivel curricular: bien en Lengua y dos cursos por debajo en Mates o bloquea todo o no
+dice nada. Ahora `cur_areas` va **al lado de `axes`, nunca dentro**, y eso no es estética:
+anidado, el esquema de una versión anterior apartaría el objeto `axes` entero por
+malformado, y un alumno sin ejes no selecciona ninguna receta — cada adaptación apagada,
+en silencio, en el portátil de quien no haya actualizado. Hay un test que simula ese
+lector.
+
+**La baseline primero, y sin tocarla después.** Lo que hace hoy un perfil con un solo CUR
+—la búsqueda, la selección de recetas sobre el corpus real, la línea del prompt, el mapa
+del renderer y el fichero en disco— escrito verde contra código que no había oído hablar
+de áreas. Sigue byte a byte igual (`git diff` vacío) y en verde: es la prueba de SC-3002,
+y una baseline escrita cuando el campo ya existe se escribe para encajar con él.
+
+Lo demás es pequeño a propósito:
+
+- **Un solo `curFor`.** Un fallback derivado dos veces son dos fallbacks, y el que se
+  escribiera `?? 0` afirmaría que un niño está al nivel de su curso en un área que nadie ha
+  evaluado.
+- **El valor no calcula ningún año.** Decide si el respaldo silencioso al curso matriculado
+  es honesto. `matriculado − 2` sería un número inventado en la hoja de un niño, justo el
+  que una maestra no puede comprobar de un vistazo.
+- **Preguntar no bloquea.** A 2 o 3 se le pregunta con su propia nota devuelta; en blanco
+  compone igual. Una parada obligatoria por CUR sería la parada anclada en el perfil que
+  P12 retiró, renacida más fina — y hay un test que la mantiene desatada, en el código y en
+  el corpus.
+- **La ACNS cita el área de la que se habla.** Antes la de Lengua citaba dos cursos que su
+  maestra había apuntado que ahí no existen, en un documento que ella firma. Y sigue sin
+  redactar el desfase de la normativa, que sale de una evaluación psicopedagógica: lo que
+  ordena es el apunte de ella, dicho como suyo (Principio III).
+
+**Lo que encontró mirar, otra vez más que los tests.** El campo de área era un
+`<input list>` con `<datalist>` y **la primera tecla real mataba el renderer** — su ventana
+desaparece a media frase. La suite entera pasaba porque `fill()` de Playwright pone el
+valor sin generar eventos de teclado: un test puede escribir en ese campo todo el día sin
+abrir nunca el desplegable que revienta. Lo encontró pulsar una tecla a mano en la
+aplicación construida. Regla anotada (G47): `fill()` prueba el **estado** en el que acaba
+un control, nunca el **acto** de usarlo.
+
+Y dos trampas más del editor, encontradas por el e2e: añadir un área la ponía a 0
+—afirmar «al nivel de su curso» de una asignatura recién tecleada— y los botones de nivel
+alternaban como los de un eje, así que pulsar 0 para confirmar «Lengua: 0» borraba el par.
+El único valor que no podía fijar con su propio botón era justo el que US1 existe para
+registrar.
+
+**Y dos lectores que faltaban.** `vaultIsNewer` se escribió con el marcador de versión y no
+lo llamaba nadie; ahora avisa cuando otra versión ha tocado la carpeta compartida, que es
+el caso de OneDrive que motivó P50. Y `profiles.example/` no lo leía ningún test: los dos
+ejemplos llevaban un `notes:` de primer nivel que `saveProfile` descarta, así que una
+maestra siguiendo la documentación escribía sus notas ahí y el siguiente guardado se las
+borraba (G46).
+
+Dos frases del corpus corregidas de paso, las dos de un diseño anterior:
+`instructions/axes.md` seguía poniendo la parada de adaptación significativa en el CUR del
+niño, y la fila de CUR de `docs/profile-schema.md` decía «only relevant to significant
+adaptation».
+
+50 casos nuevos y 7 e2e; 11 costuras verificadas por mutación — dos de ellas escritas
+**después** de comprobar que la mutación no fallaba nada.
+
+**Lo que queda de `032`, en manos de una persona:** SC-3004 (sentar a una maestra ante la
+pantalla de perfil, decirle sólo «apunta que va bien en Lengua y lleva dos cursos de
+desfase en Mates», y cronometrarlo: menos de un minuto es el criterio). Es el eje que un
+tutor actualiza tras una evaluación; si tiene ceremonia no se actualizará.
+
 ## Notas de proceso
 
 - **La instancia que me pediste, y por qué la he reiniciado.** La levanté con `npm run dev`
@@ -1119,13 +1190,13 @@ requisitos necesita una clave real ni el juicio de una PT.
 | | |
 |---|---|
 | `npx tsc --noEmit` | verde (línea base) |
-| `npx vitest run` | verde — 2.018 casos |
-| `npm run test:e2e` | verde — 159 casos |
+| `npx vitest run` | verde — 2.095 casos |
+| `npm run test:e2e` | verde — 166 casos |
 | `scripts/check-fr-coverage.sh` | verde (línea base) |
 | `scripts/check-spec-kit.sh` | verde (línea base) |
 
 ---
 
-**Lotes 0, 1 y 2 completos (5/5 · 17/17 · 12/12); Lote 3 con `027`, `022`, `026` y `031`
-implementadas.** Quedan **3.10** (`020` US2-US4), **3.13** (notas de BACKLOG) y **7
-features** por `/speckit-implement` en el orden 032→028→035→033→029→030→034.
+**Lotes 0, 1 y 2 completos (5/5 · 17/17 · 12/12); Lote 3 con `027`, `022`, `026`, `031` y
+`032` implementadas.** Quedan **3.10** (`020` US2-US4), **3.13** (notas de BACKLOG) y **6
+features** por `/speckit-implement` en el orden 028→035→033→029→030→034.
