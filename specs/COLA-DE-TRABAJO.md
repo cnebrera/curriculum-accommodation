@@ -501,7 +501,29 @@ sigue siendo el único ítem del lote sin tasks propios (sus tareas viven en spe
       cuando otra versión ha tocado la carpeta compartida) y `profiles.example/` no lo leía
       ningún test — llevaba un `notes:` en el perfil que `saveProfile` descarta, así que
       copiarlo perdía lo escrito.
-- [x] **3.9 · Spec ESCRITA → `033-lengua-vehicular`** (P6). Falta: clarify → plan → tasks → implement.
+- [x] **3.9 · `033-lengua-vehicular` IMPLEMENTADA** (P6).
+      **Hecho 2026-09-05, tres commits.** 24 de 26 tareas y **10 de 10 requisitos**; las dos
+      abiertas son una pregunta de producto (T023, va con el puente) y un veredicto de una
+      maestra (T026).
+      Un alumno que llega en marzo sin el idioma del aula no encajaba en ningún eje, y la
+      tentación era `LIN`. Es la casa equivocada: `LIN` modela un **trastorno** en un
+      hablante nativo, así que meterlo ahí escribía «dificultad de comprensión lingüística»
+      en un expediente que le sigue años — y en junio, cuando ya seguía la clase, el `LIN`
+      seguía puesto. Eso muere por escrito en `instructions/axes.md`.
+      La marca vive **al lado** de los ejes: los diez describen barreras que viajan con el
+      niño, y ésta es un estado con una fecha en la que deja de ser verdad. Ausente es que
+      nadie miró; `0` es ella diciendo que se acabó, con su fecha — y hay un caso que
+      prueba que se distinguen. Pulsar el nivel que ya tiene la borra, que es otra cosa.
+      El caso cierra la parada P1 en su forma más nítida: antes ese perfil seleccionaba
+      **cero** recetas, y «voy a hacerte 0 adaptaciones» era lo que se le decía sobre el
+      niño para el que existe esta feature. Ahora son tres, y ninguna es por un eje.
+      **El puente lo resuelve el código o no se resuelve**: la unión es un id de pictograma,
+      y una palabra con dos dibujos no recibe nada. Un modelo al que le pides «denominador
+      en árabe» contesta, en un alfabeto que ella no lee, en una hoja que nadie de la sala
+      puede comprobar. Y traducir la hoja entera se rechaza con el motivo, en `hard-rules`.
+      **Dos guardianes existentes saltaron** (el de pictogramas en recetas y el de lectores
+      del índice), y mi propio tripwire saltó con el primer lector de `vehicular.languages`,
+      que es para lo que se escribió vacío antes de que existiera nada.
 - [ ] **3.10 · Spec: 020 completo** — US2-US4: Preparar dentro del alumno, retirar el door, partir
       Mis notas, Configuración completa (P25/P29). Grande; los e2e de navegación son la red.
 - [x] **3.11 · Spec ESCRITA → `034-como-llegan-las-versiones`** (P49). Falta: clarify → plan → tasks → implement.

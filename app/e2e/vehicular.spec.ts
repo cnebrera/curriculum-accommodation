@@ -171,6 +171,60 @@ test.describe('recording that he is still learning the classroom language', () =
     await app.close();
   });
 
+  test('lowering it re-dates the note, because the change is the observation (T018)', async () => {
+    const { app, page, vault } = await launch();
+    const code = await seed(page, vault);
+    await openProfile(page);
+    const block = page.locator('.stack.gap2')
+      .filter({ hasText: 'Sigue la clase en el idioma del aula' }).first();
+
+    await block.getByRole('button', { name: '3', exact: true }).click();
+    await page.getByRole('button', { name: 'Guardar' }).first().click();
+    await page.waitForTimeout(600);
+    const first = ((await profileOnDisk(page, code))!['vehicular'] as { noted_on: string }).noted_on;
+
+    // Months later, he has come on. She lowers it.
+    await block.getByRole('button', { name: '1', exact: true }).click();
+    await page.getByRole('button', { name: 'Guardar' }).first().click();
+    await page.waitForTimeout(600);
+
+    const mark = (await profileOnDisk(page, code))!['vehicular'] as
+      { intensity: number; noted_on: string };
+    expect(mark.intensity).toBe(1);
+    /*
+     * The date is re-stamped because **the change is the observation** (P44). «Lleva
+     * bajando desde febrero» and «lo bajé ayer» are different facts about a child, and
+     * the second is the one that tells the next teacher how fresh this is.
+     */
+    expect(mark.noted_on).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    expect(mark.noted_on >= first).toBe(true);
+
+    await app.close();
+  });
+
+  test('and pressing the level it already has clears it — which is not the same as 0', async () => {
+    const { app, page, vault } = await launch();
+    const code = await seed(page, vault);
+    await openProfile(page);
+    const block = page.locator('.stack.gap2')
+      .filter({ hasText: 'Sigue la clase en el idioma del aula' }).first();
+
+    await block.getByRole('button', { name: '2', exact: true }).click();
+    await block.getByRole('button', { name: '2', exact: true }).click();
+    await page.getByRole('button', { name: 'Guardar' }).first().click();
+    await page.waitForTimeout(600);
+
+    /*
+     * Clearing says «I should not have marked this». Setting 0 says «it is over», and the
+     * record keeps that with its date. Two different things a teacher does, and his file
+     * has to be able to tell them apart — which is why the block disappears here and
+     * stays at 0 in the other case.
+     */
+    expect((await profileOnDisk(page, code))!['vehicular']).toBeUndefined();
+
+    await app.close();
+  });
+
   test('nothing pre-fills a language from her note about his country', async () => {
     const { app, page, vault } = await launch();
     const code = await seed(page, vault);

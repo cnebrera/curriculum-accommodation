@@ -127,3 +127,46 @@ describe('what the mark never does', () => {
     }
   });
 });
+
+describe('on an exam, the supports are access and nothing else (T022, FR-3105)', () => {
+  /**
+   * The edge case with the most at stake in the whole feature.
+   *
+   * A child who cannot yet read the question is being assessed on the language rather
+   * than on what he knows — so an exam is exactly where these supports matter. It is also
+   * exactly where «adaptar» slides into «hacerlo más fácil»: shorter sentences in a
+   * question can quietly become a shorter question, and the mark would then be lowering
+   * the bar for a learner who never needed it lowered.
+   *
+   * The line is the one `012` already drew and `exam-access-not-difficulty` already
+   * guards: the criterion is untouched, the route to it is cleared.
+   */
+  const examCorpus = corpus.filter((r) => r.scope.includes('assessment'));
+
+  it('a vehicular recipe that touches an exam says the criterion is untouched', () => {
+    const onExams = examCorpus.filter((r) => r.marks.length > 0);
+    expect(onExams.length).toBeGreaterThan(0);
+    for (const r of onExams) {
+      /*
+       * Its own text has to say it, because the recipe body is what the model reads.
+       * A rule that lives only in a test is a rule the model never sees.
+       */
+      expect(r.body, r.id).toMatch(/no se toca|no se diluye|no cambia/i);
+    }
+  });
+
+  it('and the exam guard is still selected beside them, never dropped', () => {
+    /*
+     * `exam-access-not-difficulty` constrains every other recipe. If the mark could drop
+     * it in a conflict, a vehicular support could make an exam easier — which is the
+     * failure this whole project is built around, arriving through the newest door.
+     */
+    const selected = selectRecipes(corpus, at(3), 'es').selected.map((r) => r.id);
+    // It is axis-keyed in the shipped corpus, so it is not expected for a mark-only
+    // profile — what must be true is that nothing vehicular claims to replace it.
+    for (const r of corpus.filter((x) => x.marks.length > 0)) {
+      expect(r.conflicts, r.id).not.toContain('exam-access-not-difficulty');
+    }
+    expect(selected).not.toContain('lectura-facil-es');
+  });
+});

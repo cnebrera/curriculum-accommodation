@@ -151,7 +151,7 @@ monotonically and the WHAT never changes.
       recipe applies and the block persists with its date — the mark expires by
       observation, not by deletion (**FR-3107**); completeness green at every
       level (SC-3102)
-- [ ] T018 [P] [US2] Lowering the intensity in the editor re-dates `noted_on` with
+- [x] T018 [P] [US2] Lowering the intensity in the editor re-dates `noted_on` with
       the real date of the change, and the report of the next adaptation shows the
       thinner support set — visible in the report, per US2 scenario 1
       (**FR-3107**, P44)
@@ -175,12 +175,12 @@ monotonically and the WHAT never changes.
       `app/packages/shell/test/` (**FR-3110**). Expected to be mostly a test: the
       packets already carry the profile; what the test pins is that the block
       survives export, import and the repair path with dates intact
-- [ ] T022 [P] Exams: vehicular recipes on assessment blocks apply access supports
+- [x] T022 [P] Exams: vehicular recipes on assessment blocks apply access supports
       only — visual instructions, simple wording — and the criterion is untouched;
       the exam guard governs and is never dropped (edge case; **FR-3105** on
       assessment; asserted beside the existing exam-guard tests in
       `app/packages/core/test/`)
-- [ ] T023 [P] `instructions/pictograms.md` · extend the publisher's `languages:`
+- [ ] T023 *(VA CON EL PUENTE: sin fuente de palabras clave, ampliar la metadata de idiomas del publicador no lo lee nadie — es exactamente el campo escrito y no leído que este repositorio persigue. Ver la pregunta de Carlos en el informe.)* [P] `instructions/pictograms.md` · extend the publisher's `languages:`
       **only after checking the live API** for each added code, with the file's
       own «Comprobado el <date>» convention (research R3) — a corpus edit, and the
       honest sentence in the UI when a recorded language is not offerable:
@@ -192,11 +192,11 @@ monotonically and the WHAT never changes.
 
 ## Phase 6 · Polish · and the parts that need a person
 
-- [ ] T024 `app/e2e/vehicular-mark.spec.ts` · quickstart §6: the mark beside the
+- [x] T024 `app/e2e/vehicular-mark.spec.ts` · quickstart §6: the mark beside the
       axes, dates written on set and on change, languages hers, pictograms her
       separate click, the mark visible in a coordination packet (**FR-3101**,
       **FR-3110**)
-- [ ] T025 **Look at it** (`013`): `npm run shots` — does the mark's control read
+- [x] T025 **Look at it** (`013`): `npm run shots` — does the mark's control read
       as «something temporary about language» or as an eleventh barrier? And a
       week-one sheet at intensity 3: usable support or decoration? No assertion
       can answer either
