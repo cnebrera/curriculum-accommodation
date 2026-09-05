@@ -214,7 +214,7 @@ refusable file — not a prompt.
       touching code. The claim Principle I stakes on this layer; the task is the
       arrangement, not the verdict — and «where she got stuck» is worth more than the
       answer
-- [ ] T029 Archive it: this coverage table kept current, and a `specs/BACKLOG.md` entry
+- [x] T029 Archive it: this coverage table kept current, and a `specs/BACKLOG.md` entry
       for anything found on the way — including whether `034`'s corpus updates need a
       note that normative corpora update under FR-2710's «signed documents never
       change»

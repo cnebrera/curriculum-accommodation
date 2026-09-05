@@ -413,6 +413,63 @@ every moment should have a spec. What it added beyond the seams pass:
    journey sentence → T094). Handover *import* (004 US2) recorded as deliberately
    deferred rather than silently missing.
 
+## G51 · Un corpus normativo no se puede actualizar: se reimporta
+
+**Abierto 2026-09-06** por `029` T029. Va con `034-como-llegan-las-versiones`.
+
+Los corpus incluidos viajan en la release, como el resto del corpus. Los que ella
+trae **no**: si quien se lo pasó corrige un error el mes que viene, el camino es
+volver a elegir el fichero y volver a activarlo. Funciona, y es una fricción real
+para el escenario que hace que esta capa exista — que un territorio se mantenga solo.
+
+Lo que no puede cambiar cuando eso se resuelva: **FR-2710**. Un documento firmado es
+lo que era cuando se firmó, y su línea de procedencia ya está dentro. Una actualización
+de corpus no reescribe nada de lo que ya hay en su carpeta, y quien diseñe la entrega
+de actualizaciones tiene que decirlo por escrito, no darlo por hecho.
+
+## G50 · «Elegir un fichero» se escribió dos veces, y ahora una
+
+**Cerrado 2026-09-06** por `029` T020, y anotado porque el patrón se repetirá.
+
+`ipc/ingest.ts` tenía su propio `dialog.showOpenDialog` para fichas; `029` necesitaba
+el mismo para una normativa. Extraerlo y dejar el otro habría sido dos
+implementaciones de la única regla que importa ahí —que **el renderer nunca compone
+una ruta**—, y una regla con dos implementaciones es una regla con un sitio donde
+olvidarla. Ahora es `ipc/pick.ts` con dos llamantes.
+
+Queda uno más: `ipc/pictograms.ts` elige un **directorio**, no un fichero. No se ha
+tocado porque `pickFile`/`pickFiles` no cubren ese caso y forzarlo habría sido un
+parámetro que sólo usa un llamante. Cuando aparezca el tercer selector de directorio,
+esa es la señal.
+
+## G49 · La aplicación no sabe qué normativa sigue una maestra fuera de Andalucía
+
+**Cerrado 2026-09-06** por `029`. Anotado aquí porque es el fallo que este proyecto
+era menos capaz de ver desde dentro, y el patrón vale para lo siguiente.
+
+Durante un año Rampa dijo «Séneca» a todo el mundo. Séneca es la plataforma de
+Andalucía; la pareja ACNS/ACS y las Instrucciones de 8 de marzo de 2017 son el marco
+de Andalucía. `017` lo dejó escrito en sus Assumptions —«Andalusia first, y las
+secciones viven en el corpus para que una segunda comunidad sea un fichero
+Markdown»— y la segunda mitad no se cumplió: las secciones estaban en
+`instructions/guide.md`, el fichero base que recibe todo el mundo.
+
+**Por qué no se vio.** Quien lo escribió trabaja bajo ese marco, así que «España» y
+«Andalucía» se leían como sinónimos en el código y en ningún sitio decía lo
+contrario. No hacía falta ninguna decisión equivocada: bastó con que nadie de fuera
+lo leyera.
+
+**La forma de la solución, que es lo reutilizable.** Un contrato con **cero campos que
+lleguen a una comprobación**. Un corpus dice cómo se llaman los documentos y qué frases
+se imprimen; no tiene ranura para tocar las reglas de examen, la marca de borrador, la
+redacción, el filtro clínico ni la negativa de los objetivos. Así el escaneo de
+importación sólo tiene que **contar** un intento, no derrotarlo. Si algún día un campo
+nuevo le diera ese alcance a un corpus, el campo está mal, no la regla.
+
+**Lo que queda vivo:** G51 (actualizaciones), y que ningún corpus incluido puede pasar a
+`reviewed_by_teacher: true` hasta que alguien que trabaje bajo esa normativa discrepe de
+algo concreto — `es-an` incluido.
+
 ## G48 · «Borrar todo lo suyo» no llegaba a lo que Rampa le había escrito sin adaptar
 
 **Closed 2026-09-05** by `028` T020. **Necesita validación de protección de datos.**
