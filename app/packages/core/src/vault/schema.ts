@@ -46,6 +46,22 @@ export const profileSchema = z.object({
   code: z.string().min(1),
   axes: z.record(z.string(), axisLevel).default({}),
   axes_confirmed: z.record(z.string(), z.string()).optional(),
+  /**
+   * CUR per area (`032` FR-3001). Keys are subject names as the vault already knows
+   * subjects — roster `subjects`, a sheet's `subject` — free-named, no taxonomy.
+   * Values are the same 0–3 as `axes.CUR`, the same calibration, the same corpus.
+   *
+   * **A sibling of `axes`, never a key inside it.** Nested, an older build's schema
+   * would reject the whole `axes` object as malformed and set it aside — and a learner
+   * with no axes selects no recipes at all: every adaptation off, silently, on the
+   * machine of whichever colleague has not updated. As an unknown top-level key it is
+   * carried verbatim instead, which is a property of the shape rather than of anyone's
+   * care (research R1, asserted by `cur-areas.test.ts`).
+   *
+   * Optional, and **written only when she details an area**: an empty map written into
+   * every profile would bump her vault's schema version for nothing (FR-3005).
+   */
+  cur_areas: z.record(z.string(), axisLevel).optional(),
   works: z.array(z.string()).default([]),
   avoid: z.array(z.string()).default([]),
   /**
@@ -248,4 +264,35 @@ export function validateWithRepair<T extends z.ZodTypeAny>(
 export function axisLevelOf(p: Pick<Profile, 'axes'>, axis: Axis): 0 | 1 | 2 | 3 | null {
   const v = p.axes?.[axis];
   return v === 0 || v === 1 || v === 2 || v === 3 ? v : null;
+}
+
+/**
+ * The CUR that governs one area: the pair, else the general, else unobserved
+ * (`032` FR-3001).
+ *
+ * **One helper, called by every consumer.** «No pair for this area means use the
+ * general» has to mean the same thing in the prompt, in the compose level, in the ACNS
+ * draft and on the profile screen; written four times it would be expressed four ways,
+ * and the one written `?? 0` would assert that a child is at his year's level in a
+ * subject nobody assessed. Same argument as `031`'s single freshness deriver.
+ *
+ * `null` rather than 0 for «nobody said», keeping `011`'s rule: 0 is an assertion — «al
+ * nivel de su curso» — that a person makes. Recipes keyed on an unobserved axis stay
+ * off, which is `satisfied()`'s existing behaviour and needs no special case here.
+ *
+ * **Only CUR.** No other axis gains this, and there is deliberately no generic
+ * `axisLevelOf(p, axis, area)`: the functional axes describe barriers that travel with
+ * the child between subjects, so a per-area DEC would be a category error in the
+ * opposite direction (FR-3002, asserted by test because the temptation is structural).
+ */
+export function curFor(
+  p: Pick<Profile, 'axes' | 'cur_areas'>,
+  area?: string,
+): 0 | 1 | 2 | 3 | null {
+  const pair = area === undefined ? undefined : p.cur_areas?.[area];
+  if (pair === 0 || pair === 1 || pair === 2 || pair === 3) return pair;
+  // Exact-string keys: «Mates» and «Matemáticas» are two areas. The near-duplicate flag
+  // belongs at entry time (FR-3007); canonicalising stored data would be Rampa rewriting
+  // what she typed in her own file.
+  return axisLevelOf(p as Pick<Profile, 'axes'>, 'CUR');
 }

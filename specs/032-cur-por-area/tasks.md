@@ -16,14 +16,14 @@ tripwire before anyone can be tempted to re-tie it.
 
 ## Phase 1 · Setup · the baseline before the field exists
 
-- [ ] T001 Write `app/packages/core/test/cur-compat.test.ts` **first**, green against
+- [x] T001 Write `app/packages/core/test/cur-compat.test.ts` **first**, green against
       today's code, per [quickstart.md](quickstart.md) §1 (SC-3002, FR-3005): for a
       profile carrying only `axes.CUR` — `axisLevelOf`, recipe selection over the real
       corpus, the prompt's axis line (`prompt/adapt.ts`), the presentation map
       (`jobs/print.ts`), and a load→save round-trip that leaves the file byte-identical.
       Never edited after this phase: a baseline written once the field exists is written
       to fit what the field already does.
-- [ ] T002 [P] Write `app/packages/core/test/cur-areas.test.ts` **first**, red, from
+- [x] T002 [P] Write `app/packages/core/test/cur-areas.test.ts` **first**, red, from
       quickstart §2: `curFor` returns the pair, else the general, else `null` — an absent
       pair is **fallback, never zero-by-omission** (FR-3001), and `null` keeps `011`'s
       no-guessing rule. Includes the old-app simulation: parsing a profile with
@@ -51,17 +51,17 @@ marker must exist before the first writer, which is also COLA 1.17's stated orde
       `packages/core/test/vault-version.test.ts`, 9 cases. Monotonic and write-time
       verified by mutation: lowering the number fails, and writing on read fails four
       cases. Nothing else in this feature is built: T004 onwards are still open.)*
-- [ ] T004 `app/packages/core/src/vault/schema.ts` · `cur_areas` as an **optional
+- [x] T004 `app/packages/core/src/vault/schema.ts` · `cur_areas` as an **optional
       top-level sibling** of `axes` on `profileSchema` (keys: subject names; values: the
       same `axisLevel` 0–3), and `curFor(profile, area?)` beside `axisLevelOf` per
       [data-model.md](data-model.md) (FR-3001, FR-3005 read path). Inside `axes` is
       forbidden by test T002: a nested change makes an old app's repair set aside the
       whole `axes` field — every recipe off, silently.
-- [ ] T005 The write path: saving a profile whose `cur_areas` is non-empty bumps the
+- [x] T005 The write path: saving a profile whose `cur_areas` is non-empty bumps the
       vault to the version that means «profiles may carry per-area CUR» (FR-3005); a
       profile nobody details stays untouched and the vault stays version 1 (quickstart
       §6.4). In `app/packages/core/src/vault/profile.ts` + the save IPC.
-- [ ] T006 The two structural tests, in `app/packages/core/test/`:
+- [x] T006 The two structural tests, in `app/packages/core/test/`:
       **(a)** FR-3002 — no axis other than CUR has area machinery: no generic
       `axes_by_area`, `curFor` is CUR's alone, and the ten-axis structures
       (`AXES`, recipe conditions, prompt lines) are untouched by area anywhere;
@@ -85,7 +85,7 @@ targets its own level, general as fallback.
 **Independent Test**: one profile, two areas with different CURs; compose for each area
 and for an unnamed one; each targets its own level, the unnamed uses the general.
 
-- [ ] T007 [US1] `knownAreas(...)` in `app/packages/core/src/` (beside
+- [x] T007 [US1] `knownAreas(...)` in `app/packages/core/src/` (beside
       `vault/profile.ts` / `record/`): the suggestion vocabulary as the union of roster
       `subjects` (`rosterEntrySchema`) and the learner's record `subject`s
       (`record/scan.ts:170`), plus the deterministic near-duplicate check — case- and

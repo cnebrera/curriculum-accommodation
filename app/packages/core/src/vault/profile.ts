@@ -2,6 +2,7 @@ import type { Vault } from './io.js';
 import { learnerProfile, learnerNotes, learnerOverlay, VAULT } from './paths.js';
 import { profileSchema, rosterSchema, validateWithRepair, type Profile, type Roster } from './schema.js';
 import { stringifyFrontMatter, type Repair } from './parse.js';
+import { bumpVaultSchema, VAULT_SCHEMA_CUR_AREAS } from './version.js';
 
 export interface LoadedLearner {
   profile: Profile;
@@ -49,6 +50,24 @@ export async function saveProfile(vault: Vault, p: Profile): Promise<void> {
   const { _unparsed, notes: _n, ...rest } = p;
   const data: Record<string, unknown> = { ...rest, ...(_unparsed ?? {}) };
   await vault.writeDoc(learnerProfile(p.code), data, '');
+
+  /*
+   * Writing a per-area CUR upgrades the vault, and nothing else does (`032` FR-3005).
+   *
+   * At the **write** of the shape, never on read and never at startup — the rule
+   * `bumpVaultSchema` states and the reason it takes `atLeast`. A version bumped on read
+   * would rewrite vaults that gained nothing, and on a folder synced with a colleague
+   * that is a conflict generator.
+   *
+   * `Object.keys(...).length` and not merely «the field is present»: an empty map is a
+   * profile nobody detailed, and marking her whole vault as carrying a shape older
+   * readers do not know — because a screen sent `cur_areas: {}` unconditionally — is the
+   * marker crying wolf on the first save of any profile.
+   */
+  const areas = (data['cur_areas'] ?? {}) as Record<string, unknown>;
+  if (typeof areas === 'object' && areas !== null && Object.keys(areas).length > 0) {
+    await bumpVaultSchema(vault, VAULT_SCHEMA_CUR_AREAS);
+  }
 }
 
 /** Appends a dated note. Never rewrites what the teacher already wrote. */
