@@ -17,7 +17,7 @@ runs.
 
 ## Phase 1 · Setup · the two tests that come first
 
-- [ ] T001 Write `app/packages/core/test/no-territory-outside-corpus.test.ts` **first**,
+- [x] T001 Write `app/packages/core/test/no-territory-outside-corpus.test.ts` **first**,
       red, per [quickstart.md](quickstart.md) §1: the named Andalusian artefact list
       (Séneca, 8-3-2017, Instrucciones de 8 de marzo, DIAC, ACNS, ACS, Andalucía…) greps
       to zero in `instructions/*.md` outside `instructions/normative/`, in
@@ -26,7 +26,7 @@ runs.
       `specs/`. It must be red at all the sites research R5 names — the four TypeScript
       ones included — because a grep written after the refactor is written to fit it
       (FR-2704, SC-2701, SC-2702)
-- [ ] T002 [P] Capture the golden Andalusian draft **before the refactor**:
+- [x] T002 [P] Capture the golden Andalusian draft **before the refactor**:
       `app/packages/core/test/andalucia-unchanged.test.ts` snapshots a drafted ACNS from
       a fixture record with today's code; after extraction, the same draft with `es-an`
       selected must be identical apart from the provenance line T012 adds — and that

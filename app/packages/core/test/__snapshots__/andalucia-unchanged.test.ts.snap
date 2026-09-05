@@ -1,0 +1,82 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`the Andalusian draft, as it is the day before the extraction > and what it says is missing, in order 1`] = `
+[
+  "Temporalización (en parte)",
+  "Instrumentos de evaluación (en parte)",
+  "Desfase curricular (en parte)",
+]
+`;
+
+exports[`the Andalusian draft, as it is the day before the extraction > and where every line came from 1`] = `
+[
+  "el fichero de adaptaciones",
+  "el perfil",
+  "el registro del alumno",
+  "las fechas del registro",
+  "los informes de adaptación",
+  "los informes de las pruebas adaptadas",
+]
+`;
+
+exports[`the Andalusian draft, as it is the day before the extraction > the whole document, byte for byte 1`] = `
+"# BORRADOR de adaptación curricular NO significativa (ACNS)
+
+> **Sin firmar.** Mientras no la firmes, esto es un borrador: si lo copias a
+> Séneca ahora, estarás presentando algo que no ha revisado nadie.
+
+> **Esto no está presentado.** El registro es **Séneca**: esto es material para
+> llevar allí.
+>
+> **La ACNS la coordina el tutor o la tutora**, y la propuesta curricular la
+> completa el profesorado del área. Rampa no la ha escrito: ha ordenado lo que ya
+> había hecho para este alumno.
+
+Alumno: **A1B2** · Curso: 5.º de Primaria · Etapa: Primaria · Área: Matemáticas
+
+Ordenado por Rampa el 2026-06-12, a partir de 3 trabajos registrados.
+
+## Datos del alumno y del área
+
+- Código: A1B2
+- Curso: 5.º de Primaria
+- Etapa: Primaria
+- Nombre: *lo pones tú en Séneca — yo no lo guardo.*
+
+## Metodología
+
+- how-much-at-once@1 — aplicado en 1 documento (2026-03-03 a 2026-03-03)
+- chunk-the-prose@1 — aplicado en 1 documento (2026-03-03 a 2026-03-03)
+- exam-access-not-difficulty@2 — aplicado en 1 documento (2026-04-14 a 2026-04-14)
+
+## Actividades y tareas
+
+- Fichas y ejercicios: 2 documentos adaptados
+- Pruebas de evaluación: 1 documento adaptado
+
+## Materiales
+
+- Material adaptado documento a documento (3 en total).
+- *Todavía no has generado ningún fichero para entregar.*
+
+## Temporalización
+
+- Trabajo realizado entre el 2026-03-03 y el 2026-05-20.
+- Curso escolar: 2025-2026.
+
+**Falta lo tuyo.** Las fechas del registro dicen cuándo se trabajó. No dicen qué tiene planificado para el trimestre, y confundir las dos cosas es lo que hace que alguien archive el documento.
+
+## Instrumentos de evaluación
+
+- 1 prueba adaptada, cambiando la vía de acceso y de respuesta y no lo que se pregunta.
+- Las adaptaciones de acceso están nombradas como tales en cada informe.
+
+**Falta lo tuyo.** Los exámenes adaptados y las adaptaciones de acceso que se declararon. Falta lo que ella use y Rampa no haya visto.
+
+## Desfase curricular
+
+- Tú tienes apuntado en el perfil que en **Matemáticas** está con contenidos de cursos anteriores.
+
+**Falta lo tuyo.** El desfase que pide la normativa sale de una evaluación psicopedagógica y lo pones tú. Lo que Rampa puede ordenar es lo que tú misma tengas apuntado en el perfil sobre el nivel curricular de esa área, que no es lo mismo y va dicho como tuyo.
+"
+`;
