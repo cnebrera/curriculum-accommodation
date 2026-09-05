@@ -86,6 +86,18 @@ export function renderRecord(learner: string, entries: readonly RecordEntry[]): 
       lines.push(`- [Lo que leyó Rampa](${up(e.documents.ir)})`);
     } else if (e.source.of === 'pasted') {
       lines.push(`- [El texto que pegué](${up(e.documents.ir)}) — es también lo que leyó Rampa`);
+    } else if (e.source.of === 'structure') {
+      /*
+       * Its own line (`028` FR-2604), and the compiler is what asked for it: adding the
+       * case to `RecordSource` broke here, which is exactly where an agenda would
+       * otherwise have printed «Lo pedí así: » with an empty list after it — a row
+       * describing the wrong kind of work.
+       */
+      const label = e.source.kind === 'secuencia' ? 'Una secuencia de pasos'
+        : e.source.kind === 'historia' ? 'Una historia social'
+        : 'Una agenda';
+      lines.push(`- ${label} que hice yo, sin adaptar nada`);
+      lines.push(`- [Lo que salió](${up(e.documents.ir)})`);
     } else {
       lines.push(`- Lo pedí así: ${e.source.objectives.join('; ')}`
         + (e.source.anchor ? ` (${e.source.anchor})` : ''));

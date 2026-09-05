@@ -217,7 +217,14 @@ function Entry({ entry, onOpen, onReuse, onReview, onPrint, printing }: {
 
         <button className="btn btn-sm" disabled={gone(entry.documents.ir)}
                 onClick={() => onOpen(entry.documents.ir)}>
-          {entry.source.of === 'pasted' ? 'El texto que pegué' : 'Lo que leyó Rampa'}
+          {/*
+            Three answers, because the document is a different thing in each case. «Lo que
+            leyó Rampa» is false for material Rampa made: nobody read anything, and a
+            button that mislabels what it opens is a button she stops trusting.
+          */}
+          {entry.source.of === 'pasted' ? 'El texto que pegué'
+            : entry.source.of === 'structure' ? 'Lo que hice'
+            : 'Lo que leyó Rampa'}
         </button>
 
         {entry.documents.report ? (
@@ -238,7 +245,12 @@ function Entry({ entry, onOpen, onReuse, onReview, onPrint, printing }: {
           provider call for the reading (FR-1409, SC-1405), which is also why it is
           a button here rather than a re-upload there.
         */}
-        {onReuse && !gone(entry.documents.ir) ? (
+        {/*
+          Not offered for structure material (`028`): the button reuses the **extraction**
+          so another learner's sheet can be adapted from it, and an agenda is never
+          adapted. Offering it would promise a flow that has nothing to do.
+        */}
+        {onReuse && entry.source.of !== 'structure' && !gone(entry.documents.ir) ? (
           <button className="btn btn-sm"
                   onClick={() => onReuse(entry.jobId, entry.kind)}>
             Hacerlo otra vez para otro alumno
@@ -250,6 +262,12 @@ function Entry({ entry, onOpen, onReuse, onReview, onPrint, printing }: {
         <p className="small" style={{ margin: 0 }}>
           Lo pedí así: {entry.source.objectives.join('; ')}
           {entry.source.anchor ? ` · ${entry.source.anchor}` : ''}
+        </p>
+      ) : entry.source.of === 'structure' ? (
+        <p className="small" style={{ margin: 0 }}>
+          {entry.source.kind === 'secuencia' ? 'Una secuencia de pasos'
+            : entry.source.kind === 'historia' ? 'Una historia social'
+            : 'Una agenda'} que hiciste tú. No se adapta: se imprime.
         </p>
       ) : null}
 

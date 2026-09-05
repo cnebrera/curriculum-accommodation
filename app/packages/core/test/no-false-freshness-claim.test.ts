@@ -99,3 +99,44 @@ describe('and the true sentence reaches her vault file', () => {
     expect(note).toContain('No pongas aquí nada de un alumno');
   });
 });
+
+describe('no type in the UI claims to «mirror» one in core', () => {
+  /*
+   * A comment is not a mechanism (`028`, applying `031`'s own lesson to itself).
+   *
+   * `ui/src/data/record.ts` held a hand-written `RecordSource` with «Mirrors
+   * `packages/core/src/record/entry.ts`» above it. When `028` added a case in core the
+   * copy did not change and **the compiler said nothing** — the record screen would have
+   * gone on calling an agenda «lo que leyó Rampa», and the branch describing it would
+   * have been unreachable code that type-checked.
+   *
+   * `031` fixed exactly this for `DocumentFreshness`, in the same directory, three weeks
+   * earlier. Twice is a pattern, so this is the guard: if a UI type restates a core one,
+   * import it. The word «mirrors» in a type comment is the tell, and it is what somebody
+   * writes at the moment they decide not to import.
+   */
+  it('the word does not appear above a type declaration in `ui/`', () => {
+    const uiRoot = join(dirname(new URL(import.meta.url).pathname), '..', '..', '..', 'ui');
+    const offenders: string[] = [];
+    for (const file of walkUi(uiRoot)) {
+      const text = readFileSync(file, 'utf8');
+      // «Mirrors <path>» followed, within a few lines, by a type or interface declaration.
+      if (/[Mm]irrors?\s+`?[\w./-]*packages\/core[\s\S]{0,200}?\b(export\s+)?(type|interface)\s/
+        .test(text)) {
+        offenders.push(file.replace(`${uiRoot}/`, 'ui/'));
+      }
+    }
+    expect(offenders, 'import the type instead of restating it').toEqual([]);
+  });
+});
+
+function walkUi(dir: string): string[] {
+  const out: string[] = [];
+  for (const entry of readdirSync(dir)) {
+    if (entry === 'node_modules' || entry.startsWith('.')) continue;
+    const path = join(dir, entry);
+    if (statSync(path).isDirectory()) out.push(...walkUi(path));
+    else if (/\.tsx?$/.test(entry)) out.push(path);
+  }
+  return out;
+}

@@ -12,14 +12,14 @@ already exist in exactly one place.
 
 ## Phase 1 · Setup · the two tests that come first
 
-- [ ] T001 Write `app/packages/core/test/structure-no-learner-facts.test.ts` **first**,
+- [x] T001 Write `app/packages/core/test/structure-no-learner-facts.test.ts` **first**,
       red, per [quickstart.md](quickstart.md) §1. Both halves of SC-2603 over a generated
       corpus of structure documents: no rendering — HTML, ODT, linear — contains the
       learner's code, name or any other learner fact (**FR-2608**, via
       `assertNoLearnerData` plus accented-name fixtures), and every rendering with a
       pictogram carries the set's real derived attribution (**FR-2607**). Written before
       any render path exists, because this failure mode leaves the building
-- [ ] T002 [P] Write `app/packages/core/test/structure-build.test.ts` **first**, red,
+- [x] T002 [P] Write `app/packages/core/test/structure-build.test.ts` **first**, red,
       from quickstart §2: the seven builder cases — override wins, vocabulary next, set
       next, ambiguous → declared gap plus report line, none → silent gap, a child's name
       → nothing and no report line, same args → byte-identical document (**FR-2605**,
@@ -34,7 +34,7 @@ signing, the record and erasure all flow through `resolveDocument`/`startedFor`;
 structure job is not recognised as generated, every later task fails at a distance from
 the cause.
 
-- [ ] T003 `app/packages/core/src/structure/build.ts` · `buildStructure(args) → Built`
+- [x] T003 `app/packages/core/src/structure/build.ts` · `buildStructure(args) → Built`
       per [contracts/structure-document.md](contracts/structure-document.md): pure,
       deterministic, no filesystem, no model (**FR-2602**, **FR-2603**); every drawing
       resolved by `matchWord` with the caller's `overrides`/`chosen`/`names`
@@ -42,18 +42,18 @@ the cause.
       `gaps` (**FR-2606**); her item order is never changed. Front matter per
       [data-model.md](data-model.md): `source: structure`, `structure: <kind>`,
       `for_learner`, `language`
-- [ ] T004 `app/packages/core/src/ir/types.ts` · `isGenerated` accepts
+- [x] T004 `app/packages/core/src/ir/types.ts` · `isGenerated` accepts
       `source: structure` beside `source: composed`, with the comment saying why an
       ingested *reading* stays unprintable. Test in
       `app/packages/core/test/document.test.ts`: a structure job resolves, is refused to
       another learner, and derives the draft mark from the document (**FR-2604**'s
       resolution half)
-- [ ] T005 [P] `app/packages/core/src/record/entry.ts` + `scan.ts` · `RecordSource` gains
+- [x] T005 [P] `app/packages/core/src/record/entry.ts` + `scan.ts` · `RecordSource` gains
       `{ of: 'structure'; kind }` and `sourceOf` reads it from the front matter — the
       record must not describe an agenda as «composed from objectives: —». Test: a saved
       structure job is listed for its learner with kind and date, unadapted, via the
       existing `startedFor` branch (**FR-2604**)
-- [ ] T006 Assert the structural rule at source level, in
+- [x] T006 Assert the structural rule at source level, in
       `app/packages/core/test/structure-build.test.ts`: **no access to
       `set.byLanguage` outside `pictograms/match.ts`** — the four rungs are one
       mechanism, and a second lookup is how they fork (**FR-2605**)

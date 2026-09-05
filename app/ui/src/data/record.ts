@@ -2,11 +2,20 @@ import type { DocumentFreshness } from '../../../packages/core/src/ir/freshness.
 import { useEffect, useState } from 'react';
 import { useAsync, useCommand, type Loadable } from './async.js';
 
-/** Mirrors `packages/core/src/record/entry.ts`. */
-export type RecordSource =
-  | { of: 'file'; paths: string[] }
-  | { of: 'pasted' }
-  | { of: 'composed'; objectives: string[]; anchor?: string };
+/**
+ * Imported, not mirrored (`028`, applying `031`'s lesson).
+ *
+ * It was a hand-written copy with a comment saying «Mirrors
+ * `packages/core/src/record/entry.ts`» — and a comment is not a mechanism. When `028`
+ * added `{ of: 'structure' }` in core, the copy did not change and the compiler said
+ * nothing: the screen would have kept saying «Lo que leyó Rampa» about an agenda Rampa
+ * wrote, and the sentence about what it is would have been unreachable code.
+ *
+ * Now the compiler is the mechanism. Same fix `031` made for `DocumentFreshness`, same
+ * reason, three weeks later in the same file.
+ */
+export type { RecordSource } from '../../../packages/core/src/record/entry.js';
+import type { RecordSource } from '../../../packages/core/src/record/entry.js';
 
 export interface RecordEntry {
   jobId: string;

@@ -21,7 +21,16 @@ export type RecordSource =
    */
   | { of: 'pasted' }
   /** Composed from objectives (002). The "original" is what she asked for. */
-  | { of: 'composed'; objectives: string[]; anchor?: string };
+  | { of: 'composed'; objectives: string[]; anchor?: string }
+  /**
+   * Structure material (`028`): an agenda, a sequence of steps, a social story.
+   *
+   * Its own case rather than folded into `composed`, because the record's row is what she
+   * reads to find something again — and «compuesto a partir de objetivos: —» is what an
+   * agenda would say folded in there: a row describing the wrong kind of work with an
+   * empty list where the explanation should be.
+   */
+  | { of: 'structure'; kind: string };
 
 export interface RecordDocuments {
   /** What Rampa read: `material/<job>/ir.md`. */

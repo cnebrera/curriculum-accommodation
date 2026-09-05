@@ -9,7 +9,18 @@
 export type BlockClass =
   | 'explanation' | 'example' | 'instruction' | 'exercise'
   | 'assessment' | 'note' | 'reference' | 'figure' | 'scaffold' | 'unsupported'
-  | 'report-notes';
+  | 'report-notes'
+  /**
+   * Structure material (`028`): one moment of a day, one step of a routine.
+   *
+   * They are block classes rather than a document type because everything downstream —
+   * the renderer, the photocopy check, the pictogram cells, the attribution — walks
+   * blocks. A parallel document type would need every one of those written again.
+   *
+   * A social story has no class of its own: it is ordinary `explanation` paragraphs, and
+   * that is the point — what makes it a story is the corpus that drafted it, not a tag.
+   */
+  | 'agenda-moment' | 'secuencia-step';
 
 export interface Block {
   id: string;
@@ -65,7 +76,20 @@ export const isVerified = (d: HasFrontMatter): boolean =>
 export const isGenerated = (d: HasFrontMatter): boolean =>
   d.frontMatter['generated'] === true
   || d.frontMatter['kind'] === 'generated'
-  || d.frontMatter['source'] === 'composed';
+  || d.frontMatter['source'] === 'composed'
+  /*
+   * Structure material (`028` FR-2604): an agenda, a sequence, a social story.
+   *
+   * Widened by one disjunct rather than given a path of its own, so `resolveDocument`
+   * serves it, the draft mark derives from it, sign-off signs it and the record lists
+   * it — all of that already exists and none of it needed to learn a new shape.
+   *
+   * **An ingested reading is still not this.** `source: photos` or `source: pegado` is a
+   * document somebody else wrote that Rampa read, and printing one would be handing a
+   * teacher back her own scan with Rampa's marks on it. What these three sources have in
+   * common is that Rampa produced the page.
+   */
+  || d.frontMatter['source'] === 'structure';
 
 /**
  * Whether a teacher has signed this document off (007 FR-509).

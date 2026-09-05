@@ -20,6 +20,7 @@ export * from './vault/codes.js';
 export * from './vault/io.js';
 export * from './vault/version.js';
 export * from './vault/areas.js';
+export * from './structure/build.js';
 export * from './vault/document.js';
 export * from './vault/profile.js';
 

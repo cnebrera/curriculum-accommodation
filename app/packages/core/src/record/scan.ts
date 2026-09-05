@@ -41,11 +41,27 @@ const str = (v: unknown): string | undefined => (typeof v === 'string' && v ? v 
  * The IR's own front matter is the authority for the two fileless cases, because
  * `material/<job>/source/` being absent is normal rather than a fault.
  */
-function sourceOf(irFrontMatter: Record<string, unknown>, sourceFiles: string[]): RecordSource {
+/**
+ * What she gave this job, from what is on disk.
+ *
+ * Exported as `sourceOfEntry` so a test can ask it directly: it is the function that
+ * decides whether the record row says «una agenda» or «lo pedí así», and reaching it
+ * through a whole vault scan would test the scan instead of the decision.
+ */
+export function sourceOfEntry(
+  irFrontMatter: Record<string, unknown>, sourceFiles: string[],
+): RecordSource {
   if (sourceFiles.length > 0) {
     return { of: 'file', paths: sourceFiles };
   }
   const declared = str(irFrontMatter['source']) ?? '';
+  /*
+   * Structure material names its kind (`028` FR-2604), so the row can say «agenda» or
+   * «secuencia» rather than describing it as a composition with no objectives.
+   */
+  if (declared === 'structure') {
+    return { of: 'structure', kind: str(irFrontMatter['structure']) ?? 'agenda' };
+  }
   if (declared === 'generated' || declared === 'composed') {
     const objectives = Array.isArray(irFrontMatter['objectives'])
       ? (irFrontMatter['objectives'] as unknown[]).filter((o): o is string => typeof o === 'string')
@@ -54,6 +70,8 @@ function sourceOf(irFrontMatter: Record<string, unknown>, sourceFiles: string[])
   }
   return { of: 'pasted' };
 }
+
+const sourceOf = sourceOfEntry;
 
 /** Every job in the vault, oldest id first. */
 const allJobs = (vault: Vault): Promise<string[]> => vault.list(VAULT.material);
