@@ -451,7 +451,32 @@ sigue siendo el único ítem del lote sin tasks propios (sus tareas viven en spe
       fuera un alumno (lo cazó el e2e; se arregla recorriendo con `learnersOf`, el enumerador
       del propio expediente), y el aviso salía arriba de la sección en vez de en la fila donde
       ella acaba de pulsar — con un vocabulario largo, un botón que no parece hacer nada.
-- [x] **3.8 · Spec ESCRITA → `032-cur-por-area`** (P30). Requiere 1.17 (versión de vault). Falta: clarify → plan → tasks → implement.
+- [x] **3.8 · `032-cur-por-area` IMPLEMENTADA** (P30). Requería 1.17 (versión de vault), hecho.
+      **Hecho 2026-09-05, cinco commits.** 21 de 22 tareas; la abierta (SC-3004) necesita una
+      maestra con un cronómetro.
+      El caso de la revisión —bien en Lengua, dos cursos en Mates— era irrepresentable: un
+      solo CUR o bloquea todo o no dice nada. Ahora `cur_areas` va **al lado de `axes`, nunca
+      dentro**: anidado, el esquema de una versión anterior apartaría el objeto `axes` entero
+      y un alumno sin ejes no selecciona ninguna receta — cada adaptación apagada, en
+      silencio, en el portátil de quien no haya actualizado.
+      Un solo `curFor`, porque un fallback derivado dos veces son dos fallbacks; el que se
+      escribiera `?? 0` afirmaría que un niño está al nivel de su curso en un área que nadie
+      ha evaluado. El valor decide **si el respaldo silencioso al curso matriculado es
+      honesto** y no calcula ningún año: `matriculado − 2` sería un número inventado en la
+      hoja de un niño. A 2 o 3 se le pregunta con su propia nota devuelta; dejarlo en blanco
+      compone igual, porque preguntar no bloquea (P12 desató esa parada y hay un test que la
+      mantiene desatada).
+      La ACNS cita el desfase **del área de la que se habla** — antes la de Lengua citaba dos
+      cursos que su maestra había apuntado que ahí no existen, en un documento que ella firma
+      — y sigue sin redactar el desfase de la normativa, que sale de una evaluación.
+      **Un fallo que sólo salió pulsando una tecla**: el campo de área era un `<input list>`
+      con `<datalist>` y la primera tecla real mataba el renderer. Toda la suite pasaba porque
+      `fill()` no genera eventos de teclado. Y el editor tenía dos trampas más —añadir un área
+      la ponía a 0, y pulsar 0 para confirmarlo la borraba—, encontradas por el e2e.
+      De propina, dos lectores que faltaban: `vaultIsNewer` no lo llamaba nadie (ahora avisa
+      cuando otra versión ha tocado la carpeta compartida) y `profiles.example/` no lo leía
+      ningún test — llevaba un `notes:` en el perfil que `saveProfile` descarta, así que
+      copiarlo perdía lo escrito.
 - [x] **3.9 · Spec ESCRITA → `033-lengua-vehicular`** (P6). Falta: clarify → plan → tasks → implement.
 - [ ] **3.10 · Spec: 020 completo** — US2-US4: Preparar dentro del alumno, retirar el door, partir
       Mis notas, Configuración completa (P25/P29). Grande; los e2e de navegación son la red.

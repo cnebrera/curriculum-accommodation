@@ -36,8 +36,17 @@ response:
 language:
   instruction: es
 
-notes: |
-  Reads aloud accurately but loses the thread on questions with more than one
-  clause. Starts a task much faster when the first step is already done as an
-  example. Rejects worksheets that look "babyish" — keep the register age-
-  appropriate.
+# Las notas NO van aquí. Viven en `profiles/<código>/notes.md`, que es el fichero que
+# Rampa lee y al que añade lo que tú vas apuntando — un `notes:` en este fichero se
+# descarta en el siguiente guardado (`saveProfile` lo quita), así que copiarlo desde aquí
+# era perder lo que hubieras escrito. Corregido el 2026-09-05, encontrado por el test que
+# por fin lee este directorio.
+#
+# Lo que iba aquí, para que se vea dónde va:
+#
+#   profiles/A3/notes.md
+#   ---
+#   ## 2026-09-05 · Cómo lee
+#   Lee en voz alta con precisión pero pierde el hilo en preguntas con más de una
+#   oración. Arranca mucho antes si el primer paso ya está hecho de ejemplo. Rechaza
+#   las fichas que parecen «de pequeños»: el registro, de su edad.

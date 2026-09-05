@@ -413,6 +413,50 @@ every moment should have a spec. What it added beyond the seams pass:
    journey sentence → T094). Handover *import* (004 US2) recorded as deliberately
    deferred rather than silently missing.
 
+## G47 · Un `<datalist>` mata la ventana, y `fill()` no lo ve
+
+**Closed 2026-09-05** by `032`, and the lesson is about the test rather than the control.
+
+The área input was an `<input list>` bound to a `<datalist>` of her subjects. Pressing one
+real key opened the suggestion popup and **took the renderer down with it**: her window
+gone mid-sentence, with whatever she had not saved.
+
+The offline suite passed. The e2e suite passed. Both would have kept passing for ever,
+because Playwright's `fill()` sets an input's value without dispatching key events — so a
+test can type into a datalist input all day and never open the popup that crashes. What
+found it was `press('L')`, by hand, in the built application, while looking at something
+else.
+
+**The rule this leaves**: `fill()` tests the *state* a control ends in, never the *act* of
+using it. Where a control's behaviour is in the interaction — popups, autocomplete, IME,
+anything that opens on input — a test has to press keys. `e2e/cur-areas.spec.ts` does, and
+says why in its own header; `cur-only-and-untied.test.ts` keeps `<datalist>` out of the
+tree, because the fix that only lives in a comment is not a fix.
+
+The replacement is better anyway: buttons for the subjects she already has, a plain input
+for the ones she does not. One press instead of typing a name correctly.
+
+---
+
+## G46 · Los ejemplos de perfil no los leía ningún test, y llevaban un campo que se tira
+
+**Closed 2026-09-05** by `032` T020.
+
+`docs/profile-schema.md` says `profiles.example/` is «safe to read and copy», and nothing
+parsed those files. Both of them carried a top-level `notes:` — which `profileSchema` does
+not know and `saveProfile` explicitly drops (`const { _unparsed, notes: _n, ...rest }`).
+
+So a teacher following the documentation put her notes in `profile.yaml`, and the next
+save deleted them. Silently, in the field the schema's own docs call «more weight in
+practice than the numbers». Notes live in `profiles/<code>/notes.md`, which is what the
+same document says three sections later — the example contradicted the page it was on.
+
+Found by writing the test that reads the directory, which is the whole point: a
+directory shipped as documentation and read by no test drifts from the code it documents,
+and the drift is invisible precisely because nobody looks at examples twice.
+
+---
+
 ## G45 · Pictogramas que se elegían, se escribían en memoria y no llegaban al papel
 
 **Closed 2026-09-05** by `031-el-segundo-eje-de-frescura` (found by its research R1,

@@ -33,7 +33,11 @@ response:
 language:
   instruction: es
 
-notes: |
-  Curricular level is on par with the year group — the barrier is access, not
-  comprehension. Do not simplify content for this learner; that would be
-  modification without justification.
+# Las notas van en `profiles/<código>/notes.md`, no aquí — ver A3.yaml. Lo que había
+# escrito en este sitio, que además es lo más importante de este perfil:
+#
+#   profiles/B7/notes.md
+#   ---
+#   ## Qué NO hay que hacer
+#   Su nivel curricular es el de su curso: la barrera es de acceso, no de comprensión.
+#   No le simplifiques el contenido — eso sería modificarlo sin justificación.

@@ -1,7 +1,10 @@
 import { describe, it, expect } from 'vitest';
 import { mkdtemp } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { join, dirname } from 'node:path';
+import { readFileSync, readdirSync } from 'node:fs';
+import { load as loadYaml } from 'js-yaml';
+import { profileSchema, validateWithRepair, curFor } from '../src/vault/schema.js';
 import { Vault } from '../src/vault/io.js';
 import { loadLearner, saveProfile } from '../src/vault/profile.js';
 import { learnerProfile } from '../src/vault/paths.js';
@@ -119,5 +122,54 @@ describe('cached prefixes are what make it cents (T092)', () => {
       expect(p.cacheWrite, `${model} cacheWrite`).toBeDefined();
       expect(p.cachedInput!).toBeLessThan(p.input);
     }
+  });
+});
+
+describe('the example profiles are profiles', () => {
+  const examples = join(
+    dirname(new URL(import.meta.url).pathname), '..', '..', '..', '..', 'profiles.example');
+
+  /*
+   * `docs/profile-schema.md` tells her these are «safe to read and copy», and until now
+   * nothing checked that they parse. A broken example is a teacher copying a file that
+   * this application then repairs fields out of — and the only place she would notice is
+   * a worksheet that came out wrong.
+   *
+   * Added 2026-09-05 with `M1.yaml` (`032`), because a third example with a field the
+   * other two do not have is exactly when an unchecked directory starts to drift.
+   */
+  it('every one parses cleanly, with no field repaired away', () => {
+    const files = readdirSync(examples).filter((f) => f.endsWith('.yaml'));
+    expect(files.length).toBeGreaterThanOrEqual(3);
+
+    for (const file of files) {
+      /*
+       * `yaml.load`, not `parseFrontMatter`: these files are plain YAML with no `---`
+       * fences, and the front-matter parser reads that as an empty document — so the
+       * first version of this test validated `{}` four times and passed on `M1.yaml`
+       * without ever seeing it.
+       */
+      const data = loadYaml(readFileSync(join(examples, file), 'utf8')) as Record<string, unknown>;
+      const { value, repairs, unparsed } = validateWithRepair(
+        profileSchema, data, `profiles.example/${file}`);
+      expect(repairs, `${file} must not need repairing`).toEqual([]);
+      expect(value.code, `${file} must have a code`).toBeTruthy();
+      /*
+       * And nothing left over. An unknown key here is either a typo or a field this
+       * schema forgot — both worth seeing, and neither visible while the directory is
+       * read by nobody.
+       */
+      expect(Object.keys(unparsed), `${file} has fields the schema does not know`)
+        .toEqual([]);
+    }
+  });
+
+  it('and `M1.yaml` is the per-área example the docs point at', () => {
+    const data = loadYaml(readFileSync(join(examples, 'M1.yaml'), 'utf8')) as Record<string, unknown>;
+    const { value } = validateWithRepair(profileSchema, data, 'M1.yaml');
+    expect(value.cur_areas).toEqual({ 'Matemáticas': 2, 'Lengua': 0 });
+    // The general is what an undetailed área uses — «Inglés» is absent on purpose.
+    expect(value.axes?.['CUR']).toBe(2);
+    expect(curFor(value as Parameters<typeof curFor>[0], 'Inglés')).toBe(2);
   });
 });

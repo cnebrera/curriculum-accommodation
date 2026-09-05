@@ -43,10 +43,41 @@ that means something different in each school makes the corpus unportable.
 | Executive function | `EJE` | Planning, sequencing, starting a task, self-regulating |
 | Motor and response | `MOT` | How the learner can answer: write, type, point, dictate |
 | Sensory regulation | `REG` | Saturation by colour, density, sound; need for predictability |
-| Curricular level | `CUR` | Gap against year group. **Only relevant to significant adaptation** |
+| Curricular level | `CUR` | Gap against year group. Per subject as well as in general — see below |
 
 `CUR` is the one axis that must never drive a recipe on its own: acting on it
 means changing objectives, which is a decision for the teaching team.
+
+It is also **not** what triggers the significant-adaptation line. What stops a request is
+what the request would change, not how far behind the learner is (decision P12,
+2026-09-04) — the column above used to say «only relevant to significant adaptation»,
+which read as the opposite.
+
+### `cur_areas` — the level per subject (`032`, 2026-09-05)
+
+`CUR` is a relationship between a child and **one subject's** curriculum, and a single
+number per learner was least true here than anywhere: at his year's level in Lengua and
+two courses behind in Matemáticas is the ordinary case.
+
+```yaml
+axes:
+  CUR: 2            # the general value, unchanged in key and meaning
+cur_areas:          # optional; keys are subject names as your roster names them
+  Matemáticas: 2
+  Lengua: 0
+```
+
+- **A sibling of `axes`, never a key inside it.** An older Rampa carries an unknown
+  top-level key through untouched; a malformed `axes` would make it set the whole axis
+  record aside, and a learner with no axes gets no adaptations at all.
+- **An área with no pair uses the general — never 0.** Blank means «lo mismo que en
+  general»; `0` is «al nivel de su curso», which is something a person asserts.
+- **Only `CUR` has this.** The other nine describe barriers that travel with the child
+  between subjects.
+- Names are yours and are never rewritten. Rampa flags «Mates» beside «Matemáticas» when
+  you type it and offers the existing one; it never merges them for you.
+- Writing your first pair raises the vault's format marker (`.rampa/vault.yaml`) to 2, so
+  an older Rampa sharing the folder can say that it is showing you the general value.
 
 ## Qualitative fields
 
@@ -62,7 +93,9 @@ These carry more weight in practice than the numbers.
 
 ## Example
 
-See `profiles.example/A3.yaml` — an invented profile, safe to read and copy.
+See `profiles.example/A3.yaml` — an invented profile, safe to read and copy. There are
+two more: `B7.yaml` for a non-visual access profile, and `M1.yaml` for a learner whose
+curricular level differs by subject.
 
 ```yaml
 code: A3
@@ -89,11 +122,12 @@ response:
   writing: "Dictates; an adult transcribes"
 language:
   instruction: es
-notes: |
-  Reads aloud accurately but loses the thread on questions with more than one
-  clause. Starts a task much faster when the first step is already done as an
-  example.
 ```
+
+**`notes` is not a profile field**, and the example above used to show one. Notes live in
+`profiles/<code>/notes.md` — the file Rampa reads and appends to. A `notes:` key inside
+`profile.yaml` is dropped on the next save, so copying it from an example lost whatever
+you had written there. Corrected 2026-09-05.
 
 ## The three files of a learner
 

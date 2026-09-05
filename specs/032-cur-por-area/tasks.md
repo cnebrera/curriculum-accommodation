@@ -179,13 +179,13 @@ suggests one for Lengua.
 
 ## Phase 6 · Polish · and the parts that need a person
 
-- [ ] T020 Corpus and docs: `instructions/axes.md` («A note on CUR» gains the per-area
+- [x] T020 Corpus and docs: `instructions/axes.md` («A note on CUR» gains the per-area
       sentence: CUR is a relationship between the child and one subject's curriculum —
       and its ≥2 note must already speak P12's request-keyed language, not resurrect the
       profile-keyed stop) and `docs/profile-schema.md` (+ `profiles.example/` gains one
       example with `cur_areas`). Judgement in Markdown, where a teacher can correct it
       (Principle I).
-- [ ] T021 **Look at it** (`013` FR-1113): `npm run shots` — the profile screen with
+- [x] T021 **Look at it** (`013` FR-1113): `npm run shots` — the profile screen with
       three detailed areas, narrowest width and `xlarge`. The question is whether
       general-plus-pairs reads as one fact about one axis or as clutter, which no
       assertion can answer. Then run the **full** offline suite and confirm T001 is green
@@ -250,3 +250,31 @@ suggests one for Lengua.
 
 **Success criteria**: SC-3001 → T011 · SC-3002 → T001 + T021 (the closing run) ·
 SC-3003 → T017 · SC-3004 → T022 (**needs a teacher**).
+
+## What actually happened, 2026-09-05
+
+21 of 22, in five commits. T022 is the only one open and it cannot be closed here: it
+needs a teacher, a profile screen and a stopwatch.
+
+**SC-3002's closing evidence**: `cur-compat.test.ts` is byte-identical to the commit that
+introduced it (`git diff 9464aa0 -- app/packages/core/test/cur-compat.test.ts` is empty)
+and green. The baseline was never edited to fit what the field turned out to do.
+
+Four things were found that the plan did not anticipate, all by looking rather than by
+tests:
+
+- **`<datalist>` kills the renderer on the first real keystroke** (BACKLOG G47). The whole
+  suite passed because `fill()` dispatches no key events.
+- **Two traps in the editor**: adding an área set it to 0 — asserting «al nivel de su
+  curso» about a subject she had just typed — and the level buttons toggled like an
+  axis's, so pressing 0 to confirm «Lengua: 0» cleared the pair. The one value US1 exists
+  to record was the one she could not set with its own button.
+- **`profiles.example/` was read by no test** and shipped a `notes:` field `saveProfile`
+  discards (BACKLOG G46).
+- **`vaultIsNewer` had no caller** — written in T003 and read by nothing. FR-3008's
+  «a sentence rather than a silence» is now its reader.
+
+And two corrections to sentences that were true of an older design: `instructions/axes.md`
+still said CUR ≥ 2 put you «in significant-adaptation territory» (P12 retired that on
+2026-09-04), and `docs/profile-schema.md`'s CUR row said «only relevant to significant
+adaptation», which read as the opposite of what P12 decided.

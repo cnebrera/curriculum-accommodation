@@ -85,7 +85,39 @@ name, then four levels in order 0 to 3.
 
 ## A note on `CUR`
 
-It never drives an adaptation on its own. At 2 or above it is a **flag**: you are
-in significant-adaptation territory, where objectives and assessment criteria
-change, and that is a decision for the teaching team and the learner's official
-file — not for a tool and not for one teacher alone.
+It never drives an adaptation on its own.
+
+**And it is not the trigger for the significant-adaptation line.** Corrected on
+2026-09-05 to match `instructions/adapt.md` (decision P12): this note used to say that
+CUR 2 or above put you «in significant-adaptation territory», which anchors the stop in
+the child instead of in what is being asked for. Most learners in an aula de apoyo are
+one or two courses behind and sit their group's exams with **access** adaptations — big
+type, one instruction per sentence, more room to answer, answering aloud — and none of
+those touches an objective. What stops is a request that would change what is measured,
+and it stops the same at `CUR: 0` as at `CUR: 3`.
+
+So a high `CUR` is a reason to adapt the route with more care, not a reason to refuse.
+
+### `CUR` is about a child and **one subject's** curriculum
+
+Since 2026-09-05 (`032`) the profile may carry a level per área beside the general one:
+
+```yaml
+axes:
+  CUR: 2            # el general
+cur_areas:
+  Matemáticas: 2
+  Lengua: 0
+```
+
+This is the axis where a single number per learner was least true. A child can be at his
+year's level in Lengua and two courses behind in Matemáticas — that is the ordinary case,
+not the exception — and one value either over-blocks everything or reflects nothing.
+
+An área you have not detailed uses the general value. **Never zero**: leaving an área
+blank means «lo mismo que en general», not «al nivel de su curso», because the second is
+something a person asserts after looking.
+
+The other nine axes have no per-área version, and that is deliberate rather than pending:
+they describe barriers that travel with the child between subjects. A learner does not
+decode text differently in Mates than in Lengua.

@@ -1,0 +1,55 @@
+# Example type-profile. Invented — not a real learner.
+#
+# The case `032` exists for: a child at his year's level in one subject and two courses
+# behind in another. With a single `CUR` per learner he is unrepresentable — one value
+# either over-blocks Lengua or says nothing about Matemáticas — and the constitution
+# justifies Principle V with exactly this: «one learner needs different things in
+# different subjects».
+
+code: M1
+
+axes:
+  PER-V: 0
+  PER-A: 0
+  DEC: 1        # reads accurately, slowly
+  LIN: 1
+  COG: 2
+  ATE: 2
+  EJE: 2
+  MOT: 0
+  REG: 0
+  CUR: 2        # the general value: what governs any subject not detailed below
+
+# The level per subject. Optional, and a sibling of `axes` — never a key inside it.
+#
+# Keys are subject names as this vault already names them (the roster's `subjects`, a
+# sheet's `subject`). There is no fixed list of school subjects anywhere in Rampa: what
+# counts as an área is judgement.
+cur_areas:
+  Matemáticas: 2   # contenidos de cursos anteriores
+  Lengua: 0        # al nivel de su curso
+
+# Inglés is deliberately absent, and that is the point: an área with no pair uses the
+# general value (2 here). It does NOT read as 0 — «al nivel de su curso» is something a
+# person asserts after looking, and nobody has looked at his Inglés.
+
+works:
+  - "Empezar el primer ejercicio con él, en voz alta"
+  - "Los pasos dados por escrito, para tacharlos"
+
+interests: ["dinosaurios", "fútbol"]
+
+avoid:
+  - "Nada con cuenta atrás"
+
+response:
+  default: short
+
+language:
+  instruction: es
+
+year: es:primaria-5
+stage: Primaria
+age: 11
+
+# Las notas van en `profiles/M1/notes.md`, nunca en este fichero — ver A3.yaml.
