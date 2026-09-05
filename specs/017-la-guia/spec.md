@@ -348,6 +348,13 @@ it is the one that most needs the earlier parts working before it is attempted.
   `instructions/`, never in code, so a change in Séneca is a Markdown edit
   (Principle I).
 
+  **Amended 2026-09-06 by `029-la-normativa-es-un-corpus`.** The sections were in the
+  corpus, and that half held — but they were in `instructions/guide.md`, the base file
+  every teacher receives, as though Andalucía's section list were everyone's. They now
+  live in `instructions/normative/es-an.md`, one file per territory, and the base file
+  carries a **generic** scaffold of only what Rampa can source. FR-1517 is unchanged in
+  what it requires; where the corpus lives is one directory deeper.
+
 ### Interrogating a guide
 
 - **FR-1518**: A loaded guide is **content**, and content is never instruction
@@ -396,6 +403,23 @@ it is the one that most needs the earlier parts working before it is attempted.
   argument about Principle IX.
 - Andalusia first, for the same reason `011` starts there, and the sections live in
   the corpus so a second comunidad is a Markdown file.
+
+  **Note, 2026-09-06 (`029`).** «Andalusia first» turned out to mean «Andalusia only,
+  and unmarked»: Séneca, the ACNS/ACS pair and the Instrucciones de 8-3-2017 reached
+  every teacher in the country as though they were the product. The assumption itself
+  was right and stays; what `029` changed is that the second comunidad really is now a
+  Markdown file, and the first one is one too — `instructions/normative/es-an.md`, with
+  the base corpus generic underneath it.
+
+  The extraction changes **nothing** for a teacher in Sevilla: her draft is byte-for-byte
+  the one this spec shipped, apart from a line naming the corpus it followed
+  (`029` FR-2705). Pinned by `packages/core/test/andalucia-unchanged.test.ts`.
+
+  One edge case inverts. This spec's «a DIAC from another comunidad» case — a document
+  whose vocabulary Rampa does not know — becomes the **home** case as soon as that
+  comunidad's corpus is selected: it is her normativa, and the draft is written in it.
+  What stays true is that measures are extracted from any document regardless, because
+  extraction never depended on the vocabulary.
 
 ## Dependencies and sequencing
 

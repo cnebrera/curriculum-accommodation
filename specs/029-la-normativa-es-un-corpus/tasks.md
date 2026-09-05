@@ -90,7 +90,7 @@ pre-extraction shape would be built twice.
       scaffold); an imported or modified corpus travels **inside P18's fence-with-nonce
       with the task reminder after it** — a bundled one travels as `guide.md` does today
       (FR-2701, research R4)
-- [ ] T011 Amend `specs/017-la-guia/spec.md` with **one dated note**, FR-1401 style, on
+- [x] T011 Amend `specs/017-la-guia/spec.md` with **one dated note**, FR-1401 style, on
       its Assumptions' «Andalusia first» and FR-1517: the Andalusian vocabulary moved to
       `instructions/normative/es-an.md` per this feature; extraction unchanged; the
       «DIAC from another comunidad» edge case inverts to the home case when her corpus
