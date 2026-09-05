@@ -76,3 +76,38 @@ stale_since: "2026-08-30"      # the extraction changed under this sheet
 In the document because that is where a teacher opening it in Obsidian will see
 it, and because a side file would be the batch entity arriving by another door.
 A stale sheet is not deleted — it is the sheet she may already have photocopied.
+
+### Enmienda · 2026-09-05 (`031`)
+
+**`stale_since` nunca se construyó.** Lo que se implementó, y lo que hay en el disco de
+cualquier vault real, es una frescura **derivada**: ninguna hoja lleva marca alguna, y la
+pregunta se responde comparando lo que la hoja registra contra lo que hay ahora
+(`app/packages/core/src/ir/reading.ts`). La sección de arriba describe un diseño que se
+descartó durante la implementación de `005` sin que este documento lo recogiera.
+
+Se corrige aquí, y no borrando el párrafo, porque la razón por la que se descartó sigue
+siendo la razón por la que no debe volver: **una marca escrita en la hoja edita un
+documento que la PT puede haber firmado**. Cambiar de opinión sobre un dibujo no puede
+tocar los bytes de una hoja firmada — es lo que `031` T019 comprueba byte a byte.
+
+Desde `031` el modelo es **uno solo con dos ejes**, en
+`app/packages/core/src/ir/freshness.ts`:
+
+| Eje | Qué compara | Qué hace ella |
+|---|---|---|
+| `reading` | la huella de la lectura con la que se hizo, contra el `ir.md` de ahora | volver a verificar la lectura |
+| `drawings` | el dibujo que registró cada palabra (`data-picto`), contra el que esa palabra tendría hoy | volver a preparar la hoja |
+
+Dos ejes y dos frases, nunca una «desactualizada» fundida: son hechos distintos con
+remedios distintos, y una sola palabra es exactamente donde uno esconde al otro
+(`031` FR-2903). El eje de dibujos puede además responder «no lo sé», que es lo que
+contesta cuando el vault es anterior a la versión que empezó a registrar los pares
+(`031` FR-2906) — una hoja sin pares en un vault antiguo no dice que no llevara
+pictogramas, dice que nadie lo anotó.
+
+**Las cláusulas de FR-520 no cambian.** Corregir la extracción después de que existan
+adaptaciones sigue dejándolas marcadas, la hoja sigue sin borrarse, y sigue siendo la
+hoja que ella puede haber fotocopiado ya. Lo que cambia es dónde vive la marca: en
+ninguna parte, porque se deduce.
+
+Detalle en `specs/031-el-segundo-eje-de-frescura/`.

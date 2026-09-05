@@ -257,3 +257,22 @@ export function useChosenSoFar(language = 'es'): Loadable<WordChoice[]> {
  * reason.
  */
 export const PICTOGRAM_PROGRESS_STAGE = 'Trayendo pictogramas';
+
+/**
+ * How many sheets a change would make stale, before she makes it (`031` T015, FR-2905).
+ *
+ * A **command** and not an `useAsync`: it is asked once, at the moment she picks a
+ * different drawing, and asking it on every render would walk `material/` every time she
+ * scrolls a list of words.
+ */
+export interface AffectedSheets {
+  count: number;
+  /** Codes, never names (`013` FR-1107). */
+  byLearner: Array<{ learner: string; jobs: string[] }>;
+}
+
+export function useAffectedSheets() {
+  return useCommand((args: {
+    word: string; language?: string; next: string | null; learner?: string;
+  }) => window.rampa.pictograms.affected(args) as Promise<AffectedSheets>);
+}

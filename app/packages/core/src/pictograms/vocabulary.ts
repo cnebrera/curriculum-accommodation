@@ -97,9 +97,18 @@ export function renderVocabulary(v: Vocabulary): string {
   lines.push('alumnos. Si un alumno concreto necesita otro dibujo, eso va en su perfil y');
   lines.push('gana sobre esto.', '');
   lines.push('Puedes cambiarlo desde Rampa o editando el número de aquí arriba.', '');
-  lines.push('**Las hojas que ya hiciste no cambian.** Se quedan con el dibujo anterior, y');
-  lines.push('no te aviso de que están desactualizadas — todavía no sé hacerlo. Si quieres');
-  lines.push('que lleven el nuevo, vuelve a prepararlas.', '');
+  /*
+   * **True since `031`** (FR-2907, SC-2904).
+   *
+   * This paragraph said «no te aviso de que están desactualizadas — todavía no sé
+   * hacerlo», which was itself a correction of an earlier sentence claiming the
+   * opposite. Of the three places `024` FR-2218 was claimed and not implemented — a doc
+   * comment, a screen and this file — **this is the one that outlives the application**:
+   * her vault is hers, and a false sentence in it is still there when Rampa is not.
+   */
+  lines.push('**Las hojas que ya hiciste se quedan con el dibujo anterior.** Te aviso de');
+  lines.push('cuáles son: aparecen marcadas en el expediente del alumno. Si quieres que');
+  lines.push('lleven el nuevo, vuelve a prepararlas.', '');
   lines.push('**No pongas aquí nada de un alumno** — ni nombres, ni códigos. Este fichero');
   lines.push('viaja en un traspaso, y viaja precisamente porque no dice nada de nadie.');
   lines.push('');

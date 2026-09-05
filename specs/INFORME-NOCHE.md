@@ -992,6 +992,78 @@ desobedeciendo — aunque eso es mi lectura y no la de una PT, que es T032.
 turno de este proyecto lo ha completado todavía un modelo) y T032 (que una PT diga si el
 camino de vuelta se encuentra sin que se lo señalen).
 
+### 3.7 · `031` implementada — el dato que no llegaba al disco, y el segundo eje
+
+23 de 23 tareas, dos commits. Y el hallazgo no está donde lo buscaba la spec.
+
+**`024` FR-2218 llevaba un año dicho y no hecho, pero el fallo era anterior.** El aviso
+que faltaba («si cambias un dibujo, las hojas que ya hiciste quedan marcadas») no se podía
+construir porque **el dato no existía en el disco**: `applyPictograms` marcaba
+`data-picto` en el documento *parseado* y `adapt.ts` escribía `result.out`, la salida
+cruda sin marcar. El documento marcado sólo alimentaba el informe, y el informe guarda
+palabras sin ids.
+
+Lo que lo convierte en defecto y no en función pendiente: `print.ts` **leía `data-picto`
+de vuelta del fichero**, bajo el comentario «lo que va en la hoja se decidió al
+adaptarla». Una lectura de un valor que nadie escribe — G36 con la escritura y la lectura
+separadas por un fichero, que es exactamente por qué el compilador tampoco lo veía.
+Ningún test lo cazaba porque ninguno hacía el viaje adaptar → disco → imprimir: el e2e se
+paraba en el corpus y el test de shell afirmaba sobre la lista `used` en memoria.
+
+**La lección no es «más tests»**: un test que afirma sobre el mismo valor en memoria que
+el código acaba de calcular no puede saber si ese valor se escribió alguna vez. Cuando un
+dato cruza un fichero, el test tiene que cruzarlo. Anotado como BACKLOG G45.
+
+Con el dato en disco, el resto se deduce:
+
+- **Un solo modelo con dos ejes** (`ir/freshness.ts`) y **una sola función que los
+  deriva**. La fila del expediente y la pantalla de verificación llaman a
+  `sheetFreshness`; nadie más. Hay un test que lo afirma **enumerando los llamantes**,
+  porque un tercer llamante es donde se escribe la segunda definición de
+  «desactualizada». Su primera versión buscaba «`data-picto` cerca de un `!==`» y señaló
+  `render/attribution.ts`, que compara contra `''` para preguntar «¿lleva esta hoja algún
+  pictograma?». Un patrón lo bastante laxo para cazar eso es un patrón que se silencia en
+  vez de obedecerse: ahora es una lista de lectores con un motivo por entrada.
+- **Dos frases, nunca una fundida.** «Se hizo con una lectura que cambiaste» y «lleva un
+  dibujo que ya no usas: casa» son hechos distintos con remedios distintos —volver a
+  verificar la lectura, o volver a preparar la hoja— y una sola palabra es donde uno
+  esconde al otro. Así estuvo FR-2218 «satisfecho por un comentario» un año.
+- **El número que se le enseña antes de decidir sale del mismo derivador**, con esa
+  palabra puesta a lo que va a elegir. «2 hojas» es por construcción lo que el expediente
+  enseñará después, no dos funciones que coinciden hoy.
+- **Las hojas no se reescriben.** El e2e compara los **bytes** de una hoja firmada a
+  través del cambio. Es la razón por la que `005`'s `stale_since` nunca se construyó, y
+  ahora ese documento lo dice: cambiar de opinión sobre un dibujo no puede editar un
+  documento que la PT ha firmado.
+- **Un vault que nunca los registró contesta «no lo sé», jamás «al día».** La versión del
+  vault (P50, hecho en 1.17) es lo que distingue «esta hoja no llevaba pictogramas» de
+  «nadie lo apuntó».
+- **Las tres frases falsas dicen ahora lo que pasa** —la pantalla, el fichero
+  `vocabulario.md` de su vault y un comentario— con un test que prohíbe que las viejas
+  vuelvan a `ui/` o `core/`. La del vault importaba más: ese fichero sobrevive a la
+  aplicación.
+
+**Dos defectos los encontró mirar, no los tests.** El recuento recorría cada entrada del
+directorio de un trabajo como si fuera un código de alumno, `ir.md` incluido, y leía
+`material/job-a/ir.md/adapted.md`: lo cazó el e2e con un `ENOTDIR`, y se arregla
+recorriendo con `learnersOf`, el enumerador del propio expediente — dos enumeraciones de
+«qué alumnos tiene este trabajo» es el mismo defecto que dos definiciones de «stale», un
+directorio más arriba. Y al hacer las capturas (T022): el aviso salía **arriba de la
+sección**, no en la fila donde ella acaba de pulsar. Con un vocabulario tan largo como su
+curso, pulsar «dejar de elegir» en la palabra treinta ponía la respuesta fuera de
+pantalla — un botón que no parece hacer nada. Ahora sale en la fila. También cayó un
+`? 'usas' : 'usas'` en la fila del expediente: un ternario con la misma cadena en las dos
+ramas, G36 en una línea.
+
+`024` FR-2218 y BACKLOG G35 quedan cerrados con fecha y puntero; `005/data-model.md`
+lleva su enmienda fechada.
+
+38 casos nuevos y 5 e2e; 6 costuras verificadas por mutación.
+
+**Lo que queda de `031`:** nada. Es la primera feature del Lote 3 que no deja tareas en
+manos de una persona — no porque se haya recortado, sino porque ninguno de sus
+requisitos necesita una clave real ni el juicio de una PT.
+
 ## Notas de proceso
 
 - **La instancia que me pediste, y por qué la he reiniciado.** La levanté con `npm run dev`
@@ -1043,13 +1115,13 @@ camino de vuelta se encuentra sin que se lo señalen).
 | | |
 |---|---|
 | `npx tsc --noEmit` | verde (línea base) |
-| `npx vitest run` | verde — 1.986 casos |
-| `npm run test:e2e` | verde — 154 casos |
+| `npx vitest run` | verde — 2.018 casos |
+| `npm run test:e2e` | verde — 159 casos |
 | `scripts/check-fr-coverage.sh` | verde (línea base) |
 | `scripts/check-spec-kit.sh` | verde (línea base) |
 
 ---
 
-**Lotes 0, 1 y 2 completos (5/5 · 17/17 · 12/12); Lote 3 con `027`, `022` y `026`
-implementadas.** Quedan **3.10** (`020` US2-US4), **3.13** (notas de BACKLOG) y **8
-features** por `/speckit-implement` en el orden 031→032→028→035→033→029→030→034.
+**Lotes 0, 1 y 2 completos (5/5 · 17/17 · 12/12); Lote 3 con `027`, `022`, `026` y `031`
+implementadas.** Quedan **3.10** (`020` US2-US4), **3.13** (notas de BACKLOG) y **7
+features** por `/speckit-implement` en el orden 032→028→035→033→029→030→034.

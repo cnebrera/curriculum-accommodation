@@ -559,27 +559,29 @@ export async function candidatesFor(args: {
 }
 
 /**
- * She picks one (FR-2214). **FR-2218 is NOT implemented** — see below.
+ * She picks one (FR-2214), and `024` FR-2218 is **implemented** since `031`.
  *
  * Recorded **once, for every learner** — «lo bajo una vez y lo uso para todos los que
  * lo necesiten».
  *
- * ## What this does not do, and what used to be claimed here
+ * ## The history, because it is the point
  *
- * This comment said «every sheet made from the previous answer is marked stale rather
- * than rewritten: `005` FR-520's rule». That was false. Staleness (`jobs/stale.ts`)
- * compares `readingFingerprint(parseIR(ir.md))` against each sheet's recorded reading,
- * and a vocabulary change does not touch `ir.md` — so every sheet made with the old
- * pictogram still reports `fresh`.
+ * This comment once said «every sheet made from the previous answer is marked stale
+ * rather than rewritten: `005` FR-520's rule». That was false: staleness compared
+ * `readingFingerprint(parseIR(ir.md))` against each sheet's recorded reading, and a
+ * vocabulary change does not touch `ir.md`. The same claim was on screen and **written
+ * into her own vault file**, where it outlives Rampa — found by an independent review,
+ * not by a test, and `previous` below existed only to fill a log field, which is what a
+ * requirement satisfied by nobody looks like from the inside.
  *
- * Worse, the same claim was on screen and **written into her own vault file**, where it
- * outlives Rampa. Found by an independent review, not by a test, and `previous` below
- * existed only to fill a log field — which is what a requirement satisfied by nobody
- * looks like from the inside.
+ * `031` built it, and the reason it could is that `data-picto` had been recording
+ * word→id per block all along — **on the parsed document, and never on disk**. So the
+ * feature that was «claimed in three places and implemented in none» was one missing
+ * write away from being answerable, and `stampPicto` is that write.
  *
- * Reopened as backlog G35. It is computable: `data-picto` already records word→id per
- * block, so a sheet whose recorded id for a word differs from the current answer is
- * stale. Until it exists, the screen and the file say what actually happens.
+ * The three sentences are corrected, and the count she now sees before a change comes
+ * from the same function the record runs: text and behaviour share one source, which is
+ * what makes this shape unmakeable here rather than merely fixed once.
  */
 export async function chooseWord(args: {
   word: string; id: string; language?: string;

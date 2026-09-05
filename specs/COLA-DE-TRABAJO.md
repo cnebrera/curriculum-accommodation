@@ -424,7 +424,33 @@ sigue siendo el único ítem del lote sin tasks propios (sus tareas viven en spe
 - [x] **3.4 · Spec ESCRITA → `028-material-de-estructura`** (P4). Falta: clarify → plan → tasks → implement.
 - [x] **3.5 · Spec ESCRITA → `029-la-normativa-es-un-corpus`** (P3, incluye P8). Falta: clarify → plan → tasks → implement.
 - [x] **3.6 · Spec ESCRITA → `030-el-paquete-de-coordinacion`** (P5/P7/P13). Falta: clarify → plan → tasks → implement.
-- [x] **3.7 · Spec ESCRITA → `031-el-segundo-eje-de-frescura`** (P34, G35). Falta: clarify → plan → tasks → implement.
+- [x] **3.7 · `031-el-segundo-eje-de-frescura` IMPLEMENTADA** (P34, G35).
+      **Hecho 2026-09-05, dos commits.** 23 de 23 tareas.
+      El fallo de fondo no era el aviso que faltaba: era que **los pictogramas elegidos no
+      llegaban al disco**. `applyPictograms` marcaba el documento en memoria y `adapt.ts`
+      escribía la salida sin marcar, mientras `print.ts` leía del fichero un valor que nadie
+      escribía nunca (BACKLOG G45). Sin ese dato no hay eje que derivar, así que se persiste
+      primero — `stampPicto` parchea el markdown crudo por id de bloque — y todo lo demás se
+      deduce.
+      **Un solo modelo con dos ejes**, y una sola función que los deriva: la fila del
+      expediente y la pantalla de verificación llaman a `sheetFreshness` y nadie más — hay un
+      test que lo afirma enumerando los llamantes, porque un tercer llamante es donde se
+      escribe la segunda definición de «desactualizada». Dos frases y nunca una fundida: «se
+      hizo con una lectura que cambiaste» y «lleva un dibujo que ya no usas: casa» son hechos
+      distintos con remedios distintos.
+      El número que se le enseña **antes** de cambiar de opinión sale de ese mismo derivador
+      con esa palabra puesta a lo que va a elegir, así que «2 hojas» es por construcción lo que
+      el expediente enseñará después, no dos funciones que coinciden. Y las hojas no se
+      reescriben: el e2e compara los bytes de una hoja **firmada** a través del cambio.
+      Un vault que nunca registró los dibujos contesta «no lo sé», jamás «al día»: la versión
+      del vault (P50) es lo que distingue «esta hoja no llevaba pictogramas» de «nadie lo
+      apuntó».
+      Y las tres frases falsas —la pantalla, el fichero `vocabulario.md` de su vault y un
+      comentario— dicen ahora lo que pasa, con un test que prohíbe que las viejas vuelvan.
+      **Dos defectos los encontró mirar, no los tests**: el recuento recorría `ir.md` como si
+      fuera un alumno (lo cazó el e2e; se arregla recorriendo con `learnersOf`, el enumerador
+      del propio expediente), y el aviso salía arriba de la sección en vez de en la fila donde
+      ella acaba de pulsar — con un vocabulario largo, un botón que no parece hacer nada.
 - [x] **3.8 · Spec ESCRITA → `032-cur-por-area`** (P30). Requiere 1.17 (versión de vault). Falta: clarify → plan → tasks → implement.
 - [x] **3.9 · Spec ESCRITA → `033-lengua-vehicular`** (P6). Falta: clarify → plan → tasks → implement.
 - [ ] **3.10 · Spec: 020 completo** — US2-US4: Preparar dentro del alumno, retirar el door, partir

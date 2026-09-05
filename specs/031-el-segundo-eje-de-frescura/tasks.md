@@ -98,7 +98,7 @@ entry point is the parallel mechanism G35 forbids.
       is why no sheet records a source. Assembled once per scan — the vocabulary is one
       file, the override is in a profile the caller already loads — because building it
       per job turns an O(jobs) scan into O(jobs) file reads.)*
-- [ ] T007 [P] Assert the structural rule: `sheetFreshness` has exactly two callers
+- [x] T007 [P] Assert the structural rule: `sheetFreshness` has exactly two callers
       (`record/scan.ts`, `jobs/stale.ts`) and nothing else imports the old single-axis
       `freshnessOf`. Source-level, because a sister function somebody calls instead is
       how FR-2218 was a comment for a year
@@ -180,7 +180,7 @@ stale, the count equals what the record then shows, and the false texts are gone
 **Independent Test**: change a choice affecting known sheets; the count shown matches the
 sheets actually marked (quickstart §5).
 
-- [ ] T014 [US2] `app/packages/core` · `affectedByDrawingChange(vault-walk inputs,
+- [x] T014 [US2] `app/packages/core` · `affectedByDrawingChange(vault-walk inputs,
       prospective resolver)` — **the same `sheetFreshness`, run with tomorrow's
       resolution** (research R3): the ladder with one rung hypothetically set. One walk
       of `material/`, short-circuit on sheets whose pairs lack the word, unknown sheets
@@ -188,29 +188,29 @@ sheets actually marked (quickstart §5).
       record then breaks is SC-2902 failed). Scoped to one learner when the change is an
       override, to all otherwise (spec edge case: global change does not touch
       override-pinned sheets, and vice versa)
-- [ ] T015 [US2] `app/packages/shell/src/ipc/pictograms.ts` + `preload.ts` + hook in
+- [x] T015 [US2] `app/packages/shell/src/ipc/pictograms.ts` + `preload.ts` + hook in
       `app/ui/src/data/pictograms.ts` · the new channel `pictograms:affected` per
       [contracts/affected-sheets.md](contracts/affected-sheets.md) — read-only, covered
       by T002's byte-wise invariant, `next` and `language` validated on the existing
       allowlists
-- [ ] T016 [US2] `app/ui/src/pictograms/MyVocabulary.tsx` + `ChooseWord.tsx` · before a
+- [x] T016 [US2] `app/ui/src/pictograms/MyVocabulary.tsx` + `ChooseWord.tsx` · before a
       change to an already-chosen word (including «Dejar de elegir»), show «N hojas usan
       el dibujo anterior; quedarán marcadas como desactualizadas en el expediente»
       (FR-2905). A first-ever choice warns nothing: no sheet carries the word, N is 0 by
       definition. The contract records that the future override editor (COLA 2.4 / P48)
       joins through the same channel with `learner` set
-- [ ] T017 [US2] The false sentences replaced by true ones (FR-2907's UI half, SC-2904):
+- [x] T017 [US2] The false sentences replaced by true ones (FR-2907's UI half, SC-2904):
       `MyVocabulary.tsx`'s «todavía no sé avisarte de que están desactualizadas», the
       matching prose `renderVocabulary` writes into **her vault file**
       (`app/packages/core/src/pictograms/vocabulary.ts` — «no te aviso… todavía no sé
       hacerlo»), and the stale doc comment in
       `app/packages/shell/src/pictograms/bring.ts:554`. The vault file outlives the
       application, which is where the last lie lived longest
-- [ ] T018 [P] [US2] Guard test: the false sentence appears **nowhere** in `app/ui/src`
+- [x] T018 [P] [US2] Guard test: the false sentence appears **nowhere** in `app/ui/src`
       or `app/packages` («las hojas que ya hiciste no cambian» / «no sé avisarte»), and
       the true sentence shown is fed by the same IPC the record reads — the G35 lie made
       unmakeable because text and behaviour share one source (SC-2904)
-- [ ] T019 [US2] `app/e2e/drawing-freshness.spec.ts` per quickstart §5, `RAMPA_HIDDEN=1`:
+- [x] T019 [US2] `app/e2e/drawing-freshness.spec.ts` per quickstart §5, `RAMPA_HIDDEN=1`:
       the walk that proves SC-2902 end to end — warning count, confirm, record shows
       exactly that many marked rows naming the word, files byte-identical, signature
       standing, re-make fresh, change-back-to-A current again with no run in between
@@ -225,20 +225,20 @@ These are tasks, not follow-ups: the last divergence between documents and behav
 here shipped as a lie in three places (G37), and G35's whole argument is that a second
 axis added silently becomes the fourteenth disagreement.
 
-- [ ] T020 `specs/005-group/data-model.md` · dated amendment, `016` FR-1401 style: the
+- [x] T020 `specs/005-group/data-model.md` · dated amendment, `016` FR-1401 style: the
       Staleness section's `stale_since` front-matter stamp is corrected — **documented
       but never built**; what shipped is derived (`app/packages/core/src/ir/reading.ts`'s
       docstring) — and the section now describes the one freshness model with two axes,
       pointing here. `005` FR-520's clauses unchanged
-- [ ] T021 [P] `specs/024-el-juego-entero/spec.md` · FR-2218's deferral note (COLA 1.8)
+- [x] T021 [P] `specs/024-el-juego-entero/spec.md` · FR-2218's deferral note (COLA 1.8)
       closes: «satisfied by `031`», dated, pointing at this spec — and
       `specs/BACKLOG.md` G35 records the closure with the same pointer (SC-2904's
       spec-side half)
-- [ ] T022 **Look at it** (`013`): `npm run shots`, quickstart §7 — the record row
+- [x] T022 **Look at it** (`013`): `npm run shots`, quickstart §7 — the record row
       carrying both reasons at the narrowest width and at `xlarge` (truncation is where
       one axis would silently mask the other, and no assertion sees an ellipsis), and
       the warning dialog's «N hojas» as a sentence a person reads under time pressure
-- [ ] T023 Archive it: this coverage table kept current, `bash scripts/check-fr-coverage.sh`
+- [x] T023 Archive it: this coverage table kept current, `bash scripts/check-fr-coverage.sh`
       green, `specs/COLA-DE-TRABAJO.md` 3.7 updated, and a `specs/BACKLOG.md` entry for
       anything found on the way — starting with research R1's print-path finding if it
       turns out user-visible before this ships

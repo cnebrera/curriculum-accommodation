@@ -83,6 +83,7 @@ export * from './vault/signature.js';
 export * from './vault/revisions.js';
 export * from './ir/diff.js';
 export * from './ir/freshness.js';
+export * from './pictograms/affected.js';
 export * from './prompt/turn.js';
 export * from './prompt/fence.js';
 export * from './pictograms/set.js';

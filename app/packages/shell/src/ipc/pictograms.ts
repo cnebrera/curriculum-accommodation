@@ -7,6 +7,7 @@ import {
   stopBringing, chosenSoFar, bringing,
 } from '../pictograms/bring.js';
 import { handle } from './wrap.js';
+import { countAffected } from '../pictograms/affected.js';
 import { currentVault } from './vault.js';
 import { loadSettings, saveSettings } from './vault-settings.js';
 import {
@@ -179,6 +180,28 @@ export function registerPictogramIpc(getWindow: () => BrowserWindow | null): voi
 
   handle('pictograms:unchooseWord', (args: { word: string; language?: string }) =>
     unchooseWord(args));
+
+  /**
+   * How many sheets a change would make stale — **before** she makes it
+   * (`031` T015, FR-2905, `contracts/affected-sheets.md`).
+   *
+   * Read-only, and the count comes from **the same deriver the record runs**, with this
+   * one rung set to what she is about to choose. That is what makes «the count equals
+   * what the record then shows» a property of the design rather than of two functions
+   * agreeing — and two functions computing one number is how a promise gets broken by a
+   * later edit to one of them.
+   */
+  /**
+   * How many sheets a change would make stale — **before** she makes it
+   * (`031` T015, FR-2905, `contracts/affected-sheets.md`).
+   *
+   * Wiring only. The walk, the validation and the override question live in
+   * `pictograms/affected.ts`, off the Electron surface — the boundary test caught the
+   * first draft with all of it here, at 956 lines against a 950 bound, which is the
+   * third time that number has made somebody move logic out of an `ipc/` file rather
+   * than raising it.
+   */
+  handle('pictograms:affected', async (args: unknown) => countAffected(args));
 
   /** Ids → `data:` URIs. The logic is `loadImages`; this supplies the disk. */
   handle('pictograms:images', async (ids: string[]) =>

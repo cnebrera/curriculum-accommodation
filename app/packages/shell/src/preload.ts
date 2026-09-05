@@ -146,6 +146,14 @@ const api = {
       invoke('pictograms:chooseWord', args),
     unchooseWord: (args: { word: string; language?: string }) =>
       invoke('pictograms:unchooseWord', args),
+    /**
+     * How many sheets a change would make stale, **before** she makes it (`031` FR-2905).
+     *
+     * `next: null` is un-choosing. `learner` scopes it to one child's override; absent
+     * means the global vocabulary.
+     */
+    affected: (args: { word: string; language?: string; next: string | null; learner?: string }) =>
+      invoke('pictograms:affected', args),
   },
   /**
    * The adaptación curricular (`017`).

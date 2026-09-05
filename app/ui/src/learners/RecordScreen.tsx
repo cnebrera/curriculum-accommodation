@@ -140,11 +140,20 @@ function Entry({ entry, onOpen, onReuse, onReview, onPrint, printing }: {
 
       {entry.freshness?.drawings.state === 'stale' ? (
         <span className="small">
-          {/* Named, because «está antigua» is not something she can act on. */}
+          {/*
+            Named, because «está antigua» is not something she can act on.
+
+            One `one`, not a ternary per word. The first draft branched three times and
+            one of the branches read `? 'usas' : 'usas'` — the same string on both sides,
+            because in Spanish the verb agrees with *her*, not with the drawings. A
+            condition whose two arms are identical is G36 in one line: a value computed,
+            typed and read by nothing.
+          */}
           Lleva {entry.freshness.drawings.words.length === 1 ? 'un dibujo' : 'dibujos'} que
-          ya no {entry.freshness.drawings.words.length === 1 ? 'usas' : 'usas'}:{' '}
-          <strong>{entry.freshness.drawings.words.join(', ')}</strong>. Vuelve a prepararla
-          si quieres que salga con el de ahora.
+          ya no usas: <strong>{entry.freshness.drawings.words.join(', ')}</strong>. Vuelve
+          a prepararla si quieres que {entry.freshness.drawings.words.length === 1
+            ? 'salga con el de ahora'
+            : 'salgan con los de ahora'}.
         </span>
       ) : null}
 

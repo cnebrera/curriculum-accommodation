@@ -72,7 +72,7 @@
   records it in her vocabulary (FR-2214, FR-2217).
 - [X] T019 Reachable from where the omission is reported, because that is where she
   learns the word was skipped (`018` FR-1609's report).
-- [ ] T020 Changing a choice marks sheets stale rather than rewriting them — FR-2218, **deferred: 2026-09-03 (decision P34) to `031-el-segundo-eje-de-frescura`** (`005` FR-520).
+- [x] T020 Changing a choice marks sheets stale rather than rewriting them — FR-2218, **done: 2026-09-05 by `031-el-segundo-eje-de-frescura`** (deferred here 2026-09-03, decision P34; `005` FR-520). Sheets record their drawings, the record derives the second axis, and she is told how many sheets a change affects before she makes it — the same number the record then shows (`031` FR-2905). The sheets themselves are not rewritten: `031`'s e2e compares the bytes of a signed one across the change.
   Staleness compares `ir.md`'s fingerprint and a vocabulary change does not touch it,
   so this needs a second freshness axis — which is a spec of its own rather than a
   patch here. BACKLOG G35 carries the history, including the period when this screen

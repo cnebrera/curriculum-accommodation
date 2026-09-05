@@ -1,7 +1,8 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { mkdtemp, readdir, readFile, stat } from 'node:fs/promises';
+import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { join, dirname } from 'node:path';
 import { Vault, recordFor, parseIR, sheetFreshness, stampSignedOff } from '../src/index.js';
 
 /**
@@ -132,5 +133,79 @@ describe('and it is derived, so A→B→A costs nothing', () => {
     });
     expect(away.drawings.state).toBe('stale');
     expect(back.drawings).toEqual({ state: 'fresh' });
+  });
+});
+
+/**
+ * One deriver, two callers, and nobody else (031 T007, FR-2901).
+ *
+ * The record row and the verification screen must never disagree about whether a sheet is
+ * stale — and the only structure that guarantees it is both reading the same function.
+ * A third caller is not forbidden because three is too many; it is forbidden because a
+ * third caller is where a second definition of «stale» gets written.
+ *
+ * The count she is shown before a change is deliberately **not** a third caller: it runs
+ * the same `sheetFreshness` through `affectedByDrawingChange`, which is what makes
+ * FR-2905's «the count equals what the record then shows» true by construction.
+ */
+describe('the structural rule', () => {
+  const appRoot = join(dirname(new URL(import.meta.url).pathname), '..', '..', '..');
+
+  const walk = (dir: string): string[] => {
+    const out: string[] = [];
+    for (const entry of readdirSync(dir)) {
+      if (entry === 'node_modules' || entry.startsWith('.')) continue;
+      const path = join(dir, entry);
+      if (statSync(path).isDirectory()) out.push(...walk(path));
+      else if (/\.ts$/.test(entry) && !/\.test\.ts$/.test(entry)) out.push(path);
+    }
+    return out;
+  };
+
+  it('`sheetFreshness` has exactly two callers, and they are the two surfaces', () => {
+    const callers = walk(appRoot)
+      .filter((f) => !f.endsWith(join('ir', 'freshness.ts')))
+      .filter((f) => /sheetFreshness\(/.test(readFileSync(f, 'utf8')))
+      .map((f) => f.replace(`${appRoot}/`, ''))
+      .sort();
+    expect(callers).toEqual([
+      'packages/core/src/record/scan.ts',        // the record row
+      'packages/shell/src/jobs/stale.ts',        // the verification screen
+    ]);
+  });
+
+  /**
+   * Every reader of the recorded pairs, enumerated so a new one is a decision.
+   *
+   * The first draft of this asserted «nothing else contains `data-picto` near a `!==`»,
+   * and flagged `render/attribution.ts` — which compares the attribute against `''` to
+   * ask «does this document have any pictogram at all». A pattern loose enough to catch
+   * an emptiness check is a pattern that will be silenced rather than obeyed, so the rule
+   * is a list with a reason per entry.
+   *
+   * What must not appear here is a **second** file deciding whether a recorded drawing is
+   * still current: that would be a second definition of «stale», and the two would
+   * disagree the first time one of them was edited.
+   */
+  it('the readers of the recorded pairs are these, and each for a stated reason', () => {
+    const readers = walk(appRoot)
+      .filter((f) => /parsePicto\(/.test(readFileSync(f, 'utf8')))
+      .map((f) => f.replace(`${appRoot}/`, ''))
+      .sort();
+    expect(readers).toEqual([
+      // Writes them, and parses them back to replace rather than append.
+      'packages/core/src/pictograms/apply.ts',
+      // Asks «is this sheet's drawing still current» — the one comparison (`031`).
+      'packages/core/src/ir/freshness.ts',
+      // Asks the same question of a prospective choice, through the same deriver.
+      'packages/core/src/pictograms/affected.ts',
+      // Draw them: each output format reads the ids off the block it is rendering.
+      'packages/core/src/render/html.ts',
+      'packages/core/src/render/linear.ts',
+      'packages/core/src/render/odt.ts',
+      // Supply the images and the credits for a sheet about to leave the screen.
+      'packages/shell/src/jobs/export.ts',
+      'packages/shell/src/jobs/print.ts',
+    ].sort());
   });
 });

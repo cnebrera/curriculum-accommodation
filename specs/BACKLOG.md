@@ -413,6 +413,32 @@ every moment should have a spec. What it added beyond the seams pass:
    journey sentence → T094). Handover *import* (004 US2) recorded as deliberately
    deferred rather than silently missing.
 
+## G45 · Pictogramas que se elegían, se escribían en memoria y no llegaban al papel
+
+**Closed 2026-09-05** by `031-el-segundo-eje-de-frescura` (found by its research R1,
+while looking for something else).
+
+`applyPictograms` stamped `data-picto` on the **parsed** adapted document; `adapt.ts`
+then wrote `result.out` — the raw pre-mutation model output — to `adapted.md`. The
+mutated document only ever fed the report, and the report records words without ids. So
+the pairs existed for the length of one function call and never reached the disk.
+
+The other end is what makes it a defect rather than a missing feature: `print.ts` read
+`data-picto` **back from the file**, under the comment «what is on the sheet was decided
+when it was adapted». A read of a value nothing persists — G36's shape with the write and
+the read separated by a file, which is why the type checker could not see it either.
+
+No test caught it because no test round-tripped adapt → disk → print: the e2e stopped at
+the corpus, and the shell test asserted the in-memory `used` list. **That is the lesson,
+and it is not «write more tests»**: a test that asserts on the same in-memory value the
+code just computed cannot tell whether the value was ever written down. When a datum
+crosses a file, the test has to cross it too.
+
+Fixed by `stampPicto(raw, perBlock)` patching the raw markdown at the write, which is
+also what made `031` possible at all — the second freshness axis needs the datum on disk.
+
+---
+
 ## G44 · A multi-word keyword is indexed and unreachable
 
 **Open, added 2026-09-04** (review AGE-05, the half without a decision).
@@ -707,7 +733,23 @@ is what the deleted one was.
 
 ## G35 · Changing a pictogram does not mark the old sheets
 
-**Open**, and it was briefly a lie rather than a gap (see G37).
+**Closed 2026-09-05** by `031-el-segundo-eje-de-frescura`. It was briefly a lie rather
+than a gap (see G37), which is the part worth keeping.
+
+What shipped is the second axis described below, plus the thing the gap did not ask for:
+she is told **how many sheets** a change will affect *before* she makes it, and it is the
+same number the record then shows — one deriver, asked twice, which is why the two cannot
+drift (`031` FR-2905). `024` FR-2218 is closed with the same date. The sheets are not
+rewritten: `031`'s e2e compares the bytes of a signed sheet across the change.
+
+Two things were found on the way and are worth the sentence. The count first walked every
+entry inside a job directory as if it were a learner code, `ir.md` included, and read
+`material/job-a/ir.md/adapted.md` — caught by the e2e, fixed by walking with the record's
+own `learnersOf`, because two enumerations of «which learners does this job have» is the
+same defect as two definitions of «stale». And the record row carried a `? 'usas' :
+'usas'` — a ternary whose two arms were the same string, G36 in one line.
+
+The original gap follows, unchanged.
 
 `024` FR-2218: changing her answer for an ambiguous word MUST mark the sheets made from
 the previous one as stale rather than rewriting them (`005` FR-520's rule). Not
@@ -723,6 +765,10 @@ fourteenth thing in this repository that two places disagree about.
 
 Until then the screen and `vocabulario.md` say what actually happens: the old sheets keep
 the old drawing, and she is not told they are out of date.
+
+*(That «until then» ended on 2026-09-05. Both texts now say what happens instead, and a
+test forbids the old sentences from reappearing anywhere in `ui/` or `core/` — the vault
+file's copy mattered most, because that file outlives the application.)*
 
 ---
 
