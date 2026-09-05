@@ -5,6 +5,7 @@ import { RecordScreen } from './RecordScreen.js';
 import { HandoverReview } from './HandoverReview.js';
 import { ForgetLearner } from './ForgetLearner.js';
 import type { LearnerTab } from '../nav/route.js';
+import { StructureScreen } from '../structure/StructureScreen.js';
 
 /**
  * What is inside a learner (020 T011-T014).
@@ -88,6 +89,16 @@ export function LearnerSection({
             </div>
           </Section>
         </Page>
+      );
+
+    case 'structure':
+      /*
+       * `028` FR-2601: a third kind of work, reached from the learner and routed through
+       * neither existing door. It is where a PT starts with a new TEA learner.
+       */
+      return (
+        <StructureScreen learnerCode={code} {...(name ? { learnerName: name } : {})}
+                         onMade={() => { /* the record picks it up on the next visit */ }} />
       );
 
     case 'made':

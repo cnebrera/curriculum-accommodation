@@ -19,10 +19,21 @@
  * is `door/intent.ts`, which exists for the same reason and is tested the same way.
  */
 
-/** The learner's sections. Four, and two set apart at the foot of the menu. */
+/** The learner's sections. Five, and two set apart at the foot of the menu. */
 export type LearnerTab =
   | 'who'          // Quién es
   | 'prepare'      // Preparar
+  /**
+   * Material de estructura (`028` FR-2601): agendas, secuencias, historias sociales.
+   *
+   * Its own entry, **not** a third option inside «Preparar». Adapting starts from a
+   * document she has and composing starts from an objective; an agenda starts from
+   * neither — it starts from the shape of a day. Routed through either existing door it
+   * would have to answer questions that do not apply to it («¿qué tipo de material?»,
+   * «¿qué tiene que aprender?»), and a flow that asks the wrong questions first is a flow
+   * she concludes is not for what she wants.
+   */
+  | 'structure'    // Su día y sus rutinas
   | 'made'         // Lo que le he preparado
   | 'curriculum'   // Su adaptación curricular
   | 'handover'     // Preparar el traspaso
@@ -34,10 +45,11 @@ export type LearnerTab =
  * to one and not the other.
  */
 export const learnerTabs: readonly LearnerTab[] =
-  ['who', 'prepare', 'made', 'curriculum', 'handover', 'erase'] as const;
+  ['who', 'prepare', 'structure', 'made', 'curriculum', 'handover', 'erase'] as const;
 
 /** The four she works in; the last two are lifecycle and sit below a rule. */
-export const MAIN_TABS: readonly LearnerTab[] = ['who', 'prepare', 'made', 'curriculum'];
+export const MAIN_TABS: readonly LearnerTab[] =
+  ['who', 'prepare', 'structure', 'made', 'curriculum'];
 
 /**
  * The sections of Configuración (025 T001).

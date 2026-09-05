@@ -142,3 +142,82 @@ describe('every drawing carries the set\'s real credit (FR-2607)', () => {
     }
   });
 });
+
+describe('the strip, on paper (T007, FR-2607)', () => {
+  const IMAGES = new Map([
+    ['1001', 'data:image/png;base64,iVBORw0KGgo='],
+    ['2001', 'data:image/png;base64,iVBORw0KGgo='],
+  ]);
+
+  it('a moment is one cell, with its drawing and her word', () => {
+    const html = renderHTML(build([{ word: 'desayuno' }]).doc, { pictogramImages: IMAGES });
+    expect(html).toContain('class="agenda-moment"');
+    expect(html).toContain('<img');
+    expect(html).toContain('desayuno');
+  });
+
+  it('and the word is printed once, not twice', () => {
+    /*
+     * The pictogram cell normally carries its word underneath, and so does the block: on
+     * an agenda they are the same string, so every moment on the strip printed «desayuno
+     * desayuno». It reads as a fault rather than as emphasis, and on a strip a child
+     * scans, a doubled word is a second thing to decode.
+     *
+     * Suppressed in the markup, not with CSS. The first attempt was `display:none`, and
+     * it was wrong for a reason worth keeping: the ODT and the audio rendering never see
+     * that stylesheet, so the page would have been fixed and a screen reader would still
+     * have said the word twice.
+     */
+    const html = renderHTML(build([{ word: 'desayuno' }]).doc, { pictogramImages: IMAGES });
+    const visible = html.replace(/<[^>]+>/g, ' ');
+    expect(visible.match(/desayuno/g) ?? []).toHaveLength(1);
+    // The alt text still carries it — that is what a screen reader reads.
+    expect(html).toMatch(/alt="[^"]*desayuno/);
+  });
+
+  it('a step is numbered, because the order is the content', () => {
+    const seq = buildStructure({
+      kind: 'secuencia', items: [{ word: 'desayuno' }, { word: 'patio' }],
+      language: 'es', set: SET, forLearner: CODE, created: '2026-09-07',
+    });
+    const html = renderHTML(seq.doc, { pictogramImages: IMAGES });
+    expect(html).toContain('data-number="1"');
+    expect(html).toContain('data-number="2"');
+    expect(html).toContain('class="n"');
+  });
+
+  it('a word with no drawing prints as a marked gap, never as an empty box', () => {
+    /*
+     * Found by printing the strip. A declared gap has no `data-picto` at all, and
+     * everywhere else that absence correctly renders nothing — most sentences have no
+     * pictogram. On an agenda every cell is meant to have one, so the absence printed a
+     * large empty rectangle with a word under it, which reads as a picture that failed to
+     * load rather than as «esta va sin dibujo».
+     */
+    const html = renderHTML(build([{ word: 'asamblea' }]).doc, { pictogramImages: IMAGES });
+    expect(html).toContain('picto-missing');
+    expect(html).toContain('aria-label="sin dibujo"');
+    expect(html).toContain('asamblea');
+  });
+
+  it('and an ordinary paragraph with no pictogram still renders nothing extra', () => {
+    /*
+     * The rule is scoped to the strip: a study text is not full of empty boxes.
+     *
+     * Asserted on the **element** and not on the string, because `.picto-missing` is also
+     * a CSS selector in every page this renderer produces — a `toContain` here passed on
+     * the stylesheet and would have kept passing whatever the markup did. The same trap
+     * `021` recorded for `answer-space` and `draft-banner`.
+     */
+    const plain = { frontMatter: {}, blocks: [{
+      id: 'b1', classes: ['explanation' as const], attrs: {}, content: 'Sin dibujos.',
+      line: 1, notices: [],
+    }], notices: [] };
+    expect(renderHTML(plain)).not.toContain('class="picto picto-missing"');
+  });
+
+  it('and the drawing is bigger than an inline one, because it is read across a room', () => {
+    const html = renderHTML(build([{ word: 'desayuno' }]).doc, { pictogramImages: IMAGES });
+    expect(html).toContain('.agenda-moment .picto img,.secuencia-step .picto img{width:35mm');
+  });
+});

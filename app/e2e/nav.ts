@@ -25,6 +25,8 @@ import { expect, type Page } from '@playwright/test';
 export const TAB = {
   who: 'Quién es',
   prepare: 'Preparar',
+  /** `028`'s third kind of work: agendas, sequences, social stories. */
+  structure: 'Su día y sus rutinas',
   made: 'Lo que le he preparado',
   curriculum: 'Su adaptación curricular',
 } as const;

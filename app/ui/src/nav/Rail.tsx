@@ -39,6 +39,7 @@ import {
 const TAB_LABEL: Record<LearnerTab, string> = {
   who: 'Quién es',
   prepare: 'Preparar',
+  structure: 'Su día y sus rutinas',
   made: 'Lo que le he preparado',
   curriculum: 'Su adaptación curricular',
   handover: 'Preparar el traspaso',

@@ -165,6 +165,21 @@ const api = {
       invoke('pictograms:affected', args),
   },
   /**
+   * Structure material (`028`): agendas, sequences, social stories.
+   *
+   * Its own namespace because it is a third kind of work beside adapting and composing —
+   * not a mode of either. What it deliberately does **not** have is a `chooseWord`: an
+   * ambiguous word is resolved through `pictograms.chooseWord`, so a choice made while
+   * building an agenda serves her worksheets too.
+   */
+  structure: {
+    /** Build and write it. Local, deterministic, and it spends nothing. */
+    save: (args: unknown) => invoke('structure:save', args),
+    /** The words her set cannot decide, with their pictures — `024`'s own chooser. */
+    candidates: (args: { words: string[]; language?: string }) =>
+      invoke('structure:candidates', args),
+  },
+  /**
    * The adaptación curricular (`017`).
    *
    * **No `ingest` here on purpose**: a guide comes in through `job:ingest` and

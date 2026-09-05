@@ -70,39 +70,39 @@ offline, no provider, no cost, five minutes.
 
 **Independent Test**: quickstart §4 with the network disabled.
 
-- [ ] T007 [US1] `app/packages/core/src/render/html.ts` · the agenda template as block
+- [x] T007 [US1] `app/packages/core/src/render/html.ts` · the agenda template as block
       class + CSS beside the existing `.picto` rules: `agenda-moment` as a strip cell,
       picto ≈35mm with the word always beneath (research R3), passing `checkPhotocopy`
       (**FR-2607**). No new renderer — Principle IV
-- [ ] T008 [US1] `app/packages/shell/src/jobs/structure.ts` · `saveStructure`: allocate a
+- [x] T008 [US1] `app/packages/shell/src/jobs/structure.ts` · `saveStructure`: allocate a
       job id, call `buildStructure` with the current set (`currentPictogramSet`), the
       learner's overrides, her vocabulary (`forLanguage`) and `nameWordSet()`, and write
       `material/<job>/ir.md` through the vault. No IPC registered here; nothing outside
       `packages/shell` imports `electron` (**FR-2602**, **FR-2604**)
-- [ ] T009 [US1] `app/packages/shell/src/ipc/structure.ts` · thin handlers: save, and the
+- [x] T009 [US1] `app/packages/shell/src/ipc/structure.ts` · thin handlers: save, and the
       builder's candidate/chooser calls **reusing** `candidatesFor` and
       `pictogramImagesFor` from `pictograms/` — the chooser writes to her vocabulary via
       the existing `choose`, so a choice made here serves adapted material too
       (**FR-2605**)
-- [ ] T010 [US1] Assert the zero-cost claim structurally, in
+- [x] T010 [US1] Assert the zero-cost claim structurally, in
       `app/packages/shell/test/`: the agenda/sequence path imports nothing from
       `@rampa/providers` and records no cost entry — a source-level check beside the
       boundary test, because «no model call» must not depend on nobody adding one
       (**FR-2602**)
-- [ ] T011 [US1] `app/ui/src/structure/` · the builder screen: kind picker, moment
+- [x] T011 [US1] `app/ui/src/structure/` · the builder screen: kind picker, moment
       picker, her ordering (declared with `Page`/`Section`/`Field`/`Actions` from
       `ui/src/shell/`; data access through a hook in `ui/src/data/`, never
       `window.rampa`). Ambiguous words offer the same chooser as `ChooseWord`, nothing
       pre-chosen; gaps render as the word with the gap stated (**FR-2606**)
-- [ ] T012 [US1] The third entry itself: «material de estructura» beside adaptar and
+- [x] T012 [US1] The third entry itself: «material de estructura» beside adaptar and
       componer, from the learner per `020`'s placement, in `app/ui/src/App.tsx` +
       `app/ui/src/door/` — not routed through either existing door (**FR-2601**)
-- [ ] T013 [P] [US1] The missing-set state: door reachable, explains what is missing, one
+- [x] T013 [P] [US1] The missing-set state: door reachable, explains what is missing, one
       pointer to Configuración ▸ Pictogramas — `025` FR-2303's pattern, driven by
       `currentPictogramSet`/`publisherState` (**FR-2612**)
-- [ ] T014 [P] [US1] The honesty hint in the builder screen: Rampa makes materials, it is
+- [x] T014 [P] [US1] The honesty hint in the builder screen: Rampa makes materials, it is
       not a communication system (SAAC) — claim materials, not therapy (**FR-2613**)
-- [ ] T015 [US1] Print and sign through the existing paths — `jobs/print.ts` over
+- [x] T015 [US1] Print and sign through the existing paths — `jobs/print.ts` over
       `resolveDocument`, sign-off through the one existing IPC (research R4: no
       born-signed shortcut; the mark stays derived and one call removes it). E2E
       `app/e2e/structure-agenda.spec.ts` per quickstart §4: build offline, sign, print,

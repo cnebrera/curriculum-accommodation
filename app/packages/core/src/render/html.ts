@@ -136,6 +136,35 @@ figure.figure svg{max-width:100%;height:auto}
 .picto-missing .picto-gap{display:flex;align-items:center;justify-content:center;
   width:20mm;height:20mm;border:2px dashed var(--rule);border-radius:6px;
   font-weight:700;color:var(--rule)}
+/* Structure material («028»): the day on a strip, a routine in steps.
+
+   Block classes and CSS, not a second renderer (Principle IV, research R3). The
+   pictogram cells, the named gaps, the alt text and the credit line are the ones
+   «renderHTML» already produces — a strip renderer would reimplement all four and
+   drift on the first change to any of them.
+
+   35mm rather than the 20mm inline minimum: an agenda is read from across a room,
+   pinned to a wall or taped inside a desk, not inside a sentence.
+
+   «column-reverse» puts the drawing above and **her word beneath it**, which is the
+   one rule that survives a greyscale photocopy (FR-2607, «010» FR-812). The cell's
+   own «.picto-word» is hidden in these blocks and only in these: the block's text is
+   already the word, sitting directly under the drawing, and printing it twice reads
+   as a fault rather than as emphasis. */
+.agenda-moment,.secuencia-step{display:flex;flex-direction:column-reverse;
+  align-items:center;text-align:center;gap:.3em;padding:.6em;
+  border:2px solid var(--rule);border-radius:8px;break-inside:avoid;
+  min-width:40mm;font-size:1.05em;font-weight:600}
+.agenda-moment .pictos,.secuencia-step .pictos{margin:0}
+.agenda-moment .picto img,.secuencia-step .picto img{width:35mm;height:35mm}
+.agenda-moment .picto-missing .picto-gap,
+.secuencia-step .picto-missing .picto-gap{width:35mm;height:35mm}
+.agenda-moment p,.secuencia-step p{margin:0}
+/* A step's number is the content, not decoration: «primero el jabón» is the step. */
+.secuencia-step .n{font-size:1.4em;font-weight:800}
+/* The strip. «wrap» because a day with nine moments has to fit on one sheet, and a
+   row that runs off the page is a row she cannot photocopy. */
+main:has(.agenda-moment){display:flex;flex-wrap:wrap;gap:.8em;align-items:stretch}
 /* The licence line. Small, at the foot, and there is no setting for it. */
 .picto-credit{margin-top:2.5em;padding-top:.8em;border-top:1px solid var(--rule);
   font-size:.75em;color:var(--ink)}
@@ -259,7 +288,43 @@ function answerSpace(b: Block): string {
  */
 function renderPictos(b: Block, images?: ReadonlyMap<string, string>): string {
   const pairs = parsePicto(b.attrs['data-picto']);
-  if (pairs.length === 0) return '';
+  const onAStripEarly = b.classes.includes('agenda-moment') || b.classes.includes('secuencia-step');
+  if (pairs.length === 0) {
+    /*
+     * On a strip, a cell with no drawing says so (`028` FR-2606).
+     *
+     * Everywhere else an absent `data-picto` means «this text has no pictogram», which is
+     * the ordinary state of most sentences and needs no mark. On an agenda every cell is
+     * meant to have one, so the same absence printed a large empty box — and an empty box
+     * reads as something that failed to load, not as «this one has no drawing». Looking
+     * at the printed strip is what showed it.
+     *
+     * Inferred from the class rather than stamped by the builder, because on these blocks
+     * «no pair» and «gap» are the same fact: a flag beside it would be a second way to
+     * say one thing, and the two would eventually disagree.
+     */
+    return onAStripEarly
+      ? '<div class="pictos"><span class="picto picto-missing" role="img"'
+        + ' aria-label="sin dibujo"><span class="picto-gap" aria-hidden="true">—</span>'
+        + '</span></div>'
+      : '';
+  }
+
+  /*
+   * On a strip the block's own text **is** the word (`028` T007).
+   *
+   * A pictogram cell normally carries its word underneath, because inside a sentence the
+   * picture arrives without one. An `agenda-moment` is different: the whole block is that
+   * word, sitting directly beneath the drawing, so emitting the cell's copy printed
+   * «desayuno desayuno» on every moment of the strip.
+   *
+   * Suppressed in the **markup** and not with CSS, which was the first attempt: the ODT
+   * and the audio rendering never see this stylesheet, so a `display:none` would have
+   * fixed the page and left a screen reader saying the word twice. The alt text still
+   * carries it, which is what a screen reader reads, and FR-2607's rule — the word beside
+   * the drawing, surviving a greyscale photocopy — is satisfied by the block's own text.
+   */
+  const onAStrip = b.classes.includes('agenda-moment') || b.classes.includes('secuencia-step');
 
   const items = pairs.map(({ word, id }) => {
     const src = images?.get(id);
@@ -268,11 +333,11 @@ function renderPictos(b: Block, images?: ReadonlyMap<string, string>): string {
       return `<span class="picto picto-missing" role="img"`
         + ` aria-label="${esc(pictogramAlt(word))} (falta la imagen)">`
         + `<span class="picto-gap" aria-hidden="true">?</span>`
-        + `<span class="picto-word">${esc(word)}</span></span>`;
+        + (onAStrip ? '' : `<span class="picto-word">${esc(word)}</span>`) + `</span>`;
     }
     return `<span class="picto">`
       + `<img src="${esc(src)}" alt="${esc(pictogramAlt(word))}">`
-      + `<span class="picto-word">${esc(word)}</span></span>`;
+      + (onAStrip ? '' : `<span class="picto-word">${esc(word)}</span>`) + `</span>`;
   }).join('');
 
   return `<div class="pictos">${items}</div>`;
