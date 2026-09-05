@@ -151,16 +151,16 @@ and absent from everything real.
 
 **Independent Test**: quickstart §1's long form — rehearse, connect, real use, inspect.
 
-- [ ] T018 [US2] Extend `app/e2e/ensayo-invariants.spec.ts`: after connect + one real
+- [ ] T018 *(NECESITA UNA CLAVE REAL — es un paseo de pago, como T031 de `026` y T025 de `022`. La mitad offline del barrido está en `e2e/ensayo.spec.ts`: hash del vault antes y después, byte a byte.)* [US2] Extend `app/e2e/ensayo-invariants.spec.ts`: after connect + one real
       adaptation, the rehearsal is still reachable (FR-3304), still framed, and the sweep
       of vault + ledger for sample markers stays zero (FR-3306) — T002 turning from red to
       the feature's standing regression test.
-- [ ] T019 [US2] Discard and resume, as she would (FR-3308): discard offered from inside
+- [x] T019 [US2] Discard and resume, as she would (FR-3308): discard offered from inside
       the rehearsal, total by construction (the root goes); restart mid-rehearsal offers
       resume or start over, and **either way the real vault was untouched** (US2 scenario
       3, covered by T002's hash running across a kill-and-relaunch in
       `app/e2e/ensayo-invariants.spec.ts`).
-- [ ] T020 [P] [US2] Coordination with `034`: an update notice does not interrupt a
+- [ ] T020 *(BLOQUEADA: `034-como-llegan-las-versiones` no está implementada todavía, así que no hay aviso de actualización con el que coordinarse. Va con `034`.)* [P] [US2] Coordination with `034`: an update notice does not interrupt a
       rehearsal — the notice waits (spec edge case). If `034`'s notice is not yet built,
       record the obligation in `specs/BACKLOG.md` against `034` instead of building a stub
       here; a task that cannot land must not land as an if.
@@ -176,11 +176,11 @@ in CI.
 
 **Independent Test**: quickstart §3 (the sample's truth) plus the distinction checks below.
 
-- [ ] T021 [US3] The reading-check catches something real (FR-3310): the walk in
+- [x] T021 [US3] The reading-check catches something real (FR-3310): the walk in
       `app/e2e/ensayo.spec.ts` fails unless the verification screen surfaces T005's
       authored disagreement — checking is the point of the screen, and a perfect sample
       would train her to skip the product's second most important gate.
-- [ ] T022 [US3] The report is a genuine report (FR-3310): shown through the same report
+- [x] T022 [US3] The report is a genuine report (FR-3310): shown through the same report
       view as a real run (`app/ui/src/review/ReportView.tsx`), recipes cited and
       resolvable (T007), decisions explained — not lorem ipsum, because it is the first
       report she ever reads and it teaches her what reviewing decisions (Principle VI)
@@ -199,7 +199,7 @@ in CI.
 
 ## Phase 6 · Polish · and the parts that need a person
 
-- [ ] T025 **Look at it** (`013`, quickstart §5): `npm run shots` over the ensayo screens
+- [x] T025 **Look at it** (`013`, quickstart §5): `npm run shots` over the ensayo screens
       — is the mark unmissable *while being ignorable*? — and the printed sample beside a
       real sheet: at arm's length, in a pile of photocopies, can they be confused? SC-3304
       asserts presence; only eyes can assert sufficiency.

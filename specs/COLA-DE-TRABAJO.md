@@ -505,7 +505,32 @@ sigue siendo el único ítem del lote sin tasks propios (sus tareas viven en spe
 - [ ] **3.10 · Spec: 020 completo** — US2-US4: Preparar dentro del alumno, retirar el door, partir
       Mis notas, Configuración completa (P25/P29). Grande; los e2e de navegación son la red.
 - [x] **3.11 · Spec ESCRITA → `034-como-llegan-las-versiones`** (P49). Falta: clarify → plan → tasks → implement.
-- [x] **3.12 · Spec ESCRITA → `035-modo-ensayo`** (P16). Falta: clarify → plan → tasks → implement.
+- [x] **3.12 · `035-modo-ensayo` IMPLEMENTADA** (P16).
+      **Hecho 2026-09-05, cinco commits.** 23 de 26 tareas y **11 de 11 requisitos**; las
+      tres abiertas son una clave real (T018), una feature que aún no existe (T020, va con
+      `034`) y dos veredictos que necesitan personas (T026).
+      El primer paso del producto era el más hostil: crear una cuenta, poner una tarjeta,
+      pegar una clave. Ahora hay otra puerta **al lado**, ninguna preelegida: un ejemplo
+      inventado de principio a fin, sin conexión y sin gastar.
+      La separación es un **directorio**, no una bandera: todo lo que recibe un `Vault`
+      corre sobre la raíz del ensayo sin cambiar, y lo único que decide qué vault es la
+      capa de IPC. Por eso «su vault no cambia ni un byte» se comprueba con un hash del
+      árbol entero antes y después, en vez de confiarse. Salir borra la carpeta entera.
+      Los dos pasos que costarían dinero se **sirven**, no se falsean: un proveedor de
+      mentira es un objeto con forma de proveedor a un refactor de quedar registrado para
+      trabajo real. Todo lo demás es el código de verdad, incluida la firma — un ensayo
+      que se saltara la firma le enseñaría que la firma es un trámite.
+      **Cero peticiones, contadas en las dos pilas**: las llamadas a un proveedor salen
+      por el `fetch` de Node, no por la sesión de Chromium, y un contador sobre una sola
+      marcaría cero mientras algo se escapa por la otra.
+      El juego de ejemplo está escrito a mano —es la única adaptación que verá todo el
+      mundo— con **un** fallo puesto a propósito en la lectura, porque una lectura perfecta
+      no enseña a mirarla. Y dice qué está simulado y qué ya funciona sin clave: no puede
+      prometer más que el producto, y tampoco menos.
+      **Tres guardianes existentes saltaron y los tres tenían razón** (corpus de sólo
+      lectura, tamaño de la superficie Electron, un único escritor de firmas), y mirarlo
+      cazó que la primera pantalla le enseñaba el IR crudo — front matter y `:::` incluidos
+      — en su primera noche.
 - [ ] **3.13 · Menores/backlog:** nota para casa (P10) · CUR bidireccional/enriquecimiento (P9) ·
       traducción del corpus core al español como proyecto propio (P28).
 

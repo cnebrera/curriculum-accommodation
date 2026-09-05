@@ -262,6 +262,27 @@ test.describe('the rehearsal, with nothing connected', () => {
     await app.close();
   });
 
+  test('and coming back lands where she left it (FR-3308)', async () => {
+    const { app, page } = await launch();
+    await page.reload();
+    await page.waitForLoadState('domcontentloaded');
+    await page.getByRole('button', { name: 'Probar con un ejemplo' }).click();
+    await page.locator('#nota').fill('una nota');
+    await page.getByRole('button', { name: 'Adaptarla para él' }).click();
+    await expect(page.getByRole('heading', { name: /Así se la he adaptado/ })).toBeVisible();
+
+    /*
+     * She closes the laptop mid-rehearsal. `ensayo.json` is what makes coming back land
+     * where she was rather than at the beginning — a demonstration that restarts itself
+     * is a demonstration she does not finish twice.
+     */
+    const state = await page.evaluate(() =>
+      window.rampa.ensayo.state() as Promise<{ step: string } | null>);
+    expect(state?.step).toBe('adapted');
+
+    await app.close();
+  });
+
   test('leaving it takes the whole root with it (FR-3308)', async () => {
     const { app, page, userData } = await launch();
     await page.reload();

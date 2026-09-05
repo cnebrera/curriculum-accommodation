@@ -32,6 +32,23 @@ import {
  * real code running over the rehearsal vault. She is not being shown a mock-up; she is
  * using the application with two steps pre-answered.
  */
+/**
+ * Markdown shown on a screen, with its marks taken off.
+ *
+ * The documents are Markdown because that is what is on disk and what she can edit in her
+ * own editor — but `**Material de ejemplo.**` and `# Informe` printed with their asterisks
+ * and hash on the very first screen she sees is Rampa showing its own syntax to somebody
+ * deciding whether this is a serious tool. `031` made the same correction to a sentence
+ * lifted out of a report; this is the same fix, one screen earlier.
+ *
+ * Presentation only: the file keeps its marks, and the printed sheet renders them properly
+ * because the renderer does that job.
+ */
+const plain = (md: string): string => md
+  .replace(/^#{1,6}\s+/gm, '')
+  .replace(/\*\*/g, '')
+  .replace(/^-\s+/gm, '· ');
+
 export function EnsayoScreen({ startedAt, onLeave }: {
   startedAt: string;
   onLeave: () => void;
@@ -125,7 +142,17 @@ export function EnsayoScreen({ startedAt, onLeave }: {
                         hacer cuando traigas una tuya, y es rápido.
                       </p>
                     </Callout>
-                    <div className="material" lang="es">{value?.markdown ?? ''}</div>
+                    {/*
+                      Her text, block by block — never the stored file. Looking at it is
+                      what caught the first version showing `--- source: photos ---` and
+                      `::: {#b1 .instruction}`: on the first screen of her first night,
+                      that teaches her that what Rampa makes is a soup of syntax.
+                    */}
+                    <div className="material" lang="es">
+                      {(value?.blocks ?? []).map((b) => (
+                        <p key={b.id} style={{ margin: '0 0 .6em' }}>{plain(b.text)}</p>
+                      ))}
+                    </div>
                   </>
                 )}
               </Loaded>
@@ -189,7 +216,11 @@ export function EnsayoScreen({ startedAt, onLeave }: {
                      lede="Ésta es la hoja que le darías. Fíjate en que dice que es un ejemplo: eso lo lleva el documento, así que también sale impreso.">
               <Loaded from={adaptation}>
                 {(value) => (
-                  <div className="material" lang="es">{value?.markdown ?? ''}</div>
+                  <div className="material" lang="es">
+                    {(value?.blocks ?? []).map((b) => (
+                      <p key={b.id} style={{ margin: '0 0 .6em' }}>{plain(b.text)}</p>
+                    ))}
+                  </div>
                 )}
               </Loaded>
             </Section>
@@ -197,7 +228,9 @@ export function EnsayoScreen({ startedAt, onLeave }: {
             <Section title="Y por qué he hecho cada cosa"
                      lede="Esto es lo que de verdad tienes que leer: qué he cambiado, qué no he tocado, y qué tienes que mirar tú.">
               <Loaded from={adaptation}>
-                {(value) => <div className="material" lang="es">{value?.report ?? ''}</div>}
+                {(value) => (
+                  <div className="material" lang="es">{plain(value?.report ?? '')}</div>
+                )}
               </Loaded>
             </Section>
 

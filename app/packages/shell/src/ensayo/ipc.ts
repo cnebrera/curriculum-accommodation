@@ -65,7 +65,18 @@ export function registerEnsayoIpc(): void {
       throw new RampaError('vault-unreadable',
         'No encuentro el material de ejemplo. Vuelve a empezar el ensayo.');
     }
-    return { markdown: raw, blocks: parseIR(raw).blocks.length };
+    /*
+     * The blocks, not the raw IR (found by looking at it, T025).
+     *
+     * The screen was showing her `--- source: photos ---` and `::: {#b1 .instruction}`:
+     * the file as it is stored, front matter and fences and all. On the first screen of
+     * her first night, that teaches her that what Rampa produces is a soup of syntax —
+     * which is exactly the impression this whole feature exists to prevent, and the
+     * verification screen she will really use shows the text.
+     */
+    return {
+      blocks: parseIR(raw).blocks.map((b) => ({ id: b.id, kind: b.classes[0] ?? '', text: b.content })),
+    };
   });
 
   /**
@@ -79,9 +90,17 @@ export function registerEnsayoIpc(): void {
     const vault = await ensayoVault(startedAt);
     const found = await resolveDocument(vault, 'ensayo-1', 'E00');
     if (found.of === 'none') throw new RampaError('vault-unreadable', whyNoDocument(found));
+    const raw = (await vault.readRaw(found.path)) ?? '';
     return {
       path: found.path,
-      markdown: (await vault.readRaw(found.path)) ?? '',
+      /*
+       * Blocks, like the reading — the sheet as she reads it, not as it is stored.
+       *
+       * The report below stays as markdown on purpose: it is prose with headings, which
+       * is how every other document-shaped thing in this application is shown to her
+       * (`017`'s ACNS draft, the turn answers). What is Rampa's own syntax is the IR.
+       */
+      blocks: parseIR(raw).blocks.map((b) => ({ id: b.id, kind: b.classes[0] ?? '', text: b.content })),
       report: (await vault.readRaw('material/ensayo-1/E00/report.md')) ?? '',
     };
   });

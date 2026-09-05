@@ -32,23 +32,25 @@ export function useAdvanceEnsayo() {
     window.rampa.ensayo.advance(step) as Promise<boolean>);
 }
 
+/** One block of the reading, as she will see it — text, never the stored syntax. */
+export interface ReadingBlock { id: string; kind: string; text: string }
+
 /** The reading, with its one authored flaw waiting to be found. */
 export function useEnsayoReading(startedAt: string | null):
-    Loadable<{ markdown: string; blocks: number } | null> {
+    Loadable<{ blocks: ReadingBlock[] } | null> {
   return useAsync(async () => {
     if (!startedAt) return null;
-    return (await window.rampa.ensayo.reading(startedAt)) as
-      { markdown: string; blocks: number };
+    return (await window.rampa.ensayo.reading(startedAt)) as { blocks: ReadingBlock[] };
   }, [startedAt]);
 }
 
 /** The pre-computed adaptation and its genuine report. */
 export function useEnsayoAdaptation(startedAt: string | null):
-    Loadable<{ path: string; markdown: string; report: string } | null> {
+    Loadable<{ path: string; blocks: ReadingBlock[]; report: string } | null> {
   return useAsync(async () => {
     if (!startedAt) return null;
     return (await window.rampa.ensayo.adaptation(startedAt)) as
-      { path: string; markdown: string; report: string };
+      { path: string; blocks: ReadingBlock[]; report: string };
   }, [startedAt]);
 }
 
