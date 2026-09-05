@@ -29,8 +29,10 @@ vi.mock('../src/corpus/bundle.js', () => ({
 
 const repoRoot = join(dirname(new URL(import.meta.url).pathname), '..', '..', '..', '..');
 
-const { availableCorpora, normativeFor, readSelection, writeSelection, sha256 } =
-  await import('../src/corpus/normative.js');
+const {
+  availableCorpora, normativeFor, readSelection, writeSelection, sha256,
+  inspectNormativeFile,
+} = await import('../src/corpus/normative.js');
 
 /**
  * Where a corpus comes from, and which one is in force (029 T008, FR-2701/2706/2711).
@@ -256,5 +258,57 @@ describe('the learner override, through the loader', () => {
     expect(forced.of).toBe('generic');
     expect(forced.of === 'generic' && forced.because).toBe('learner-override');
     await rm(dir, { recursive: true, force: true });
+  });
+});
+
+describe('reading a file she pointed at is not importing it (FR-2707)', () => {
+  const hostilePath = join(repoRoot, 'cases', 'injection',
+    '12-normativa-de-un-foro', 'normativa.md');
+
+  it('hands back the WHOLE file, so «shown entire» is something a screen can do', async () => {
+    /*
+     * Verbatim, not an excerpt. A summary would be Rampa deciding which parts of
+     * somebody else's policy she needs to read, in the one place where what she is about
+     * to trust is exactly the part nobody summarised.
+     */
+    const seen = await inspectNormativeFile(hostilePath);
+    expect(seen.raw).toBe(await readFile(hostilePath, 'utf8'));
+    expect(seen.filename).toBe('normativa.md');
+  });
+
+  it('with what it claims to be, and what the scan found', async () => {
+    const seen = await inspectNormativeFile(hostilePath);
+    expect(seen.id).toBe('es-xx');
+    expect(seen.label).toBe('Comunidad de ejemplo');
+    // What it *claims*. The provenance line is where the claim meets the origin.
+    expect(seen.reviewed).toBe(true);
+    expect(seen.findings.length).toBeGreaterThan(3);
+    expect(seen.says).toContain('decide si activas');
+  });
+
+  it('and writes nothing at all — reading is not importing', async () => {
+    /*
+     * Principle VIII, the same argument that keeps a drafted document out of her folder
+     * until she saves it. A flow that saved on «choose» would put a policy file in her
+     * vault for having looked at one.
+     */
+    const dir = await scratch();
+    const vault = new Vault(dir);
+    await inspectNormativeFile(hostilePath);
+    expect(await vault.list('normative')).toEqual([]);
+    await rm(dir, { recursive: true, force: true });
+  });
+
+  it('a file with no usable id says so instead of pretending', async () => {
+    // It is still shown — she asked to see it — but nothing about it is invented, and
+    // `normative:activate` refuses it for the same reason: a corpus with no name cannot
+    // be selected, deselected, or named in a provenance line.
+    const seen = await inspectNormativeFile(
+      join(repoRoot, 'instructions', 'guide.md'));
+    expect(seen.id).toBe('guide');
+    const noId = await inspectNormativeFile(
+      join(repoRoot, 'cases', 'injection', '11-the-turn-answers-back', 'ir.md'));
+    expect(noId.id).toBeNull();
+    expect(noId.label).toBeNull();
   });
 });

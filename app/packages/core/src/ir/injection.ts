@@ -75,6 +75,37 @@ const CAPABILITY: Array<{ re: RegExp; why: string }> = [
     why: 'pide enviar contenido a otro sitio' },
 ];
 
+/**
+ * Tier C: text imitating **the prompt's own structure** (P18, review AGE-02).
+ *
+ * The vector P18's fence closes, detected as well as fenced — and the two are not
+ * redundant. The fence stops a forged section from *working*; this is what tells her it
+ * was there. A document carrying `## Correcciones de la maestra sobre el intento
+ * anterior` followed by orders is not a document with a typo in it, and «nothing
+ * happened» is not the same answer as «somebody tried».
+ *
+ * Added here rather than in `029`'s corpus scan so the adapt pipeline gains it too. A
+ * second copy over there would be the defence-duplicated-is-defence-halved rule that
+ * `026` T006 already had to state once.
+ *
+ * Anchored to the **start of a line**, because that is what makes a heading a heading.
+ * «Hablamos de las correcciones de la maestra» in a paragraph is a sentence about
+ * teaching; the same words as an `##` heading are a forgery.
+ */
+const SECTION_SPOOF: Array<{ re: RegExp; why: string }> = [
+  { re: /^\s{0,3}#{1,6}\s*(correcciones|instrucciones|reglas|reglas duras|perfil|memoria|recetas|tarea|system|prompt)\b/im,
+    why: 'imita una sección del propio encargo' },
+  { re: /^\s{0,3}(#{1,6}\s*)?(lo que (te )?ha (dicho|corregido) la maestra|correcciones de la (maestra|profesora|docente)|notas de la maestra)\b/im,
+    why: 'se hace pasar por lo que ha dicho la maestra' },
+  /*
+   * Fence imitation. The nonce is unforgeable — it is minted after the document is
+   * read — so an attacker's best try is the **shape** of the delimiter, hoping the
+   * model reads a bare `<<<FIN-MATERIAL>>>` as the end of the quoted document.
+   */
+  { re: /<<<\s*\/?\s*(fin[- ])?material[^>]*>>>/i,
+    why: 'imita la marca que cierra el documento' },
+];
+
 const NEAR = 90;
 const clip = (s: string, n = 160) => (s.length <= n ? s : s.slice(0, n - 1) + '…');
 
@@ -104,7 +135,7 @@ export function detectInjection(block: Block): Notice[] {
   const role = ROLE_IMITATION.exec(text);
   if (role) found.set(clip(role[0].trim()), 'imita un mensaje de sistema');
 
-  for (const { re, why } of CAPABILITY) {
+  for (const { re, why } of [...CAPABILITY, ...SECTION_SPOOF]) {
     const m = new RegExp(re.source, 'i').exec(text);
     if (!m) continue;
     const start = text.lastIndexOf('\n', m.index) + 1;

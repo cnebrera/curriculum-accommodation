@@ -99,3 +99,26 @@ export function useSelectNormative() {
   return useCommand((id: string | null) =>
     window.rampa.normative.select(id) as Promise<{ ok: boolean }>);
 }
+
+/** What a corpus file says about itself, plus what the scan found in it. */
+export interface NormativeImport {
+  filename: string;
+  id: string | null;
+  label: string | null;
+  reviewed: boolean;
+  /** The whole file, so «shown entire before activation» is something a screen can do. */
+  raw: string;
+  findings: Array<{ family: 'injection' | 'conflict'; quote: string; line: number; why: string }>;
+  says: string;
+}
+
+/** Pick and read. Writes nothing: looking at a file is not importing it. */
+export function useChooseNormative() {
+  return useCommand(() => window.rampa.normative.choose() as Promise<NormativeImport | null>);
+}
+
+/** Activate what `choose` handed back — refused when the scan found something. */
+export function useActivateNormative() {
+  return useCommand((raw: string, override?: boolean) =>
+    window.rampa.normative.activate(raw, override) as Promise<{ ok: boolean; id: string }>);
+}

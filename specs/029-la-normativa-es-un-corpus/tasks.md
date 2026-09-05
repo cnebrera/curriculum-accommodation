@@ -165,36 +165,36 @@ the layer generic for any country, carrying the injection surface safely.
 **Independent Test**: import a corpus file; it is displayed before activation, scanned,
 refusable; documents drafted under it carry its provenance and unreviewed status.
 
-- [ ] T020 [US3] The import flow: the **full content shown before any activation**, and
+- [x] T020 [US3] The import flow: the **full content shown before any activation**, and
       activation a separate explicit act; the file lands in the vault's `normative/`
       through `Vault`/`resolveInVault` — which refuses paths that leave the vault rather
       than sanitising them, `007` FR-508's refuse-don't-repair posture (FR-2707)
-- [ ] T021 [US3] `app/packages/core/src/normative/scan.ts`: deterministic, offline, over
+- [x] T021 [US3] `app/packages/core/src/normative/scan.ts`: deterministic, offline, over
       the raw file — `007`'s tiers via `detectInjection`
       (`app/packages/core/src/ir/injection.ts`), plus the **section-spoofing shapes per
       P18** (headings imitating the prompt's own section markers, role prefixes, fence
       imitation) added beside `detectInjection` so the adapt pipeline gains them too
       rather than a second copy drifting, plus hard-rule-contradicting shapes reported
       as conflicts (FR-2708, FR-2709)
-- [ ] T022 [US3] Refused by default, override hers and recorded: findings shown quoted
+- [x] T022 [US3] Refused by default, override hers and recorded: findings shown quoted
       and located, activation blocked until her explicit override, the override written
       to the activation log with the content hash — and `007` FR-514's non-blocking rule
       deliberately does **not** apply: activating policy is the moment to block, and a
       false positive costs one press, not a job (FR-2708, SC-2704)
-- [ ] T023 [US3] «Modificado por ti»: a vault corpus whose hash no longer matches its
+- [x] T023 [US3] «Modificado por ti»: a vault corpus whose hash no longer matches its
       activation derives `origin: 'modificado'`, prints as such, and re-enters the scan
       before its next activation — editing is allowed and visible, never silent
       (FR-2706, FR-2708)
-- [ ] T024 [P] [US3] Fixtures: `cases/injection/` extended with corpus-shaped cases —
+- [x] T024 [P] [US3] Fixtures: `cases/injection/` extended with corpus-shaped cases —
       the `007` shapes as normativa files, the P18 section-spoofing shapes, and one
       hostile corpus that «authorises» easier exams and printing names (SC-2704)
-- [ ] T025 [US3] **Hard rules outrank every corpus, as a test**: with the hostile
+- [x] T025 [US3] **Hard rules outrank every corpus, as a test**: with the hostile
       fixture activated (override recorded), the decline is the same sentence, the exam
       guards, clinical filter and output checks return identical results to no corpus at
       all, and the conflict was reported at import. Lands **with** the import flow, not
       after it — a corpus activatable before this test exists is `021` T022's mistake
       with a policy file (FR-2709)
-- [ ] T026 [P] [US3] `e2e/normative.spec.ts` extended with quickstart §5 items 3–6:
+- [x] T026 [P] [US3] `e2e/normative.spec.ts` extended with quickstart §5 items 3–6:
       shown-then-activated, hostile refused, override logged, edited prints modificado,
       deletion falls back with notice, learner `none` stays generic
 
@@ -205,7 +205,7 @@ refusable file — not a prompt.
 
 ## Phase 6 · Polish · and the parts that need a person
 
-- [ ] T027 **Look at it** (`013` FR-1113/FR-1118): the Normativa pane narrow and at
+- [x] T027 **Look at it** (`013` FR-1113/FR-1118): the Normativa pane narrow and at
       `xlarge`; the import screen with findings — whether «no lo actives» reads as
       clearly as it must; the provenance line on a printed draft, which will sit on
       every official document she produces

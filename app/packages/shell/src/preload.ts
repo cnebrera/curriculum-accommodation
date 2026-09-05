@@ -102,6 +102,18 @@ const api = {
     select: (id: string | null) => invoke('normative:select', id),
     /** What a document drafted right now would say about where its wording came from. */
     resolve: (learnerChoice?: string) => invoke('normative:resolve', learnerChoice),
+    /**
+     * Pick a file and **read** it. Writes nothing (FR-2707): reading a file she pointed
+     * at is not importing it, and a flow that saved on «choose» would put a policy file
+     * in her vault for having looked at one.
+     */
+    choose: () => invoke('normative:choose'),
+    /**
+     * Activate what `choose` handed back. Refused when the scan found something, unless
+     * she says so expressly — and the override is written to the activation log.
+     */
+    activate: (raw: string, override?: boolean) =>
+      invoke('normative:activate', raw, override === true),
   },
   learners: {
     list: () => invoke('learners:list'),

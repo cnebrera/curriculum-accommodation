@@ -125,9 +125,10 @@ describe('inside packages/shell, the surface is small and named', () => {
     'packages/shell/src/ipc/conversation.ts', // BrowserWindow (type only) — 026 T015
     'packages/shell/src/ipc/diagnostics.ts', // app.getPath, shell.showItemInFolder
     'packages/shell/src/ipc/guide.ts',       // BrowserWindow (type only) — 017 T013
-    'packages/shell/src/ipc/ingest.ts',      // dialog.showOpenDialog, app.getPath, progress
+    'packages/shell/src/ipc/ingest.ts',      // app.getPath, progress (its dialog moved to pick.ts)
     'packages/shell/src/ipc/keys.ts',        // safeStorage — the encrypted key store
     'packages/shell/src/ipc/names.ts',       // safeStorage — the encrypted name map
+    'packages/shell/src/ipc/pick.ts',        // dialog.showOpenDialog — the one file picker (`029`)
     'packages/shell/src/ipc/pictograms.ts',  // dialog.showOpenDialog, app.getPath (018 T014)
     'packages/shell/src/ipc/vault.ts',       // dialog.showOpenDialog, the watcher
     'packages/shell/src/ipc/wrap.ts',        // ipcMain.handle — the channel itself
@@ -282,8 +283,21 @@ describe('inside packages/shell, the surface is small and named', () => {
      * counter. What is left in `main.ts` is *that* something is registered, which is what
      * `main.ts` is for.
      *
+     * **Raised to 981 on 2026-09-06, by five lines.** `029` needed a file dialog for a
+     * normativa somebody sent her, and putting it in `corpus/normative.ts` would have put
+     * that file's 260 lines of loading, hashing, resolving and scanning on this surface.
+     * The bound refused it and was right; the Electron-specific part is fifteen lines.
+     *
+     * It refused the extraction too, at 982 — and the second refusal is the one that
+     * produced the better answer. `ipc/ingest.ts` had written the same dialog first, for
+     * worksheets. Extracting one and leaving the other would have been two
+     * implementations of the one rule that matters here, that **the renderer never
+     * composes a path**; a rule with two implementations is a rule with one place to
+     * forget it. So `ipc/pick.ts` has two callers, `ingest.ts` gave its dialog up, and
+     * the whole import flow of a feature cost five lines on this surface.
+     *
      * 25, not 100. A bound raised to a round number stops being a measurement.
      */
-    expect(lines).toBeLessThan(975);
+    expect(lines).toBeLessThan(981);
   });
 });

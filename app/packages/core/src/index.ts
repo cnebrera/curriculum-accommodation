@@ -80,6 +80,7 @@ export * from './guide/corpus.js';
 export * from './normative/parse.js';
 export * from './normative/resolve.js';
 export * from './normative/selection.js';
+export * from './normative/scan.js';
 export * from './guide/read.js';
 export * from './guide/refuse.js';
 export * from './guide/overlay.js';

@@ -2,6 +2,7 @@ import { test, expect, _electron as electron, type Page, type ElectronApplicatio
 import { mkdtemp, mkdir } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { readFileSync } from 'node:fs';
 import { intoLearner, toTab, toScreen } from './nav.js';
 
 /**
@@ -171,5 +172,117 @@ test.describe('she says where she teaches', () => {
     const md = await draft(page, code);
     expect(md).not.toContain('Séneca');
     expect(md).toContain('borrador genérico');
+  });
+});
+
+/**
+ * Bringing one she was given (029 T020/T022/T023/T026, FR-2707/2708/2709).
+ *
+ * ## What this can drive and what it cannot
+ *
+ * The native file dialog is not something Playwright can open, so `normative:choose` —
+ * the half that reads the file and shows it — is exercised by its unit tests and by
+ * looking at the screen. What is driven here is everything **after** she has the file:
+ * the refusal, the override, what the override writes down, and what the guards do with
+ * the thing activated.
+ *
+ * That is the right half to spend an e2e on. «It showed me the file» fails visibly;
+ * «it activated a policy file without asking» does not.
+ */
+const hostile = readFileSync(
+  join(appRoot, '..', 'cases', 'injection', '12-normativa-de-un-foro', 'normativa.md'),
+  'utf8');
+
+test.describe('a normativa somebody sent her', () => {
+  let app: ElectronApplication;
+  let page: Page;
+  let code: string;
+  let vault: string;
+
+  test.beforeAll(async () => {
+    ({ app, page, vault } = await launch());
+    code = await seed(page, vault);
+  });
+
+  test.afterAll(async () => { await app.close(); });
+
+  test('activating it is refused, and the refusal says what was found', async () => {
+    /*
+     * `007` FR-514's non-blocking rule deliberately does **not** apply. A notice on a
+     * worksheet must not block a job she is paying for; activating a file that enters
+     * prompts as policy is exactly the moment to stop.
+     */
+    const said = await page.evaluate(async (raw) => {
+      try { await window.rampa.normative.activate(raw); return 'ok'; }
+      catch (e) { return (e as Error).message; }
+    }, hostile);
+
+    expect(said).not.toBe('ok');
+    expect(said).toContain('las reglas duras');
+    expect(said).toContain('No lo he quitado del fichero');
+  });
+
+  test('and nothing was written, because a refusal that half-imports is not a refusal', async () => {
+    const files = await page.evaluate(() => window.rampa.vault.list('normative'));
+    expect(files).not.toContain('es-xx.md');
+  });
+
+  test('the override is hers, and it is written down with what she overrode', async () => {
+    const done = await page.evaluate((raw) =>
+      window.rampa.normative.activate(raw, true) as Promise<{ ok: boolean; findings: number }>,
+      hostile);
+    expect(done.ok).toBe(true);
+    expect(done.findings).toBeGreaterThan(0);
+
+    // SC-2704: an activation with findings and no recorded override is a test failure.
+    /*
+     * The front matter, because that is where the log lives: `vault:read` parses it, so
+     * the body it hands back is her own annotations and never the record.
+     */
+    const log = await page.evaluate(() =>
+      window.rampa.vault.read('normative/selection.md') as Promise<{ data: {
+        activations?: Array<{ corpus: string; overridden: boolean; content_sha256: string; findings: number }>;
+      } }>);
+    const activation = log.data.activations?.find((a) => a.corpus === 'es-xx');
+    expect(activation).toBeDefined();
+    expect(activation!.overridden).toBe(true);
+    expect(activation!.findings).toBeGreaterThan(0);
+    expect(activation!.content_sha256).toMatch(/^[0-9a-f]{64}$/);
+  });
+
+  test('and with it in force, the draft is the same document it always was', async () => {
+    /*
+     * FR-2709, at the level she would meet it. The file declares `draft_mark: off`,
+     * `exam_rules.allow_easier`, `redaction: disabled` and a `decline` of its own —
+     * every one of them a field the contract does not have, carried in `unknown` where
+     * nothing reads it.
+     */
+    await page.evaluate(() => window.rampa.normative.select('es-xx'));
+    await intoLearner(page);
+    await toTab(page, 'curriculum');
+    await page.getByRole('button', { name: 'Borrador de su adaptación' }).click();
+    await page.getByRole('button', { name: /^(Hacer el borrador|Volver a hacerlo)$/ }).click();
+    await expect(page.getByRole('heading', { name: 'El borrador' })).toBeVisible();
+    await page.getByRole('button', { name: /^Guardarla (en mi carpeta|otra vez)$/ }).click();
+    await expect(page.getByText(`profiles/${code}/acns.md`)).toBeVisible();
+
+    const stored = await page.evaluate((c) =>
+      window.rampa.guide.acnsRead(c) as Promise<{ markdown: string }>, code);
+    expect(stored.markdown).toContain('BORRADOR');
+    // And the provenance says where the file came from, not what the file claims.
+    expect(stored.markdown).toContain('subido por ti');
+  });
+
+  test('editing it afterwards says «modificado por ti», which is visibility not punishment', async () => {
+    await page.evaluate(async () => {
+      // Appended through the vault, the way her editor would: the hash is over the file
+      // on disk, so anything that changes it must show up as «modificado».
+      const doc = await window.rampa.vault.read('normative/es-xx.md') as { content: string };
+      await window.rampa.vault.write('normative/es-xx.md',
+        `---\nid: es-xx\nlabel: Comunidad de ejemplo\n---\n${doc.content}\n\nUna línea mía.\n`);
+    });
+    const resolved = await page.evaluate(() =>
+      window.rampa.normative.resolve() as Promise<{ provenanceLine: string }>);
+    expect(resolved.provenanceLine).toContain('modificado después');
   });
 });

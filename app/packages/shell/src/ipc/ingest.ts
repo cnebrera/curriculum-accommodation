@@ -1,4 +1,4 @@
-import { dialog, app, type BrowserWindow } from 'electron';
+import { app, type BrowserWindow } from 'electron';
 import { basename } from 'node:path';
 import {
   jobIR, parseIR, formatCost, isUnusuallyExpensive, resolveInVault, irToMarkdown, VAULT,
@@ -6,6 +6,7 @@ import {
 import { currentVault } from './vault.js';
 import { estimateCents, currentLedger } from './cost.js';
 import { handle } from './wrap.js';
+import { pickFiles } from './pick.js';
 import { activeProvider } from './keys.js';
 import { photoWarningSeen, acknowledgePhotoWarning } from './vault-settings.js';
 import { runIngest, budget, readExtraction, setPageVerified } from '../jobs/ingest.js';
@@ -33,20 +34,17 @@ export function registerIngestIpc(getWindow: () => BrowserWindow | null): void {
    * a path from content is rejected, not sanitised — true for this input too,
    * and it is why `ingest:run` takes paths this handler produced rather than
    * strings the renderer assembled.
+   *
+   * The dialog itself moved to `ipc/pick.ts` in `029`, which needed the same fifteen
+   * lines for a normativa file. Two callers, one dialog: a rule with two
+   * implementations is a rule with one place to forget it.
    */
   handle('ingest:choose', async () => {
-    const win = getWindow();
-    if (!win) return [];
     const { ACCEPTED_EXTENSIONS } = await import('../ingest/read.js');
-    const result = await dialog.showOpenDialog(win, {
-      title: 'Elige la ficha',
-      properties: ['openFile', 'multiSelections'],
-      filters: [{
-        name: 'Fichas',
-        extensions: ACCEPTED_EXTENSIONS.map((e) => e.replace('.', '')),
-      }],
+    return pickFiles({
+      title: 'Elige la ficha', filterName: 'Fichas', many: true,
+      extensions: ACCEPTED_EXTENSIONS.map((e) => e.replace('.', '')),
     });
-    return result.canceled ? [] : result.filePaths;
   });
 
   handle('ingest:run', async (jobId: string, paths: string[]) =>

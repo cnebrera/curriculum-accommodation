@@ -1,8 +1,10 @@
+import { useState } from 'react';
 import { Page, Section, Actions } from '../shell/Page.js';
 import { Callout } from '../components/Callout.js';
 import { Loaded } from '../data/Loaded.js';
 import {
-  useNormativeList, useSelectNormative, type CorpusListing,
+  useNormativeList, useSelectNormative, useChooseNormative, useActivateNormative,
+  type CorpusListing, type NormativeImport,
 } from '../data/normative.js';
 
 /**
@@ -72,21 +74,7 @@ export function NormativeSection() {
 
             {select.error ? <Callout intent="danger">{select.error.message}</Callout> : null}
 
-            <Section title="La tuya no está"
-                     lede="Se escribe en Markdown y no hace falta tocar código.">
-              <p className="small">
-                Una normativa es un fichero: cómo se llaman aquí los documentos, quién los
-                firma, qué secciones llevan y las frases que se imprimen. El contrato está
-                en el repositorio, en{' '}
-                <code>specs/029-la-normativa-es-un-corpus/contracts/normative-corpus.md</code>,
-                y hay un ejemplo completo en <code>instructions/normative/es-an.md</code>.
-              </p>
-              <p className="small">
-                Traer una que te hayan pasado todavía no se puede desde aquí: antes tengo
-                que enseñártela entera y revisarla, porque un fichero de normativa entra en
-                lo que le digo al modelo y eso no se activa a ciegas.
-              </p>
-            </Section>
+            <BringOne onDone={() => list.reload()} />
           </>
         )}
       </Loaded>
@@ -140,6 +128,113 @@ function CorpusRow({ corpus, selected, busy, onSelect }: {
             {selected ? 'Es la que tienes' : `Usar ${corpus.label}`}
           </button>
         } />
+    </Section>
+  );
+}
+
+/**
+ * Bringing one she has been given: shown entire, scanned, refusable (FR-2707/2708).
+ *
+ * ## Two acts, never one
+ *
+ * «Elegir el fichero» reads it and shows it. «Activarla» is a separate press. A single
+ * button that picked and activated would put a policy file into force for having looked
+ * at one — Principle VIII, the same argument that keeps a drafted document out of her
+ * folder until she saves it.
+ *
+ * ## Shown entire, and that is not a formality
+ *
+ * The whole file, in a `<pre>`, before anything. A summary would be Rampa deciding which
+ * parts of somebody else's policy she needs to read, in the one place where what she is
+ * about to trust is exactly the part nobody summarised.
+ *
+ * ## Refused by default, and the override is hers
+ *
+ * `007` FR-514's non-blocking rule deliberately does **not** apply here. A notice on a
+ * worksheet must not block a job she is paying for; activating a file that enters
+ * prompts as policy is exactly the moment to stop. So the activate button is not a
+ * disabled control with a tooltip: it is replaced by a second one that says what she is
+ * overriding, because a button whose label does not change is a button she presses out
+ * of habit.
+ */
+function BringOne({ onDone }: { onDone: () => void }) {
+  const choose = useChooseNormative();
+  const activate = useActivateNormative();
+  const [file, setFile] = useState<NormativeImport | null>(null);
+
+  const dirty = (file?.findings.length ?? 0) > 0;
+
+  return (
+    <Section title="Traer una que te hayan pasado"
+             lede="Te la enseño entera y te digo lo que he encontrado antes de que decidas.">
+      <Actions
+        primary={
+          <button className="btn" disabled={choose.busy}
+                  onClick={() => void choose.run().then((f) => setFile(f ?? null))}>
+            Elegir el fichero
+          </button>
+        } />
+
+      {choose.error ? <Callout intent="danger">{choose.error.message}</Callout> : null}
+      {activate.error ? <Callout intent="danger">{activate.error.message}</Callout> : null}
+
+      {file ? (
+        <>
+          <p className="small">
+            <strong>{file.filename}</strong>
+            {file.label ? ` · dice ser «${file.label}»` : ' · no dice qué normativa es'}
+            {file.reviewed ? ' · dice estar revisada' : ' · dice no estar revisada'}
+          </p>
+
+          <Callout intent={dirty ? 'decide' : 'info'}
+                   title={dirty ? 'Léelo antes de activarla' : 'Lo he mirado'}>
+            {file.says}
+          </Callout>
+
+          {file.findings.length ? (
+            <ul>
+              {file.findings.map((f) => (
+                <li key={`${f.line}:${f.quote}`} className="small">
+                  <strong>Línea {f.line}:</strong> <code>{f.quote}</code>
+                  <br />{f.why}
+                </li>
+              ))}
+            </ul>
+          ) : null}
+
+          {/*
+            The whole file, before anything. A summary here would be Rampa deciding
+            which parts of somebody else's policy she needs to read.
+          */}
+          <details>
+            <summary>Ver el fichero entero</summary>
+            <pre className="small" style={{ whiteSpace: 'pre-wrap', overflowX: 'auto' }}>
+              {file.raw}
+            </pre>
+          </details>
+
+          <Actions
+            primary={
+              <button className="btn" disabled={activate.busy}
+                      onClick={() => void activate.run(file.raw, dirty).then((r) => {
+                        if (r?.ok) { setFile(null); onDone(); }
+                      })}>
+                {dirty ? 'Activarla de todas formas' : 'Activarla'}
+              </button>
+            }>
+            <button className="btn btn-ghost" onClick={() => setFile(null)}>
+              No activarla
+            </button>
+          </Actions>
+        </>
+      ) : (
+        <p className="small">
+          Una normativa es un fichero Markdown: cómo se llaman aquí los documentos, quién
+          los firma, qué secciones llevan y las frases que se imprimen. El contrato y un
+          ejemplo completo están en el repositorio, en{' '}
+          <code>instructions/normative/</code>.
+        </p>
+      )}
     </Section>
   );
 }
