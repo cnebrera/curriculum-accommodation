@@ -1,6 +1,6 @@
 import { safeStorage } from 'electron';
 import {
-  redact, findProbableNames, loadLearner, loadJournal, VAULT, nameWords,
+  redact, findProbableNames, loadLearner, loadJournal, VAULT, nameWords, type Vault,
 } from '@rampa/core';
 import { currentVault } from './vault.js';
 import { handle } from './wrap.js';
@@ -46,9 +46,15 @@ export function encryptionStatus(): EncryptionStatus {
   };
 }
 
-async function load(): Promise<NameMap> {
+async function load(vault?: Vault): Promise<NameMap> {
   if (cache) return cache;
-  const raw = await currentVault().readRaw(VAULT.names);
+  /*
+   * The vault is a parameter since `031`, defaulting to the open one — same reason as
+   * `loadVocabulary`: `staleSheets` is handed its vault so it can run offline, and the
+   * freshness ladder it builds needs the names (a word that is now a learner's name gets
+   * no drawing, so sheets that drew it are stale).
+   */
+  const raw = await (vault ?? currentVault()).readRaw(VAULT.names);
   if (!raw) return (cache = {});
   try {
     const buf = Buffer.from(raw, 'base64');
@@ -66,7 +72,8 @@ async function save(map: NameMap): Promise<void> {
   await currentVault().writeRaw(VAULT.names, enc.toString('base64'));
 }
 
-export const knownNames = async (): Promise<Map<string, string>> => new Map(Object.entries(await load()));
+export const knownNames = async (vault?: Vault): Promise<Map<string, string>> =>
+  new Map(Object.entries(await load(vault)));
 
 /**
  * Erasure's hands on the encrypted map (`003` FR-216, review COD-03).
@@ -118,8 +125,8 @@ export const nameStore = {
  *
  * One function, so the two callers cannot disagree about what a name is.
  */
-export const nameWordSet = async (): Promise<Set<string>> =>
-  nameWords((await knownNames()).values());
+export const nameWordSet = async (vault?: Vault): Promise<Set<string>> =>
+  nameWords((await knownNames(vault)).values());
 
 /**
  * Words she has told us are not names (T090).

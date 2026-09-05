@@ -10,6 +10,7 @@ import { basename } from 'node:path';
 import { loadInstruction } from '../corpus/index.js';
 import { loadSettings, saveSettings } from '../ipc/vault-settings.js';
 import { currentVault } from '../ipc/vault.js';
+import type { Vault } from '@rampa/core';
 import {
   pictogramSettingsDir, configuredRoot, fsReader, currentPictogramSet,
   pictogramImagesFor,
@@ -472,8 +473,17 @@ const vocabularyPath = 'vocabulario.md';
  * A missing file is an empty vocabulary, not an error: she has chosen nothing yet, and
  * every ambiguous word is still correctly reported as ambiguous.
  */
-export async function loadVocabulary(): Promise<Vocabulary> {
-  const raw = await currentVault().readRaw(vocabularyPath);
+export async function loadVocabulary(vault?: Vault): Promise<Vocabulary> {
+  /*
+   * The vault is a **parameter** since `031`, defaulting to the open one.
+   *
+   * `staleSheets(vault, jobId)` takes its vault so it can be tested offline against a
+   * temporary folder, and the freshness ladder it now builds needs the vocabulary. Left
+   * reaching for `currentVault()`, this made an offline-testable function depend on a
+   * global somebody had to have opened — which is how a test suite quietly stops being
+   * able to run the thing it tests.
+   */
+  const raw = await (vault ?? currentVault()).readRaw(vocabularyPath);
   return raw ? parseVocabulary(raw, vocabularyPath) : emptyVocabulary();
 }
 
@@ -481,8 +491,8 @@ export async function loadVocabulary(): Promise<Vocabulary> {
  * Her vocabulary, as `matchWord` wants it. One place, so the four rungs cannot disagree.
  */
 export const chosenWords = async (
-  language: string,
-): Promise<ReadonlyMap<string, string>> => forLanguage(await loadVocabulary(), language);
+  language: string, vault?: Vault,
+): Promise<ReadonlyMap<string, string>> => forLanguage(await loadVocabulary(vault), language);
 
 /**
  * The words a set cannot decide, with their candidates (FR-2217).

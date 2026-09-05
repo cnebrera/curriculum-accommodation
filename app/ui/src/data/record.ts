@@ -1,3 +1,4 @@
+import type { DocumentFreshness } from '../../../packages/core/src/ir/freshness.js';
 import { useEffect, useState } from 'react';
 import { useAsync, useCommand, type Loadable } from './async.js';
 
@@ -20,12 +21,19 @@ export interface RecordEntry {
   /** Composed and not yet adapted for this learner (`016` T006). */
   pending?: boolean;
   /**
-   * Whether this sheet came from the reading that is on disk now (`005` FR-520).
+   * Both axes of freshness (`031` FR-2901): the reading it was made from, and the
+   * drawings it used.
    *
-   * `unknown` for every sheet made before Rampa recorded it, which is honest and
-   * not a fault — see the note in `packages/core/src/ir/reading.ts`.
+   * **Imported from `core` rather than restated here**, and that took a defect to
+   * learn. This file declared `'fresh' | 'stale' | 'unknown'` by hand, so when `031`
+   * changed `RecordEntry.freshness` in core the compiler said nothing — the whole
+   * argument for changing the type instead of adding a field was «the compiler finds
+   * every reader», and a restatement is exactly what stops it doing that.
+   *
+   * `unknown` on either axis is honest and not a fault: it is every sheet made before
+   * Rampa recorded that fact.
    */
-  freshness?: 'fresh' | 'stale' | 'unknown';
+  freshness?: DocumentFreshness;
   source: RecordSource;
   documents: {
     ir: string;

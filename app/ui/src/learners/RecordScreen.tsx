@@ -122,10 +122,29 @@ function Entry({ entry, onOpen, onReuse, onReview, onPrint, printing }: {
         put a line on every row of an existing vault, which teaches her to skip the
         line and takes the `stale` one down with it.
       */}
-      {entry.freshness === 'stale' ? (
+      {/*
+        **Both axes, independently** (`031` FR-2903).
+
+        Two sentences and never one merged «desactualizada»: «se hizo con una lectura que
+        cambió» and «lleva un dibujo que ya no usas» are different facts with different
+        remedies — re-verify the reading, or re-make the sheet — and a single word is
+        exactly where one would hide the other. That is how `024` FR-2218 stayed
+        «satisfied by a comment» for a year.
+      */}
+      {entry.freshness?.reading === 'stale' ? (
         <span className="small">
           Se hizo con una lectura que has cambiado después. Vuelve a adaptarla si el
           cambio le afecta.
+        </span>
+      ) : null}
+
+      {entry.freshness?.drawings.state === 'stale' ? (
+        <span className="small">
+          {/* Named, because «está antigua» is not something she can act on. */}
+          Lleva {entry.freshness.drawings.words.length === 1 ? 'un dibujo' : 'dibujos'} que
+          ya no {entry.freshness.drawings.words.length === 1 ? 'usas' : 'usas'}:{' '}
+          <strong>{entry.freshness.drawings.words.join(', ')}</strong>. Vuelve a prepararla
+          si quieres que salga con el de ahora.
         </span>
       ) : null}
 

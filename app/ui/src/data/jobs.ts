@@ -1,3 +1,4 @@
+import type { DocumentFreshness } from '../../../packages/core/src/ir/freshness.js';
 import { useEffect } from 'react';
 import { useAsync, useCommand, type Loadable } from './async.js';
 
@@ -163,15 +164,23 @@ export function useAdapt() {
 export interface StaleSheet {
   learner: string;
   name: string;
-  freshness: 'stale' | 'unknown';
+  /**
+   * Both axes (`031` FR-2903), imported rather than restated.
+   *
+   * This file used to declare `'stale' | 'unknown'` by hand — and so did
+   * `data/record.ts`, which is how a core type change reached neither of them. The
+   * argument for changing the type instead of adding a field is «the compiler finds every
+   * reader», and a restatement is precisely what stops it doing that.
+   */
+  freshness: DocumentFreshness;
 }
 
 export function useStaleSheetsCommand() {
   return useCommand(async (jobId: string): Promise<StaleSheet[]> => {
     const rows = await window.rampa.job.staleSheets(jobId) as Array<
-      { learner: string; freshness: 'fresh' | 'stale' | 'unknown' }>;
-    const notFresh = rows.filter((r): r is { learner: string; freshness: 'stale' | 'unknown' } =>
-      r.freshness !== 'fresh');
+      { learner: string; freshness: DocumentFreshness }>;
+    const notFresh = rows.filter((r) =>
+      r.freshness.reading !== 'fresh' || r.freshness.drawings.state === 'stale');
     if (notFresh.length === 0) return [];
     const names = await window.rampa.names.all() as Record<string, string>;
     return notFresh.map((r) => ({ ...r, name: names[r.learner] ?? r.learner }));

@@ -1,6 +1,7 @@
 import { parseIR } from '../ir/parse.js';
 import { isSignedOff } from '../ir/types.js';
-import { readingFingerprint, freshnessOf } from '../ir/reading.js';
+import { readingFingerprint } from '../ir/reading.js';
+import { sheetFreshness, type CurrentState, type DocumentFreshness } from '../ir/freshness.js';
 import { startedFor } from '../vault/document.js';
 import { parseFrontMatter } from '../vault/parse.js';
 import {
@@ -63,7 +64,21 @@ const allJobs = (vault: Vault): Promise<string[]> => vault.list(VAULT.material);
  * Exported because the erasure planner needs to ask the same question about a
  * single job without scanning the vault twice.
  */
-export async function entryFor(vault: Vault, jobId: string, learner: string): Promise<RecordEntry | null> {
+export async function entryFor(
+  vault: Vault, jobId: string, learner: string,
+  /**
+   * What «current» means for the drawing axis (`031` T008, research R2).
+   *
+   * Assembled by the shell **once per scan** and passed down — the vocabulary is one
+   * file, the override lives in a profile the caller already loads, and the set is behind
+   * the existing cached path. Building it per job would make an O(jobs) scan O(jobs)
+   * file reads, which is `020` FR-1828's rule applied to this axis.
+   *
+   * Optional, and its absence means `unknown` rather than `fresh`: a caller that cannot
+   * assemble the ladder does not get to claim a sheet's drawings are current (FR-2906).
+   */
+  drawings?: Pick<CurrentState, 'drawingFor' | 'recordsDrawings'>,
+): Promise<RecordEntry | null> {
   const adaptedPath = jobAdapted(jobId, learner);
   const adaptedRaw = await vault.readRaw(adaptedPath);
 
@@ -171,8 +186,17 @@ export async function entryFor(vault: Vault, jobId: string, learner: string): Pr
    * derivations that can disagree about whether a sheet is stale. The verification
    * screen and this row read the same function.
    */
-  const freshness = adapted !== null && irRaw !== null
-    ? freshnessOf(adapted, readingFingerprint(parseIR(irRaw)))
+  const freshness: DocumentFreshness | undefined = adapted !== null && irRaw !== null
+    ? sheetFreshness(adapted, {
+        reading: readingFingerprint(parseIR(irRaw)),
+        drawingFor: drawings?.drawingFor ?? (() => undefined),
+        /*
+         * Without a ladder there is nothing to compare against, so an empty record
+         * cannot be vouched for either — `unknown`, which is the only honest answer and
+         * never `fresh`.
+         */
+        recordsDrawings: drawings?.recordsDrawings ?? false,
+      })
     : undefined;
 
   return {
@@ -214,12 +238,16 @@ export async function entryFor(vault: Vault, jobId: string, learner: string): Pr
  * it belongs to nobody yet. A job that was **composed** for her does appear, marked
  * `pending`, because it was hers from the moment she asked for it (`016` T006).
  */
-export async function recordFor(vault: Vault, learner: string): Promise<RecordEntry[]> {
+export async function recordFor(
+  vault: Vault, learner: string,
+  /** One ladder for the whole scan, not one per job. See `entryFor`. */
+  drawings?: Pick<CurrentState, 'drawingFor' | 'recordsDrawings'>,
+): Promise<RecordEntry[]> {
   const entries: RecordEntry[] = [];
   for (const jobId of await allJobs(vault)) {
     // A file dropped into `material/` by a sync client is not a job.
     if (!(await vault.exists(jobDir(jobId)))) continue;
-    const entry = await entryFor(vault, jobId, learner);
+    const entry = await entryFor(vault, jobId, learner, drawings);
     if (entry) entries.push(entry);
   }
   return entries.sort((a, b) => (b.date ?? '').localeCompare(a.date ?? ''));

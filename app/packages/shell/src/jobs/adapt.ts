@@ -1,6 +1,6 @@
 
 import {
-  archivePrevious,
+  archivePrevious, stampPicto, bumpVaultSchema, VAULT_SCHEMA_DRAWINGS,
   Vault, VAULT, jobDir, jobIR, jobLearnerDir, jobAdapted, jobAdaptedRevision,
   jobRejected, jobReport, parseIR, annotateInjection, checkBounds, isVerified,
   selectRecipes, loadLearner, buildReport, loadForRun, RampaError, isGenerated,
@@ -387,8 +387,34 @@ export async function runAdaptation(
    * NOT re-run anything on its own» read from the other side — the fix is her
    * pressing adapt again, not a flag we maintain.
    */
-  await vault.writeRaw(jobAdapted(jobId, learnerCode),
-    stampReading(/^---\r?\n/.test(result.out) ? stamped : result.out, readingFingerprint(doc)));
+  /*
+   * And which drawing each word got (`031` T004, research R1).
+   *
+   * `applyPictograms` set `data-picto` on the **parsed** document above and this line
+   * wrote `result.out` — the raw model output — so the pairs never reached the file.
+   * `print.ts` has been reading them back from disk ever since, under a comment saying
+   * «what is on the sheet was decided when it was adapted»: a read of a value nothing
+   * persisted, with no test to catch it because none round-tripped adapt → disk → print.
+   *
+   * Stamped here, beside the date and the reading fingerprint, because all three are the
+   * same kind of fact: a property of the process at the moment the sheet was written.
+   * `031` then derives «is this drawing still the one she uses?» from them, and the
+   * printing path starts finding what it was always looking for.
+   */
+  const withPicto = stampPicto(
+    stampReading(/^---\r?\n/.test(result.out) ? stamped : result.out, readingFingerprint(doc)),
+    pictoPerBlock(pictos));
+  await vault.writeRaw(jobAdapted(jobId, learnerCode), withPicto);
+  /*
+   * And the vault says it now records drawings (`031`, P50's marker).
+   *
+   * Raised **at the write of the shape that needs it**, which is the rule
+   * `bumpVaultSchema` states: never at startup, never from a read. It is what lets the
+   * freshness axis tell «this sheet used no pictograms» from «this sheet predates the
+   * record» — without it every old sheet in her vault would have to answer «no lo sé»
+   * for ever, including the ones written after this shipped.
+   */
+  await bumpVaultSchema(vault, VAULT_SCHEMA_DRAWINGS);
 
   const report = buildReport({
     adapted, selection,
@@ -528,4 +554,13 @@ export async function applyPictogramsIfSheSaidSo(
   return { used: applied.used, skipped: applied.skipped };
 }
 
-
+/** Block id → the `word=id` pairs that block got, in the format `024` already defined. */
+function pictoPerBlock(
+  pictos: { used: Array<{ blockId: string; word: string; id: string }> } | null,
+): Map<string, string> {
+  const out = new Map<string, string>();
+  for (const { blockId, word, id } of pictos?.used ?? []) {
+    out.set(blockId, `${out.get(blockId) ? `${out.get(blockId)} ` : ''}${word}=${id}`);
+  }
+  return out;
+}

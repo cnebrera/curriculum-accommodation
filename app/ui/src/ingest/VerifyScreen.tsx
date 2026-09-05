@@ -140,11 +140,11 @@ export function VerifyScreen({ jobId, onVerified, next }: {
         did not make, so this points at the adaptation she already knows how to
         start and stops talking.
       */}
-      {stale.some((s) => s.freshness === 'stale') ? (
+      {stale.some((s) => s.freshness.reading === 'stale') ? (
         <Callout intent="decide" title="Hay fichas hechas con la lectura de antes">
           Has cambiado lo que yo había leído, así que estas fichas se hicieron con la
           versión anterior:{' '}
-          <strong>{stale.filter((s) => s.freshness === 'stale').map((s) => s.name).join(', ')}</strong>.
+          <strong>{stale.filter((s) => s.freshness.reading === 'stale').map((s) => s.name).join(', ')}</strong>.
           No he vuelto a hacer nada por mi cuenta. Si esas fichas ya están impresas y el
           cambio les afecta, vuelve a adaptarlas cuando termines aquí.
         </Callout>
@@ -155,11 +155,31 @@ export function VerifyScreen({ jobId, onVerified, next }: {
         reading it came from cannot be called current and cannot be called old, and
         saying either would be inventing an answer about a document in her folder.
       */}
-      {stale.some((s) => s.freshness === 'unknown') ? (
+      {stale.some((s) => s.freshness.reading === 'unknown') ? (
         <Callout intent="info" title="De estas fichas no sé con qué lectura se hicieron">
           Son de antes de que empezara a anotarlo:{' '}
-          <strong>{stale.filter((s) => s.freshness === 'unknown').map((s) => s.name).join(', ')}</strong>.
+          <strong>{stale.filter((s) => s.freshness.reading === 'unknown').map((s) => s.name).join(', ')}</strong>.
           Si las hiciste antes de corregir esta lectura, conviene volver a adaptarlas.
+        </Callout>
+      ) : null}
+
+      {/*
+        And the other axis, on its own (`031` FR-2903).
+
+        She came here to correct a reading, so the two callouts above are what she came
+        for — but a sheet that is *also* carrying a drawing she no longer uses is a sheet
+        she is about to re-make anyway, and telling her one thing at a time costs her the
+        second trip. The words are named, because «está antigua» is not actionable.
+      */}
+      {stale.some((s) => s.freshness.drawings.state === 'stale') ? (
+        <Callout intent="decide" title="Y estas llevan dibujos que ya no usas">
+          {stale.filter((s) => s.freshness.drawings.state === 'stale').map((s) => (
+            <div key={s.learner}>
+              <strong>{s.name}</strong>:{' '}
+              {s.freshness.drawings.state === 'stale'
+                ? s.freshness.drawings.words.join(', ') : ''}
+            </div>
+          ))}
         </Callout>
       ) : null}
 

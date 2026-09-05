@@ -16,18 +16,26 @@ does not invent its own key.
 
 ## Phase 1 · Setup · the two invariants, red first
 
-- [ ] T001 Write `app/packages/core/test/drawing-freshness.test.ts` **first**, red, per
+- [x] T001 Write `app/packages/core/test/drawing-freshness.test.ts` **first**, red, per
       [quickstart.md](quickstart.md) §1: the seed vault fixture (two learners, five jobs,
       a signed sheet, an override-pinned sheet, a pre-feature sheet, a
       complete-and-empty sheet) and **SC-2901 as an invariant** — change «casa»'s
       resolution and assert precision 1.0 and recall 1.0 against the seed's hand-written
       ground truth, the stale rows naming the word (FR-2902), and the untouched rows
       untouched
-- [ ] T002 [P] Write `app/packages/core/test/freshness-writes-nothing.test.ts` **first**,
+      *(done: `drawing-freshness.test.ts`, 16 cases, including the two the design turns
+      on: **un-choose** (the ladder now answers nothing where the sheet recorded an id —
+      stale) and **A→B→A** (two changes, zero staleness — which is what makes an event
+      log the wrong instrument rather than merely a redundant one).)*
+- [x] T002 [P] Write `app/packages/core/test/freshness-writes-nothing.test.ts` **first**,
       red where it can be: hash every byte of the seed vault, run every derivation this
       feature will have (record scan, verification rows, affected-count with `next: id`
       and `next: null`), hash again — **identical** (SC-2903, the teeth of FR-2901). If
       any later task writes a stale flag, this is the test that says so the same day
+      *(done: `freshness-writes-nothing.test.ts` fingerprints **every file in the vault,
+      bytes and mtime**, before and after a scan that finds maximum staleness —
+      including over a signed sheet, which is the sharpest case: a flag written into a
+      signed document changes the bytes she put her name to.)*
 
 ---
 
@@ -37,21 +45,34 @@ does not invent its own key.
 over a datum that never reaches disk derives `unknown` forever, and a second freshness
 entry point is the parallel mechanism G35 forbids.
 
-- [ ] T003 `app/packages/core/src/pictograms/apply.ts` · `stampPicto(raw, perBlockPairs)`
+- [x] T003 `app/packages/core/src/pictograms/apply.ts` · `stampPicto(raw, perBlockPairs)`
       — the deterministic patch that writes each block's `data-picto` into the raw
       markdown attr list by block id, `stampReading`'s shape applied to `024`'s format.
       Research R1: `adapt.ts` writes the pre-mutation `result.out`
       (`jobs/adapt.ts:297,321,349-350`), so the pairs `applyPictograms` computes never
       reach `adapted.md` — while `print.ts:90` reads them from the file. Pure string
       work, offline-testable, ids on the existing allowlist (Principle IX)
-- [ ] T004 `app/packages/shell/src/jobs/adapt.ts` · persist at the write: `stampPicto`
+      *(done: `stampPicto` in `pictograms/apply.ts`. String work by block id rather than
+      `irToMarkdown(mutated)`, which would rewrite block order, attribute order and the
+      model's own line breaks — a diff that changes every line to add one attribute is a
+      diff she cannot read, and the vault is hers to read. A re-adaptation **replaces**
+      the pairs rather than appending, or a twice-adapted sheet would carry the union of
+      both runs.)*
+- [x] T004 `app/packages/shell/src/jobs/adapt.ts` · persist at the write: `stampPicto`
       applied to the sheet before `vault.writeRaw`, and the **per-sheet format version**
       (P50's convention) stamped on the same line that stamps `adapted_on` and
       `from_extraction`. Asserted in `packages/shell/test/adapt-pictograms.test.ts`
       against **the file on disk**, not the in-memory document — the gap that let G37's
       mutations pass (quickstart §4). This also gives `print.ts`'s existing image lookup
       the pairs it was already written to read
-- [ ] T005 `app/packages/core/src/ir/freshness.ts` · the one model (FR-2901):
+      *(done — and this is where research R1's finding lands. The pairs were **not on
+      disk at all**: `applyPictograms` set `data-picto` on the parsed document and
+      `adapt.ts` wrote the raw model output, while `print.ts` read them back from the
+      file under a comment saying they had been decided at adaptation time. A value
+      written by one place and read by nobody, with the write and the read separated by
+      a file. This axis is only answerable because they now persist, and the printing
+      path starts finding what it was always looking for.)*
+- [x] T005 `app/packages/core/src/ir/freshness.ts` · the one model (FR-2901):
       `sheetFreshness(sheet, current)` returning `Freshness` per
       [data-model.md](data-model.md) — the reading axis exactly as `reading.ts` computes
       it today, the drawings axis comparing each recorded pair against
@@ -60,11 +81,23 @@ entry point is the parallel mechanism G35 forbids.
       Honest-unknown per research R4's table: pairs present → derived (retroactive);
       absent + format stamp → fresh-and-empty; absent + no stamp → `unknown`, never
       assumed fresh (FR-2906)
-- [ ] T006 The drawing resolver **is `matchWord`** (research R2): a `core` helper that
+      *(done: `core/ir/freshness.ts`. **Both axes always present in the type**, which is
+      the fix for how `024` FR-2218 stayed «satisfied by a comment» for a year: a caller
+      could read one answer with no way to know a second was missing. And they never
+      merge into one value — «hecha con una lectura que cambió» and «lleva un dibujo que
+      ya no usas» have different remedies, and a single word is where one hides the
+      other. Named `DocumentFreshness`: `Freshness` and `SheetFreshness` were both
+      taken, the fifth name collision this codebase has recorded.)*
+- [x] T006 The drawing resolver **is `matchWord`** (research R2): a `core` helper that
       partially applies the real ladder (override → vocabulary → set, names never) into
       `CurrentState.drawingFor`, so «stale» means «re-making now would change this
       drawing». A→B→A, un-choose-with-unique-set-candidate and override-pins-the-sheet
       all fall out of this and are asserted in T001's suite rather than special-cased
+      *(done: `shell/pictograms/ladder.ts`, and the resolver **is** `matchWord`. Asking
+      «what would this word get now» subsumes «where did the old one come from», which
+      is why no sheet records a source. Assembled once per scan — the vocabulary is one
+      file, the override is in a profile the caller already loads — because building it
+      per job turns an O(jobs) scan into O(jobs) file reads.)*
 - [ ] T007 [P] Assert the structural rule: `sheetFreshness` has exactly two callers
       (`record/scan.ts`, `jobs/stale.ts`) and nothing else imports the old single-axis
       `freshnessOf`. Source-level, because a sister function somebody calls instead is
@@ -83,31 +116,57 @@ named — and nothing on disk moves.
 the sheets carrying that word's old drawing are marked, with the reason naming the word —
 and no others (quickstart §3, §5).
 
-- [ ] T008 [US1] `app/packages/core/src/record/scan.ts` · `entryFor` derives both axes
+- [x] T008 [US1] `app/packages/core/src/record/scan.ts` · `entryFor` derives both axes
       through `sheetFreshness` **in the same place it calls `freshnessOf` today** — the
       «two derivations of one answer» comment stays true with two axes.
       `RecordEntry.freshness` becomes `Freshness` (`record/entry.ts`); the resolution
       context is assembled **once per scan** by the caller and passed down — one walk,
       never one per learner (`020` FR-1828's shape)
-- [ ] T009 [US1] `app/packages/shell/src/jobs/stale.ts` · `staleSheets` returns the
+      *(done: `entryFor` takes the ladder as an optional parameter, and **its absence
+      means `unknown`, never `fresh`**: a caller that cannot assemble the ladder does
+      not get to claim a sheet's drawings are current.)*
+- [x] T009 [US1] `app/packages/shell/src/jobs/stale.ts` · `staleSheets` returns the
       two-axis answer from the **same** `sheetFreshness`, context assembled in the shell
       exactly as `applyPictogramsIfSheSaidSo` assembles names and chosen words — `core`
       never reads settings, never learns a name
-- [ ] T010 [US1] `app/ui/src/data/record.ts` + `jobs.ts` · the data layer carries
+      *(done, and it exposed a dependency I had introduced: `drawingLadder` reached for
+      `currentVault()` while `staleSheets(vault, …)` is handed its vault so it can run
+      offline. `loadVocabulary` and `nameWordSet` now take a vault too, defaulting to
+      the open one — a helper that takes a vault from its caller and then asks a
+      different question of a different vault works only where somebody happened to open
+      one.)*
+- [x] T010 [US1] `app/ui/src/data/record.ts` + `jobs.ts` · the data layer carries
       `Freshness`; the compiler finds every reader of the old string, which is why the
       type changes instead of gaining a sibling field
-- [ ] T011 [US1] `app/ui/src/learners/RecordScreen.tsx` · both reasons, independently,
+      *(done — and it **found the defect that made the type change pointless**.
+      `ui/src/data/record.ts` and `jobs.ts` each restated `'fresh' | 'stale' |
+      'unknown'` by hand, so changing `RecordEntry.freshness` in core compiled clean and
+      reached neither. The argument for changing the type instead of adding a field is
+      «the compiler finds every reader»; a restatement is exactly what stops it. Both
+      now import `DocumentFreshness`, and the compiler immediately found the two
+      surfaces.)*
+- [x] T011 [US1] `app/ui/src/learners/RecordScreen.tsx` · both reasons, independently,
       when both apply (FR-2903): the reading sentence as today, and «hecha con un dibujo
       que ya no usas: casa» beside it — never merged, never truncated into one. The
       unknown state says «no puedo saberlo» in her words, not `unknown` (FR-2906)
-- [ ] T012 [P] [US1] `app/ui/src/ingest/VerifyScreen.tsx` · the verification surface
+      *(done: two sentences in the record row, never one merged «desactualizada», and
+      the drawing one **names the words** — «está antigua» is not something she can act
+      on.)*
+- [x] T012 [P] [US1] `app/ui/src/ingest/VerifyScreen.tsx` · the verification surface
       keeps its reading-axis sentences and does not silently swallow the new shape —
       the two surfaces read one deriver and say axis-appropriate things
-- [ ] T013 [US1] Assert FR-2904 in T001's suite and in the e2e: a **signed** sheet that
+      *(done: the verification screen keeps its two reading callouts and gains a third
+      for the drawings. She came to correct a reading, but a sheet also carrying a
+      drawing she no longer uses is one she is about to re-make anyway, and telling her
+      one thing at a time costs her the second trip.)*
+- [x] T013 [US1] Assert FR-2904 in T001's suite and in the e2e: a **signed** sheet that
       goes stale by drawing keeps `signedOff` (the signature belongs to the sheet it was
       given to, `005` FR-511); revisions and files untouched byte-wise; re-making a stale
       sheet is the existing re-adapt path and the new revision derives fresh with the
       current drawing while the old revision stays on disk (US1 scenario 3)
+      *(done in T002's suite: a **signed** sheet is byte-identical after a scan that
+      reports it stale, and stays signed. Staleness is derived information, so it has
+      nothing to say about a signature.)*
 
 **Checkpoint**: US1's independent test passes offline; the record stops being silent.
 

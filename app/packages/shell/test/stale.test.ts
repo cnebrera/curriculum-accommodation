@@ -55,9 +55,14 @@ async function seed(exercise = '47 × 8 =', stamp: string | null = null): Promis
 describe('a sheet made from a reading she has since corrected', () => {
   it('is fresh while nothing has changed', async () => {
     await seed();
+    /*
+     * Two axes since `031`, and the drawing one is **`unknown`** here on purpose: this
+     * fixture's vault carries no schema marker, so an absent `data-picto` says nothing —
+     * «no lo sé» rather than a claim about a fact nobody wrote down (FR-2906).
+     */
     expect(await staleSheets(vault, 'job-1')).toEqual([
-      { learner: 'E38', freshness: 'fresh' },
-      { learner: 'E41', freshness: 'fresh' },
+      { learner: 'E38', freshness: { reading: 'fresh', drawings: { state: 'unknown' } } },
+      { learner: 'E41', freshness: { reading: 'fresh', drawings: { state: 'unknown' } } },
     ]);
     expect(notFromCurrentReading(await staleSheets(vault, 'job-1'))).toEqual([]);
   });
@@ -69,7 +74,9 @@ describe('a sheet made from a reading she has since corrected', () => {
 
     const rows = notFromCurrentReading(await staleSheets(vault, 'job-1'));
     expect(rows.map((r) => r.learner)).toEqual(['E38', 'E41']);
-    expect(rows.every((r) => r.freshness === 'stale')).toBe(true);
+    // The **reading** axis, named: `031` made freshness two axes, so a test that says
+    // «stale» without saying which one would pass on a sheet stale for the other reason.
+    expect(rows.every((r) => r.freshness.reading === 'stale')).toBe(true);
   });
 
   it('stays fresh when she confirms a page she did not change', async () => {
@@ -91,7 +98,7 @@ describe('a sheet made from a reading she has since corrected', () => {
   it('says «no lo sé» about a sheet made before any of this existed', async () => {
     await seed('47 × 8 =', 'no-stamp');
     const rows = await staleSheets(vault, 'job-1');
-    expect(rows.every((r) => r.freshness === 'unknown')).toBe(true);
+    expect(rows.every((r) => r.freshness.reading === 'unknown')).toBe(true);
   });
 
   it('has nothing to say about a job with no sheets yet', async () => {
@@ -134,6 +141,12 @@ describe('asking the question changes nothing', () => {
       join(dirname(new URL(import.meta.url).pathname), '..', 'src', 'jobs', 'stale.ts'), 'utf8');
     const imports = [...src.matchAll(/^\s*import\s[^;]*from\s+['"]([^'"]+)['"]/gm)].map((m) => m[1]);
     expect(imports.filter((i) => /adapt|batch|provider|keys|ingest/i.test(i ?? ''))).toEqual([]);
-    expect(imports).toEqual(['@rampa/core']);
+    /*
+     * Two since `031`: the second axis needs to know which drawing each word would get
+     * **now**, and `pictograms/ladder.ts` is the only thing that answers that. It reads
+     * files and nothing else — no provider, no adaptation, no ingest — which is what the
+     * filter above asserts and what this list forces somebody to argue for again.
+     */
+    expect(imports).toEqual(['@rampa/core', '../pictograms/ladder.js']);
   });
 });

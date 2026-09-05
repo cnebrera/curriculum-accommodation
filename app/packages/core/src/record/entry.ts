@@ -5,7 +5,7 @@
  * reads them back the other way round — from the learner rather than from the
  * job — which is the whole feature.
  */
-import type { ReadingFreshness } from '../ir/reading.js';
+import type { DocumentFreshness } from '../ir/freshness.js';
 
 /** Where the material came from, and what "the original" therefore means. */
 export type RecordSource =
@@ -90,7 +90,15 @@ export interface RecordEntry {
    *
    * Absent while a composed job has no sheet: there is nothing to be stale.
    */
-  freshness?: ReadingFreshness;
+  /**
+   * Both axes (`031` FR-2901/2903), where the sheet and its reading are both present.
+   *
+   * The type changed from `ReadingFreshness` rather than gaining a second field, so the
+   * compiler finds every reader — which is the point: `024` FR-2218's deferral was
+   * «satisfied by a comment» precisely because nothing forced the readers to notice a
+   * second axis existed.
+   */
+  freshness?: DocumentFreshness;
   source: RecordSource;
   documents: RecordDocuments;
   /**

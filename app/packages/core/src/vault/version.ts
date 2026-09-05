@@ -49,8 +49,18 @@ export const VAULT_SCHEMA_V1 = 1;
  */
 export const VAULT_SCHEMA_CUR_AREAS = 2;
 
+/**
+ * Adapted sheets record which drawing each word got (`031` FR-2901, data-model.md).
+ *
+ * The version is what distinguishes «this sheet used no pictograms» from «this sheet
+ * predates the record». Below it, an absent `data-picto` says nothing at all and the
+ * drawing axis answers «no lo sé» — never «fresh», which would be a claim about a fact
+ * nobody wrote down (FR-2906).
+ */
+export const VAULT_SCHEMA_DRAWINGS = 3;
+
 /** The newest shape this build knows how to write. */
-export const VAULT_SCHEMA_CURRENT = VAULT_SCHEMA_CUR_AREAS;
+export const VAULT_SCHEMA_CURRENT = VAULT_SCHEMA_DRAWINGS;
 
 /**
  * What this vault says it holds. `1` when it says nothing.

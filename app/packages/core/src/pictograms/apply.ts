@@ -193,3 +193,43 @@ export function parsePicto(
       : { word, id: rest.slice(0, sep), from: rest.slice(sep + 1) };
   }).filter((p) => p.id !== '');
 }
+
+/**
+ * Write the pairs into the raw markdown, by block id (031 T003, research R1).
+ *
+ * ## The defect this closes
+ *
+ * `applyPictograms` sets `data-picto` on the **parsed** document, and `adapt.ts` writes
+ * `result.out` — the raw, pre-mutation model output. So the pairs never reached the file.
+ * Meanwhile `print.ts` reads them back **from the file**, under a comment saying «what is
+ * on the sheet was decided when it was adapted»: a read of a value nothing persisted.
+ *
+ * No test caught it because none round-tripped adapt → disk → print. It is this project's
+ * signature defect with the write and the read separated by a file, and `031` needs the
+ * pairs on disk to answer «is this sheet's drawing still the one she uses?» at all.
+ *
+ * ## String work, not a re-serialisation
+ *
+ * The alternative — `irToMarkdown(mutated)` — would rewrite her whole document: block
+ * order, attribute order, whitespace, the model's own line breaks. The vault is hers to
+ * read, and a diff that changes every line to add one attribute is a diff she cannot
+ * read. So this patches the attribute list of the named blocks and touches nothing else.
+ */
+export function stampPicto(
+  raw: string, perBlock: ReadonlyMap<string, string>,
+): string {
+  if (perBlock.size === 0) return raw;
+  /*
+   * `::: {#b3 .instruction data-picto="…"}` — the opening line of a block, by id.
+   *
+   * An existing `data-picto` is replaced rather than appended to: re-adapting a sheet
+   * comes back through here and must stamp what *this* run decided, not the union of
+   * every run. Same rule as `stampReading` beside it.
+   */
+  return raw.replace(/^::: \{#([A-Za-z0-9_-]+)([^}]*)\}/gm, (whole, id: string, rest: string) => {
+    const pairs = perBlock.get(id);
+    if (pairs === undefined) return whole;
+    const without = rest.replace(/\s*data-picto="[^"]*"/g, '');
+    return `::: {#${id}${without} data-picto="${pairs}"}`;
+  });
+}

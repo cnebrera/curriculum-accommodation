@@ -1,4 +1,5 @@
-import { recordFor, writeRecord, learnerDir, type RecordEntry } from '@rampa/core';
+import { recordFor, writeRecord, learnerDir, loadLearner, type RecordEntry } from '@rampa/core';
+import { drawingLadder } from '../pictograms/ladder.js';
 import { currentVault } from './vault.js';
 import { handle } from './wrap.js';
 
@@ -16,13 +17,34 @@ import { handle } from './wrap.js';
  * calling, so a name never reaches a log the first time somebody debugs this
  * (FR-1207/1208).
  */
+/**
+ * One drawing ladder for a whole scan (`031` T009, research R2).
+ *
+ * Built here, once, and passed down — the vocabulary is one file, the override lives in
+ * the profile this already loads, and the set is behind the existing cached path.
+ * Building it inside `entryFor` would turn an O(jobs) scan into O(jobs) file reads, which
+ * is `020` FR-1828's rule applied to this axis.
+ */
+async function ladderFor(code: string): ReturnType<typeof drawingLadder> {
+  const learner = await loadLearner(currentVault(), code);
+  const overrides = (learner.profile as {
+    pictograms?: { overrides?: Record<string, string> };
+  }).pictograms?.overrides;
+  return drawingLadder({
+    vault: currentVault(),
+    ...(overrides ? { overrides } : {}),
+    ...(learner.profile.language?.instruction
+      ? { language: learner.profile.language.instruction } : {}),
+  });
+}
+
 export function registerRecordIpc(): void {
   handle('record:forLearner', async (code: string): Promise<RecordEntry[]> =>
-    recordFor(currentVault(), code));
+    recordFor(currentVault(), code, await ladderFor(code)));
 
   handle('record:rebuild', async (code: string): Promise<string> => {
     const vault = currentVault();
-    return writeRecord(vault, code, await recordFor(vault, code));
+    return writeRecord(vault, code, await recordFor(vault, code, await ladderFor(code)));
   });
 
   /**
@@ -37,7 +59,7 @@ export function registerRecordIpc(): void {
     const vault = currentVault();
     if (!query.learner) return [];
 
-    const entries = await recordFor(vault, query.learner);
+    const entries = await recordFor(vault, query.learner, await ladderFor(query.learner));
     const needle = (query.text ?? '').trim().toLowerCase();
 
     const matches = await Promise.all(entries.map(async (e) => {
@@ -74,7 +96,7 @@ export function registerRecordIpc(): void {
 export async function refreshRecord(code: string): Promise<void> {
   try {
     const vault = currentVault();
-    await writeRecord(vault, code, await recordFor(vault, code));
+    await writeRecord(vault, code, await recordFor(vault, code, await ladderFor(code)));
   } catch { /* see above */ }
 }
 
