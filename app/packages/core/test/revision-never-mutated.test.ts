@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import {
   Vault, listRevisions, archivePrevious, restoreRevision, stampSignedOff,
-  revisionDiff, type RevisionSite,
+  revisionDiff, recordFor, type RevisionSite,
 } from '../src/index.js';
 
 /**
@@ -233,5 +233,37 @@ Resuelve estas multiplicaciones.
     const diff = revisionDiff(sheet(4), boasting);
     expect(diff.sentences.join(' ')).toContain('He añadido 1 bloque (n1)');
     expect(diff.sentences.join(' ')).not.toContain('quitado');
+  });
+});
+
+/**
+ * The record says which revision was signed, and that later ones exist
+ * (026 T026, FR-2412).
+ *
+ * `signedOff` alone answers about the **working** file, so a turn after a sign-off turns
+ * it `false` — and the record would then say «sin firmar» about a document she remembers
+ * signing. Six weeks later she needs both halves: that revision 2 was signed, and that
+ * there is a revision 3 nobody has read.
+ */
+describe('what the record can say about a document with revisions', () => {
+  it('names the signed revision even when a later one is working', async () => {
+    await vault.ensureDir('material/job-1/E38');
+    await vault.writeRaw('material/job-1/ir.md', sheet(4));
+    await turn(stampSignedOff(sheet(4), 'la PT', '2026-09-05'));
+    await turn(sheet(5));
+
+    const entries = await recordFor(vault, 'E38');
+    const entry = entries.find((e) => e.jobId === 'job-1')!;
+    expect(entry.signedOff, 'the working revision is not signed').toBe(false);
+    expect(entry.signedRevision, 'and the record forgot she ever signed').toBe(1);
+    expect(entry.revision).toBe(2);
+  });
+
+  it('and says nothing about a signed revision when there has never been one', async () => {
+    await vault.ensureDir('material/job-1/E38');
+    await vault.writeRaw('material/job-1/ir.md', sheet(4));
+    await turn(sheet(4));
+    const entry = (await recordFor(vault, 'E38')).find((e) => e.jobId === 'job-1')!;
+    expect(entry.signedRevision).toBeUndefined();
   });
 });

@@ -62,6 +62,15 @@ export interface RecordEntry {
   objectives?: string[];
   /** Principle VII: an unsigned draft appears in the record, marked. */
   signedOff: boolean;
+  /**
+   * Which revision she signed, when it is not the current one (`026` FR-2412).
+   *
+   * `signedOff` is about the working file, so a turn after a sign-off turns it `false` —
+   * and the record would then answer «sin firmar» about a document she remembers signing.
+   * Both halves matter to her six weeks later: that revision 2 was signed, and that there
+   * is a revision 3 nobody has read.
+   */
+  signedRevision?: number;
   /** 1 for the original; higher when she has corrected it (001). */
   revision: number;
   /**

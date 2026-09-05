@@ -9,6 +9,7 @@ import { Callout } from '../components/Callout.js';
 import { ReportView, type Decision } from './ReportView.js';
 import { DraftMark } from '../components/DraftMark.js';
 import { ScopeQuestion } from './ScopeQuestion.js';
+import { ConversationPanel } from './ConversationPanel.js';
 
 /**
  * Leads with the risky decisions, per checklists/review.md. The teacher reviews
@@ -210,6 +211,16 @@ export function ReviewScreen({ jobId, learner, recipes, back }: {
           </div>
         </details>
       ) : null}
+
+      {/*
+        The conversation, under the document (`026` T016).
+
+        Before it, «casi, pero hazlo más corto» cost a full re-run: the same money, the
+        same wait, and a fresh document to re-check from scratch. The scope question below
+        is a different act and stays — it is about her *practice*, and this is about *this
+        sheet*.
+      */}
+      <ConversationPanel jobId={jobId} learner={learner} />
 
       <ScopeQuestion learner={learner} recipes={applied} onCaptured={(c) => setCorrections((prev) => [...prev, c])} />
 

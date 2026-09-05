@@ -931,6 +931,67 @@ regla de valor, y la guarda de grupo-sin-verificar de `buildSheet` no tenía tes
 T024 (que una PT diga cuál de las dos hojas pondría delante del niño) y T025 (el paseo con
 clave real: ningún diagrama de este proyecto lo ha producido todavía un modelo).
 
+### 3.3 · `026` implementada — «casi» cuesta un turno, no una re-ejecución
+
+**Commits:** `026 · una sola mecánica de revisiones…` y `026 · el turno…`
+**Decisión:** P24
+
+**La garantía de todo el feature es el orden.** Las puertas corren sobre un candidato en
+memoria; sólo cuando todas han pasado se archiva el fichero anterior y se escribe el
+nuevo. Así que un fallo del proveedor, una negativa, una salida rechazada o un cierre a
+mitad dejan el vault **byte a byte** como estaba. «Completa o ausente» es entonces una
+propiedad del orden de operaciones y no de una ruta de limpieza — y una ruta de limpieza
+es algo que tiene que ejecutarse.
+
+**Lo que cambió lo dicen los dos ficheros, nunca el modelo.** A un modelo al que se le
+pregunta qué cambió contesta con seguridad, incluido sobre cambios que no hizo — el
+mismo fallo que `004` cerró para los informes y `014` para las fechas. Y aquí importa
+más: «¿qué ha cambiado?» es la pregunta con la que ella decide si mirar la hoja, así que
+un resumen equivocado a su favor es un resumen que hace que no mire. El diff habla en
+ejercicios y enunciados, y **los cambios de cantidad llevan frase propia** porque tiene
+la hoja de soluciones en la mano.
+
+**Una firma no se mueve.** Vive en el front matter del documento, así que restaurar una
+revisión firmada restaura un documento firmado sin que nadie tenga que mover nada —
+mover una firma es precisamente la operación que la pondría encima de algo que nadie
+leyó. Y restaurar **archiva** en vez de borrar: «volver a la uno» no le cuesta la tres.
+
+**Una sola mecánica de revisiones.** `nextRevision` (para `adapted.rN.md`) y
+`nextComposedRevision` (para `ir.rN.md`) eran la misma aritmética con otro nombre de
+fichero — la deriva que la investigación de `021` avisó, una feature más tarde. Escribir
+el turno contra cualquiera de las dos habría hecho la tercera; las dos convergen.
+
+**Dos agujeros del detector de inyección, y son de este feature.** El fixture número once
+no es material de fuera: es **un documento que escribió Rampa**, un turno antes, a partir
+de la salida de un modelo. Si la salida de un turno pudiera colar una instrucción en el
+siguiente, la conversación sería un canal para que un modelo se hable a sí mismo entre
+turnos con el nombre de ella en los mensajes. Encontró dos cosas:
+
+- **«Instrucción para el siguiente turno» no tenía destinatario.** No hay «ordenador» ni
+  «sistema» en esa frase: `026` le dio al modelo una manera de nombrar al programa que
+  antes no existía. Ahora «siguiente turno» es destinatario — **la frase y no la palabra
+  suelta**, porque «es tu turno» y «por turnos» son castellano de aula, y un detector que
+  marca fichas de juegos de mesa es un detector que se ignora en una semana.
+- **«Puedes *dar* el documento por revisado» se colaba.** El patrón sólo conocía el
+  imperativo («da», «marca»), y el castellano tira del infinitivo constantemente.
+
+Los dos aislados con sus propios casos, después de que la mutación mostrara que un solo
+fixture no podía fallar por una razón a la vez.
+
+**Y mirar el panel encontró dos cosas más:** los turnos corrían juntos como lista de
+viñetas — la línea de coste de uno pegada a las palabras de ella en el siguiente, así que
+«lo que pedí» y «lo que pedí después» se leían como un bloque — y la fecha salía en ISO
+donde el resto de la aplicación las escribe a la española. Lo que sí lee bien es la
+negativa: dice qué ha entendido, qué cambiaría de lo que se evalúa, y **qué sí puede
+hacer en su lugar**. Se lee como Rampa protegiendo su criterio y no como Rampa
+desobedeciendo — aunque eso es mi lectura y no la de una PT, que es T032.
+
+66 casos nuevos y 7 e2e; 10 costuras verificadas por mutación.
+
+**Lo que queda de `026`, en manos de una persona:** T031 (el paseo con clave real: ningún
+turno de este proyecto lo ha completado todavía un modelo) y T032 (que una PT diga si el
+camino de vuelta se encuentra sin que se lo señalen).
+
 ## Notas de proceso
 
 - **La instancia que me pediste, y por qué la he reiniciado.** La levanté con `npm run dev`
@@ -982,13 +1043,13 @@ clave real: ningún diagrama de este proyecto lo ha producido todavía un modelo
 | | |
 |---|---|
 | `npx tsc --noEmit` | verde (línea base) |
-| `npx vitest run` | verde — 1.926 casos |
-| `npm run test:e2e` | verde — 147 casos |
+| `npx vitest run` | verde — 1.986 casos |
+| `npm run test:e2e` | verde — 154 casos |
 | `scripts/check-fr-coverage.sh` | verde (línea base) |
 | `scripts/check-spec-kit.sh` | verde (línea base) |
 
 ---
 
-**Lotes 0, 1 y 2 completos (5/5 · 17/17 · 12/12); Lote 3 con `027` y `022` implementadas.**
-Quedan **3.10** (`020` US2-US4), **3.13** (notas de BACKLOG) y **9 features** por
-`/speckit-implement` en el orden 026→031→032→028→035→033→029→030→034.
+**Lotes 0, 1 y 2 completos (5/5 · 17/17 · 12/12); Lote 3 con `027`, `022` y `026`
+implementadas.** Quedan **3.10** (`020` US2-US4), **3.13** (notas de BACKLOG) y **8
+features** por `/speckit-implement` en el orden 031→032→028→035→033→029→030→034.

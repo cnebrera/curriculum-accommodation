@@ -252,6 +252,13 @@ export const es = {
      * and the job throws it as the message, so this catch-all is only reached if that
      * corpus file is missing.
      */
+    /*
+     * The two the conversation adds. Both are short here because the job throws the
+     * sentence that carries the argument; this is the fallback if it ever does not.
+     */
+    'stale-reading': 'Esa hoja se hizo con una lectura que ha cambiado. Vuelve a adaptarla y seguimos desde ahí.',
+    'turn-in-flight': 'Todavía estoy con el cambio anterior de este documento. Espera a que termine.',
+    'revision-missing': 'Ya no encuentro esa versión en tu carpeta. Las que quedan siguen ahí.',
     'compose-exam-other-course': 'Un examen de otro curso evalúa otras cosas, y eso lo decide el equipo docente. Tráeme la ACS y lo compongo a ese nivel.',
     /*
      * `pictogram-language` has **no** entry here, deliberately.

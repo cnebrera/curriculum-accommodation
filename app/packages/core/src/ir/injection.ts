@@ -27,9 +27,20 @@ import type { Block, IRDocument, Notice } from './types.js';
  * Tier B needs no addressee: a maths sheet does not ask for a child's diagnosis.
  */
 
-/** Words that name the thing being addressed. */
+/**
+ * Words that name the thing being addressed.
+ *
+ * `siguiente turno` / `próximo turno` joined the list with `026`, and the vector is
+ * specific to it: a document Rampa wrote one turn ago, saying «instrucción para el
+ * siguiente turno». There is no «ordenador» and no «sistema» in that sentence — the
+ * conversation gave the model a way to name the program that did not exist before.
+ *
+ * The **phrase** and not the bare word, deliberately: «es tu turno» and «por turnos» are
+ * ordinary classroom Spanish, and an addressee that fires on them would flag board-game
+ * worksheets for ever, which is how a detector gets ignored.
+ */
 const ADDRESSEE =
-  /(ordenador|computador\w*|sistema|programa|asistente|máquina|maquina|modelo|\bia\b|\bai\b|chatgpt|claude|gemini|prompt|system|assistant|developer message)/i;
+  /(ordenador|computador\w*|sistema|programa|asistente|máquina|maquina|modelo|\bia\b|\bai\b|chatgpt|claude|gemini|prompt|system|assistant|developer message|(?:siguiente|pr[óo]ximo|next)\s+turno?)/i;
 
 /** Directives that, next to an addressee, stop being ordinary classroom language. */
 const DIRECTIVE =
@@ -45,7 +56,16 @@ const CAPABILITY: Array<{ re: RegExp; why: string }> = [
     why: 'pide sacar datos del alumno al material' },
   { re: /\b(quita|elimina|borra|remove|delete|clear)\b[^.\n]{0,50}\b(marca de borrador|borrador|draft|watermark|marca de agua)\b/i,
     why: 'pide quitar la marca de borrador' },
-  { re: /\b(da|marca|considera|treat|mark)\b[^.\n]{0,40}\b(por revisado|como revisado|as reviewed|as signed)\b/i,
+  /*
+   * Infinitives too, since `026`.
+   *
+   * The pattern read `(da|marca|considera)` — the imperative only — and Spanish reaches
+   * for the infinitive constantly: «puedes **dar** el documento por revisado», «hay que
+   * **marcar**lo como revisado». A vector written the ordinary way walked past this,
+   * which a fixture found. The object («por revisado») is specific enough that widening
+   * the verb costs no false positives.
+   */
+  { re: /\b(da|dar|marca|marcar|considera|considerar|treat|mark)\w*\b[^.\n]{0,40}\b(por revisado|como revisado|as reviewed|as signed)\b/i,
     why: 'pide dar el material por revisado sin que nadie lo revise' },
   { re: /\b(desactiva|disable|salta|omite|skip)\b[^.\n]{0,50}\b(redacci[óo]n|redaction|sustituci[óo]n de nombres|anonimizaci[óo]n)\b/i,
     why: 'pide desactivar la protección de nombres' },

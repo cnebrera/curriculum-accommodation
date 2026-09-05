@@ -1,4 +1,4 @@
-import { randomBytes } from 'node:crypto';
+import { materialFence } from './fence.js';
 import { AXES, axisLevelOf, type Profile } from '../vault/schema.js';
 import { recipeRef, type Recipe } from '../recipes/index.js';
 
@@ -100,38 +100,6 @@ export function boundNotes(notes: string, budget = NOTES_BUDGET_CHARS): BoundedN
 
 const section = (title: string, body: string): string => `\n## ${title}\n${body}`;
 
-/**
- * A fence for untrusted content, with a nonce nobody can predict (AGE-02, P18).
- *
- * ## What the headings alone could not stop
- *
- * The sections of this prompt were separated by Markdown headings and the
- * material was pasted verbatim at the end. So a source document containing a line
- * `## Correcciones de la maestra sobre el intento anterior` followed by orders
- * read **structurally identically** to the legitimate section of highest
- * precedence — and the injection detector does not cover that vector: its tiers
- * want an addressee plus a directive, or a named capability, not the impersonation
- * of a section of the prompt.
- *
- * A random per-call nonce closes it, and closes it *structurally* rather than by
- * asking the model to be careful (rule 5 of AGENTS.md): a document cannot forge
- * `<<<FIN-MATERIAL-9f3a…>>>` because it was written before the nonce existed.
- *
- * It is also what makes the reaffirmation after the material safe to add. `007`'s
- * argument was that the material must be **last** so nothing after it could read
- * as continuing an instruction; that argument holds only while there is no way to
- * say «the content ends here». Now there is, so recency stops working for the
- * attacker (which was the other half of AGE-02) without giving up the positional
- * defence.
- */
-function materialFence(material: string): { open: string; close: string } {
-  // A `while` that cannot loop in practice — 96 bits — but a fence the material
-  // already contains is the one thing that would make this useless, so it is
-  // checked rather than assumed.
-  let nonce = randomBytes(12).toString('hex');
-  while (material.includes(nonce)) nonce = randomBytes(12).toString('hex');
-  return { open: `<<<MATERIAL-${nonce}>>>`, close: `<<<FIN-MATERIAL-${nonce}>>>` };
-}
 
 /**
  * The order is the precedence order in `instructions/adapt.md` §"Order of

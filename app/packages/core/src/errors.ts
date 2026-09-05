@@ -49,6 +49,24 @@ export type ErrorKind =
    * more carefully, never a reason to refuse (P12, and 2.11's correction to `adapt.md`).
    */
   | 'compose-exam-other-course'
+  /**
+   * A second turn on a document whose first turn is still running (`026` T012).
+   *
+   * Refused rather than queued: the running turn is about to change the file the second
+   * would be sent, so queueing would send a document that no longer exists. Keyed per
+   * document — a turn about Marco's sheet does not block a turn about Lucia's.
+   */
+  | 'turn-in-flight'
+  /** A revision number that is not on disk — she may have tidied the folder by hand. */
+  | 'revision-missing'
+  /**
+   * A turn on a sheet made from a reading that has since changed (`026` T013, `005` FR-520).
+   *
+   * Refused rather than warned, because a warning arrives with the bill: iterating a
+   * stale sheet bakes the stale reading in deeper, since the next revision inherits the
+   * fingerprint. She unblocks it by re-adapting from the current reading.
+   */
+  | 'stale-reading'
   | 'pictogram-not-accepted'  // a fetch attempted before she accepted the licence (023 FR-2104)
   | 'pictogram-in-progress'  // a second whole-set download while one is running (024 FR-2118)
   | 'pictogram-language'     // her publisher has no pictograms in this language

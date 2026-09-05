@@ -121,6 +121,7 @@ describe('inside packages/shell, the surface is small and named', () => {
     'packages/shell/src/corpus/links.ts',    // shell.openExternal, app.getVersion — the outbound surface
     'packages/shell/src/ipc/adapt.ts',       // BrowserWindow (type only), for the progress send
     'packages/shell/src/ipc/compose.ts',     // BrowserWindow (type only) — 016 T003
+    'packages/shell/src/ipc/conversation.ts', // BrowserWindow (type only) — 026 T015
     'packages/shell/src/ipc/diagnostics.ts', // app.getPath, shell.showItemInFolder
     'packages/shell/src/ipc/guide.ts',       // BrowserWindow (type only) — 017 T013
     'packages/shell/src/ipc/ingest.ts',      // dialog.showOpenDialog, app.getPath, progress
@@ -203,6 +204,9 @@ describe('inside packages/shell, the surface is small and named', () => {
     expect(typeOnly).toEqual([
       'packages/shell/src/ipc/adapt.ts',
       'packages/shell/src/ipc/compose.ts',
+      // `026` T015: the conversation sends progress into the window and nothing else,
+      // which is what «type only» means here — no `app`, no `dialog`, no `shell`.
+      'packages/shell/src/ipc/conversation.ts',
       'packages/shell/src/ipc/guide.ts',
     ]);
   });

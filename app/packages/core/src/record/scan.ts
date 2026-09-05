@@ -2,6 +2,7 @@ import { parseIR } from '../ir/parse.js';
 import { isSignedOff } from '../ir/types.js';
 import { readingFingerprint, freshnessOf } from '../ir/reading.js';
 import { startedFor } from '../vault/document.js';
+import { parseFrontMatter } from '../vault/parse.js';
 import {
   VAULT, jobDir, jobIR, jobSourceDir, jobLearnerDir, jobAdapted, jobReport, outputDir,
   jobAnswers, jobComposeReport,
@@ -107,6 +108,19 @@ export async function entryFor(vault: Vault, jobId: string, learner: string): Pr
   const rendered = (await vault.list(outputDir(jobId, learner)))
     .map((f) => `${outputDir(jobId, learner)}/${f}`);
 
+  /*
+   * The highest revision whose own file carries a signature.
+   *
+   * Read in order, so «the one she signed» is the latest one she signed — she may have
+   * signed the second, taken two more turns and signed nothing since.
+   */
+  let signedRevision: number | undefined;
+  for (const [i, path] of revisions.entries()) {
+    const raw = await vault.readRaw(path);
+    if (raw && isSignedOff({ frontMatter: parseFrontMatter(raw).data })) signedRevision = i + 1;
+  }
+  if (adapted !== null && isSignedOff(adapted)) signedRevision = revisions.length + 1;
+
   const reportPath = jobReport(jobId, learner);
   const hasReport = await vault.exists(reportPath);
 
@@ -171,6 +185,19 @@ export async function entryFor(vault: Vault, jobId: string, learner: string): Pr
     // No sheet, no signature. `isSignedOff` over the IR would read a flag from a
     // document nobody signs.
     signedOff: adapted !== null && isSignedOff(adapted),
+    /*
+     * **Which** revision she signed, when it is not the current one (`026` T026, FR-2412).
+     *
+     * `signedOff` above is about the working file, and a turn after a sign-off makes that
+     * `false` — which loses the fact that she signed something at all. A teacher looking
+     * at her record six weeks later needs both halves: that revision 2 was signed, and
+     * that there is a revision 3 nobody has. Without this the record would answer «sin
+     * firmar» about a document she remembers signing.
+     *
+     * Derived from the archived files' own front matter, never from a side-store: the
+     * signature belongs to the sheet (`005` FR-511), so the sheet is what is asked.
+     */
+    ...(signedRevision !== undefined ? { signedRevision } : {}),
     ...(adaptedRaw === null ? { pending: true } : {}),
     ...(freshness ? { freshness } : {}),
     revision: revisions.length + 1,

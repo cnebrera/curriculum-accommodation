@@ -180,6 +180,20 @@ const api = {
     acs: (learner: string, evaluationRecorded: boolean, decided: string) =>
       invoke('guide:acs', learner, evaluationRecorded, decided),
   },
+  /**
+   * The conversation about one document (`026`).
+   *
+   * `learner` is `undefined` for a composition, which is the same pair `resolveDocument`
+   * answers for — «which document?» is decided in one place, and this surface does not
+   * get to have a second opinion.
+   */
+  conversation: {
+    turn: (job: string, learner: string | undefined, text: string) =>
+      invoke('conversation:turn', job, learner, text),
+    list: (job: string, learner?: string) => invoke('conversation:list', job, learner),
+    restore: (job: string, learner: string | undefined, revision: number) =>
+      invoke('conversation:restore', job, learner, revision),
+  },
   job: {
     /** `kind` is required and never defaulted (012 FR-1003). */
     create: (id: string, text: string, kind: string, lang?: string) =>

@@ -396,7 +396,31 @@ sigue siendo el único ítem del lote sin tasks propios (sus tareas viven en spe
       ahora existen, y la cita de `022` FR-2008 en `pictograms/fetch.ts` nombra otra vez
       una regla implementada.
       124 casos nuevos + 7 e2e; 12 costuras verificadas por mutación.
-- [x] **3.3 · Spec ESCRITA → `026-la-conversacion`** (P24). Falta: clarify → plan → tasks → implement.
+- [x] **3.3 · `026-la-conversacion` IMPLEMENTADA** (P24).
+      **Hecho 2026-09-05, dos commits.** 31 de 33 tareas; las dos abiertas necesitan una
+      clave real y una PT.
+      «Casi, pero hazlo más corto» costaba una re-ejecución entera: el mismo dinero, la
+      misma espera y un documento nuevo que revisar desde cero. Ahora cuesta un turno.
+      **La garantía es el orden**: las puertas corren sobre un candidato en memoria y sólo
+      entonces se archiva lo anterior y se escribe lo nuevo — así que un fallo del
+      proveedor, una negativa o una salida rechazada dejan el vault **byte a byte** como
+      estaba. Eso es una propiedad del orden de operaciones, no de una ruta de limpieza; y
+      una ruta de limpieza es algo que tiene que ejecutarse.
+      Lo que cambió lo dice el **diff entre los dos ficheros**, nunca el modelo: uno al que
+      se le pregunta qué cambió contesta con seguridad, incluido sobre cambios que no hizo.
+      Y los cambios de cantidad llevan frase propia, porque ella tiene la hoja de
+      soluciones en la mano.
+      Una firma no se mueve nunca: vive en el front matter, así que restaurar una revisión
+      firmada restaura un documento firmado sin que nadie mueva nada — y mover una firma es
+      la operación que la pondría sobre algo que nadie leyó.
+      **Dos agujeros del detector de inyección encontrados de paso**, y son de este
+      feature: «instrucción para el siguiente turno» no tenía a nadie a quien dirigirse en
+      la lista — `026` le dio al modelo una manera de nombrar al programa que antes no
+      existía — y «puedes **dar** el documento por revisado» se colaba por un patrón que
+      sólo conocía el imperativo. Los dos cerrados, con casos que los aíslan.
+      Y una sola mecánica de revisiones: `nextRevision` y `nextComposedRevision` eran la
+      misma aritmética con otro nombre de fichero, y ahora convergen.
+      66 casos nuevos + 7 e2e; 10 costuras verificadas por mutación.
 - [x] **3.4 · Spec ESCRITA → `028-material-de-estructura`** (P4). Falta: clarify → plan → tasks → implement.
 - [x] **3.5 · Spec ESCRITA → `029-la-normativa-es-un-corpus`** (P3, incluye P8). Falta: clarify → plan → tasks → implement.
 - [x] **3.6 · Spec ESCRITA → `030-el-paquete-de-coordinacion`** (P5/P7/P13). Falta: clarify → plan → tasks → implement.

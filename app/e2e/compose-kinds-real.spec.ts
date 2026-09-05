@@ -108,12 +108,19 @@ test.describe('an exam of another course is the teaching team’s decision', () 
     });
 
     /*
-     * It gets past the gate and stops at the **key**, which is the next thing in the
-     * way. Asserted as «a different refusal» rather than as success: composing for real
-     * costs money, and what this test is about is which door closed.
+     * It gets past the gate and stops at whatever is next. Asserted as «a **different**
+     * refusal» rather than as success: composing for real costs money, and what this test
+     * is about is which door closed.
+     *
+     * What comes next is deliberately not pinned. The seed stores a fake key, so the run
+     * reaches the provider and fails there — and *which* provider failure depends on the
+     * network at that moment («offline», a 401, a timeout). Pinning one of them made this
+     * flaky: it passed alone and failed in the full suite, which is how a suite learns to
+     * be ignored. The claim this test makes is about the gate, and the gate is asserted.
      */
     expect(said).not.toContain('equipo docente');
-    expect(said).toMatch(/servicio de IA|clave/i);
+    expect(said).not.toContain('ACS');
+    expect(said, 'it should not have composed for real').not.toBe('ok');
     await app.close();
   });
 
