@@ -289,6 +289,13 @@ export async function runAdaptation(
        */
       kind: await materialKind(
         typeof doc.frontMatter['kind'] === 'string' ? doc.frontMatter['kind'] : undefined),
+      /*
+       * What subject this is (`032` FR-3001), read from the document rather than asked
+       * again: `subject` is written by the compose flow and by ingestion's front matter,
+       * and re-deciding it here would let one sheet be prompted as two subjects.
+       */
+      ...(typeof doc.frontMatter['subject'] === 'string' && doc.frontMatter['subject']
+        ? { subject: doc.frontMatter['subject'] } : {}),
     });
     if (notesOmitted > 0) {
       logger.info('adapt.notes-bounded', { jobId, omittedSections: notesOmitted });

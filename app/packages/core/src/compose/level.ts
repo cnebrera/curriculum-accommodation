@@ -152,6 +152,43 @@ export function explainTarget(t: Target, yearLabel?: (id: string) => string): st
   }
 }
 
+/**
+ * Which curricular level governed this composition, and whether it was hers for this
+ * subject or the general one standing in (`032` T012, Principle VI).
+ *
+ * Traceability, not decoration: «composing at a stated level is a different act from
+ * quietly lowering someone else's worksheet, and the difference is who decided». The
+ * per-area value adds a second half to that — *which* observation was consulted. A
+ * report that says «nivel curricular 2» without saying whether that came from her note
+ * about Matemáticas or from the general value cannot be checked by the person who wrote
+ * both.
+ *
+ * `null` when nobody has recorded a CUR at all: there is nothing to report, and a
+ * sentence saying so on every composition for every learner without one is noise.
+ *
+ * The Spanish lives here rather than in the corpus because `explainTarget` and
+ * `explainLevel` beside it already do — a single sentence extracted to Markdown while
+ * its two neighbours stay would be a third convention, and the corpus is for judgement a
+ * teacher may correct, not for a sentence that states what the code just read.
+ */
+export function explainCurSource(input: {
+  cur: 0 | 1 | 2 | 3 | null;
+  /** The job's area, when it has one. */
+  area?: string;
+  /** True when the value came from her pair for that area rather than the general. */
+  fromPair: boolean;
+}): string | null {
+  if (input.cur === null) return null;
+  const level = ['al nivel de su curso', 'por debajo pero dentro del curso',
+                 'con contenidos de cursos anteriores', 'muy alejado de su curso'][input.cur];
+  if (input.fromPair && input.area) {
+    return `Nivel curricular consultado: el que tienes apuntado en ${input.area} `
+      + `(${level}).`;
+  }
+  const where = input.area ? ` No tienes nada apuntado para ${input.area}.` : '';
+  return `Nivel curricular consultado: el general (${level}).${where}`;
+}
+
 /** Why the level is or is not known, for the report and for the screen. */
 export type LevelSource =
   /** From the corpus, for this year and this skill. */

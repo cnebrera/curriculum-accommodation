@@ -1,5 +1,5 @@
 import { materialFence } from './fence.js';
-import { AXES, axisLevelOf, type Profile } from '../vault/schema.js';
+import { AXES, axisLevelOf, curFor, type Profile } from '../vault/schema.js';
 import { recipeRef, type Recipe } from '../recipes/index.js';
 
 /**
@@ -63,6 +63,13 @@ export interface AdaptPromptInput {
   recipes: Recipe[];
   /** What she corrected on the previous attempt of *this* worksheet. */
   corrections?: Correction[];
+  /**
+   * What subject this document is (`032` FR-3001), from its own front matter.
+   *
+   * Absent for every document that predates `032` and for every one she did not label —
+   * and then the CUR line carries the general value, exactly as it does today.
+   */
+  subject?: string;
   /** The IR document, verbatim. */
   material: string;
 }
@@ -176,8 +183,31 @@ export function buildAdaptPrompt(input: AdaptPromptInput): { prompt: string; not
    * because it has to survive routes this function is not on.)
    */
 
+  /*
+   * The CUR line carries the value that governs **this document's subject** (`032`
+   * FR-3001, T013).
+   *
+   * Without it, Marco's Lengua worksheet is prompted as two courses behind while the
+   * composition for the same subject is not — US1's «nothing about Lengua is treated as
+   * delayed» succeeding in one half of the application and failing in the other, which is
+   * worse than not having the feature: it is a disagreement nobody would look for.
+   *
+   * The remaining pairs go in as **data**, named and unranked, so the model can see that
+   * the number it was given is subject-specific. No adaptation rule moves into code here;
+   * what to do about a gap is `instructions/` (Principle I).
+   */
+  const cur = curFor(profile, input.subject);
   out.push(section('Perfil del alumno (barreras, no diagnóstico)',
-    AXES.map((a) => `${a}: ${axisLevelOf(profile, a) ?? 'sin observar'}`).join(' · ')));
+    AXES.map((a) => {
+      const level = a === 'CUR' ? cur : axisLevelOf(profile, a);
+      return `${a}: ${level ?? 'sin observar'}`;
+    }).join(' · ')
+    + (input.subject ? `\n(CUR es el de ${input.subject}.)` : '')
+    + (profile.cur_areas && Object.keys(profile.cur_areas).length
+      ? `\nNivel curricular por área: ${Object.entries(profile.cur_areas)
+          .map(([area, level]) => `${area}: ${level}`).join(' · ')}`
+        + `. El general es ${axisLevelOf(profile, 'CUR') ?? 'sin observar'}.`
+      : '')));
 
   /**
    * Who he is (011 T013-T017, FR-903/905).

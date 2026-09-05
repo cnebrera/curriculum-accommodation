@@ -117,11 +117,11 @@ and for an unnamed one; each targets its own level, the unnamed uses the general
 - [x] T011 [US1] `app/packages/core/test/compose-level-by-area.test.ts` from quickstart
       §3 — the six cases, including the tripwire absence and the never-zero fallback
       (SC-3001).
-- [ ] T012 [P] [US1] The compose report says which area's CUR was consulted and whether
+- [x] T012 [P] [US1] The compose report says which area's CUR was consulted and whether
       it was the pair or the general fallback (Principle VI): «composing at a stated
       level is a different act from quietly lowering someone's worksheet, and the
       difference is who decided». Sentences in i18n/corpus, not born in `compose.ts`.
-- [ ] T013 [P] [US1] `app/packages/core/src/prompt/adapt.ts`: for a job whose `subject`
+- [x] T013 [P] [US1] `app/packages/core/src/prompt/adapt.ts`: for a job whose `subject`
       is known, the CUR line carries the **effective** value for that area
       (`curFor`), with the general and the remaining pairs named as data (FR-3001, US1's
       «nothing about Lengua is treated as delayed» — otherwise it fails in the prompt

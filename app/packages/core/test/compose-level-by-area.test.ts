@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { targetYear, explainTarget, worthAsking } from '../src/compose/level.js';
+import { targetYear, explainTarget, worthAsking, explainCurSource } from '../src/compose/level.js';
+import { buildAdaptPrompt } from '../src/prompt/adapt.js';
 import { curFor, type Profile } from '../src/vault/schema.js';
 
 /**
@@ -145,5 +146,62 @@ describe('the tripwire: no year is ever derived from a CUR value', () => {
       const t = targetYear({ enrolled: 'es:primaria-5', cur, area: 'Matemáticas' });
       expect(t.yearId).toBe('es:primaria-5');
     }
+  });
+});
+
+describe('the report says which observation was consulted (T012, Principle VI)', () => {
+  it('names the área when the value was hers for that subject', () => {
+    expect(explainCurSource({ cur: 2, area: 'Matemáticas', fromPair: true }))
+      .toContain('el que tienes apuntado en Matemáticas');
+  });
+
+  it('and says the general stood in, naming the área it stood in for', () => {
+    /*
+     * Both halves matter. «El general» alone leaves her unable to tell whether Rampa
+     * read her Inglés note or failed to find one — and she wrote both, so the report has
+     * to be checkable against what she wrote.
+     */
+    const said = explainCurSource({ cur: 2, area: 'Inglés', fromPair: false })!;
+    expect(said).toContain('el general');
+    expect(said).toContain('No tienes nada apuntado para Inglés');
+  });
+
+  it('and says nothing at all when nobody recorded a CUR', () => {
+    // A line on every composition for every learner without one is noise, and noise is
+    // how a report stops being read.
+    expect(explainCurSource({ cur: null, fromPair: false })).toBeNull();
+  });
+});
+
+describe('the prompt carries the CUR of this document\'s subject (T013, FR-3001)', () => {
+  const promptFor = (subject?: string): string => buildAdaptPrompt({
+    profile: marco,
+    recipes: [],
+    ...(subject ? { subject } : {}),
+    material: '::: {#b1 .exercise}\n1. 2 × 3 =\n:::\n',
+  }).prompt;
+
+  it('a Lengua worksheet is not prompted as two courses behind', () => {
+    /*
+     * US1 failing in the prompt while succeeding in compose would be worse than not
+     * having the feature: two halves of the application disagreeing about the same
+     * child, in a place nobody would think to look.
+     */
+    const out = promptFor('Lengua');
+    expect(out).toContain('CUR: 0');
+    expect(out).toContain('(CUR es el de Lengua.)');
+    expect(out).not.toContain('CUR: 2 ');
+  });
+
+  it('and the pairs travel as data, with the general named', () => {
+    const out = promptFor('Matemáticas');
+    expect(out).toContain('CUR: 2');
+    expect(out).toContain('Nivel curricular por área: Matemáticas: 2 · Lengua: 0');
+    expect(out).toContain('El general es 2.');
+  });
+
+  it('a document with no subject gets the general, exactly as today', () => {
+    expect(promptFor()).toContain('CUR: 2');
+    expect(promptFor()).not.toContain('CUR es el de');
   });
 });

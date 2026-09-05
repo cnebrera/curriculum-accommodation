@@ -1,7 +1,8 @@
 import {
   jobDir, jobIR, jobAnswers, jobComposeReport, jobComposeRequest, parseComposeBudget,
   readObjectives, type Vault,
-  levelFrom, explainLevel, targetYear, explainTarget, worthAsking, composeExercises,
+  levelFrom, explainLevel, targetYear, explainTarget, worthAsking, explainCurSource,
+  composeExercises,
   explainOutcome, curFor,
   arithmetic, buildSheet,
   renderAnswerKey, buildComposeReport, assertObjectives, parseIR, logger, RampaError,
@@ -771,6 +772,24 @@ export async function runCompose(
   const notes = [
     // FR-129 · the level, and who chose it. First, because it governs everything else.
     explainTarget(target, yearId ? yearLabel : undefined),
+    /*
+     * And **which** curricular level was consulted (`032` FR-3003, Principle VI).
+     *
+     * Separate from the sentence above because they answer different questions: that one
+     * says which year the material targets and who decided, this one says which recorded
+     * observation was read to get there — her note for this subject, or the general value
+     * standing in for a subject she has not detailed.
+     */
+    ...(((): string[] => {
+      const said = explainCurSource({
+        cur: curFor(learner.profile, request.subject),
+        ...(request.subject ? { area: request.subject } : {}),
+        fromPair: request.subject !== undefined
+          && learner.profile.cur_areas?.[request.subject] !== undefined,
+      });
+      // `null` when nobody has recorded a CUR at all — nothing to report, no line.
+      return said ? [said] : [];
+    })()),
     /*
      * What she asked for versus what came out (`021` FR-1910).
      *
