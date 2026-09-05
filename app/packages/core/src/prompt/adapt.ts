@@ -70,6 +70,23 @@ export interface AdaptPromptInput {
    * and then the CUR line carries the general value, exactly as it does today.
    */
   subject?: string;
+  /**
+   * The vehicular mark, when she recorded one (`033` FR-3101).
+   *
+   * Passed in rather than read off `profile.vehicular` so that the caller decides —
+   * the same shape `subject` above has. `intensity: 0` is her statement that it is over
+   * and produces no section, which is not the same as an absent block and is why the
+   * caller can hand this over untouched.
+   */
+  vehicular?: { intensity: number; languages: readonly string[] };
+  /**
+   * Bridge glosses **the code already resolved** (`033` FR-3106).
+   *
+   * Never a list of words to translate: a finished list of equivalences, each of which
+   * came from two languages' metadata for one published drawing. The prompt says «use
+   * these and add none», which is a rule the model can follow — «translate this» is not.
+   */
+  glosses?: ReadonlyArray<{ word: string; gloss: string; language: string }>;
   /** The IR document, verbatim. */
   material: string;
 }
@@ -224,6 +241,49 @@ export function buildAdaptPrompt(input: AdaptPromptInput): { prompt: string; not
    */
   const who = whoIsThis(input);
   if (who) out.push(section('Quién es este alumno', who));
+
+  /*
+   * The vehicular mark, and the glosses the **code** resolved (`033` T011, FR-3106).
+   *
+   * Its own section rather than a line in the axis grid, because it is not an axis: the
+   * ten describe barriers that travel with the child, and this is a state with a date on
+   * which it stops being true. A learner who is acquiring the language is marked, never
+   * scored on `LIN` for it (`instructions/axes.md`, the dated boundary).
+   *
+   * ## The glosses arrive as data, and only the resolved ones
+   *
+   * `bridgeWords` produced them from the set's own metadata — two languages' keywords for
+   * one published drawing — and the model is handed the finished list. It is never asked
+   * for a translation, because a model asked for one answers confidently in a script this
+   * teacher cannot read, onto a sheet nobody in the room can check.
+   *
+   * **No glosses, no section.** The no-fields-no-section rule this function already
+   * follows, and here it earns its keep twice over: an empty «vocabulario puente» heading
+   * is an invitation to fill it, and what would fill it is exactly the invented word this
+   * whole feature exists to prevent.
+   */
+  const mark = input.vehicular;
+  if (mark && mark.intensity > 0) {
+    const lines = [
+      `Este alumno está aprendiendo el idioma del aula. Nivel ${mark.intensity} de 3.`,
+      ...(mark.languages.length
+        ? [`Idiomas que ella ha apuntado: ${mark.languages.join(', ')}.`]
+        : []),
+      'No es una dificultad de lenguaje: es una barrera de acceso que se irá. No le quites '
+      + 'contenido por esto.',
+    ];
+    out.push(section('Lengua vehicular en adquisición', lines.join('\n')));
+
+    if (input.glosses?.length) {
+      out.push(section('Vocabulario puente ya resuelto',
+        [
+          'Estas equivalencias las he resuelto yo del vocabulario que hay en el ordenador. '
+          + 'Úsalas tal cual, entre paréntesis y sólo la primera vez que salga la palabra.',
+          '**No añadas ninguna más y no traduzcas nada por tu cuenta.**',
+          ...input.glosses.map((g) => `- ${g.word} → ${g.gloss} (${g.language})`),
+        ].join('\n')));
+    }
+  }
 
   /*
    * What this document is, and what that forbids (012 FR-1002).

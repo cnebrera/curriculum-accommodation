@@ -130,8 +130,8 @@ test.describe('recording that he is at level in one subject and behind in anothe
      * `pressSequentially`, not `fill` — this is the assertion that would have caught the
      * datalist crash, and `fill` is exactly why nothing did.
      */
-    await page.getByLabel('Añadir un área').pressSequentially('Música', { delay: 30 });
-    await page.getByRole('button', { name: 'Añadir', exact: true }).click();
+    await page.getByLabel('Escribe un área nueva').pressSequentially('Música', { delay: 30 });
+    await page.getByRole('button', { name: 'Añadir un área' }).click();
 
     // The window is still here, and so is what she typed.
     expect(app.windows()).toHaveLength(1);
@@ -146,7 +146,7 @@ test.describe('recording that he is at level in one subject and behind in anothe
     await openProfile(page);
 
     await page.getByRole('button', { name: 'Matemáticas', exact: true }).click();
-    await page.getByLabel('Añadir un área').pressSequentially('Mates', { delay: 30 });
+    await page.getByLabel('Escribe un área nueva').pressSequentially('Mates', { delay: 30 });
 
     // Flagged, with the existing one named and offered.
     await expect(page.getByText(/Ya tienes/)).toBeVisible();
@@ -157,7 +157,7 @@ test.describe('recording that he is at level in one subject and behind in anothe
      * is the tool renaming her subjects, and «Lengua» folded silently into «Lenguaje
      * musical» is not something she would ever find.
      */
-    await page.getByRole('button', { name: 'Añadir', exact: true }).click();
+    await page.getByRole('button', { name: 'Añadir un área' }).click();
 
     /*
      * Both get a level, because a named área with no level is stored as nothing at all —

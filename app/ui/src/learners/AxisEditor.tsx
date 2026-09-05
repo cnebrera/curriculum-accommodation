@@ -232,11 +232,23 @@ function CurByArea({ areas, onChange, known }: {
       ) : null}
 
       <div className="row gap2">
+        {/*
+          The input and the button need **different** names, which is a thing I got wrong
+          twice in a row. First they were both «Añadir» — indistinguishable from `033`'s
+          language control on the same screen. Then both became «Añadir un área», which is
+          worse: two controls with one name, one a textbox and one a button, in the same
+          group. Typing and adding are two acts and they say so.
+        */}
         <input className="input" value={typed} placeholder="…o escribe otra"
-               aria-label="Añadir un área" style={{ maxWidth: '22em' }}
+               aria-label="Escribe un área nueva" style={{ maxWidth: '22em' }}
                onChange={(e) => setTyped(e.target.value)} />
+        {/*
+          Named, because it is not the only «Añadir» on this screen: `033`'s language
+          control has one too. Two buttons with the same accessible name on one page is a
+          list of identical rows for anybody navigating by control.
+        */}
         <button type="button" className="btn" disabled={!typed.trim()}
-                onClick={() => add(typed)}>
+                aria-label="Añadir un área" onClick={() => add(typed)}>
           Añadir
         </button>
       </div>

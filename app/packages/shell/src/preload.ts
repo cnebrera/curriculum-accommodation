@@ -66,6 +66,8 @@ const api = {
     materialKinds: () => invoke('corpus:materialKinds'),
     /** Axis descriptors, so the interface never shows an axis code (T014). */
     axes: () => invoke('corpus:axes'),
+    /** The vehicular mark's descriptor (`033`). Not an eleventh axis — see the handler. */
+    mark: () => invoke('corpus:mark'),
     /**
      * The services she can choose from, and the one recommendation (009).
      * Neither carries a model name or an endpoint across this boundary — a

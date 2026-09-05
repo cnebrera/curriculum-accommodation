@@ -178,6 +178,17 @@ describe('structurally: no source maps anything to a language', () => {
         .test(text))
       .map(({ path }) => path)
       .sort();
-    expect(readers).toEqual([]);
+    expect(readers).toEqual([
+      /*
+       * The first one arrived on 2026-09-05, and this assertion went red for it — which
+       * is the whole point of writing the list empty before the feature existed.
+       *
+       * `prompt/adapt.ts` puts her recorded languages into the mark's section so the model
+       * knows which language the bridge words are in. It reads them off the input the
+       * caller hands it, and the caller reads them off `profile.vehicular` — the one
+       * place they live. Nothing here derives, defaults or completes them.
+       */
+      'packages/core/src/prompt/adapt.ts',
+    ].sort());
   });
 });

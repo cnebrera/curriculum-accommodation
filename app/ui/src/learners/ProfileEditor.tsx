@@ -3,6 +3,7 @@ import { useLoadLearner, useSaveLearner, useNewLearnerCode, useKnownAreas } from
 import { useResolveName, useSetName } from '../data/names.js';
 import { useStrings } from '../i18n/context.js';
 import { AxisEditor } from './AxisEditor.js';
+import { VehicularMark } from './VehicularMark.js';
 import { YearPicker, type Who } from './YearPicker.js';
 import { Notice } from '../components/Notice.js';
 import { LearnerPictograms } from '../pictograms/LearnerPictograms.js';
@@ -30,6 +31,9 @@ export function ProfileEditor({ code, onSaved, onConfigure }: {
    * for nothing (FR-3005).
    */
   const [curAreas, setCurAreas] = useState<Record<string, number>>({});
+  /** The vehicular mark (`033` FR-3101). Absent until she says something about it. */
+  const [vehicular, setVehicular] = useState<
+    { intensity: number; languages: string[]; noted_on: string } | undefined>(undefined);
   /** The subjects this vault already knows, to suggest from (FR-3007). */
   const areaVocabulary = useKnownAreas(code ?? undefined);
   const [works, setWorks] = useState('');
@@ -91,11 +95,12 @@ export function ProfileEditor({ code, onSaved, onConfigure }: {
       void loadLearner.run(code).then((raw) => {
         if (!raw) return;
         const l = raw as any;
-        const { code: _c, axes, cur_areas, works, avoid, interests, response,
+        const { code: _c, axes, cur_areas, vehicular: veh, works, avoid, interests, response,
                 age, year, stage, age_recorded: _ar, pictograms, ...rest } = l.profile ?? {};
         setCurrent(l.profile.code);
         setAxes(axes ?? {});
         setCurAreas(cur_areas ?? {});
+        setVehicular(veh);
         setWho({ age, year, stage });
         setWorks((works ?? []).join('\n'));
         setAvoid((avoid ?? []).join('\n'));
@@ -172,6 +177,12 @@ export function ProfileEditor({ code, onSaved, onConfigure }: {
        * the first save of any profile, for a field nobody used.
        */
       ...(Object.keys(curAreas).length ? { cur_areas: curAreas } : {}),
+      /*
+       * Only when she has said something. An absent block means «nobody has observed
+       * this», and writing an empty one on every save would turn that into «observed and
+       * nothing found» for every learner in her caseload.
+       */
+      ...(vehicular ? { vehicular } : {}),
       works: lines(works),
       avoid: lines(avoid),
       /*
@@ -240,6 +251,12 @@ export function ProfileEditor({ code, onSaved, onConfigure }: {
         without stopping to consider.
       */}
       <YearPicker value={who} onChange={setWho} />
+
+      {/*
+        Beside the axes, in its own block (`033` T014). Rendered after them because it is
+        the less common case, and never inside the grid — see `VehicularMark`.
+      */}
+      <VehicularMark value={vehicular} onChange={setVehicular} />
 
       <AxisEditor axes={axes} onChange={setAxes}
                   curAreas={curAreas} onCurAreasChange={setCurAreas}

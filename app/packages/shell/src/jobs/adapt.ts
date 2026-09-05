@@ -219,6 +219,32 @@ export async function runAdaptation(
    * a green tick on the connection screen. She would have had no way to tell
    * that the failure was ours.
    */
+  /*
+   * The mark, and the bridge words it makes possible (`033`).
+   *
+   * Read from the profile and from nowhere else: no country, no origin, no name. Resolved
+   * before the prompt is built so that what reaches the model is data rather than a task.
+   */
+  const mark = learner.profile.vehicular;
+  const vehicular = mark && mark.intensity > 0
+    ? { intensity: mark.intensity, languages: mark.languages }
+    : undefined;
+  /*
+   * The bridge is **built and not yet fed**, and that is a recorded gap rather than an
+   * oversight (`033` T011, question for Carlos in `specs/INFORME-NOCHE.md`).
+   *
+   * `bridgeWords` resolves glosses from a list of key words. Which words are key is a
+   * judgement about the unit, and `018` settled that it is passed in and never guessed —
+   * «inferring it from frequency would put a picture beside whatever happened to repeat».
+   * Today nothing fills that list: `ApplyOptions.vocabulary` exists for the same purpose
+   * and no caller supplies it either.
+   *
+   * So the honest state is: the mark reaches the prompt, the three recipes fire, the
+   * visual and transitional supports happen — and no gloss is claimed, because inventing
+   * a word source here would be inventing the judgement this project refuses to invent.
+   * The question is «where does the unit's key vocabulary come from», and it is hers.
+   */
+
   const active = await activeProvider();
   if (!active) throw new RampaError('key-missing', 'Todavía no has conectado Rampa con tu servicio de IA.');
   const { provider, key } = active;
@@ -296,6 +322,13 @@ export async function runAdaptation(
        */
       ...(typeof doc.frontMatter['subject'] === 'string' && doc.frontMatter['subject']
         ? { subject: doc.frontMatter['subject'] } : {}),
+      /*
+       * The vehicular mark and the bridge words (`033` T011, FR-3101/3106).
+       *
+       * Nothing is sent when the mark is 0 — her statement that it is over. The glosses
+       * are not sent at all yet; see the note above `vehicular` for why.
+       */
+      ...(vehicular ? { vehicular } : {}),
     });
     if (notesOmitted > 0) {
       logger.info('adapt.notes-bounded', { jobId, omittedSections: notesOmitted });

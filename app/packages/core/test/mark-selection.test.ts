@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {
-  parseRecipe, parseMarkCondition, selectRecipes, applies, isGuard,
+  parseRecipe, parseMarkCondition, selectRecipes, applies, isGuard, buildAdaptPrompt,
   type Recipe, type Profile,
 } from '../src/index.js';
 
@@ -162,5 +162,77 @@ describe('a mark-only recipe is an adaptation, not a guard', () => {
   it('and the guard still reaches a learner with nothing recorded at all', () => {
     // The other half: widening `isGuard` must not have stopped guards being guards.
     expect(selected(profile())).toContain('keep-curricular-terms');
+  });
+});
+
+describe('the mark reaches the model as what it is (T011, FR-3101/3106)', () => {
+  const promptFor = (vehicular?: { intensity: number; languages: string[] },
+                     glosses?: Array<{ word: string; gloss: string; language: string }>) =>
+    buildAdaptPrompt({
+      profile: profile(),
+      recipes: [],
+      ...(vehicular ? { vehicular } : {}),
+      ...(glosses ? { glosses } : {}),
+      material: '::: {#b1 .exercise}\n1. 2 × 3 =\n:::\n',
+    }).prompt;
+
+  it('its own section, saying it is not a language difficulty', () => {
+    /*
+     * The sentence that keeps `LIN` and this apart where it matters most — in the text a
+     * model reads before it decides what to simplify. Without it, «nivel 2» beside nine
+     * axis levels reads as a tenth axis, and the model adapts for a disorder.
+     */
+    const out = promptFor({ intensity: 2, languages: ['ar'] });
+    expect(out).toContain('Lengua vehicular en adquisición');
+    expect(out).toContain('No es una dificultad de lenguaje');
+    expect(out).toContain('No le quites contenido');
+  });
+
+  it('and the languages are hers, named', () => {
+    expect(promptFor({ intensity: 2, languages: ['ar', 'fr'] })).toContain('ar, fr');
+  });
+
+  it('intensity 0 sends nothing — her statement that it is over', () => {
+    expect(promptFor({ intensity: 0, languages: ['ar'] }))
+      .not.toContain('Lengua vehicular');
+  });
+
+  it('and an absent mark sends nothing either', () => {
+    expect(promptFor()).not.toContain('Lengua vehicular');
+  });
+
+  it('glosses arrive as a finished list, with an instruction to add none', () => {
+    /*
+     * The model is never asked to translate. It is handed equivalences the code resolved
+     * from published metadata and told to use those and no others — a rule it can follow.
+     * «Traduce esto» is not a rule; it is a request for invention.
+     */
+    const out = promptFor({ intensity: 2, languages: ['ar'] },
+      [{ word: 'denominador', gloss: 'مقام', language: 'ar' }]);
+    expect(out).toContain('Vocabulario puente ya resuelto');
+    expect(out).toContain('denominador → مقام');
+    expect(out).toContain('no traduzcas nada por tu cuenta');
+  });
+
+  it('and no glosses means no section at all — an empty heading invites filling it', () => {
+    /*
+     * The no-fields-no-section rule, and here it earns its keep twice: an empty
+     * «vocabulario puente» heading is an invitation, and what would fill it is exactly the
+     * invented word in an unreadable script that this whole feature exists to prevent.
+     */
+    const out = promptFor({ intensity: 3, languages: ['ar'] });
+    expect(out).toContain('Lengua vehicular en adquisición');
+    expect(out).not.toContain('Vocabulario puente');
+  });
+
+  it('and an empty list is the same as none — which is the case a caller produces', () => {
+    /*
+     * The distinction mutation found. «No glosses» reaches this function two ways: the
+     * caller passed nothing, or the caller ran the bridge and it resolved nothing —
+     * because the set had no such language, or every word was ambiguous. The second is
+     * the common one, and it is the one that would print an empty heading.
+     */
+    const out = promptFor({ intensity: 3, languages: ['ar'] }, []);
+    expect(out).not.toContain('Vocabulario puente');
   });
 });

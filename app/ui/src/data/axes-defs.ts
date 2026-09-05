@@ -36,3 +36,31 @@ export function useAxisDefs(): AxisDef[] {
   }, []);
   return defs;
 }
+
+/**
+ * The vehicular mark's descriptor (`033` T014).
+ *
+ * Its own hook and its own channel, never appended to `useAxisDefs`. The ten axes are
+ * barriers that travel with a child; the mark is a state with a date on which it stops
+ * being true, and a screen that renders it inside the axis grid is a screen telling her
+ * they are the same kind of thing.
+ *
+ * `null` while it loads and if the corpus has no section for it — the editor then shows
+ * no mark control at all, which is honest: an unlabelled 0–3 row is something she would
+ * score against without knowing what she was scoring.
+ */
+let markCache: AxisDef | null = null;
+
+export function useMarkDef(): AxisDef | null {
+  const [def, setDef] = useState<AxisDef | null>(markCache);
+  useEffect(() => {
+    if (markCache) return;
+    void window.rampa.corpus.mark()
+      .then((d) => {
+        const found = d as AxisDef | null;
+        if (found && Array.isArray(found.levels)) { markCache = found; setDef(found); }
+      })
+      .catch(() => { /* no mark control rather than an unlabelled one */ });
+  }, []);
+  return def;
+}

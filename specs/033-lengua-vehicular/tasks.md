@@ -100,12 +100,12 @@ recipes and the mark.
       named `BridgeAbsence`s (`no-set`, `language-not-in-set`,
       `word-has-no-entry`) — pure, offline, `packages/core`, isolation suite
       passes (**FR-3106**)
-- [ ] T011 [US1] `app/packages/core/src/prompt/adapt.ts` · the mark's section —
+- [x] T011 [US1] `app/packages/core/src/prompt/adapt.ts` · the mark's section —
       intensity, her recorded languages, and **only the resolved glosses as
       data**; no glosses → no gloss section at all, the no-fields-no-section rule,
       because an empty section invites the model to fill it (**FR-3106**,
       FR-3102 asserted by T001)
-- [ ] T012 [US1] `app/packages/core/src/report/index.ts` · vehicular supports
+- [x] T012 [US1] `app/packages/core/src/report/index.ts` · vehicular supports
       grouped under their own heading, attributed to the mark, distinguishable
       from disability-driven adaptations — his record never reads as if a
       disability was observed (**FR-3108**); degradations to visual-only named in
@@ -115,7 +115,7 @@ recipes and the mark.
       mark is acquisition; a learner acquiring the language is marked, never
       scored on LIN for it — the falsified-profile workaround dies in writing.
       Plus the mark's own documented levels (read by T006). Corpus edit, no code
-- [ ] T014 [US1] `app/ui/src/learners/ProfileEditor.tsx` · the mark edited
+- [x] T014 [US1] `app/ui/src/learners/ProfileEditor.tsx` · the mark edited
       **beside** the axes — its own `Section`, the 0–3 interaction she already
       knows, labels from the corpus via T006; saving writes `noted_on` with
       today's real date (P44); languages are typed or picked by **her**, nothing
@@ -126,7 +126,7 @@ recipes and the mark.
       resolved via shared id; `language-not-in-set` degrades with zero glosses;
       no profile languages → lookup not consulted and no gloss section; prompt
       gloss data is exactly the resolved list (**FR-3106**, SC-3103)
-- [ ] T016 [US1] The fixture walk of quickstart §2/§4 wired end to end: mark-only
+- [x] T016 [US1] The fixture walk of quickstart §2/§4 wired end to end: mark-only
       profile over the fixture corpus produces an adaptation with visible
       transitional supports — not a copy (SC-3101) — and **the existing
       completeness gate** reports zero curricular elements absent (SC-3102,

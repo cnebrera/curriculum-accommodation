@@ -1,6 +1,6 @@
 import type { IRDocument, Block, Notice } from '../ir/types.js';
 import { parseRecipeRef } from '../ir/provenance.js';
-import type { Selection } from '../recipes/index.js';
+import { recipeRef, type Selection } from '../recipes/index.js';
 import { parseReportNotes } from './notes.js';
 
 /**
@@ -22,6 +22,14 @@ export interface ReportInput {
   selection?: Selection;
   dropped?: Array<{ id: string; why: string }>;
   undescribedFigures?: string[];
+  /**
+   * Why a bridge word could not be built, already in her words (`033` FR-3106).
+   *
+   * Sentences rather than the `BridgeAbsence` union, because the union's own module owns
+   * the wording (`explainAbsence`) and a second place turning a `kind` into a sentence is
+   * a second place that has to learn about a fourth kind.
+   */
+  bridgeAbsences?: readonly string[];
   flaggedSignificant?: string[];
   /**
    * The journal entries **loaded** for this run, by recipe id (003 FR-210).
@@ -246,11 +254,51 @@ export function buildReport(input: ReportInput): Report {
     md.push('');
   }
 
-  for (const d of decisions) {
+  /*
+   * Vehicular supports are grouped apart, and attributed to the mark (`033` T012, FR-3108).
+   *
+   * His record must never read as if a disability had been observed. Listed among the
+   * axis-driven decisions, «apoyo-visual-instrucciones · Barrera: LIN» is what a tutor
+   * reads next year — and the barrier named would be one nobody found. What is true is
+   * that he was three weeks into the language, which is a different sentence and one that
+   * stops being true.
+   *
+   * Split here rather than at the source because the recipes already say which they are:
+   * `marks:` and no axis is the whole test, and the selection carries it.
+   */
+  const isVehicular = (d: Decision): boolean =>
+    input.selection?.selected.some((r) =>
+      recipeRef(r) === d.recipe && r.marks.length > 0 && r.axes.length === 0) ?? false;
+
+  const byMark = decisions.filter(isVehicular);
+  for (const d of decisions.filter((x) => !isVehicular(x))) {
     md.push(`## ${d.title}`);
     md.push(`Receta: \`${d.recipe}\` · Barrera: \`${d.axis}\``);
     md.push(`Bloques: ${d.blocks.join(', ')}`);
     md.push('');
+  }
+
+  if (byMark.length) {
+    md.push('## Apoyo por el idioma, no por una barrera', '');
+    md.push('Esto lo he hecho porque tienes apuntado que está aprendiendo el idioma del '
+      + 'aula. **No es una dificultad suya de lenguaje**: es una barrera de acceso que se '
+      + 'irá, y este apartado está aparte para que su expediente no diga otra cosa.', '');
+    for (const d of byMark) {
+      md.push(`### ${d.title}`);
+      md.push(`Receta: \`${d.recipe}\` · Por: la lengua vehicular en adquisición`);
+      md.push(`Bloques: ${d.blocks.join(', ')}`);
+      md.push('');
+    }
+    /*
+     * And what could not be bridged, in her words (FR-3106).
+     *
+     * A deterministic fact the code states — the set had no such language, the word had
+     * no entry — and never a judgement handed to the model. She needs it because the
+     * remedy is hers: the sheet went out with visual support and no bridge words, and
+     * she is the one who can decide whether that is enough.
+     */
+    for (const line of input.bridgeAbsences ?? []) md.push(`- ${line}`);
+    if (input.bridgeAbsences?.length) md.push('');
   }
 
   if (declared.other.length) {
