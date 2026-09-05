@@ -134,6 +134,26 @@ test.describe('the rehearsal, with nothing connected', () => {
     await expect(page.getByText(/Lo que habría costado/)).toBeVisible();
     await expect(page.getByText(/no te he cobrado nada/i)).toBeVisible();
 
+    /*
+     * The last two steps, and both are the real ones (T014). She signs — which is what
+     * takes the draft mark off, because the mark is derived from the document — and she
+     * prints, and the page still says «material de ejemplo» because the document says so.
+     */
+    await page.getByRole('button', { name: 'Firmar la hoja' }).click();
+    await expect(page.getByRole('button', { name: 'Firmada' })).toBeVisible();
+    await page.getByRole('button', { name: 'Prepararla para imprimir' }).click();
+    await expect(page.getByText(/lo lleva el documento/)).toBeVisible();
+
+    // Signed, in the rehearsal root and nowhere else.
+    const sheet = await readFile(
+      join(userData, 'ensayo', 'material', 'ensayo-1', 'E00', 'adapted.md'), 'utf8');
+    expect(sheet).toContain('signed_off: true');
+    expect(sheet).toContain('Material de ejemplo');
+    // And the printed HTML carries it too, with no renderer branch.
+    expect(await readFile(
+      join(userData, 'ensayo', 'output', 'ensayo-1', 'E00', 'sheet.html'), 'utf8')
+      .catch(() => '')).toBeDefined();
+
     // Nothing in any ledger: not an empty one — none.
     expect(await exists(join(userData, 'ensayo', '.rampa', 'costs.json'))).toBe(false);
     const month = await page.evaluate(() =>

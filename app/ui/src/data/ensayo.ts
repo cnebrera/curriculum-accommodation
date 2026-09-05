@@ -67,3 +67,20 @@ export function useCheckNames() {
   return useCommand((text: string) =>
     window.rampa.ensayo.checkNames(text) as Promise<{ found: string[] }>);
 }
+
+/**
+ * Sign it, and print it — for real, over the rehearsal root.
+ *
+ * The gesture is the real one on purpose. A signature in this application means somebody
+ * read the sheet; a rehearsal that skipped it would teach her that the signature is a
+ * formality, which is the one thing it must never be.
+ */
+export function useSignEnsayo() {
+  return useCommand((startedAt: string, role: string) =>
+    window.rampa.ensayo.sign(startedAt, role) as Promise<{ signedOff: boolean; date: string }>);
+}
+
+export function useRenderEnsayo() {
+  return useCommand((startedAt: string) =>
+    window.rampa.ensayo.render(startedAt) as Promise<string>);
+}

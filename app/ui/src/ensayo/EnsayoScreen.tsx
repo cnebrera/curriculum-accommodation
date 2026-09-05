@@ -5,6 +5,7 @@ import { Loaded } from '../data/Loaded.js';
 import { EnsayoFrame } from './EnsayoFrame.js';
 import {
   useEnsayoReading, useEnsayoAdaptation, useWouldCost, useCheckNames, useAdvanceEnsayo,
+  useSignEnsayo, useRenderEnsayo,
 } from '../data/ensayo.js';
 
 /**
@@ -40,6 +41,10 @@ export function EnsayoScreen({ startedAt, onLeave }: {
   const wouldCost = useWouldCost();
   const checkNames = useCheckNames();
   const advance = useAdvanceEnsayo();
+  const sign = useSignEnsayo();
+  const render = useRenderEnsayo();
+  const [signed, setSigned] = useState(false);
+  const [printed, setPrinted] = useState(false);
 
   const [step, setStep] = useState<'reading' | 'adapted'>('reading');
   const [note, setNote] = useState('');
@@ -170,6 +175,44 @@ export function EnsayoScreen({ startedAt, onLeave }: {
               has spent anything. The fear the cost display exists to end, met while the
               answer is «nada todavía».
             */}
+            {/*
+              The last two steps, and both are the real ones (T014).
+              
+              She signs and she prints, through the existing sign-off and the existing
+              renderer pointed at the rehearsal root. The mark comes off the sheet because
+              a person read it — and the printed page still says «material de ejemplo»,
+              because the **document** says so and no renderer had to be told.
+            */}
+            <Section title="Lo último: firmarla e imprimirla"
+                     lede="En Rampa una firma quiere decir que alguien la ha leído. Aquí es la misma firma de verdad, sobre la hoja de ejemplo.">
+              <div className="row gap2" style={{ flexWrap: 'wrap' }}>
+                <button className="btn" disabled={sign.busy || signed}
+                        onClick={() => void sign.run(startedAt, 'la PT').then((r) => {
+                          if (r) setSigned(true);
+                        })}>
+                  {signed ? 'Firmada' : 'Firmar la hoja'}
+                </button>
+                <button className="btn" disabled={render.busy}
+                        onClick={() => void render.run(startedAt).then((r) => {
+                          if (r) setPrinted(true);
+                        })}>
+                  Prepararla para imprimir
+                </button>
+              </div>
+              {signed ? (
+                <p className="small">
+                  Ya no dice «borrador»: la marca sale del documento, y la quita una firma
+                  y nada más. En un pase de verdad sería exactamente esto.
+                </p>
+              ) : null}
+              {printed ? (
+                <p className="small">
+                  Hecha. Sigue diciendo <strong>«material de ejemplo»</strong> en la hoja,
+                  porque eso lo lleva el documento — no la pantalla que lo imprimió.
+                </p>
+              ) : null}
+            </Section>
+
             <Loaded from={wouldCost}>
               {(cost) => (
                 <Callout intent="info" title="Lo que habría costado">

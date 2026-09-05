@@ -510,9 +510,19 @@ describe('FR-509 · only sign-off removes the draft mark', () => {
      * block, both callers use it, and every renderer still reads it through
      * `isSignedOff` / `draftMark`. Two callers of one writer, not two writers — which
      * is the property FR-509 actually needs, and it is asserted below.
+     *
+     * **An eighth arrived on 2026-09-05, and this list did its job.** `ensayo/ipc.ts`
+     * (`035`) lets her sign the sample sheet, because a rehearsal that skipped the
+     * signature would teach her that the signature is a formality — which is the one
+     * thing it must never be. It arrived here having **copied** `stampSignedOff`, this
+     * assertion failed, and the copy became a call to `signDocument` in `ipc/signoff.ts`.
+     *
+     * That is the whole point of enumerating rather than filtering: a rehearsal is
+     * exactly where somebody thinks a copy is harmless, and a second way to unmark a
+     * document is a teacher's signature meaning nothing.
      */
     expect(writers.sort()).toEqual([
-      'ipc/guide.ts', 'ipc/signoff.ts', 'jobs/export.ts', 'jobs/guide.ts',
+      'ensayo/ipc.ts', 'ipc/guide.ts', 'ipc/signoff.ts', 'jobs/export.ts', 'jobs/guide.ts',
       'jobs/print.ts', 'main.ts', 'preload.ts',
     ]);
   });

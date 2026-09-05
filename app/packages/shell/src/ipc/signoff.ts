@@ -39,6 +39,27 @@ import { refreshRecord } from './record.js';
  * not style: a flag that is `false` almost everywhere is a flag somebody forgets in one
  * place, and the one place would put a fictional child in a real caseload.
  */
+/**
+ * The one writer of a signature (`035` T014).
+ *
+ * Two callers now — the real handler below and the rehearsal's — and **one** place that
+ * calls `stampSignedOff`. `untrusted.test.ts` enumerates the files that may mention
+ * signing at all, and it caught the second write the moment it existed: a second way to
+ * unmark a document is a signature that stops meaning anything.
+ *
+ * Exported rather than duplicated for the same reason `031` gives about freshness: two
+ * implementations of one rule are two rules, and the second one is the one nobody tests.
+ */
+export async function signDocument(
+  vault: Vault, jobId: string, learnerCode: string, role: string, stamp: string,
+): Promise<{ signedOff: true; date: string }> {
+  const found = await resolveDocument(vault, jobId, learnerCode);
+  if (found.of === 'none') throw new RampaError('vault-unreadable', whyNoDocument(found));
+  const raw = (await vault.readRaw(found.path)) ?? '';
+  await vault.writeRaw(found.path, stampSignedOff(raw, role, stamp));
+  return { signedOff: true, date: stamp };
+}
+
 export function registerSignoffIpc(whichVault: () => Vault = currentVault): void {
   handle('job:signOff', async (jobId: string, learnerCode: string, role: string) => {
     const vault = whichVault();
@@ -48,20 +69,17 @@ export function registerSignoffIpc(whichVault: () => Vault = currentVault): void
      * signature that travels: adapting a signed composition for three learners produces
      * three **unsigned** sheets, because nobody has read those.
      */
-    const found = await resolveDocument(vault, jobId, learnerCode);
-    if (found.of === 'none') throw new RampaError('vault-unreadable', whyNoDocument(found));
-    const path = found.path;
-    const raw = (await vault.readRaw(path)) ?? '';
     const stamp = new Date().toISOString().slice(0, 10);
-    // One writer of the block, in core (`stampSignedOff`). It was inline here until the
-    // ACNS became signable too (P46) — and two spellings of `review.signed_off` is one
-    // spelling that drifts, with `isSignedOff` the single reader that decides whether a
-    // document announces itself as unreviewed. That drift fails open.
-    await vault.writeRaw(path, stampSignedOff(raw, role, stamp));
+    // One writer of the block, in core (`stampSignedOff`), reached through the one
+    // function above. It was inline here until the ACNS became signable too (P46) — and
+    // two spellings of `review.signed_off` is one spelling that drifts, with
+    // `isSignedOff` the single reader that decides whether a document announces itself as
+    // unreviewed. That drift fails open.
+    const result = await signDocument(vault, jobId, learnerCode, role, stamp);
     // A sign-off is one of FR-1215's three events: the record says «sin firmar»
     // beside this sheet and must stop.
     await refreshRecord(learnerCode);
-    return { signedOff: true, date: stamp };
+    return result;
   });
 
   handle('job:isSignedOff', async (jobId: string, learnerCode: string) => {

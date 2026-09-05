@@ -204,6 +204,9 @@ const api = {
     wouldCost: () => invoke('ensayo:wouldCost'),
     /** The real name detector, offline — the gate she will meet on her first note. */
     checkNames: (text: string) => invoke('ensayo:checkNames', text),
+    /** The existing sign-off and renderer, over the rehearsal root. Not a rehearsal of them. */
+    sign: (startedAt: string, role: string) => invoke('ensayo:sign', startedAt, role),
+    render: (startedAt: string) => invoke('ensayo:render', startedAt),
   },
   /**
    * The adaptación curricular (`017`).

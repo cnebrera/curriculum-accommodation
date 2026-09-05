@@ -1,5 +1,7 @@
 import { load as loadYaml } from 'js-yaml';
 import { resolveDocument, whyNoDocument, RampaError, parseIR, findProbableNames } from '@rampa/core';
+import { renderJob } from '../jobs/print.js';
+import { signDocument } from '../ipc/signoff.js';
 import { handle } from '../ipc/wrap.js';
 import { ensayoVault, ensayoState, advance, discard, type EnsayoState } from './store.js';
 import { sampleManifest } from './sample.js';
@@ -96,6 +98,39 @@ export function registerEnsayoIpc(): void {
     const manifest = loadYaml(await sampleManifest()) as
       { wouldCost: { readCents: number; adaptCents: number } };
     return manifest.wouldCost;
+  });
+
+  /**
+   * Signing and printing, for real, over the rehearsal vault (T014, FR-3305/3311).
+   *
+   * The **existing** sign-off and the existing renderer, pointed at the other root — which
+   * is what T003's vault parameter is for. So the draft mark is derived from the document
+   * and removed only by a signature, the printed PDF says «material de ejemplo» because
+   * the document does, and none of that needed a rehearsal branch anywhere in the render
+   * path.
+   *
+   * That is also the honest lesson: what she rehearses is the real gesture. A signature in
+   * this application means somebody read the sheet, and a rehearsal that skipped it would
+   * teach her that the signature is a formality.
+   */
+  handle('ensayo:sign', async (startedAt: string, role: string) => {
+    const vault = await ensayoVault(startedAt);
+    /*
+     * `signDocument`, not a second write. `untrusted.test.ts` enumerates every file that
+     * may mention signing and caught this the moment it duplicated `stampSignedOff` — a
+     * second way to unmark a document is a signature that stops meaning anything, and a
+     * rehearsal is exactly where somebody would think a copy was harmless.
+     */
+    const result = await signDocument(vault, 'ensayo-1', 'E00', role, startedAt.slice(0, 10));
+    await advance('signed');
+    return result;
+  });
+
+  handle('ensayo:render', async (startedAt: string) => {
+    const vault = await ensayoVault(startedAt);
+    const { html } = await renderJob('ensayo-1', 'E00', vault);
+    await advance('printed');
+    return html;
   });
 
   /**

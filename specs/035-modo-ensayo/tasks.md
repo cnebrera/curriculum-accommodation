@@ -118,7 +118,7 @@ disabled — printed, signed sample, zero requests, zero cost.
       against the photo** — real comparison over the rehearsal vault, where T005's flaw
       waits — then the simulated adaptation arriving with its genuine report. Reuses the
       review/report presentation components; the data comes only through T009's hooks.
-- [ ] T014 [US1] Sign and print, for real, over the rehearsal vault (FR-3305, FR-3311):
+- [x] T014 [US1] Sign and print, for real, over the rehearsal vault (FR-3305, FR-3311):
       T003's `renderJob` and sign-off pointed at the rehearsal root — the draft mark
       derived from the document, removed only by sign-off, **one signature per sheet**;
       the printed PDF says «material de ejemplo» on the paper because the document does
