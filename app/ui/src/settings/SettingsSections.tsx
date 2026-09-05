@@ -3,6 +3,7 @@ import { PictogramSetSection } from '../pictograms/PictogramSetSection.js';
 import { MyVocabulary } from '../pictograms/MyVocabulary.js';
 import { ConnectionScreen } from './ConnectionScreen.js';
 import { AboutScreen } from '../about/AboutScreen.js';
+import { NormativeSection } from './NormativeSection.js';
 import type { SettingsPane } from '../nav/route.js';
 
 /**
@@ -42,6 +43,7 @@ export function SettingsSections({ pane, onReconnect, onEnsayo }: {
   onEnsayo: (startedAt: string) => void;
 }) {
   if (pane === 'service') return <ConnectionScreen onReconnect={onReconnect} onEnsayo={onEnsayo} />;
+  if (pane === 'normative') return <NormativeSection />;
   if (pane === 'about') return <AboutScreen />;
   return (
     <Page

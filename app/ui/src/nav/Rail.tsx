@@ -71,6 +71,7 @@ export function Rail({ route, go, learnerName, labels, foot }: {
   labels: {
     learners: string; work: string; notes: string;
     connection: string; about: string; settings: string; pictograms: string;
+    normative: string;
   };
   /** The cost badge, the display controls and the locale — unchanged (`013` FR-1106). */
   foot: ReactNode;
@@ -86,6 +87,7 @@ export function Rail({ route, go, learnerName, labels, foot }: {
    */
   const paneLabel: Record<SettingsPane, string> = {
     pictograms: labels.pictograms,
+    normative: labels.normative,
     service: labels.connection,
     about: labels.about,
   };

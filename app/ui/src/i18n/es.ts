@@ -25,7 +25,10 @@ export const es = {
    */
   nav: { learners: 'Mis alumnos', work: 'Preparar material', notes: 'Mis notas',
          connection: 'Mi servicio de IA', about: 'Acerca de y licencias',
-         settings: 'Configuración', pictograms: 'Pictogramas' },
+         settings: 'Configuración', pictograms: 'Pictogramas',
+         // `029`: which normativa her documents are written in. A fact about her
+         // school, not about a child — so it lives beside the pictogram set.
+         normative: 'Normativa' },
 
   onboarding: {
     welcome: 'Vamos a dejarlo listo',

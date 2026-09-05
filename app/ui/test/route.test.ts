@@ -225,11 +225,15 @@ describe('Configuración', () => {
      * rail renders from and the type are two copies of «which sections exist», so they
      * are checked against each other rather than trusted to stay in step.
      *
-     * Three, and no `display`: the text-size and contrast controls live in the rail's
+     * Four, and no `display`: the text-size and contrast controls live in the rail's
      * foot (`013` FR-1106) and work from every screen. A second home for them would be
      * two copies of one truth, and the copy she found first would feel broken.
+     *
+     * `normative` joined in `029`: which normativa her documents are written in is a
+     * fact about her school, not about a child, so it sits beside the pictogram set for
+     * the same reason that one is here.
      */
-    const panes: SettingsPane[] = ['pictograms', 'service', 'about'];
+    const panes: SettingsPane[] = ['pictograms', 'normative', 'service', 'about'];
     expect([...settingsPanes].sort()).toEqual([...panes].sort());
   });
 });

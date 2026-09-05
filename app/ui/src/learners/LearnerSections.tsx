@@ -67,7 +67,7 @@ function CurriculumSection({ code, name, onGuide }: {
         </div>
         <p className="small">
           Aquí es <strong>{unchanged}</strong>. La ordeno con lo que ya llevas hecho —{' '}
-          <strong>no la escribo yo</strong>. Y no queda registrada: eso se registra{' '}
+          <strong>no la escribo yo</strong>. Y no queda registrada: el registro es{' '}
           {registerName(n)}, y esto es material para llevar allí.
         </p>
         {n?.of === 'generic' && (

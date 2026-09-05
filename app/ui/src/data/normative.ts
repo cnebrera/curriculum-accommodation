@@ -1,4 +1,4 @@
-import { useAsync, type Loadable } from './async.js';
+import { useAsync, useCommand, type Loadable } from './async.js';
 
 /**
  * Which normativa the interface should speak in (`029` T009/T013).
@@ -54,6 +54,48 @@ export function documentName(
     : 'la adaptación que no toca objetivos';
 }
 
-/** Where she registers things, in her words — or the honest generic phrase. */
+/**
+ * Where she registers things, in her words — or the honest generic phrase.
+ *
+ * Written to slot into «el registro es …» so both halves read as one sentence. A bare
+ * platform name plus a screen composing its own preposition is how «se registra Séneca»
+ * happens, which is a sentence nobody would write on purpose.
+ */
 export const registerName = (n: ResolvedNormativeView | null): string =>
-  n?.register ?? 'donde se registre en tu territorio';
+  n?.register ?? 'donde diga la normativa de tu territorio';
+
+/** One corpus in the picker: what it is, where it came from, and who has disagreed. */
+export interface CorpusListing {
+  id: string;
+  label: string;
+  territory: string | null;
+  origin: 'bundled' | 'subido' | 'modificado';
+  reviewed: boolean;
+  lastChecked: string | null;
+  /** What her territory calls its documents. Enough to recognise it as hers. */
+  documents: string[];
+}
+
+export interface NormativeList {
+  selected?: string;
+  corpora: CorpusListing[];
+  /**
+   * The id she selected that is no longer there (FR-2711).
+   *
+   * Named by the main process rather than computed here from `selected` not being in
+   * `corpora`: the pane has to say «la que elegiste ya no está» in the same sentence
+   * shape as everything else, and a screen deriving that is a second place that has to
+   * learn what «missing» means.
+   */
+  missing: string | null;
+}
+
+export function useNormativeList(): Loadable<NormativeList> {
+  return useAsync(() => window.rampa.normative.list() as Promise<NormativeList>, []);
+}
+
+/** Selecting takes an id; deselecting is the same call with `null`. */
+export function useSelectNormative() {
+  return useCommand((id: string | null) =>
+    window.rampa.normative.select(id) as Promise<{ ok: boolean }>);
+}

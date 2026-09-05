@@ -112,7 +112,7 @@ draft cites its own corpus and register and names the corpus it followed.
       carry the resolver's provenance line — «siguiendo el corpus normativo: Andalucía
       (incluido, sin revisar)» — in the document itself, not only on screen, from the
       template T004 put in the corpus layer (FR-2705, FR-2706)
-- [ ] T013 [US1] The «Normativa» pane in `app/ui/src/settings/` (a `SettingsPane`, per
+- [x] T013 [US1] The «Normativa» pane in `app/ui/src/settings/` (a `SettingsPane`, per
       `025`'s shapes): corpora listed by file with label and review status, none
       pre-selected, generic named as what she has when nothing is; selection by corpus
       id, never by territory string (spec edge case); deselecting returns to generic
@@ -125,7 +125,7 @@ draft cites its own corpus and register and names the corpus it followed.
 - [x] T015 [P] [US1] Assert the review-status honesty: an unreviewed, imported or
       locally-modified corpus can never print as reviewed, because the provenance line
       is built in one place from `review` + derived origin (FR-2706)
-- [ ] T016 [US1] `app/e2e/normative.spec.ts`, quickstart §5 items 1–2: select Andalucía
+- [x] T016 [US1] `app/e2e/normative.spec.ts`, quickstart §5 items 1–2: select Andalucía
       and the draft prints its provenance; two territories, one request, two drafts each
       citing only its own corpus (SC-2701, SC-2703)
 

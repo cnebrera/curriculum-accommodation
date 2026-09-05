@@ -187,6 +187,7 @@ export const SCREENS = [
   { label: 'Mis alumnos' },
   { label: 'Mis notas' },
   { label: 'Pictogramas', under: 'Configuración' },
+  { label: 'Normativa', under: 'Configuración' },
   { label: 'Mi servicio de IA', under: 'Configuración' },
   { label: 'Acerca de y licencias', under: 'Configuración' },
 ] as const;
