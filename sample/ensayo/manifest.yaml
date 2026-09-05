@@ -1,0 +1,31 @@
+# El juego de ejemplo del modo ensayo (035 T005, FR-3307/3310).
+#
+# Escrito a mano y revisado como el corpus, nunca generado en el build: ésta es la única
+# adaptación que va a ver todo el mundo que abra Rampa por primera vez, y una adaptación
+# generada por una máquina para enseñar lo que hace una máquina no demuestra nada.
+#
+# Licencia: CC BY-SA 4.0, como el resto de los comunes de este repositorio.
+
+learner: E00
+job: ensayo-1
+
+# El único desacuerdo entre la foto y la lectura, puesto a propósito (FR-3310).
+#
+# La pantalla de verificación existe porque el OCR se equivoca, y una lectura perfecta no
+# enseña a mirarla. Está nombrado aquí para que un test pueda comprobar que sigue ahí: un
+# ejemplo al que alguien «le arregla» el fallo con buena intención es una pantalla de
+# verificación sin nada que enseñar.
+flaw:
+  page: 1
+  what: >
+    En la foto el tercer ejercicio dice «5 × 4» y en la lectura salió «5 x 4» con equis
+    de letra. Se lee parecido y no es lo mismo: es justo el tipo de cosa que ella tiene
+    que corregir aquí y no en la hoja del niño.
+
+# Lo que costaría de verdad un pase equivalente, en céntimos (FR-3304).
+#
+# Se enseña en el registro de `006` FR-403 y **no se escribe en ningún libro de gastos**:
+# un gasto que no ha ocurrido no es una entrada, es una estimación.
+wouldCost:
+  readCents: 2
+  adaptCents: 3

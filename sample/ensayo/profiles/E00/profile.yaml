@@ -1,0 +1,41 @@
+# El alumno de ejemplo. NO EXISTE.
+#
+# Inventado en voz alta (FR-3307, Principio VII): lo dice el `sample: true` de aquí abajo
+# y lo dice su propia prosa, porque un fichero puede acabar abierto sin la aplicación
+# delante. Nombre de pila corriente y sin apellido, colegio inventado, y ni una sola cosa
+# que se parezca a un niño real — el registro que ya usa `scripts/seed-learners.mjs`.
+#
+# Es también el primer ejemplo que ella ve de qué aspecto tiene un perfil bien puesto.
+
+code: E00
+sample: true
+
+axes:
+  DEC: 2      # descifrar le come la comprensión
+  LIN: 1      # se le escapan palabras poco frecuentes
+  COG: 2      # pierde el hilo con más de tres cosas
+  ATE: 2      # unos minutos y hay que reconducirle
+  EJE: 2      # necesita los pasos dados
+  CUR: 1      # por debajo pero dentro del curso
+# PER-V, PER-A, MOT y REG están **ausentes** a propósito: ausente no es cero, y un perfil
+# de ejemplo que puntúa los diez ejes enseña justo lo contrario de lo que hay que hacer.
+
+works:
+  - "Arranca si el primer ejercicio está hecho de ejemplo"
+  - "Una tarea por página, con sitio en blanco alrededor"
+
+avoid:
+  - "Nada con cuenta atrás"
+
+interests: ["dinosaurios", "fútbol"]
+
+response:
+  default: short
+  writing: "Escribe poco; si es largo, lo dice en voz alta"
+
+language:
+  instruction: es
+
+year: es:primaria-4
+age: 9
+school: "CEIP de ejemplo"

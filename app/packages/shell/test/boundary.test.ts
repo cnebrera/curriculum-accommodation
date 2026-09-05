@@ -119,6 +119,7 @@ describe('inside packages/shell, the surface is small and named', () => {
   const EXPECTED = [
     'packages/shell/src/corpus/bundle.ts',   // app.isPackaged / getAppPath — where the bundle is
     'packages/shell/src/corpus/links.ts',    // shell.openExternal, app.getVersion — the outbound surface
+    'packages/shell/src/ensayo/root.ts',     // app.getPath('userData') — where the rehearsal root lives (`035`)
     'packages/shell/src/ipc/adapt.ts',       // BrowserWindow (type only), for the progress send
     'packages/shell/src/ipc/compose.ts',     // BrowserWindow (type only) — 016 T003
     'packages/shell/src/ipc/conversation.ts', // BrowserWindow (type only) — 026 T015

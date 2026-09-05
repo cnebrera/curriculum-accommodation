@@ -44,6 +44,20 @@ const OURS: Array<string | RegExp> = [
   // Screenshots of our own interface, in the repository because `013`'s argument
   // is visual and a diff cannot carry it.
   /^docs\/screenshots\//,
+  /*
+   * The rehearsal's sample «photo» (`035` T005).
+   *
+   * Drawn by us, as an SVG rather than a photograph — inspectable instead of opaque,
+   * which is the same argument `022` makes for diagrams. It depicts the worksheet a
+   * teacher would bring, with the authored flaw in it, and it ships CC BY-SA like the
+   * rest of the sample.
+   *
+   * Narrow on purpose: `sample/ensayo/` may hold **this** image and no other. A
+   * directory-wide allowance here would be the hole this whole file exists to keep shut
+   * — «no pictogram asset is in this repository» is a licence claim, and a wildcard is
+   * how the next one arrives without anybody deciding.
+   */
+  'sample/ensayo/material/ensayo-1/source/pagina-1.svg',
 ];
 
 const isOurs = (path: string): boolean =>

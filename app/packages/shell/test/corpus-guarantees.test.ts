@@ -126,9 +126,20 @@ describe('provenance survives a corpus update (T081, 006 FR-416)', () => {
     for (const e of entries) {
       if ((await stat(join(corpus, e))).isDirectory()) dirs.push(e);
     }
-    // ADR 0006: harness/commands and templates were bundled and never read.
-    // Anything added here must have a reader, or it is decoration in an installer.
-    expect(dirs.sort()).toEqual(['checklists', 'instructions', 'recipes']);
+    /*
+     * ADR 0006: harness/commands and templates were bundled and never read. Anything
+     * added here must have a reader, or it is decoration in an installer.
+     *
+     * `sample/` since `035`: the authored rehearsal set — an invented learner, a
+     * worksheet, an adaptation and its report — read by `ensayo/sample.ts` at seed time.
+     * It is content and ships under the same licence gate as the rest.
+     */
+    expect(dirs.sort()).toEqual(['checklists', 'instructions', 'recipes', 'sample']);
+
+    // And it has a reader, which is the actual rule this list encodes.
+    const reader = await readFile(
+      join(appRoot, 'packages', 'shell', 'src', 'ensayo', 'sample.ts'), 'utf8');
+    expect(reader).toMatch(/corpusRoot\(\)[\s\S]{0,60}'sample'/);
   });
 
   /**

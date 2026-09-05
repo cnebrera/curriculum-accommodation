@@ -2,7 +2,7 @@ import { BrowserWindow, shell } from 'electron';
 import { renderHTML, renderODT, parseIR, checkOutput, checkPhotocopy, checkEssentialFigures,
          presentationFor, outputDir, loadLearner, RampaError, AXES, axisLevelOf, isSignedOff,
          resolveDocument, whyNoDocument,
-         parsePicto } from '@rampa/core';
+         parsePicto, type Vault } from '@rampa/core';
 import { currentVault } from '../ipc/vault.js';
 import { knownNames } from '../ipc/names.js';
 import { writeFile, mkdir } from 'node:fs/promises';
@@ -15,8 +15,7 @@ import { pictogramImagesFor, pictogramCredits as pictogramCreditsFor } from '../
  * the teacher to install, and — because Chromium is bundled — the PDF she prints
  * is made by the same engine we tested against.
  */
-export async function renderJob(jobId: string, learnerCode: string) {
-  const vault = currentVault();
+export async function renderJob(jobId: string, learnerCode: string, vault: Vault = currentVault()) {
   /*
    * Whichever document this job has (`021` T007).
    *
@@ -166,8 +165,9 @@ export async function renderPdf(html: string): Promise<Buffer> {
 }
 
 /** Open the adapted document in her own editor (T094). */
-export async function openAdaptedForEditing(jobId: string, learnerCode: string): Promise<string> {
-  const vault = currentVault();
+export async function openAdaptedForEditing(
+  jobId: string, learnerCode: string, vault: Vault = currentVault(),
+): Promise<string> {
   const found = await resolveDocument(vault, jobId, learnerCode);
   if (found.of === 'none') throw new RampaError('vault-unreadable', whyNoDocument(found));
   const path = resolveInVault(vault.root, found.path);

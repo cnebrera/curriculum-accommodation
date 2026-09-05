@@ -1,0 +1,9 @@
+# El «aula» del ensayo: un alumno, inventado.
+#
+# Vive en la carpeta del ensayo y nunca en su vault. Lo que hace que eso sea comprobable
+# no es esta nota: es que la carpeta del ensayo es otra raíz entera (SC-3303).
+learners:
+  - code: E00
+    stage: Primaria
+    year_group: "4.º"
+    subjects: ["Matemáticas"]

@@ -1,4 +1,4 @@
-import { resolveDocument, RampaError, whyNoDocument, stampSignedOff } from '@rampa/core';
+import { resolveDocument, RampaError, whyNoDocument, stampSignedOff, type Vault } from '@rampa/core';
 import { currentVault } from './vault.js';
 import { handle } from './wrap.js';
 import { refreshRecord } from './record.js';
@@ -27,9 +27,21 @@ import { refreshRecord } from './record.js';
  * Sign-off is per (job × learner): approving Hugo's sheet says nothing about
  * Vega's, even when both came from the same worksheet (T092b).
  */
-export function registerSignoffIpc(): void {
+/**
+ * `whichVault` is a parameter since `035` T003.
+ *
+ * **Only the IPC layer decides which vault** (research R2). Sign-off, printing and the
+ * record all take one now, so the rehearsal runs the real code over its own root instead
+ * of a parallel implementation — and the real handlers pass `currentVault()`, which is
+ * why nothing about this changes behaviour.
+ *
+ * The alternative was an `ensayo` flag threaded through every job, and the difference is
+ * not style: a flag that is `false` almost everywhere is a flag somebody forgets in one
+ * place, and the one place would put a fictional child in a real caseload.
+ */
+export function registerSignoffIpc(whichVault: () => Vault = currentVault): void {
   handle('job:signOff', async (jobId: string, learnerCode: string, role: string) => {
-    const vault = currentVault();
+    const vault = whichVault();
     /*
      * A signature is about **a document** (Principle VII), so she can sign a composition
      * without adapting it first (`021` T010, FR-1904). What she must not get is a
@@ -53,9 +65,10 @@ export function registerSignoffIpc(): void {
   });
 
   handle('job:isSignedOff', async (jobId: string, learnerCode: string) => {
-    const found = await resolveDocument(currentVault(), jobId, learnerCode);
+    const vault = whichVault();
+    const found = await resolveDocument(vault, jobId, learnerCode);
     if (found.of === 'none') return false;
-    const raw = (await currentVault().readRaw(found.path)) ?? '';
+    const raw = (await vault.readRaw(found.path)) ?? '';
     return /signed_off:\s*true/.test(raw);
   });
 }

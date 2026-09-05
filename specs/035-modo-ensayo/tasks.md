@@ -17,7 +17,9 @@ pointed at the rehearsal vault.
 
 ## Phase 1 · Setup · the two invariants, first and red
 
-- [ ] T001 Write `app/packages/shell/test/ensayo-boundary.test.ts` and
+- [ ] T001 *(mitad estructural HECHA 2026-09-05: `ensayo-boundary.test.ts`, 13 casos, con
+      su propio guardián contra el escaneo vacío. Falta la mitad de tiempo de ejecución —
+      el contador de red — que va con el e2e.)* Write `app/packages/shell/test/ensayo-boundary.test.ts` and
       `app/e2e/ensayo-invariants.spec.ts` **first**, red, per
       [quickstart.md](quickstart.md) §1 — **SC-3302, zero network, both stacks** (FR-3302).
       Structural half: a module-graph test in the shape of `test:isolation` — nothing under
@@ -42,20 +44,20 @@ pointed at the rehearsal vault.
 IPC written before the vault-parameter refactor would be written *around*
 `currentVault()`, and «around» is where a real-vault reference sneaks into rehearsal code.
 
-- [ ] T003 The vault becomes a parameter at the job layer: `renderJob` in
+- [x] T003 The vault becomes a parameter at the job layer: `renderJob` in
       `app/packages/shell/src/jobs/print.ts` and the sign-off in
       `app/packages/shell/src/ipc/signoff.ts` take a `Vault` instead of calling
       `currentVault()` internally; the real IPC handlers pass `currentVault()` — no
       behaviour change, asserted by the existing suites staying green. **Only the IPC
       layer decides which vault** (research R2): this is the whole seam.
-- [ ] T004 `app/packages/shell/src/ensayo/store.ts` · the rehearsal store (FR-3306): a
+- [x] T004 `app/packages/shell/src/ensayo/store.ts` · the rehearsal store (FR-3306): a
       second `Vault` over `app.getPath('userData')/ensayo/`, laid out per
       [data-model.md](data-model.md) — the vault's own layout, so `resolveDocument`,
       `isSignedOff` and the renderers run over it unchanged. Seed from the bundled sample;
       **discard = delete the root, totally** (FR-3308); re-enter re-seeds; `ensayo.json`
       makes a mid-rehearsal restart resumable. Offline lifecycle tests per quickstart §2,
       including the escape-path refusal and the asserted **absence** of a ledger file.
-- [ ] T005 [P] `sample/ensayo/` · **author the sample set** (FR-3307, FR-3310), reviewed
+- [x] T005 [P] `sample/ensayo/` · **author the sample set** (FR-3307, FR-3310), reviewed
       like corpus, in Spanish, CC BY-SA: the fictional profile (`sample: true` in front
       matter AND the declaration in its prose — «Este alumno no existe» — axes only,
       ordinary given name, no surname, invented school, per `app/scripts/seed-learners.mjs`'s
@@ -65,7 +67,7 @@ IPC written before the vault-parameter refactor would be written *around*
       pending-review mark live **in the documents**, so every rendering carries them by
       construction (FR-3305, research R4). **Never generated at build** — authored, and
       the one adaptation every new user will see.
-- [ ] T006 `app/scripts/bundle-corpus.mjs` bundles `sample/` beside `recipes/`,
+- [x] T006 `app/scripts/bundle-corpus.mjs` bundles `sample/` beside `recipes/`,
       `instructions/` and `checklists/`, under the same licence gate — the sample is
       content and ships with attribution like the rest of the commons.
 - [ ] T007 [P] `app/packages/shell/test/ensayo-sample.test.ts` · the sample tells the

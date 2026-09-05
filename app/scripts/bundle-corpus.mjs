@@ -16,8 +16,13 @@ const out = join(appDir, 'corpus');
 
 // Read at run time: recipes/ selects adaptations, instructions/ carries the
 // judgement layer sent to the model, checklists/ is what the teacher reviews
-// against. Nothing is bundled that nothing reads.
-const DIRS = ['recipes', 'instructions', 'checklists'];
+// against, sample/ is the authored rehearsal set (`035`). Nothing is bundled
+// that nothing reads.
+//
+// `sample/` ships under the same licence gate as the rest: it is content — an
+// invented learner, a worksheet, an adaptation and its report, written by hand
+// and reviewed like the corpus — and it travels with its attribution.
+const DIRS = ['recipes', 'instructions', 'checklists', 'sample'];
 const LICENCES = ['LICENSE', 'LICENSE-CONTENT.md', 'NOTICE'];
 
 for (const f of LICENCES) {
