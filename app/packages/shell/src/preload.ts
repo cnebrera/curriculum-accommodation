@@ -397,6 +397,8 @@ const api = {
   },
 
   diagnostics: {
+    /** Under `RAMPA_TEST` only: every request this process made. `null` otherwise. */
+    network: () => invoke('diagnostics:network'),
     path: () => invoke('diagnostics:path'),
     reveal: () => invoke('diagnostics:reveal'),
     tail: (lines?: number) => invoke('diagnostics:tail', lines),

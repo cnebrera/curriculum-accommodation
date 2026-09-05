@@ -35,7 +35,13 @@ async function launch(): Promise<{
   await mkdir(vault, { recursive: true });
   const app = await electron.launch({
     args: [join(appRoot, 'out', 'main', 'main.js'), `--user-data-dir=${userData}`],
-    env: { ...process.env, ANTHROPIC_API_KEY: '', GOOGLE_API_KEY: '' },
+    /*
+     * `RAMPA_TEST` here rather than from the command line: the network counter is
+     * installed only under it, and a spec whose central assertion depends on how the suite
+     * was invoked is a spec that passes vacuously under `npm run test:e2e` — `net` would
+     * be `null` and «zero requests» would never be checked.
+     */
+    env: { ...process.env, RAMPA_TEST: '1', ANTHROPIC_API_KEY: '', GOOGLE_API_KEY: '' },
   });
   const page = await app.firstWindow();
   await page.waitForLoadState('domcontentloaded');
@@ -162,6 +168,18 @@ test.describe('the rehearsal, with nothing connected', () => {
     expect(await readFile(
       join(userData, 'ensayo', 'output', 'ensayo-1', 'E00', 'sheet.html'), 'utf8')
       .catch(() => '')).toBeDefined();
+
+    /*
+     * **Zero requests, both stacks** (SC-3302). Not «no provider call» — nothing at all
+     * left this process during the whole rehearsal, counted in Chromium's session and in
+     * Node's `fetch`, because a provider call leaves through the second one and a counter
+     * on the first would sit at zero while a request escaped.
+     */
+    const net = await page.evaluate(() =>
+      window.rampa.diagnostics.network() as Promise<{ count: number; urls: string[] } | null>);
+    expect(net, 'the counter is only installed under RAMPA_TEST').not.toBeNull();
+    expect(net!.urls, 'something left the machine during a rehearsal').toEqual([]);
+    expect(net!.count).toBe(0);
 
     // Nothing in any ledger: not an empty one — none.
     expect(await exists(join(userData, 'ensayo', '.rampa', 'costs.json'))).toBe(false);

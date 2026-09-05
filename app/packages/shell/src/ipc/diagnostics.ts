@@ -3,6 +3,7 @@ import { appendFile, mkdir, readFile, stat, rename } from 'node:fs/promises';
 import { join, dirname } from 'node:path';
 import { logger, formatLine, type LogRecord } from '@rampa/core';
 import { handle } from './wrap.js';
+import { networkLog } from '../net-counter.js';
 
 /**
  * The log lives in the OS application-data directory, NOT in the vault.
@@ -40,6 +41,20 @@ export async function startLogging(): Promise<void> {
 
 export function registerDiagnosticsIpc(): void {
   handle('diagnostics:path', () => logPath());
+
+  /**
+   * Every request this process has made, under test only (`035` SC-3302).
+   *
+   * Read back over a channel rather than asserted inside the main process, because what
+   * the test needs to say is «zero, across a whole rehearsal» — a claim about a span of
+   * time that only the test knows the boundaries of.
+   *
+   * Outside `RAMPA_TEST` the counter was never installed, so this answers `null`: an
+   * absent counter and a counter reading zero are different facts, and a shipped build
+   * reporting «0 requests» would be the more comforting of the two and the false one.
+   */
+  handle('diagnostics:network', () =>
+    (process.env['RAMPA_TEST'] === '1' ? networkLog() : null));
 
   /** So she can attach it to a message without hunting through folders. */
   handle('diagnostics:reveal', () => { shell.showItemInFolder(logPath()); return true; });

@@ -1,4 +1,4 @@
-import { app, BrowserWindow, Menu, shell } from 'electron';
+import { app, BrowserWindow, Menu, session, shell } from 'electron';
 import { join } from 'node:path';
 import { registerVaultIpc, reopenVault, startWatching, stopWatching } from './ipc/vault.js';
 import { registerNamesIpc } from './ipc/names.js';
@@ -12,6 +12,7 @@ import { registerComposeIpc } from './ipc/compose.js';
 import { registerPictogramIpc } from './ipc/pictograms.js';
 import { registerStructureIpc } from './ipc/structure.js';
 import { registerEnsayoIpc } from './ensayo/ipc.js';
+import { watchNetworkIfTesting } from './net-counter.js';
 import { registerGuideIpc } from './ipc/guide.js';
 import { registerConversationIpc } from './ipc/conversation.js';
 import { registerIngestIpc } from './ipc/ingest.js';
@@ -65,6 +66,9 @@ const getWindow = () => win;
  * `npm run shots` stays visible on purpose: its whole job is a picture for a human.
  */
 const underTest = process.env['RAMPA_TEST'] === '1';
+
+// The network counter, under test only (`035` SC-3302). See `net-counter.ts`.
+void app.whenReady().then(() => watchNetworkIfTesting(session.defaultSession));
 const hidden = process.env['RAMPA_HIDDEN'] === '1';
 
 function createWindow(): void {

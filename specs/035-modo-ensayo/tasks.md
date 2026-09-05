@@ -17,9 +17,7 @@ pointed at the rehearsal vault.
 
 ## Phase 1 · Setup · the two invariants, first and red
 
-- [ ] T001 *(mitad estructural HECHA 2026-09-05: `ensayo-boundary.test.ts`, 13 casos, con
-      su propio guardián contra el escaneo vacío. Falta la mitad de tiempo de ejecución —
-      el contador de red — que va con el e2e.)* Write `app/packages/shell/test/ensayo-boundary.test.ts` and
+- [x] T001 Write `app/packages/shell/test/ensayo-boundary.test.ts` and
       `app/e2e/ensayo-invariants.spec.ts` **first**, red, per
       [quickstart.md](quickstart.md) §1 — **SC-3302, zero network, both stacks** (FR-3302).
       Structural half: a module-graph test in the shape of `test:isolation` — nothing under

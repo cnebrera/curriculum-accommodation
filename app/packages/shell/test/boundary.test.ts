@@ -268,7 +268,22 @@ describe('inside packages/shell, the surface is small and named', () => {
      *
      * So it counts code — blank lines and comment lines excluded — and the number went
      * down again, from 1,460 to what it is now. Same tell as the third time.
+     *
+     * **Raised to 975 on 2026-09-05, and this time the number was right.** Three features
+     * landed in one stretch — `028`'s structure channels, `035`'s rehearsal channels and
+     * `035`'s network counter — and each added a registration line and an import to
+     * `main.ts`. That is five lines of pure wiring, which is precisely the growth the
+     * second paragraph above says this bound exists to permit.
+     *
+     * It refused two attempts first, and both moves were kept because both were right:
+     * `035`'s rehearsal store had a hundred lines behind one `app.getPath` call, which
+     * became `ensayo/root.ts`; and the «install the counter under test» decision was ten
+     * lines of reasoning in `main.ts`, which became `watchNetworkIfTesting` beside the
+     * counter. What is left in `main.ts` is *that* something is registered, which is what
+     * `main.ts` is for.
+     *
+     * 25, not 100. A bound raised to a round number stops being a measurement.
      */
-    expect(lines).toBeLessThan(950);
+    expect(lines).toBeLessThan(975);
   });
 });
