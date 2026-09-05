@@ -99,7 +99,7 @@ const profile: Profile = {
 } as unknown as Profile;
 
 const recipe: Recipe = {
-  id: 'r1', version: 1, axes: [], scope: [], conflicts: [],
+  id: 'r1', version: 1, axes: [], marks: [], scope: [], conflicts: [],
   body: 'Parte el enunciado en pasos.', origin: 'core', path: 'r1.md',
 } as Recipe;
 

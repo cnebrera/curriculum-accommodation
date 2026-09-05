@@ -704,7 +704,7 @@ describe('FR-209 · adaptations.md is read first and outranks the corpus', () =>
     response: {}, language: { instruction: 'es' },
   } as never;
   const recipe = {
-    id: 'checkbox-to-numbered', version: 1, axes: [], scope: [], conflicts: [],
+    id: 'checkbox-to-numbered', version: 1, axes: [], marks: [], scope: [], conflicts: [],
     body: 'Convierte las casillas en pasos numerados.', origin: 'core' as const,
     path: 'r.md',
   };

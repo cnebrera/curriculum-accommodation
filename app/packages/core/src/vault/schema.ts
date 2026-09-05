@@ -138,6 +138,48 @@ export const profileSchema = z.object({
      */
     overrides: z.record(z.string(), z.string()).default({}),
   }).optional(),
+  /**
+   * The vehicular language, still being acquired (`033` FR-3101, data-model R1).
+   *
+   * ## Beside the axes, never inside them
+   *
+   * A learner arriving mid-course without the classroom's language fits no axis, and the
+   * temptation is `LIN`. It is the wrong home: `LIN` models a language **disorder** in a
+   * native speaker, so putting him there writes «dificultad de comprensión lingüística»
+   * into a record that follows him — a disability where there is a transition. What he
+   * has is a barrier that expires.
+   *
+   * That is also why it is not in `AXES`: the ten describe barriers, and this one has a
+   * date on which it stops being true.
+   *
+   * ## Absent, and zero, and the difference
+   *
+   * Absent means nobody has observed it, exactly as with an axis. `intensity: 0` is her
+   * **statement that it is over** — «ya sigue la clase en su idioma» — kept with the date
+   * she made it, because the fact that a barrier expired is a fact about her observation
+   * and not an absence of one. The history lives in `notes.md`, where all profile history
+   * lives.
+   *
+   * ## The languages are hers, and only hers
+   *
+   * No country, no origin, no nationality, no default. A language derived from «llegó de
+   * Marruecos» would be a claim about a child that nobody made, right often enough to
+   * look like a feature and wrong for the Amazigh speaker, the French-schooled child and
+   * the one whose family speaks Spanish at home.
+   * `no-inferred-language.test.ts` asserts that behaviourally and structurally.
+   *
+   * Codes in the vault (the pictogram metadata's own), names on screen (AGENTS.md rule 7).
+   */
+  vehicular: z.object({
+    intensity: axisLevel,
+    languages: z.array(z.string()).default([]),
+    /**
+     * When she noted it or last changed it. Written by the editor at save time — a real
+     * annotation date, never derived and never backfilled (decision P44, the same rule
+     * `noted_on` above follows for the qualitative fields).
+     */
+    noted_on: yamlDate,
+  }).optional(),
 });
 export type Profile = z.infer<typeof profileSchema> & {
   _unparsed?: Record<string, unknown>;

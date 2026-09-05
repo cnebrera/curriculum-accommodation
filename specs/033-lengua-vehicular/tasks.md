@@ -12,7 +12,7 @@ recipes in Spanish that a PT can read and correct.
 
 ## Phase 1 · Setup · the tripwire, before anything can trip it
 
-- [ ] T001 Write `app/packages/core/test/no-inferred-language.test.ts` **first**,
+- [x] T001 Write `app/packages/core/test/no-inferred-language.test.ts` **first**,
       red, per [quickstart.md](quickstart.md) §1. Both halves of **FR-3102**:
       behavioural — no prompt, gloss lookup or report ever contains a language the
       profile's `vehicular.languages` does not name, whatever sits in notes,
@@ -20,7 +20,7 @@ recipes in Spanish that a PT can read and correct.
       source maps names, countries or nationalities to languages, and that
       `vehicular.languages` is read from `profile.yaml` and nowhere else (SC-3103's
       code-review tripwire, made a test so it cannot be skipped in review)
-- [ ] T002 [P] Write `app/packages/core/test/mark-selection.test.ts` **first**, red,
+- [x] T002 [P] Write `app/packages/core/test/mark-selection.test.ts` **first**, red,
       from quickstart §2: mark-only profile selects the vehicular recipes
       (non-empty selection — this case's instance of P1's stop closed, SC-3101);
       absent block selects nothing (not observed ≠ 0); intensity 0 selects nothing
@@ -35,13 +35,13 @@ recipes in Spanish that a PT can read and correct.
 is silently never selected — the unread-field defect, this project's most repeated
 shape.
 
-- [ ] T003 `app/packages/core/src/vault/schema.ts` · the `vehicular` block beside
+- [x] T003 `app/packages/core/src/vault/schema.ts` · the `vehicular` block beside
       `pictograms` per [data-model.md](data-model.md): `intensity` 0–3,
       `languages: string[]` (metadata codes, hers only, no default), `noted_on`
       via `yamlDate` — real annotation dates, P44 (**FR-3101**, FR-3102). Repair
       semantics for free through `validateWithRepair`; document the block in
       `docs/profile-schema.md`
-- [ ] T004 `app/packages/core/src/recipes/index.ts` · `marks:` front matter parsed
+- [x] T004 `app/packages/core/src/recipes/index.ts` · `marks:` front matter parsed
       into `MarkCondition[]` (the axes' `>=|<=|=` 0–3 grammar, mark names from a
       known list); `applies()` requires axis **and** mark conditions, with absent
       block = `null`, never 0; `isGuard()` becomes «no axes *and* no marks» —

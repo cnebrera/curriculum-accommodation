@@ -7,6 +7,18 @@ export interface Recipe {
   version: number;
   /** Conditions such as `COG>=2`. Empty means it always applies. */
   axes: AxisCondition[];
+  /**
+   * Conditions on a **mark** — a profile fact that is not one of the ten axes
+   * (`033` FR-3104). Today there is one: `vehicular>=1`.
+   *
+   * Its own list rather than a member of `axes`, because a mark is not an axis: the ten
+   * describe barriers that travel with the child, and a mark is a state with a date on
+   * which it stops being true. Folding it in would put it in `AXES`, and from there into
+   * every `AXES.map` in the application — the prompt's profile line, the presentation
+   * map, the axis editor — each of which would then be describing a transition as a
+   * barrier.
+   */
+  marks: MarkCondition[];
   scope: string[];
   conflicts: string[];
   evidence?: string;
@@ -18,6 +30,29 @@ export interface Recipe {
 }
 
 export interface AxisCondition { axis: Axis; op: '>=' | '<=' | '='; level: number; }
+
+/** The marks a recipe may name. One today; the list is what makes an unknown one fail. */
+export const MARKS = ['vehicular'] as const;
+export type Mark = typeof MARKS[number];
+
+export interface MarkCondition { mark: Mark; op: '>=' | '<=' | '='; level: number; }
+
+const MARK_COND = /^([a-z][a-z-]*)(>=|<=|=)([0-3])$/;
+
+/**
+ * `vehicular>=1`, or `null`.
+ *
+ * Rejected like an unknown axis rather than ignored: a recipe keyed on a condition the
+ * parser cannot read is a recipe that is **silently never selected**, which is this
+ * repository's most repeated defect — a value written, typed and read by nothing.
+ */
+export function parseMarkCondition(raw: string): MarkCondition | null {
+  const m = MARK_COND.exec(raw.trim());
+  if (!m) return null;
+  const mark = m[1] as Mark;
+  if (!MARKS.includes(mark)) return null;
+  return { mark, op: m[2] as MarkCondition['op'], level: Number(m[3]) };
+}
 
 const COND = /^([A-Z]+(?:-[A-Z])?)(>=|<=|=)([0-3])$/;
 
@@ -40,6 +75,7 @@ export function parseRecipe(raw: string, path: string, origin: Recipe['origin'])
     id,
     version: Number(data['version'] ?? 1) || 1,
     axes: list(data['axes']).map(parseAxisCondition).filter((c): c is AxisCondition => c !== null),
+    marks: list(data['marks']).map(parseMarkCondition).filter((c): c is MarkCondition => c !== null),
     scope: list(data['scope']),
     conflicts: list(data['conflicts']),
     evidence: typeof data['evidence'] === 'string' ? data['evidence'] : undefined,
@@ -58,9 +94,38 @@ const satisfied = (c: AxisCondition, p: Profile): boolean => {
   return c.op === '>=' ? level >= c.level : c.op === '<=' ? level <= c.level : level === c.level;
 };
 
-/** A recipe applies when every one of its conditions holds. No conditions means always. */
+/**
+ * The level of a mark on this profile, or `null` when nobody observed it.
+ *
+ * The same null-vs-zero rule the axes have, and for the same reason: an absent block is
+ * «not observed» and must activate nothing. `intensity: 0` is her statement that the
+ * barrier is over, which is a different fact and also activates nothing — but it does so
+ * because 0 fails `>=1`, not because it was mistaken for an absence.
+ */
+const markLevel = (p: Profile, mark: Mark): number | null => {
+  if (mark === 'vehicular') {
+    const level = p.vehicular?.intensity;
+    return level === 0 || level === 1 || level === 2 || level === 3 ? level : null;
+  }
+  return null;
+};
+
+const markSatisfied = (c: MarkCondition, p: Profile): boolean => {
+  const level = markLevel(p, c.mark);
+  if (level === null) return false;
+  return c.op === '>=' ? level >= c.level : c.op === '<=' ? level <= c.level : level === c.level;
+};
+
+/**
+ * A recipe applies when every one of its conditions holds — axes **and** marks.
+ *
+ * No conditions of either kind means always, which is what a guard is. A recipe with
+ * `axes: []` and `marks: [vehicular>=1]` has conditions: it is an adaptation that applies
+ * to the learners she marked, and `isGuard` below says so.
+ */
 export const applies = (r: Recipe, p: Profile): boolean =>
-  r.axes.length === 0 || r.axes.every((c) => satisfied(c, p));
+  (r.axes.length === 0 || r.axes.every((c) => satisfied(c, p)))
+  && (r.marks.length === 0 || r.marks.every((c) => markSatisfied(c, p)));
 
 /**
  * A recipe with no axis conditions is a GUARD, not an adaptation.
@@ -72,7 +137,13 @@ export const applies = (r: Recipe, p: Profile): boolean =>
  * failure this project is built around, an adaptation quietly making an exam
  * easier. Caught by the end-to-end test over the real corpus, not by review.
  */
-export const isGuard = (r: Recipe): boolean => r.axes.length === 0;
+/*
+ * **And no marks** (`033` T004). A recipe keyed only on `vehicular>=1` names a condition,
+ * so it is an adaptation — classing it as a guard would make it always-applying and
+ * undroppable in conflicts, both wrong: it would reach every learner including the ones
+ * who speak the classroom's language, and it could never lose to the exam guard.
+ */
+export const isGuard = (r: Recipe): boolean => r.axes.length === 0 && r.marks.length === 0;
 
 export interface Selection {
   selected: Recipe[];
