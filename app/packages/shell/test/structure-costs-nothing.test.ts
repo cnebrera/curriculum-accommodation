@@ -34,8 +34,15 @@ const read = (rel: string): string =>
     // Comments stripped: this file's own prose names the modules it forbids.
     .replace(/\/\*[\s\S]*?\*\//g, '').replace(/^[ \t]*\/\/.*$/gm, '');
 
-/** The two files an agenda actually travels through. */
-const PATH = ['jobs/structure.ts', 'ipc/structure.ts'] as const;
+/**
+ * The file an agenda actually travels through.
+ *
+ * `ipc/structure.ts` is **not** in this list, and that is deliberate rather than an
+ * oversight: it routes all three kinds, so it necessarily reaches `jobs/story.ts`. What
+ * keeps the promise is that the story lives behind its own module and its own channel —
+ * asserted below — so the agenda's path can be checked on its own.
+ */
+const PATH = ['jobs/structure.ts'] as const;
 
 describe('the agenda path cannot spend money', () => {
   it('imports nothing from the providers package', () => {
@@ -71,13 +78,29 @@ describe('the agenda path cannot spend money', () => {
     expect(build).not.toMatch(/@rampa\/providers|fetch\(|https?:\/\//);
   });
 
-  it('the story is the exception, and it is the one that is allowed a provider', () => {
+  it('the story is the exception, and it lives in its own file', () => {
     /*
-     * Stated as a test so the boundary is a shape rather than a convention: if the story
-     * ever moves into `jobs/structure.ts`, the assertions above start failing and whoever
-     * moved it has to decide where the line is instead of discovering later that an
-     * agenda now needs a key.
+     * This is the assertion that did its job (2026-09-05).
+     *
+     * `runStory` was written into `jobs/structure.ts`, where the tasks put it, and the two
+     * tests above went red on the same run: one `import { sendRedacted }` at the top of a
+     * shared file made «the agenda cannot spend» false for all three kinds at once.
+     *
+     * So the line is a file boundary. `jobs/story.ts` may reach a provider — drafting a
+     * social story is what it is for — and `jobs/structure.ts` may not.
      */
     expect(read('jobs/structure.ts')).not.toContain('runStory');
+    const story = readFileSync(join(shell, 'src', 'jobs', 'story.ts'), 'utf8');
+    expect(story).toContain('sendRedacted');
+    expect(story).toContain('recordCost');
+
+    /*
+     * And the channels stay two. One `structure:save` taking a `kind` would put the
+     * spending decision inside a field, where she cannot see it and where this test
+     * cannot either — the agenda's handler would import the story's module.
+     */
+    const ipc = read('ipc/structure.ts');
+    expect(ipc).toContain("handle('structure:save'");
+    expect(ipc).toContain("handle('structure:story'");
   });
 });

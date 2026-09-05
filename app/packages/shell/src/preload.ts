@@ -178,6 +178,11 @@ const api = {
     /** The words her set cannot decide, with their pictures — `024`'s own chooser. */
     candidates: (args: { words: string[]; language?: string }) =>
       invoke('structure:candidates', args),
+    /**
+     * A social story. **The one of the three that costs money**, and its own channel so
+     * that fact is visible in the surface rather than hidden behind a `kind` field.
+     */
+    story: (args: unknown) => invoke('structure:story', args),
   },
   /**
    * The adaptación curricular (`017`).

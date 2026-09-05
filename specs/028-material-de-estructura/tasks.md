@@ -154,28 +154,28 @@ between her and the provider.
 
 **Independent Test**: quickstart §7.
 
-- [ ] T022 [US3] `instructions/social-story.md` · the judgement, in Markdown a teacher
+- [x] T022 [US3] `instructions/social-story.md` · the judgement, in Markdown a teacher
       can read and correct (Principle I): first person, short sentences, present tense,
       the concrete situation, what must not be presented as fact — and the report's
       invented-details wording lives **here**, not in `jobs/` (**FR-2611**). Ships with
       a before/after example and at least one anti-pattern, per the quality gates
-- [ ] T023 [US3] `app/packages/shell/src/jobs/structure.ts` · `runStory`: system prompt =
+- [x] T023 [US3] `app/packages/shell/src/jobs/structure.ts` · `runStory`: system prompt =
       `loadInstruction('hard-rules')` + `loadInstruction('social-story')`; her situation
       text is the instruction, anything attached is content delimited via the existing
       annotation (`annotateInjection`/`injectionNotices`) (**FR-2610**); egress only
       through `sendRedacted`; cost recorded via the existing recording; output written as
       an **unsigned** structure job, `structure: historia` (**FR-2609**)
-- [ ] T024 [US3] Pictogram support over the drafted text through `applyPictograms` +
+- [x] T024 [US3] Pictogram support over the drafted text through `applyPictograms` +
       `matchWord` with her vocabulary — the same machinery as adapted material, asserted
       by reusing the `018`/`024` fixtures (**FR-2605**)
-- [ ] T025 [US3] The story's report carries the anti-anchoring line from the corpus —
+- [x] T025 [US3] The story's report carries the anti-anchoring line from the corpus —
       concrete details are the model's invention until edited — surfaced in the review
       screen and in `report.md` (**FR-2611**)
-- [ ] T026 [P] [US3] The redaction test, `app/packages/shell/test/`: a classmate's name
+- [x] T026 [P] [US3] The redaction test, `app/packages/shell/test/`: a classmate's name
       in the situation text is caught by the same gate as notes (`nameWordSet` through
       `sendRedacted` — P17's hardened rule); and printing unsigned shows the draft mark,
       which only the existing sign-off removes (**FR-2609**)
-- [ ] T027 [US3] UI: the situation form in `app/ui/src/structure/`, cost shown in `006`
+- [x] T027 [US3] UI: the situation form in `app/ui/src/structure/`, cost shown in `006`
       FR-403's terms, review/edit/sign through the existing review screen — E2E
       `app/e2e/structure-story.spec.ts` per quickstart §7 (**FR-2609**, **FR-2610**,
       **FR-2611**)

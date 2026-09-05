@@ -46,3 +46,23 @@ export function useStructureCandidates(words: string[], language = 'es'):
       Array<{ word: string; candidates: Array<{ id: string; image?: string }> }>;
   }, [words.join('|'), language]);
 }
+
+/**
+ * A social story — **the one of the three that costs money** (`028` FR-2609/2610/2611).
+ *
+ * Its own hook and its own channel, so the fact that this one reaches a provider is
+ * visible in the surface rather than hidden behind a `kind` field. She should be able to
+ * tell which of the three things she is about to do spends by looking at the button.
+ */
+export function useWriteStory() {
+  return useCommand((args: {
+    jobId: string;
+    learnerCode: string;
+    situation: string;
+    attached?: string;
+    language?: string;
+    created: string;
+  }) => window.rampa.structure.story(args) as Promise<{
+    jobId: string; path: string; cents: number | null;
+  }>);
+}

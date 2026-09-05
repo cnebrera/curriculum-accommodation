@@ -161,7 +161,7 @@ else {
     registerAdaptIpc(getWindow);
     registerComposeIpc(getWindow);
     registerPictogramIpc(getWindow);
-    registerStructureIpc();
+    registerStructureIpc(getWindow);
     registerGuideIpc(getWindow);
     registerConversationIpc(getWindow);
   registerIngestIpc(getWindow);
