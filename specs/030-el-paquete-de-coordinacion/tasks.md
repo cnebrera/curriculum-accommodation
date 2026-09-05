@@ -15,7 +15,7 @@ and the entire security model.
 
 ## Phase 1 · Setup · the two invariants, red first
 
-- [ ] T001 Write `app/packages/core/test/coordination-no-names.test.ts` **first**, red,
+- [x] T001 Write `app/packages/core/test/coordination-no-names.test.ts` **first**, red,
       per [quickstart.md](quickstart.md) §1. Over a seeded corpus whose profiles, notes
       and material titles are salted with real-looking names: export both packet kinds
       and inspect the **raw bytes** — no learner name (subject's or any other child
@@ -37,7 +37,7 @@ and the entire security model.
 built against two ad-hoc formats is the two-copies defect between two *machines*, where
 nobody can see the drift.
 
-- [ ] T003 `app/packages/core/src/memory/coordination.ts` · types per
+- [x] T003 `app/packages/core/src/memory/coordination.ts` · types per
       [data-model.md](data-model.md) and `buildCoordinationPacket(learner, period, role,
       record)` — notes sections dated within the period (from `appendNote`'s `## <date> ·
       <heading>` structure), material references from `record`'s `entryFor` (titles and
@@ -45,23 +45,23 @@ nobody can see the drift.
       with their real annotation dates and `''` where none — the `?? today()` fabrication
       lesson is written at length in `handover.ts`, and this builder inherits it). Corpus-
       scope journal entries never enter: they were never the packet's to carry (FR-2801)
-- [ ] T004 The renderer: front matter for the machine and prose body for the person,
+- [x] T004 The renderer: front matter for the machine and prose body for the person,
       **written from the same `CoordinationPacket` in one pass** so the audited text and
       the imported data cannot diverge. Anti-anchoring framing on the document's face
       («esto viene de otra aula… quedará como “me lo contaron”») lives with the corpus
       templates, not as string literals in core (Principle I). Prose-readable with no
       tooling — the receiving colleague may not have Rampa (`004` FR-306's rule) (FR-2801)
-- [ ] T005 `parseCoordinationPacket(raw)` — deterministic, tolerant, offline per
+- [x] T005 `parseCoordinationPacket(raw)` — deterministic, tolerant, offline per
       [contracts/packet.md](contracts/packet.md): unknown fields kept and surfaced,
       malformed file → readable refusal and no partial result, `academic_year` older
       than current → stale (reusing `004`'s `isStale` rule). Round trip asserted:
       render → parse → the same packet (quickstart §3)
-- [ ] T006 The export gate: final bytes through `redact()` with the **full** known-names
+- [x] T006 The export gate: final bytes through `redact()` with the **full** known-names
       map (a note about Marco can name Vega), `isClean()` as refusal — refusal, never
       sanitisation, the vault-boundary house rule — and `findProbableNames` flags
       surfaced for the export review step (FR-2802). The role field is the only sender
       identity: no name field exists on the type
-- [ ] T007 [P] Packet content through `detectInjection` before display — item texts
+- [x] T007 [P] Packet content through `detectInjection` before display — item texts
       wrapped as blocks and passed to **the existing scanner**, not a second one with
       its own opinions; flags quoted and located, never removed, never auto-skipped
       (FR-2806, Principle IX). Fixture packet from `cases/injection`'s patterns, per

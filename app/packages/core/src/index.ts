@@ -119,4 +119,5 @@ export * from './cost/index.js';
 export * from './memory/index.js';
 export * from './memory/consolidate.js';
 export * from './memory/handover.js';
+export * from './memory/coordination.js';
 export * from './memory/forget.js';

@@ -136,7 +136,16 @@ export function detectInjection(block: Block): Notice[] {
   if (role) found.set(clip(role[0].trim()), 'imita un mensaje de sistema');
 
   for (const { re, why } of [...CAPABILITY, ...SECTION_SPOOF]) {
-    const m = new RegExp(re.source, 'i').exec(text);
+    /*
+     * The pattern's **own** flags, minus `g`.
+     *
+     * This rebuilt every pattern as plain `'i'`, which was invisible while every pattern
+     * was `'i'` — and then `029`'s section-spoofing shapes arrived anchored with `^…$m`,
+     * and `^` silently meant «start of the whole block» instead of «start of a line». A
+     * heading forged on line four matched nothing. `g` is dropped because these are
+     * single-shot `exec` calls and a sticky `lastIndex` across calls is its own bug.
+     */
+    const m = new RegExp(re.source, re.flags.replace(/g/g, '') || 'i').exec(text);
     if (!m) continue;
     const start = text.lastIndexOf('\n', m.index) + 1;
     const end = text.indexOf('\n', m.index);
