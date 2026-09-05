@@ -1307,6 +1307,76 @@ input y un botón compartiendo nombre.
 
 52 casos nuevos y 6 e2e; 9 costuras verificadas por mutación.
 
+### 3.5 · `029` en marcha — Andalucía deja de ser el producto
+
+`4de4265`, `8680f57`, `9b6962c`, `18d7133`, `5463fc0` · T001-T010, T012, T014-T015,
+T017-T019 de 29 · vitest 2.300 · e2e 192
+
+Durante un año Rampa le dijo «Séneca» a todo el mundo. Séneca es la plataforma de
+Andalucía; la pareja ACNS/ACS y las Instrucciones de 8 de marzo de 2017 son el marco de
+Andalucía. Una maestra de Vigo leía frases sobre una plataforma que no tiene y concluía
+—con razón— que esto no estaba hecho para ella. Era además el fallo más difícil de ver
+desde dentro: quien lo escribió trabaja bajo ese marco.
+
+**El inventario primero.** Antes de mover un fichero, `no-territory-outside-corpus.test.ts`
+fijó los **19 sitios** que nombraban un territorio: cinco de `instructions/` y catorce de
+`src`. Escrito como «cero» habría estado rojo y no se habría podido commitear; escrito
+como la lista exacta de hoy es el patrón de `selection-baseline.test.ts`, y además guarda
+el futuro: un fichero número veinte lo rompe. Hoy la lista está en **uno**, y ese uno está
+afirmado con su motivo (abajo).
+
+**Lo que se movió.** `instructions/normative/es-an.md` es ahora Andalucía entera: sus dos
+documentos con sus secciones, quién los coordina, qué hace falta antes, las frases que se
+imprimen y las palabras clínicas de sus documentos. `guide.md` y `acs.md` son el genérico,
+que es un producto y no una versión con los nombres borrados — tiene su propia lista de
+secciones (sólo lo que Rampa puede armar de verdad, no la imitación de un formulario real)
+y dice por escrito que el procedimiento lo verifica ella con su orientador.
+
+**Lo que un corpus no puede hacer, por estructura y no por vigilancia.** No existe ningún
+campo en el contrato que llegue a ninguna comprobación (FR-2709). Un fichero que declare
+`exam_rules`, `draft_mark: off`, `redaction: disabled` o un `decline` propio aterriza
+entero en `unknown` —que se conserva para que un corpus más nuevo corra en un build viejo,
+y no se consulta jamás—. La marca de borrador tampoco: `BORRADOR`, su banner y su marca de
+agua son el Principio VII, y una comprobación que un Markdown de un desconocido pudiera
+redactar es una que puede vaciar. El corpus dice cómo se **llama** el documento; que es un
+borrador lo dice el código.
+
+**La maestra de Sevilla no nota nada.** `andalucia-unchanged.test.ts` fotografió su
+borrador con el código de ayer y hoy sale **byte a byte el mismo** salvo la línea de
+procedencia — y el test pasa esa línea y la resta, en vez de no pasarla, para que lo que
+demuestre sea «la única diferencia es esa línea» y no «no hay diferencia si dejas fuera lo
+nuevo».
+
+**Tres cosas que encontró la disciplina y no el diseño:**
+
+- *La mutación.* El test del título firmado pasaba por casualidad: en Andalucía el título
+  firmado es el del borrador sin «de » y con mayúscula, así que ignorar `signed_title`
+  daba el mismo resultado. Ahora hay un corpus gallego de prueba cuyos dos títulos no se
+  derivan uno del otro. Lo mismo con la exclusión de `selection.md`: el parser lo tiraba
+  igual por no tener `id`, y quitar la exclusión no rompía nada.
+- *El e2e.* Los dos handlers IPC nuevos estaban escritos `(_e, id)` como si `ipcMain`
+  pasara el evento, pero `handle()` ya lo quita — así que `select('es-an')` llegaba como
+  deselección y **todo salía en genérico**. El test de shell montea `ipcMain.handle` a
+  no-op, así que nunca ejerció la aridad. Se ve arrancando la aplicación.
+- *Un defecto latente de FR-2710.* Firmar el martes un borrador hecho el lunes, después de
+  cambiar de comunidad, lo habría titulado con el territorio nuevo mientras la nota de
+  dentro seguía diciendo el viejo. Ahora el documento guarda `signed_title` en su front
+  matter: lo que firma es lo que leyó.
+
+**El único acrónimo que queda en el código, y por qué quitarlo sería el error.**
+`acsInOverlay` lee la frase que `guideSection` escribe en el `adaptations.md` de un alumno
+para saber si sus objetivos ya están modificados — lo que desbloquea componerle un examen
+a ese nivel. `029` deja de **escribir** «es una **ACS**», pero los ficheros que ya están en
+los vaults la llevan, y una puerta que dejara de reconocerlos empezaría a negar exámenes en
+silencio. El inventario lo afirma con su motivo en vez de callarlo.
+
+**Lo que falta de `029`:** T011 (nota fechada en `017`), T013 (el panel de Normativa),
+T016 y T026 (e2e), y toda la US3 — importar, escanear, refusar por defecto y el test del
+corpus hostil (T020-T025). El escaneo es lo que hace que un «normativa-madrid.md» de un
+foro sea un fichero enseñado y refusable en vez de un prompt, así que **no hay flujo de
+importación hasta que esté**: hoy sólo se pueden elegir los corpus incluidos, que es el
+estado seguro.
+
 ## Notas de proceso
 
 - **La instancia que me pediste, y por qué la he reiniciado.** La levanté con `npm run dev`
@@ -1374,7 +1444,7 @@ input y un botón compartiendo nombre.
 | | |
 |---|---|
 | `npx tsc --noEmit` | verde (línea base) |
-| `npx vitest run` | verde — 2.224 casos |
+| `npx vitest run` | verde — 2.300 casos |
 | `npm run test:e2e` | verde — 192 casos |
 | `scripts/check-fr-coverage.sh` | verde (línea base) |
 | `scripts/check-spec-kit.sh` | verde (línea base) |
@@ -1382,5 +1452,6 @@ input y un botón compartiendo nombre.
 ---
 
 **Lotes 0, 1 y 2 completos (5/5 · 17/17 · 12/12); Lote 3 con `027`, `022`, `026`, `031`,
-`032`, `028`, `035` y `033` implementadas.** Quedan **3.10** (`020` US2-US4), **3.13**
-(notas de BACKLOG) y **3 features** por `/speckit-implement` en el orden 029→030→034.
+`032`, `028`, `035` y `033` implementadas, y `029` a dos tercios.** Quedan la US3 de `029`
+(importar y escanear), **3.10** (`020` US2-US4), **3.13** (notas de BACKLOG) y **2
+features** por `/speckit-implement` en el orden 030→034.
