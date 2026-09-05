@@ -67,12 +67,23 @@ export function examBelowCourse(args: {
 }
 
 /**
- * Does his overlay record an ACS?
+ * Does his overlay record a document that **modifies objectives**?
  *
- * Reads the sentence `guideSection` writes — «Este documento es una **ACS**» — because
- * that is where the fact lives (`017`, and the defect 2.11 fixed was that it lived
- * nowhere at all). Deliberately not a second store: a boolean in the profile would be a
- * copy of what the overlay already says, and the copy is what goes stale.
+ * Reads the sentence `guideSection` writes, because that is where the fact lives
+ * (`017`, and the defect 2.11 fixed was that it lived nowhere at all). Deliberately not
+ * a second store: a boolean in the profile would be a copy of what the overlay already
+ * says, and the copy is what goes stale.
+ *
+ * ## Two patterns, and the second one is not dead code
+ *
+ * `029` stopped writing «es una **ACS**» — that is Andalucía's name for the document,
+ * and this gate governs teachers everywhere. New overlays say what the document does.
+ * **Overlays already in vaults still say the old sentence**, and a gate that stopped
+ * recognising them would silently start refusing exams for every learner whose
+ * adaptation was recorded before the extraction. So the old wording is still read, and
+ * it is read for exactly as long as those files exist.
  */
 export const acsInOverlay = (overlay: string | null): boolean =>
-  overlay !== null && /es una \*\*ACS\*\*/.test(overlay);
+  overlay !== null
+  && (/\*\*modifica objetivos y criterios de evaluación\*\*/.test(overlay)
+    || /es una \*\*ACS\*\*/.test(overlay));

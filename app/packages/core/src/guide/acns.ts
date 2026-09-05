@@ -1,6 +1,6 @@
-import { acnsHeader } from './acns-document.js';
+import { acnsHeader, type NormativeWording } from './acns-document.js';
 import type { RecordEntry } from '../record/entry.js';
-import type { DraftSection } from './corpus.js';
+import { phraseOf, type DraftSection } from './corpus.js';
 import { hasGuideMeasures } from './overlay.js';
 
 /**
@@ -64,6 +64,17 @@ export interface AcnsInput {
   /** The sections the regulation requires, from the corpus (FR-1517). */
   sections: readonly DraftSection[];
   /**
+   * Which normativa's wording this draft is written in (`029` T009/T012).
+   *
+   * The register, the printed sentences and the provenance line, resolved by the
+   * caller. Absent is generic mode, which is a product and not a degraded state: the
+   * generic file's own phrases are used and the document says plainly what is hers to
+   * verify.
+   */
+  wording?: NormativeWording;
+  /** What this territory calls the document, printed as a fact rather than assumed. */
+  documentLabel?: string;
+  /**
    * What she has recorded about the curricular level **of this área** (`032` FR-3004).
    *
    * Resolved by the caller with `curFor`, so «no pair for this área means the general»
@@ -102,8 +113,8 @@ export interface AcnsDraft {
 export function requireRecordedWork(record: readonly RecordEntry[]): string | null {
   if (record.length > 0) return null;
   return 'Todavía no he adaptado nada para este alumno, así que no tengo con qué '
-    + 'redactar la ACNS. Un borrador hecho de nada es un formulario rellenado por un '
-    + 'modelo de lenguaje, y lo firmarías tú. Adapta algo primero y vuelve.';
+    + 'redactar su adaptación. Un borrador hecho de nada es un formulario rellenado por '
+    + 'un modelo de lenguaje, y lo firmarías tú. Adapta algo primero y vuelve.';
 }
 
 export function draftAcns(input: AcnsInput): AcnsDraft {
@@ -119,8 +130,9 @@ export function draftAcns(input: AcnsInput): AcnsDraft {
    * (FR-1504). Both facts go above the content, where they cannot be scrolled past.
    */
   md.push(
-    ...acnsHeader(false),
+    ...acnsHeader(false, input.wording ?? {}),
     '',
+    ...(input.documentLabel ? [`Documento: **${input.documentLabel}**`, ''] : []),
     `Alumno: **${input.learnerCode}**`
     + `${input.year ? ` · Curso: ${input.year}` : ''}`
     + `${input.stage ? ` · Etapa: ${input.stage}` : ''}`
@@ -174,10 +186,11 @@ function sectionBody(
           ...(input.stage ? [`- Etapa: ${input.stage}`] : []),
           /*
            * The name is not here, and that is not an omission to apologise for: it
-           * never enters a file Rampa writes. She writes it in Séneca, where it
-           * belongs.
+           * never enters a file Rampa writes. She writes it where it is registered,
+           * and which platform that is, this file does not know — the sentence comes
+           * from her territory's corpus, or from the generic one.
            */
-          '- Nombre: *lo pones tú en Séneca — yo no lo guardo.*',
+          `- Nombre: ${phraseOf('name-line', input.wording?.phrases, input.wording?.generic)}`,
         ],
         sources: ['el perfil'],
       };

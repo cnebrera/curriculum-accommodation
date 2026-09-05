@@ -244,7 +244,7 @@ export const es = {
      * worked with yet, and the second is a procedural requirement that exists to
      * protect the child rather than the file.
      */
-    'guide-no-work': 'Todavía no he adaptado nada para este alumno, así que no tengo con qué redactar la ACNS. Adapta algo primero y vuelve.',
+    'guide-no-work': 'Todavía no he adaptado nada para este alumno, así que no tengo con qué redactar su adaptación. Adapta algo primero y vuelve.',
     'guide-no-evaluation': 'Sin evaluación psicopedagógica una adaptación significativa no puede seguir adelante: es nula de procedimiento. Si existe y no lo he visto, dímelo.',
     /*
      * Deliberately short here (`027` FR-2509). The sentence that carries the argument
@@ -259,7 +259,7 @@ export const es = {
     'stale-reading': 'Esa hoja se hizo con una lectura que ha cambiado. Vuelve a adaptarla y seguimos desde ahí.',
     'turn-in-flight': 'Todavía estoy con el cambio anterior de este documento. Espera a que termine.',
     'revision-missing': 'Ya no encuentro esa versión en tu carpeta. Las que quedan siguen ahí.',
-    'compose-exam-other-course': 'Un examen de otro curso evalúa otras cosas, y eso lo decide el equipo docente. Tráeme la ACS y lo compongo a ese nivel.',
+    'compose-exam-other-course': 'Un examen de otro curso evalúa otras cosas, y eso lo decide el equipo docente. Tráeme su adaptación curricular y lo compongo a ese nivel.',
     /*
      * `pictogram-language` has **no** entry here, deliberately.
      *

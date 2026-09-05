@@ -109,21 +109,23 @@ export function parseGuideCorpus(raw: string, file = 'instructions/guide.md'): G
  * `undefined` where its «this is not filed» line should be would be a draft that
  * looks filed, which is the one thing `017` exists to prevent. So every key a
  * document prints has a built-in answer, and a missing key is logged, not silent.
+ *
+ * **The draft mark is not in here and cannot be in a corpus** (FR-2709). The word
+ * BORRADOR, its banner and its watermark are Principle VII — a guard — and a guard a
+ * corpus could word is a guard a corpus could empty. What a corpus supplies is what the
+ * document is *called*, never that it is a draft.
  */
 export const MINIMUM_PHRASES: Record<string, string> = {
-  'draft-heading': 'BORRADOR de documento de adaptación curricular',
-  'signed-heading': 'Documento de adaptación curricular',
-  'unsigned-note': '**Sin firmar.** Mientras no la firmes, esto es un borrador.',
+  'draft-title': 'de documento de adaptación curricular',
+  'signed-title': 'Documento de adaptación curricular',
   'not-filed': '**Esto no está presentado.** Rampa no presenta nada: esto es material '
     + 'para llevar a donde se registre en tu territorio.',
   'authorship-footer': '**Rampa no ha escrito esta adaptación**: ha ordenado lo que ya '
     + 'habías hecho para este alumno.',
-  'name-line': 'El nombre lo pones tú donde lo registres — yo no lo guardo.',
+  'name-line': '*lo pones tú donde lo registres — yo no lo guardo.*',
   'report-note': 'Esto no está registrado. Si esta adaptación va al expediente, se '
     + 'registra donde diga la normativa de tu territorio, y eso lo haces tú.',
   'acs-footer': '**Esto es un borrador y no está presentado.**',
-  'draft-banner': 'BORRADOR — sin firmar · no lo presentes todavía',
-  'draft-watermark': 'BORRADOR — SIN FIRMAR',
   'generic-statement': 'No tienes ninguna normativa elegida, así que esto es un '
     + 'borrador genérico: qué documento exige tu territorio, quién lo firma y dónde se '
     + 'registra lo verificas tú con tu orientador u orientadora.',

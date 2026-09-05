@@ -3,7 +3,7 @@ import {
   archivePrevious, stampPicto, bumpVaultSchema, VAULT_SCHEMA_DRAWINGS,
   Vault, VAULT, jobDir, jobIR, jobLearnerDir, jobAdapted, jobAdaptedRevision,
   jobRejected, jobReport, parseIR, annotateInjection, checkBounds, isVerified,
-  selectRecipes, loadLearner, buildReport, loadForRun, RampaError, isGenerated,
+  selectRecipes, loadLearner, buildReport, loadForRun, parseGuideCorpus, RampaError, isGenerated,
   stringifyFrontMatter, injectionNotices, logger, buildAdaptPrompt, schoolYearOf, blockClassesIn,
   checkStructurallyComplete, checkCompleteness, completenessNotice,
   assertProvenance, findUnaccountedBlocks, divergence, studiesFor, applyPictograms,
@@ -15,7 +15,9 @@ import { currentVault } from '../ipc/vault.js';
 import { nameWordSet, knownNames, unknownNamesIn } from '../ipc/names.js';
 import { chosenWords } from '../pictograms/bring.js';
 import { activeProvider } from '../ipc/keys.js';
-import { allRecipes, assertCorpus, loadInstruction, findYearInCorpus, materialKind } from '../corpus/index.js';
+import {
+  allRecipes, assertCorpus, loadInstruction, findYearInCorpus, materialKind, normativeFor,
+} from '../corpus/index.js';
 import { currentPictogramSet } from '../pictograms/access.js';
 import { recordCost } from '../ipc/cost.js';
 
@@ -456,8 +458,23 @@ export async function runAdaptation(
    */
   await bumpVaultSchema(vault, VAULT_SCHEMA_DRAWINGS);
 
+  /*
+   * Which normativa names what this adaptation is (`029` T010/T012, FR-2705).
+   *
+   * The report's opening sentence used to name one community's document and one
+   * community's platform, in a string literal, in the document a teacher reads before
+   * she signs. The learner's own corpus wins over the vault's, like everywhere else.
+   */
+  const normative = await normativeFor(vault, learner.profile.normative_corpus);
+  const genericPhrases = parseGuideCorpus(await loadInstruction('guide')).phrases;
+
   const report = buildReport({
     adapted, selection,
+    wording: {
+      generic: genericPhrases,
+      ...(normative.of === 'corpus' ? { phrases: normative.corpus.phrases } : {}),
+    },
+    provenanceLine: normative.provenanceLine,
     /*
      * Only when they are on (FR-1607). Where she has left them off the report says
      * nothing at all — a tool that keeps proposing pictograms is a tool arguing with

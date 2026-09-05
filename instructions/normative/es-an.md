@@ -93,28 +93,44 @@ documents:
 
 # Las frases que se IMPRIMEN. Estaban en TypeScript, que es donde no puede corregirlas
 # quien sabe si son correctas.
+#
+# Los saltos de línea son los que se imprimen: lo que escribes aquí es lo que sale, sin
+# que nadie lo vuelva a partir (Principio I). Por eso van con `|` y no con `>`.
+#
+# Lo que NO está aquí, y no puede estar: la palabra BORRADOR, la marca de borrador y su
+# marca de agua. Eso es el Principio VII, es una comprobación, y una comprobación que un
+# corpus pudiera redactar es una comprobación que un corpus puede vaciar.
 phrases:
-  draft-heading: BORRADOR de adaptación curricular NO significativa (ACNS)
-  signed-heading: Adaptación curricular NO significativa (ACNS)
-  unsigned-note: >
-    **Sin firmar.** Mientras no la firmes, esto es un borrador: si lo copias a Séneca
-    ahora, estarás presentando algo que no ha revisado nadie.
-  not-filed: >
+  # Lo que sigue a «# BORRADOR », que lo pone el código.
+  draft-title: "de adaptación curricular NO significativa (ACNS)"
+  signed-title: "Adaptación curricular NO significativa (ACNS)"
+  not-filed: |
     **Esto no está presentado.** El registro es **Séneca**: esto es material para
     llevar allí.
-  authorship-footer: >
-    **La ACNS la coordina el tutor o la tutora**, y la propuesta curricular la completa
-    el profesorado del área. Rampa no la ha escrito: ha ordenado lo que ya había hecho
-    para este alumno.
-  name-line: >
-    El nombre lo pones tú en Séneca — yo no lo guardo.
-  report-note: >
+  authorship-footer: |
+    **La ACNS la coordina el tutor o la tutora**, y la propuesta curricular la
+    completa el profesorado del área. Rampa no la ha escrito: ha ordenado lo que ya
+    había hecho para este alumno.
+  name-line: "*lo pones tú en Séneca — yo no lo guardo.*"
+  report-note: |
+    Lo que hay aquí es una **adaptación curricular no significativa (ACNS)**: he
+    cambiado cómo se presenta, en qué orden y cuánto hay por página. **Ningún
+    objetivo ni criterio de evaluación cambia** — eso sería una adaptación
+    significativa, y no la decide una herramienta.
+
     Esto no está registrado. El registro es **Séneca**: si esta adaptación va al
     expediente, la ACNS la coordina el tutor o la tutora y se registra allí.
-  acs-footer: >
+  acs-footer: |
     **Esto es un borrador y no está presentado.** El registro es Séneca.
-  draft-banner: BORRADOR de ACNS — sin firmar · no lo lleves a Séneca todavía
-  draft-watermark: BORRADOR DE ACNS — SIN FIRMAR
+
+    Según la normativa, en una adaptación curricular significativa:
+
+    - La **redacta el profesorado especialista en educación especial** (PT).
+    - **Colabora** el profesorado del área.
+    - **Asesora** el equipo o departamento de orientación.
+
+    Y requiere una **evaluación psicopedagógica previa**. Sin ella es nula de
+    procedimiento, por mucho que el documento parezca completo.
 
 # Palabras clínicas que usan los documentos de este territorio y que la lista base de
 # `instructions/guide.md` no trae. **Sólo añade**: de la lista base no se puede quitar

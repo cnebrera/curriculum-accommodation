@@ -38,18 +38,26 @@ export function draftMark(doc: HasFrontMatter, signedOff?: boolean): DraftMark |
   if (signedOff === true || isSignedOff(doc)) return null;
 
   /*
-   * The ACNS says something else again (P46, review COD-22).
+   * The adaptation document says something else again (P46, review COD-22).
    *
-   * Not «no entregar al alumnado» — nobody was ever going to hand an ACNS to a
-   * child. What must not happen to this one is being **filed**: the record is Séneca,
-   * and the way an unreviewed draft gets there is a copy-paste out of the printed
-   * page. So the mark names that, and it is the only banner in Rampa that talks about
-   * where a document must not go rather than to whom.
+   * Not «no entregar al alumnado» — nobody was ever going to hand one of these to a
+   * child. What must not happen to it is being **filed**, and the way an unreviewed
+   * draft gets filed is a copy-paste out of the printed page. So the mark names that,
+   * and it is the only banner in Rampa that talks about where a document must not go
+   * rather than to whom.
+   *
+   * ## Why this text is not a corpus phrase (`029` FR-2709)
+   *
+   * Because the draft mark is Principle VII and Principle VII is a guard. A corpus
+   * supplies what a document is *called*; it has no field for the mark, and it must not
+   * — a banner a stranger's Markdown file could word is a banner it could empty. So this
+   * says «no lo presentes» rather than naming a platform: territory-neutral because it
+   * is code's, not because a territory was blanked out of it.
    */
   if (doc.frontMatter['kind'] === 'acns') {
     return {
-      banner: 'BORRADOR de ACNS — sin firmar · no lo lleves a Séneca todavía',
-      watermark: 'BORRADOR DE ACNS — SIN FIRMAR',
+      banner: 'BORRADOR de adaptación curricular — sin firmar · no lo presentes todavía',
+      watermark: 'BORRADOR — SIN FIRMAR',
     };
   }
 

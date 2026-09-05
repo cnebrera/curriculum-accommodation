@@ -91,7 +91,7 @@ test.describe('an exam of another course is the teaching team’s decision', () 
     // The corpus sentence, not a code fallback: it carries the argument a PT must be
     // able to correct, and it names the way past it.
     expect(said).toContain('equipo docente');
-    expect(said).toContain('ACS');
+    expect(said).toContain('Su adaptación curricular');
     await app.close();
   });
 
@@ -119,7 +119,7 @@ test.describe('an exam of another course is the teaching team’s decision', () 
      * be ignored. The claim this test makes is about the gate, and the gate is asserted.
      */
     expect(said).not.toContain('equipo docente');
-    expect(said).not.toContain('ACS');
+    expect(said).not.toContain('Su adaptación curricular');
     expect(said, 'it should not have composed for real').not.toBe('ok');
     await app.close();
   });

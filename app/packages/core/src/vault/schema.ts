@@ -139,6 +139,26 @@ export const profileSchema = z.object({
     overrides: z.record(z.string(), z.string()).default({}),
   }).optional(),
   /**
+   * Which normativa **this** learner's documents follow (`029` FR-2702).
+   *
+   * A corpus id, `'none'`, or absent. Beside `pictograms.overrides` because it is the
+   * same shape of fact: a per-learner exception to something that is otherwise a
+   * property of her school, and it earns its place for the same reason — the exception
+   * is real and rare.
+   *
+   * The two real cases:
+   *
+   * - **The child who arrived in October** from another comunidad, whose documents her
+   *   colleagues there will read.
+   * - **`'none'`**, the child schooled across territories, whose documents must claim
+   *   neither. That is why it is a string and not an optional id: «follow the school's»
+   *   and «follow nobody's» are different answers, and absent can only mean the first.
+   *
+   * Absent is absent, never defaulted, and it never appears in learner-facing output —
+   * `011` FR-910's rule, extended to it by the existing output check.
+   */
+  normative_corpus: z.string().optional(),
+  /**
    * The vehicular language, still being acquired (`033` FR-3101, data-model R1).
    *
    * ## Beside the axes, never inside them

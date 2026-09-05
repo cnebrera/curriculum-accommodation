@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { join, dirname } from 'node:path';
 import {
   draftAcns, acnsDocument, acnsIsSigned, signAcns, renderAcnsHTML, draftMark,
-  ACNS_DRAFT_HEADING, ACNS_SIGNED_HEADING, nextAcnsRevision,
+  DRAFT_PREFIX, nextAcnsRevision, parseNormativeCorpus,
   parseGuideCorpus, learnerAcns, learnerAcnsRevision, learnerAcnsPdf,
   Vault, planForget, executeForget, verifyForgotten,
   type RecordEntry, type NameStore,
@@ -30,6 +30,22 @@ import {
 const root = join(dirname(new URL(import.meta.url).pathname), '..', '..', '..', '..');
 const corpus = parseGuideCorpus(readFileSync(join(root, 'instructions', 'guide.md'), 'utf8'));
 
+/**
+ * Drafted under Andalucía, because the sentences this file is about are hers (`029`).
+ *
+ * The standing note — «esto no está presentado», «la coordina el tutor» — is exactly
+ * the territory-specific half that moved to `instructions/normative/es-an.md`. Asserting
+ * it against the generic corpus after the extraction would assert that generic mode
+ * names a platform, which is the thing `029` exists to stop.
+ */
+const esAn = parseNormativeCorpus(
+  readFileSync(join(root, 'instructions', 'normative', 'es-an.md'), 'utf8'), 'es-an.md')!;
+const WORDING = {
+  phrases: esAn.phrases, generic: corpus.phrases, register: esAn.register,
+};
+const SIGNED_TITLE = esAn.phrases['signed-title']!;
+const DRAFT_HEADING = DRAFT_PREFIX + esAn.phrases['draft-title'];
+
 const entry = (): RecordEntry => ({
   jobId: 'job-1', learner: 'A1B2', date: '2026-03-03', schoolYear: '2025-2026',
   kind: 'worksheet', signedOff: true, revision: 1,
@@ -44,9 +60,10 @@ const entry = (): RecordEntry => ({
 const draft = () => draftAcns({
   learnerCode: 'A1B2', year: '5.º de Primaria', stage: 'Primaria',
   sections: corpus.draftSections, on: '2026-06-12', overlay: null, record: [entry()],
+  wording: WORDING,
 }).markdown;
 
-const stored = () => acnsDocument(draft(), 'A1B2', '2026-06-12');
+const stored = () => acnsDocument(draft(), 'A1B2', '2026-06-12', SIGNED_TITLE);
 
 describe('the document she keeps', () => {
   it('says what it is, and who it is about, without her name', () => {
@@ -94,7 +111,7 @@ describe('the mark is in the file, not only on the screen', () => {
    * she opens it and copies it into Séneca.
    */
   it('the stored draft carries the mark', () => {
-    expect(stored()).toContain(ACNS_DRAFT_HEADING);
+    expect(stored()).toContain(DRAFT_HEADING);
     expect(stored()).toContain('Sin firmar');
   });
 
@@ -112,9 +129,9 @@ describe('the signature, and the only thing it removes', () => {
 
   it('takes the mark off', () => {
     const out = signed();
-    expect(out).not.toContain(ACNS_DRAFT_HEADING);
+    expect(out).not.toContain(DRAFT_HEADING);
     expect(out).not.toContain('Sin firmar');
-    expect(out).toContain(ACNS_SIGNED_HEADING);
+    expect(out).toContain(`# ${SIGNED_TITLE}`);
   });
 
   it('records who and when, in the document and in the front matter', () => {
@@ -159,7 +176,7 @@ describe('the signature, and the only thing it removes', () => {
    * recognise.
    */
   it('refuses a file that no longer has the mark', () => {
-    const mangled = stored().replace(ACNS_DRAFT_HEADING, '# Mi ACNS');
+    const mangled = stored().replace(DRAFT_HEADING, '# Mi ACNS');
     expect(() => signAcns(mangled, 'la tutora', '2026-06-20'))
       .toThrow(/no sé en qué estado está/);
   });
@@ -170,20 +187,37 @@ describe('the signature, and the only thing it removes', () => {
 });
 
 describe('the printed page, and where its mark comes from', () => {
-  it('the banner names what must not happen: it reaching Séneca unsigned', () => {
+  it('the banner names what must not happen: it being presented unsigned', () => {
     const html = renderAcnsHTML(stored());
-    expect(html).toContain('no lo lleves a Séneca todavía');
-    // Not «no entregar al alumnado»: nobody was ever going to hand an ACNS to a child,
-    // and a warning about the wrong risk is a warning she learns to skip.
+    expect(html).toContain('no lo presentes todavía');
+    // Not «no entregar al alumnado»: nobody was ever going to hand one of these to a
+    // child, and a warning about the wrong risk is a warning she learns to skip.
     expect(html).not.toContain('no entregar al alumnado');
+  });
+
+  it('and the banner names no platform, because the mark is code\'s and not a corpus\'s', () => {
+    /*
+     * `029` FR-2709. The draft mark is Principle VII, which makes it a guard, and a
+     * corpus has no field it could word one through — a banner a stranger's Markdown
+     * file could write is a banner it could empty. So it says «no lo presentes» rather
+     * than naming a register: territory-neutral because it is code's, not because a
+     * territory was blanked out of it.
+     */
+    const html = renderAcnsHTML(stored());
+    const banner = /<[^>]*draft-banner[^>]*>([\s\S]*?)<\//.exec(html)?.[1] ?? '';
+    expect(banner).toContain('BORRADOR');
+    expect(banner).not.toContain('Séneca');
+    // The document body still says «Séneca», through her corpus — that is the move,
+    // not the deletion. What must not carry it is the mark.
+    expect(html).toContain('Séneca');
   });
 
   /**
    * Page two of a stapled draft carries nothing otherwise, and the way an unsigned
-   * ACNS reaches the official record is somebody reading it off paper.
+   * draft reaches the official record is somebody reading it off paper.
    */
   it('watermarks every page, not just the first', () => {
-    expect(renderAcnsHTML(stored())).toContain('BORRADOR DE ACNS — SIN FIRMAR');
+    expect(renderAcnsHTML(stored())).toContain('BORRADOR — SIN FIRMAR');
   });
 
   it('the signed one has neither', () => {

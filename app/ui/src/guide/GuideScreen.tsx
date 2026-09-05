@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Page, Section, Field, Actions } from '../shell/Page.js';
 import { Callout } from '../components/Callout.js';
+import { useNormative, documentName } from '../data/normative.js';
 import { InjectionNotice } from '../components/InjectionNotice.js';
 import {
   useReadGuide, useApplyGuide, useDraftAcns, useAskGuide, useHelpWithAcs,
@@ -41,7 +42,7 @@ export function GuideScreen({
    * This screen said «trae primero el documento y comprueba que lo he leído bien»
    * and offered **no control to do it**: a note describing a step with no door.
    * The only route was the door → «Adaptar algo que tengo» → choose a material
-   * kind (is a DIAC «una ficha» or «un examen»?) → bring the photo → verify →
+   * kind (is an official adaptation document «una ficha» or «un examen»?) → bring the photo → verify →
    * abandon the adapt flow → walk back to the learner. So the entry point of a
    * feature marked «Built» was a dead end.
    */
@@ -78,7 +79,7 @@ export function GuideScreen({
      * The kind travels with the measures (decision P12). The screen already knew
      * it — it renders «esto parece una adaptación significativa» from the same
      * value — and it stopped there, so the overlay never recorded whether the
-     * document was an ACNS or an ACS. That is the one fact that tells a later
+     * document modified objectives or not. That is the one fact that tells a later
      * adaptation it may work at the modified level.
      */
     const done = await apply.run(learnerCode, measures, document.trim() || 'la adaptación curricular',
@@ -193,9 +194,9 @@ export function GuideScreen({
 
       {reading.kind === 'acs' ? (
         <Callout intent="decide" title="Esto parece una adaptación significativa">
-          Una ACS modifica objetivos y criterios de evaluación. Yo aplico sus medidas
-          de presentación igual que las de una ACNS — pero lo que se modifica lo
-          decidió el equipo docente, y yo no toco esa parte.
+          Este documento modifica objetivos y criterios de evaluación. Yo aplico sus
+          medidas de presentación igual que las de una adaptación que no los toca — pero
+          lo que se modifica lo decidió el equipo docente, y yo no toco esa parte.
         </Callout>
       ) : null}
 
@@ -274,7 +275,7 @@ export function GuideScreen({
         <Field label="De qué documento es" htmlFor="doc"
                help="Para que su fichero de adaptaciones diga de dónde salió esto.">
           <input className="input" id="doc" type="text" value={document}
-                 placeholder="Por ejemplo: el DIAC de marzo, o la ACNS del tutor"
+                 placeholder="Por ejemplo: el documento de marzo, o el del tutor"
                  onChange={(e) => setDocument(e.target.value)} />
         </Field>
       </Section>
@@ -283,12 +284,14 @@ export function GuideScreen({
 }
 
 /**
- * The ACNS draft (T019-T022, US2).
+ * The draft of the adaptation that changes no objective (T019-T022, US2).
  *
- * The one Rampa is *entitled* to help with: an ACNS changes no objective, which is
- * the line Principle III already refuses to cross. Every measure in it traces to an
- * adaptation Rampa already made, and what cannot be sourced is **named** rather than
- * filled in.
+ * The one Rampa is *entitled* to help with, because it changes no objective — the line
+ * Principle III already refuses to cross. Every measure in it traces to an adaptation
+ * Rampa already made, and what cannot be sourced is **named** rather than filled in.
+ *
+ * What her territory calls it comes from her normativa (`029` T009); with none selected
+ * the screen says what the document does, which is true everywhere.
  */
 export function AcnsDraftScreen({ learnerCode, learnerName, onBack }: {
   learnerCode: string;
@@ -298,20 +301,24 @@ export function AcnsDraftScreen({ learnerCode, learnerName, onBack }: {
   const draft = useDraftAcns();
   const [result, setResult] = useState<Awaited<ReturnType<typeof draft.run>>>(undefined);
   /**
-   * Which área this ACNS is for (`032` FR-3004).
+   * Which área this draft is for (`032` FR-3004).
    *
-   * The regulation writes an ACNS **per área**, and the curricular level she has recorded
+   * The regulation writes one **per área**, and the curricular level she has recorded
    * for Matemáticas is not the one for Lengua — so a draft that ignores the subject cites
    * the wrong gap for one of them. Optional: without it the draft uses the general value
    * and says, in the document, that it did.
    */
   const [subject, setSubject] = useState('');
   const areas = useKnownAreas(learnerCode);
+  const normative = useNormative();
+  const unchanged = documentName(
+    normative.state === 'ready' ? normative.value : null, 'unchanged');
 
   return (
     <Page
-      title={`Borrador de ACNS para ${learnerName ?? learnerCode}`}
-      lede="No la escribo yo: ordeno lo que ya había hecho para él. Lo que no puedo sacar de ahí te lo señalo."
+      title={`Borrador de la adaptación de ${learnerName ?? learnerCode}`}
+      lede={`Aquí es ${unchanged}. No la escribo yo: ordeno lo que ya había hecho para él. `
+        + 'Lo que no puedo sacar de ahí te lo señalo.'}
       actions={
         <Actions
           primary={
@@ -328,7 +335,7 @@ export function AcnsDraftScreen({ learnerCode, learnerName, onBack }: {
       {draft.error ? <Callout intent="danger">{draft.error.message}</Callout> : null}
 
       <Section title="¿De qué área?"
-               lede="La normativa hace una ACNS por área. Si me la dices, cito lo que tengas apuntado de esa; si no, el nivel general.">
+               lede="La normativa hace uno por área. Si me la dices, cito lo que tengas apuntado de esa; si no, el nivel general.">
         <Field label="Área" htmlFor="acns-area">
           <input className="input" id="acns-area" style={{ maxWidth: '22em' }}
                  value={subject} onChange={(e) => setSubject(e.target.value)} />
@@ -392,7 +399,7 @@ export function AcnsDraftScreen({ learnerCode, learnerName, onBack }: {
  *
  * The draft was a string on a screen. Nothing kept it, nothing printed it, and the
  * mark FR-1516 calls «removable only by sign-off» had no signature that could remove
- * it — so what actually happened is that she retyped it into Séneca and the mark was
+ * it — so what actually happened is that she retyped it into her register and the mark was
  * lost in the copy-paste, with no review having happened anywhere.
  *
  * ## Why saving is a separate press
@@ -414,7 +421,7 @@ function AcnsDocumentSection({ learnerCode }: { learnerCode: string }) {
 
   if (showing !== null) {
     return (
-      <DocumentViewer html={showing} title="La ACNS, como se imprime"
+      <DocumentViewer html={showing} title="El documento, como se imprime"
                       onClose={() => setShowing(null)} />
     );
   }
@@ -473,13 +480,13 @@ function AcnsDocumentSection({ learnerCode }: { learnerCode: string }) {
 
       {signed ? (
         <Callout intent="info" title="Firmada">
-          Ya no lleva la marca de borrador. Lo que sigue faltando es llevarla a Séneca:
+          Ya no lleva la marca de borrador. Lo que sigue faltando es presentarla:
           el registro no es este fichero.
         </Callout>
       ) : exists ? (
         <>
           <Field label="Quién la firma" htmlFor="acns-role"
-                 help="Una ACNS la coordina el tutor o la tutora, y quién la ha revisado es parte del documento.">
+                 help="Quién ha revisado el documento es parte del documento.">
             <input className="input" id="acns-role" type="text" value={role}
                    placeholder="Por ejemplo: la tutora, o el equipo docente"
                    onChange={(e) => setRole(e.target.value)} />
@@ -497,7 +504,7 @@ function AcnsDocumentSection({ learnerCode }: { learnerCode: string }) {
             Firmarla y quitarle la marca
           </button>
           <p className="field-help">
-            Firmar dice que la has leído. No la presenta: eso sigue siendo cosa tuya, en Séneca.
+            Firmar dice que la has leído. No la presenta: eso sigue siendo cosa tuya.
           </p>
         </>
       ) : null}
@@ -575,13 +582,13 @@ export function GuideConversation({ jobId, onBack }: { jobId: string; onBack: ()
 }
 
 /**
- * Helping her write the ACS (T025/T026, US4).
+ * Helping her write the adaptation that modifies objectives (T025/T026, US4).
  *
  * **She** states which objectives the team decided to modify. Rampa helps her express
  * them and never proposes the list — and refuses outright where no evaluación
  * psicopedagógica is recorded, without drafting around it.
  *
- * The checkbox is not a formality. An ACS without that report is procedurally void,
+ * The checkbox is not a formality. One of these without that report is procedurally void,
  * and a document that *looks* complete invites somebody to file it — so the person
  * harmed by a plausible draft is the child.
  */
@@ -595,6 +602,9 @@ export function AcsHelpScreen({ learnerCode, learnerName, onBack }: {
   const [decided, setDecided] = useState('');
   const [answer, setAnswer] = useState<string | null>(null);
   const [declined, setDeclined] = useState(false);
+  const normative = useNormative();
+  const modified = documentName(
+    normative.state === 'ready' ? normative.value : null, 'modified');
 
   const go = async (): Promise<void> => {
     const r = await help.run(learnerCode, evaluation, decided.trim());
@@ -605,8 +615,9 @@ export function AcsHelpScreen({ learnerCode, learnerName, onBack }: {
 
   return (
     <Page
-      title={`Ayuda con la ACS de ${learnerName ?? learnerCode}`}
-      lede="Tú traes lo que ha decidido el equipo docente. Yo te ayudo a redactarlo."
+      title={`Ayuda con la adaptación significativa de ${learnerName ?? learnerCode}`}
+      lede={`Aquí es ${modified}. Tú traes lo que ha decidido el equipo docente. Yo te `
+        + 'ayudo a redactarlo.'}
       actions={
         <Actions
           primary={
@@ -640,7 +651,7 @@ export function AcsHelpScreen({ learnerCode, learnerName, onBack }: {
           <span>Existe evaluación psicopedagógica para este alumno</span>
         </label>
         <p className="field-help">
-          Sin ella una ACS es <strong>nula de procedimiento</strong>. No te voy a
+          Sin ella suele ser <strong>nula de procedimiento</strong>. No te voy a
           redactar un documento que parezca completo sin eso: quien sale perjudicado
           es él, no el expediente. Yo no guardo el informe ni lo resumo — sólo necesito
           saber que existe.

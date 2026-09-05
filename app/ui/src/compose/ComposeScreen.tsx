@@ -330,7 +330,7 @@ export function ComposeScreen({ learners, onComposed, onBack }: {
         */}
         <Field label="¿Para cuántas sesiones es?" htmlFor="sesiones"
                help={countsSomething
-                 ? 'Se apunta en el material, y la ACNS lo usa para la temporalización.'
+                 ? 'Se apunta en el material, y el borrador de su adaptación lo usa para la temporalización.'
                  : 'Con esto ajusto la extensión del texto. Es una estimación mía: cuánto tarda él en una página lo sabes tú.'}>
           <div className="row gap2" style={{ alignItems: 'center' }}>
             <input className="input" id="sesiones" type="number" min={1} max={20}

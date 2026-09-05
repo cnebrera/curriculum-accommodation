@@ -6,6 +6,7 @@ import { HandoverReview } from './HandoverReview.js';
 import { ForgetLearner } from './ForgetLearner.js';
 import type { LearnerTab } from '../nav/route.js';
 import { StructureScreen } from '../structure/StructureScreen.js';
+import { useNormative, documentName, registerName } from '../data/normative.js';
 
 /**
  * What is inside a learner (020 T011-T014).
@@ -13,21 +14,88 @@ import { StructureScreen } from '../structure/StructureScreen.js';
  * ## The six cards
  *
  * Until now these were **cards stacked underneath the edit-profile form** in
- * `LearnersScreen`: the record, the guide, the ACNS draft, ACS help, the handover and
- * erasure. To reach any of them she opened a learner to *edit* them and scrolled. Each
- * card had a heading, a paragraph explaining itself and a button — which is what a
- * destination looks like when it has nowhere to live.
+ * `LearnersScreen`: the record, the guide, the draft of her adaptation document, help
+ * with the significant one, the handover and erasure. To reach any of them she opened a
+ * learner to *edit* them and scrolled. Each card had a heading, a paragraph explaining
+ * itself and a button — which is what a destination looks like when it has nowhere to
+ * live.
  *
  * They are destinations now. The paragraphs survive, because they were good: «no la
- * escribo yo, la ordeno» is the sentence that tells a PT what the ACNS draft actually
- * is, and it belongs on the section rather than in a card fighting for space with a
- * form.
+ * escribo yo, la ordeno» is the sentence that tells a PT what the draft actually is, and
+ * it belongs on the section rather than in a card fighting for space with a form.
+ *
+ * ## And they call the document what her normativa calls it (`029` T009)
+ *
+ * These paragraphs said «ACNS», «ACS» and «Séneca» — Andalucía's words, on the screen of
+ * every teacher in the country. They now come from the corpus she selected, and generic
+ * mode says what the document *does* rather than pretending to know its name.
  *
  * ## Nothing here calls a provider
  *
  * Every section is a screen that already existed, reached from a menu instead of from a
  * card. `020` moves things; `003`, `004`, `014` and `017` still own what they do.
  */
+
+/**
+ * The two official documents, named as her normativa names them (`029` T009).
+ *
+ * Its own component because it is the one section that has to **load** something before
+ * it can word itself — and a hook cannot live inside the `switch` above.
+ */
+function CurriculumSection({ code, name, onGuide }: {
+  code: string;
+  name?: string;
+  onGuide: (what: 'guide' | 'acns' | 'acs') => void;
+}) {
+  const normative = useNormative();
+  const n = normative.state === 'ready' ? normative.value : null;
+  const unchanged = documentName(n, 'unchanged');
+  const modified = documentName(n, 'modified');
+
+  return (
+    <Page title={`La adaptación curricular de ${name ?? code}`}
+          lede="Lo oficial: lo que te hayan dado, y lo que puedo ordenarte a partir de lo que ya llevas hecho.">
+      <Section title="Si te han dado el documento"
+               lede="Me quedo con sus medidas y las aplico a todo lo que adapte para él. El diagnóstico no lo guardo.">
+        <div className="row gap2" style={{ flexWrap: 'wrap' }}>
+          <button className="btn btn-primary" onClick={() => onGuide('guide')}>
+            Traer el documento que me han dado
+          </button>
+          <button className="btn" onClick={() => onGuide('acns')}>
+            Borrador de su adaptación
+          </button>
+        </div>
+        <p className="small">
+          Aquí es <strong>{unchanged}</strong>. La ordeno con lo que ya llevas hecho —{' '}
+          <strong>no la escribo yo</strong>. Y no queda registrada: eso se registra{' '}
+          {registerName(n)}, y esto es material para llevar allí.
+        </p>
+        {n?.of === 'generic' && (
+          <p className="small">
+            No tienes ninguna normativa elegida, así que hablo en general. Si quieres que
+            lo llame como se llama en tu comunidad, elígela en Configuración ▸ Normativa.
+          </p>
+        )}
+      </Section>
+
+      {/*
+        Last and set apart, because it is the only thing in this application that
+        touches what is *asked* of him (Principle III). The card that used to say
+        this said it well, so it says it here.
+      */}
+      <Section title={`Si estás redactando ${modified}`}
+               lede="Una adaptación significativa modifica objetivos y criterios.">
+        <p className="small">
+          Eso lo decide el equipo docente con Orientación, no yo. Cuando ya está
+          decidido, te ayudo a redactarlo.
+        </p>
+        <div className="row">
+          <button className="btn" onClick={() => onGuide('acs')}>Ayúdame con ello</button>
+        </div>
+      </Section>
+    </Page>
+  );
+}
 
 export function LearnerSection({
   code, name, tab, onGuide, onReuse, onReview, onPrepare, onErased, onConfigure,
@@ -113,42 +181,7 @@ export function LearnerSection({
       );
 
     case 'curriculum':
-      return (
-        <Page title={`La adaptación curricular de ${name ?? code}`}
-              lede="Lo oficial: lo que te hayan dado, y lo que puedo ordenarte a partir de lo que ya llevas hecho.">
-          <Section title="Si te han dado el documento"
-                   lede="Me quedo con sus medidas y las aplico a todo lo que adapte para él. El diagnóstico no lo guardo.">
-            <div className="row gap2" style={{ flexWrap: 'wrap' }}>
-              <button className="btn btn-primary" onClick={() => onGuide('guide')}>
-                Traer el documento que me han dado
-              </button>
-              <button className="btn" onClick={() => onGuide('acns')}>
-                Borrador de la ACNS
-              </button>
-            </div>
-            <p className="small">
-              La ACNS la ordeno con lo que ya llevas hecho — <strong>no la escribo yo</strong>.
-              Y no queda registrada: el registro es Séneca, y esto es material para llevar allí.
-            </p>
-          </Section>
-
-          {/*
-            Last and set apart, because it is the only thing in this application that
-            touches what is *asked* of him (Principle III). The card that used to say
-            this said it well, so it says it here.
-          */}
-          <Section title="Si estás redactando una ACS"
-                   lede="Una adaptación significativa modifica objetivos y criterios.">
-            <p className="small">
-              Eso lo decide el equipo docente con Orientación, no yo. Cuando ya está
-              decidido, te ayudo a redactarlo.
-            </p>
-            <div className="row">
-              <button className="btn" onClick={() => onGuide('acs')}>Ayúdame con la ACS</button>
-            </div>
-          </Section>
-        </Page>
-      );
+      return <CurriculumSection code={code} {...(name ? { name } : {})} onGuide={onGuide} />;
 
     case 'handover':
       return (

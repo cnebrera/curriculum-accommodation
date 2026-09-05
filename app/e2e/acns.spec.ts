@@ -64,6 +64,12 @@ async function seed(page: Page, vault: string): Promise<string> {
     await window.rampa.vault.write(`material/${job}/${c}/report.md`,
       '# Informe\n\nReceta: `frase-corta@1`\n');
   }, code);
+  /*
+   * Andalucía selected, because this file is about the document she signs and the
+   * sentences it prints are hers (`029` T016). With nothing selected the same flow runs
+   * in generic mode — that case is `normative.spec.ts`, where it belongs.
+   */
+  await page.evaluate(() => window.rampa.normative.select('es-an'));
   await page.evaluate((c) => window.rampa.record.forLearner(c), code);
   await page.reload();
   await page.waitForLoadState('domcontentloaded');
@@ -82,7 +88,7 @@ test.describe('the ACNS is a document, and the signature unmarks it', () => {
     code = await seed(page, vault);
     await intoLearner(page);
     await toTab(page, 'curriculum');
-    await page.getByRole('button', { name: 'Borrador de la ACNS' }).click();
+    await page.getByRole('button', { name: 'Borrador de su adaptación' }).click();
     await page.getByRole('button', { name: 'Hacer el borrador' }).click();
     await expect(page.getByRole('heading', { name: 'El borrador' })).toBeVisible();
   });
@@ -114,10 +120,17 @@ test.describe('the ACNS is a document, and the signature unmarks it', () => {
   test('and she can see the page she would print, with its banner', async () => {
     await page.getByRole('button', { name: 'Verla como se imprime' }).click();
     await expect(page.locator('.viewer')).toBeVisible();
-    // The banner names the risk that is actually in play: it reaching the official
-    // record unreviewed. Not «no entregar al alumnado» — nobody hands an ACNS to a child.
+    /*
+     * The banner names the risk that is actually in play: it reaching the official
+     * record unreviewed. Not «no entregar al alumnado» — nobody hands one of these to a
+     * child.
+     *
+     * And it names no platform. The mark is Principle VII, which makes it a guard, and
+     * `029` FR-2709 gives a corpus no field to word one through: what her normativa says
+     * is inside the document, where she reads it.
+     */
     await expect(page.frameLocator('.viewer iframe').locator('.draft-banner'))
-      .toContainText('no lo lleves a Séneca todavía');
+      .toContainText('no lo presentes todavía');
     await page.getByRole('button', { name: 'Cerrar' }).click();
   });
 

@@ -3,7 +3,8 @@ import { readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import {
   draftAcns, requireRecordedWork, guideSection, appendGuideSection, hasGuideMeasures,
-  GUIDE_HEADING, parseGuideCorpus, type RecordEntry, type Measure,
+  GUIDE_HEADING, parseGuideCorpus, parseNormativeCorpus,
+  type RecordEntry, type Measure,
 } from '../src/index.js';
 
 /**
@@ -26,9 +27,14 @@ const entry = (over: Partial<RecordEntry> = {}): RecordEntry => ({
   ...over,
 });
 
+/** Drafted under Andalucía, because «Séneca» is hers and not the product's (`029`). */
+const esAn = parseNormativeCorpus(
+  readFileSync(join(root, 'instructions', 'normative', 'es-an.md'), 'utf8'), 'es-an.md')!;
+
 const base = {
   learnerCode: 'A1B2', year: '5.º de Primaria', stage: 'Primaria',
   sections: corpus.draftSections, on: '2026-06-12', overlay: null,
+  wording: { phrases: esAn.phrases, generic: corpus.phrases, register: esAn.register },
 };
 
 describe('no recorded work, no draft', () => {
@@ -47,7 +53,7 @@ describe('no recorded work, no draft', () => {
 
 describe('nothing may look filed', () => {
   /** SC-1506, FR-1502, and it is above the content where it cannot be scrolled past. */
-  it('says Séneca is the record, before anything else', () => {
+  it('says her register is the record, before anything else', () => {
     const { markdown } = draftAcns({ ...base, record: [entry()] });
 
     expect(markdown).toContain('BORRADOR');
@@ -68,6 +74,27 @@ describe('nothing may look filed', () => {
     const { markdown } = draftAcns({ ...base, record: [entry()] });
     expect(markdown).toContain('A1B2');
     expect(markdown).toContain('lo pones tú en Séneca');
+  });
+
+  /**
+   * And with no normativa selected it says all of that **without naming a platform**
+   * (`029` FR-2703).
+   *
+   * The half that makes generic mode a product rather than a blanked Andalucía: the
+   * draft still refuses to look filed, still declines authorship and still keeps the
+   * name out — it simply does not claim to know where she registers things, because it
+   * does not.
+   */
+  it('and generic mode refuses to look filed without naming anybody\'s platform', () => {
+    const { markdown } = draftAcns({
+      ...base, record: [entry()],
+      wording: { generic: corpus.phrases },
+    });
+    expect(markdown).toContain('BORRADOR');
+    expect(markdown).toContain('Esto no está presentado');
+    expect(markdown).toContain('donde se registre en tu territorio');
+    expect(markdown).not.toContain('Séneca');
+    expect(markdown).not.toContain('ACNS');
   });
 });
 
@@ -302,7 +329,9 @@ describe('an ordinary adaptation says what it is', () => {
      * between. Asserting the raw string failed on its own formatting — the seventh time
      * in this project, and the reason the helper is now written out every time.
      */
-    const flat = buildReport({ adapted }).markdown.replace(/^>\s?/gm, '').replace(/\s+/g, ' ');
+    const wording = { phrases: esAn.phrases, generic: corpus.phrases };
+    const flat = buildReport({ adapted, wording }).markdown
+      .replace(/^>\s?/gm, '').replace(/\s+/g, ' ');
 
     expect(flat).toContain('adaptación curricular no significativa (ACNS)');
     // And the limit, which is the other half of naming it.
@@ -310,11 +339,30 @@ describe('an ordinary adaptation says what it is', () => {
     expect(flat).toContain('no la decide una herramienta');
   });
 
+  it('and with no normativa selected it still states the limit, without an acronym', async () => {
+    const { buildReport, parseIR } = await import('../src/index.js');
+    /*
+     * `029` FR-2703. The limit — «ningún objetivo cambia» — is Principle III and belongs
+     * to everybody; the acronym for the document belongs to a territory. Generic mode
+     * keeps the first and drops the second, which is the difference between a product
+     * and a blanked one.
+     */
+    const flat = buildReport({
+      adapted: parseIR(['---', '---', '', '::: {#b1 .exercise}', 'x', ':::'].join('\n')),
+      wording: { generic: corpus.phrases },
+    }).markdown.replace(/^>\s?/gm, '').replace(/\s+/g, ' ');
+
+    expect(flat).toContain('Ningún objetivo ni criterio de evaluación cambia');
+    expect(flat).not.toContain('ACNS');
+    expect(flat).not.toContain('Séneca');
+  });
+
   /** SC-1506: nothing Rampa produces may be mistaken for a filed document. */
-  it('says Séneca is the register in the same breath', async () => {
+  it('says her register is the register in the same breath', async () => {
     const { buildReport, parseIR } = await import('../src/index.js');
     const flat = buildReport({
       adapted: parseIR(['---', '---', '', '::: {#b1 .exercise}', 'x', ':::'].join('\n')),
+      wording: { phrases: esAn.phrases, generic: corpus.phrases },
     }).markdown.replace(/^>\s?/gm, '').replace(/\s+/g, ' ');
 
     expect(flat).toContain('Esto no está registrado');
@@ -329,6 +377,7 @@ describe('an ordinary adaptation says what it is', () => {
       adapted: parseIR(['---', '---', '',
         '::: {#b1 .exercise data-from="p1" data-recipe="one-task-per-page@1" data-axis="COG"}',
         'x', ':::'].join('\n')),
+      wording: { phrases: esAn.phrases, generic: corpus.phrases },
     });
 
     expect(markdown.indexOf('ACNS')).toBeLessThan(markdown.indexOf('one-task-per-page'));
@@ -356,23 +405,38 @@ describe('the overlay says what kind of document it came from', () => {
     { text: 'Letra grande', source: 'p. 3', actionable: true },
   ] as never;
 
-  it('names an ACS, and says adapting to that level is right', () => {
+  it('says the document modifies objectives, and that adapting to that level is right', () => {
+    /*
+     * Written by what the document **does**, not by one territory's acronym (`029`).
+     * The distinction it encodes is Principle III and belongs everywhere; «ACS» belongs
+     * to Andalucía, and the exam gate reads this sentence for every teacher.
+     */
     const { markdown } = guideSection({
-      measures, document: 'la ACS de marzo', on: '2026-03-01', kind: 'acs',
+      measures, document: 'la de marzo', on: '2026-03-01', kind: 'acs',
     });
-    expect(markdown).toContain('**ACS**');
-    expect(markdown).toMatch(/objetivos ya están modificados/);
-    // And the limit stays: it does not authorise modifying an objective the ACS
+    expect(markdown).toContain('**modifica objetivos y criterios de evaluación**');
+    expect(markdown).toMatch(/ya los ha[\s\S]*modificado el equipo docente/);
+    // And the limit stays: it does not authorise modifying an objective the document
     // does not name.
-    expect(markdown).toMatch(/que esta ACS no nombre/);
+    expect(markdown).toMatch(/que este documento no nombre/);
   });
 
-  it('names an ACNS, and says what it does and does not touch', () => {
+  it('and names it in her territory\'s words when she has a corpus selected', () => {
     const { markdown } = guideSection({
-      measures, document: 'la ACNS del tutor', on: '2026-03-01', kind: 'acns',
+      measures, document: 'la de marzo', on: '2026-03-01', kind: 'acs',
+      documentLabel: 'Adaptación curricular significativa (ACS)',
     });
-    expect(markdown).toContain('**ACNS**');
-    expect(markdown).toMatch(/no modifica ningún objetivo/);
+    expect(markdown).toContain('(Adaptación curricular significativa (ACS))');
+    // Beside the fact, never instead of it: the fact is what the gate acts on.
+    expect(markdown).toContain('**modifica objetivos y criterios de evaluación**');
+  });
+
+  it('says the document modifies nothing, and what it does change', () => {
+    const { markdown } = guideSection({
+      measures, document: 'la del tutor', on: '2026-03-01', kind: 'acns',
+    });
+    expect(markdown).toContain('**no modifica ningún objetivo**');
+    expect(markdown).toContain('cómo llega y cómo contesta');
   });
 
   it('says neither when the reading could not tell', () => {

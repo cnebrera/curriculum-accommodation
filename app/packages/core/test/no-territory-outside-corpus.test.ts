@@ -103,15 +103,17 @@ describe('the base corpus is the product, not one community', () => {
    * **new** site appears, which is precisely how «España» and «Andalucía» became synonyms
    * in this source in the first place.
    *
-   * ## The corpus half is done (`029` T003/T004); the source half is what remains
+   * ## Nineteen files went on this list, and eighteen have come off
    *
-   * Five corpus files were on this list and none is now: the Andalusian vocabulary
-   * lives in `instructions/normative/es-an.md` and the base corpus speaks of «el
-   * documento de adaptación vigente en tu territorio» and «tu plataforma de registro».
+   * The five corpus files first (`029` T003/T004): the Andalusian vocabulary lives in
+   * `instructions/normative/es-an.md` and the base corpus speaks of «el documento de
+   * adaptación vigente en tu territorio» and «tu plataforma de registro».
    *
-   * The fourteen source files are the reason this is a feature rather than a
-   * documentation pass — a sentence about one community's platform compiled into the
-   * application cannot be replaced by a teacher choosing her own corpus.
+   * Then the fourteen source files (T009/T010), which are why this was a feature rather
+   * than a documentation pass — a sentence about one community's platform compiled into
+   * the application cannot be replaced by a teacher choosing her own corpus.
+   *
+   * One remains, on purpose, and it is named below.
    */
   it('no corpus file outside instructions/normative names a territory', () => {
     const files = walk(join(repoRoot, 'instructions'), (f) => f.endsWith('.md'))
@@ -120,36 +122,42 @@ describe('the base corpus is the product, not one community', () => {
     expect(found).toEqual([]);
   });
 
-  it('and the source files are exactly these, which is why this is code and not prose', () => {
+  /**
+   * The one file left, and why removing it would be the regression.
+   *
+   * `acsInOverlay` reads the sentence `guideSection` writes into a learner's
+   * `adaptations.md` to decide whether his objectives have already been modified — which
+   * is what unlocks composing an exam at that level. `029` stopped **writing** «es una
+   * **ACS**»; the overlays already sitting in vaults still say it.
+   *
+   * So the gate reads both wordings, and deleting the old one would silently start
+   * refusing exams for every learner whose adaptation was recorded before the
+   * extraction. It is the only place in the application where one community's acronym is
+   * still legitimate, and it is legitimate for exactly as long as those files exist.
+   *
+   * Not an allowlist entry with a shrug: an assertion that it is there, so that removing
+   * it is a decision somebody makes on purpose.
+   */
+  it('one source file still names it, because vaults already do', () => {
     const files = [join(appRoot, 'packages'), join(appRoot, 'ui')]
       .flatMap((d) => walk(d, (f) => /\.tsx?$/.test(f) && !/\.test\.tsx?$/.test(f)));
     expect(files.length).toBeGreaterThan(50);
 
     const found = [...new Set(offenders(files, true).map((o) => o.path))].sort();
-    expect(found).toEqual([
-      'app/packages/core/src/compose/exam-gate.ts',    // «es una **ACS**» in the overlay check
-      'app/packages/core/src/errors.ts',               // an error sentence naming the pair
-      'app/packages/core/src/guide/acns-document.ts',  // the document's own headers
-      'app/packages/core/src/guide/acns.ts',           // the draft's sentences
-      'app/packages/core/src/guide/overlay.ts',        // reading which kind a guide is
-      'app/packages/core/src/render/draft.ts',         // the draft mark's wording
-      'app/packages/core/src/render/html.ts',          // the banner
-      'app/packages/core/src/report/index.ts',         // the significant-adaptation flag
-      'app/packages/shell/src/ipc/guide.ts',           // channel names and messages
-      'app/packages/shell/src/jobs/guide.ts',          // the job's own sentences
-      'app/ui/src/compose/ComposeScreen.tsx',          // a screen sentence
-      'app/ui/src/guide/GuideScreen.tsx',              // the whole guide surface
-      'app/ui/src/i18n/es.ts',                         // the interface strings
-      'app/ui/src/learners/LearnerSections.tsx',       // the section's own copy
-    ]);
+    expect(found).toEqual(['app/packages/core/src/compose/exam-gate.ts']);
+
+    const gate = readFileSync(join(appRoot, 'packages/core/src/compose/exam-gate.ts'), 'utf8');
+    // Both, and the new one first: what is written today and what is already on disk.
+    expect(gate).toContain('modifica objetivos y criterios de evaluación');
+    expect(gate).toContain('es una \\*\\*ACS\\*\\*');
   });
 
-  it('and nothing has crept in outside the fourteen that are left', () => {
+  it('and nothing has crept in beside it', () => {
     /*
-     * The half that guards the future rather than the past. Until the extraction
-     * finishes, the list above is the permitted state — and a **fifteenth** file is a
-     * new place a teacher in Vigo meets a platform she has not got, arriving after this
-     * was written down.
+     * The half that guards the future rather than the past. The permitted state is now
+     * **one** file, named above with its reason — and a second one is a new place a
+     * teacher in Vigo meets a platform she has not got, arriving after this was written
+     * down.
      */
     const corpusFiles = walk(join(repoRoot, 'instructions'), (f) => f.endsWith('.md'))
       .filter((f) => !f.includes(join('instructions', 'normative')));
@@ -159,6 +167,6 @@ describe('the base corpus is the product, not one community', () => {
       ...offenders(corpusFiles, false).map((o) => o.path),
       ...offenders(sourceFiles, true).map((o) => o.path),
     ]);
-    expect(total.size).toBe(14);
+    expect([...total]).toEqual(['app/packages/core/src/compose/exam-gate.ts']);
   });
 });

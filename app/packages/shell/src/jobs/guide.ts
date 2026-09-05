@@ -4,14 +4,14 @@ import {
   nextAcnsRevision,
   readGuide, guideSection, appendGuideSection, draftAcns, requireRecordedWork,
   requireEvaluation, checkDeclines, parseGuideCorpus, parseAcsCorpus,
-  recordFor, loadLearner, findYear, curFor, logger, RampaError,
-  type Candidate, type GuideReading, type Measure, addCost,
+  recordFor, loadLearner, findYear, curFor, phraseOf, logger, RampaError,
+  type Candidate, type GuideReading, type Measure, type NormativeWording, addCost,
 } from '@rampa/core';
 import { sendRedacted } from '@rampa/providers';
 import { currentVault } from '../ipc/vault.js';
 import { knownNames, unknownNamesIn } from '../ipc/names.js';
 import { activeProvider } from '../ipc/keys.js';
-import { assertCorpus, loadInstruction, findYearInCorpus } from '../corpus/index.js';
+import { assertCorpus, loadInstruction, findYearInCorpus, normativeFor } from '../corpus/index.js';
 import { recordCost } from '../ipc/cost.js';
 
 /**
@@ -209,9 +209,12 @@ export async function applyGuide(args: {
   return { path, written: section.written };
 }
 
-/** The ACNS draft (T019-T022). Assembled, never generated. */
+/**
+ * The draft of the adaptation that changes no objective (T019-T022). Assembled, never
+ * generated — and worded by whichever normativa is in force (`029` T010).
+ */
 export async function draftAcnsJob(learnerCode: string, subject?: string): Promise<{
-  markdown: string; missing: string[]; sources: string[];
+  markdown: string; missing: string[]; sources: string[]; signedTitle: string;
 }> {
   const vault = currentVault();
   const record = await recordFor(vault, learnerCode);
@@ -222,6 +225,38 @@ export async function draftAcnsJob(learnerCode: string, subject?: string): Promi
   const learner = await loadLearner(vault, learnerCode);
   const found = learner.profile.year ? await findYearInCorpus(learner.profile.year) : null;
   const corpus = parseGuideCorpus(await loadInstruction('guide'));
+
+  /*
+   * Which normativa this document is written in (`029` T007/T010/T012).
+   *
+   * Resolved once, here, and passed down — the sections, the printed sentences and the
+   * provenance line all have to describe the **same** corpus, and three separate
+   * lookups is three chances for a document to cite one territory and be structured
+   * like another's.
+   *
+   * The learner's own choice wins over the vault's, which is the child who arrived from
+   * another comunidad in October.
+   */
+  const normative = await normativeFor(vault, learner.profile.normative_corpus);
+  const wording: NormativeWording = {
+    generic: corpus.phrases,
+    provenanceLine: normative.provenanceLine,
+    ...(normative.of === 'corpus'
+      ? {
+          phrases: normative.corpus.phrases,
+          ...(normative.corpus.register ? { register: normative.corpus.register } : {}),
+        }
+      : {}),
+  };
+
+  /*
+   * Her territory's sections replace the generic scaffold, because which sections a
+   * document requires is exactly what varies between territories. The document type
+   * used is the one that does **not** modify objectives — the only one Rampa assembles.
+   */
+  const documentType = normative.of === 'corpus'
+    ? normative.corpus.documents.find((d) => !d.touchesObjectives)
+    : undefined;
 
   /*
    * The recipes each report records, read here because `core` does not read files —
@@ -247,7 +282,7 @@ export async function draftAcnsJob(learnerCode: string, subject?: string): Promi
    */
   const cur = curFor(learner.profile, subject);
 
-  return draftAcns({
+  const drafted = draftAcns({
     learnerCode,
     ...(found ? { year: found.year.label, stage: found.stage.label } : {}),
     ...(subject ? { subject } : {}),
@@ -260,10 +295,21 @@ export async function draftAcnsJob(learnerCode: string, subject?: string): Promi
       : {}),
     record,
     overlay: learner.overlay,
-    sections: corpus.draftSections,
+    sections: documentType && documentType.sections.length > 0
+      ? documentType.sections : corpus.draftSections,
     recipesByJob,
+    wording,
+    ...(documentType ? { documentLabel: documentType.label } : {}),
     on: new Date().toISOString().slice(0, 10),
   });
+
+  /*
+   * What the document will be called once she signs it, carried out of here so
+   * `acnsDocument` can write it into the file. The document records its own identity at
+   * drafting time — FR-2710, so switching normativa between drafting and signing cannot
+   * re-title a document she is about to sign.
+   */
+  return { ...drafted, signedTitle: phraseOf('signed-title', wording.phrases, corpus.phrases) };
 }
 
 /**
@@ -301,7 +347,7 @@ export async function saveAcnsDraft(learnerCode: string): Promise<{
   }
 
   const document = acnsDocument(
-    draft.markdown, learnerCode, new Date().toISOString().slice(0, 10));
+    draft.markdown, learnerCode, new Date().toISOString().slice(0, 10), draft.signedTitle);
   await vault.writeRaw(path, document);
   logger.info('acns.saved', { missing: draft.missing.length, kept: kept !== undefined });
   // `document` and not `draft.markdown`: what she prints and what she copies must be
@@ -336,7 +382,7 @@ export async function signOffAcns(learnerCode: string, role: string): Promise<
   const raw = await vault.readRaw(path);
   if (raw === null) {
     throw new RampaError('vault-unreadable',
-      'Todavía no hay ACNS guardada para este alumno. Haz el borrador primero.');
+      'Todavía no hay ningún borrador guardado para este alumno. Hazlo primero.');
   }
   const date = new Date().toISOString().slice(0, 10);
   await vault.writeRaw(path, signAcns(raw, role, date));
@@ -423,7 +469,7 @@ export async function askAboutGuide(args: {
 }
 
 /**
- * Helping her write the ACS (T025/T026, US4).
+ * Helping her write the adaptation that modifies objectives (T025/T026, US4).
  *
  * She states which objectives the team decided to modify. Rampa helps her express
  * them and **never proposes the list** — and refuses outright where no evaluación
@@ -490,21 +536,39 @@ export async function helpWithAcs(args: {
    * somebody files under the wrong signature.
    */
   return {
-    answer: `${answer}\n\n---\n\n${ACS_FOOTER}`,
+    answer: `${answer}\n\n---\n\n${await acsFooter(args.learnerCode)}`,
     declined: false,
     costCents,
   };
 }
 
-export const ACS_FOOTER = [
-  '**Esto es un borrador y no está presentado.** El registro es Séneca.',
-  '',
-  'Según la normativa, en una adaptación curricular significativa:',
-  '',
-  '- La **redacta el profesorado especialista en educación especial** (PT).',
-  '- **Colabora** el profesorado del área.',
-  '- **Asesora** el equipo o departamento de orientación.',
-  '',
-  'Y requiere una **evaluación psicopedagógica previa**. Sin ella es nula de',
-  'procedimiento, por mucho que el documento parezca completo.',
-].join('\n');
+/**
+ * Who signs it, and that it is not filed — from her normativa (`029` T009).
+ *
+ * This was `ACS_FOOTER`, a string constant naming Séneca and Andalucía's three roles,
+ * appended to a document every teacher in the country might produce. Who authors,
+ * collaborates and advises is **exactly** what varies between territories, and it was
+ * the one part of the footer stated as though it did not.
+ *
+ * What does not vary, and therefore stays in the generic file rather than in any
+ * territory's: that a document like this needs a psycho-pedagogical evaluation first,
+ * and that Rampa has not filed anything.
+ */
+async function acsFooter(learnerCode: string): Promise<string> {
+  const vault = currentVault();
+  const learner = await loadLearner(vault, learnerCode).catch(() => null);
+  const normative = await normativeFor(vault, learner?.profile.normative_corpus);
+  const generic = parseGuideCorpus(await loadInstruction('guide')).phrases;
+
+  const roles = normative.of === 'corpus'
+    ? normative.corpus.documents.find((d) => d.touchesObjectives)?.roles
+    : undefined;
+
+  return [
+    phraseOf('acs-footer', normative.of === 'corpus' ? normative.corpus.phrases : undefined,
+      generic),
+    ...(roles ? ['', roles] : []),
+    '',
+    normative.provenanceLine,
+  ].join('\n');
+}

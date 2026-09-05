@@ -61,6 +61,14 @@ export function guideSection(input: {
    * the same refusal as one with no assessment at all.
    */
   kind?: 'acns' | 'acs';
+  /**
+   * What her normativa calls this document, when she has one selected (`029` T009).
+   *
+   * Printed beside the fact rather than instead of it: the fact is what the model and
+   * the exam gate act on, and it has to be readable by a teacher whose corpus is not
+   * the one this document was written under.
+   */
+  documentLabel?: string;
 }): OverlayWrite {
   const actionable = input.measures.filter((m) => m.actionable);
   const notOurs = input.measures.filter((m) => !m.actionable);
@@ -95,17 +103,27 @@ export function guideSection(input: {
    * Written for the model **and** for her, because she is the one who will wonder
    * why a sheet was adapted to a lower level than the group's.
    */
+  /*
+   * Written by what the document **does**, not by one territory's acronym (`029` T009).
+   *
+   * «ACS» and «ACNS» are Andalucía's names. The distinction they encode — does this
+   * document modify objectives — is Principle III and belongs everywhere, so that is
+   * what the sentence says. Her territory's own name for it, when she has a corpus
+   * selected, is appended as a fact rather than assumed.
+   */
   if (input.kind === 'acs') {
     lines.push(
-      'Este documento es una **ACS**: los objetivos ya están modificados por el equipo',
-      'docente, a partir de una evaluación psicopedagógica. Adaptar a ese nivel es lo',
-      'correcto, y el informe lo dice. Lo que sigue sin poder hacerse es modificar un',
-      'objetivo que esta ACS no nombre.',
+      'Este documento **modifica objetivos y criterios de evaluación**'
+        + `${input.documentLabel ? ` (${input.documentLabel})` : ''}: ya los ha`,
+      'modificado el equipo docente, a partir de una evaluación psicopedagógica.',
+      'Adaptar a ese nivel es lo correcto, y el informe lo dice. Lo que sigue sin poder',
+      'hacerse es modificar un objetivo que este documento no nombre.',
       '',
     );
   } else if (input.kind === 'acns') {
     lines.push(
-      'Este documento es una **ACNS**: no modifica ningún objetivo. Lo que cambia es',
+      'Este documento **no modifica ningún objetivo**'
+        + `${input.documentLabel ? ` (${input.documentLabel})` : ''}. Lo que cambia es`,
       'cómo llega y cómo contesta.',
       '',
     );

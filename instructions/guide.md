@@ -120,38 +120,38 @@ draft_sections:
 # Estaban en TypeScript, nombrando una plataforma concreta. Ahora hablan de roles —
 # «tu plataforma de registro», «el documento de adaptación vigente en tu territorio» —
 # y un fichero de `instructions/normative/` las sustituye por las de su territorio.
+#
+# Los saltos de línea son los que se imprimen (Principio I): por eso van con `|`.
+#
+# Lo que NO está aquí, y no puede estar en ningún corpus normativo: la palabra BORRADOR,
+# la marca de borrador y su marca de agua. Eso es el Principio VII y vive en el código.
 phrases:
-  draft-heading: BORRADOR de documento de adaptación curricular
-  signed-heading: Documento de adaptación curricular
-  unsigned-note: >
-    **Sin firmar.** Mientras no la firmes, esto es un borrador: si lo copias a tu
-    plataforma de registro ahora, estarás presentando algo que no ha revisado nadie.
-  not-filed: >
+  # Lo que sigue a «# BORRADOR », que lo pone el código.
+  draft-title: "de documento de adaptación curricular"
+  signed-title: "Documento de adaptación curricular"
+  not-filed: |
     **Esto no está presentado.** Rampa no presenta nada y no sabe dónde se registra
     aquí: esto es material para llevar a donde se registre en tu territorio.
-  authorship-footer: >
+  authorship-footer: |
     **Rampa no ha escrito esta adaptación**: ha ordenado lo que ya habías hecho para
     este alumno. Quién la coordina y quién la firma lo dice la normativa de tu
     territorio.
-  name-line: >
-    El nombre lo pones tú donde lo registres — yo no lo guardo.
-  report-note: >
+  name-line: "*lo pones tú donde lo registres — yo no lo guardo.*"
+  report-note: |
+    Lo que hay aquí es una **adaptación de las que no tocan objetivos**: he cambiado
+    cómo se presenta, en qué orden y cuánto hay por página. **Ningún objetivo ni
+    criterio de evaluación cambia** — eso sería una adaptación significativa, y no la
+    decide una herramienta.
+
     Esto no está registrado. Si esta adaptación va al expediente, se registra donde
     diga la normativa de tu territorio, y eso lo haces tú.
-  acs-footer: >
+  acs-footer: |
     **Esto es un borrador y no está presentado.**
-  draft-banner: BORRADOR — sin firmar · no lo presentes todavía
-  draft-watermark: BORRADOR — SIN FIRMAR
 
-  # La frase del modo genérico, que es la que hace que el genérico sea honesto y no
-  # una imitación descafeinada (FR-2703). Se imprime dentro del documento.
-  generic-statement: >
-    No tienes ninguna normativa elegida, así que esto es un **borrador genérico**: he
-    ordenado lo que ya habías hecho para este alumno, sin dar por hecho qué documento
-    exige tu territorio, quién lo firma ni dónde se registra. Eso lo verificas tú con
-    tu orientador u orientadora antes de presentarlo. Si quieres que lo escriba con el
-    vocabulario de tu comunidad, elige o trae una normativa en Configuración ▸
-    Normativa.
+    Un documento que modifica objetivos y criterios requiere una **evaluación
+    psicopedagógica previa**. Sin ella suele ser nulo de procedimiento, por mucho que
+    parezca completo. Quién lo redacta, quién colabora y quién asesora lo dice la
+    normativa de tu territorio, y eso lo verificas tú.
 ---
 
 # La adaptación curricular

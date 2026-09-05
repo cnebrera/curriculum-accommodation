@@ -76,7 +76,7 @@ export function registerGuideIpc(getWindow: () => BrowserWindow | null): void {
     const found = await readAcns(learnerCode);
     if (!found) {
       throw new RampaError('vault-unreadable',
-        'Todavía no hay ACNS guardada para este alumno. Haz el borrador primero.');
+        'Todavía no hay ningún borrador guardado para este alumno. Hazlo primero.');
     }
     return renderAcnsHTML(found.markdown);
   });
@@ -86,7 +86,7 @@ export function registerGuideIpc(getWindow: () => BrowserWindow | null): void {
     const found = await readAcns(learnerCode);
     if (!found) {
       throw new RampaError('vault-unreadable',
-        'Todavía no hay ACNS guardada para este alumno. Haz el borrador primero.');
+        'Todavía no hay ningún borrador guardado para este alumno. Hazlo primero.');
     }
     const pdf = await renderPdf(renderAcnsHTML(found.markdown));
     const path = resolveInVault(vault.root, learnerAcnsPdf(learnerCode));

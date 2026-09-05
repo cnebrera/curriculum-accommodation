@@ -492,7 +492,13 @@ export function renderAcnsHTML(raw: string): string {
   return [
     '<!doctype html>',
     '<html lang="es"><head><meta charset="utf-8">',
-    `<title>${mark ? 'BORRADOR de ACNS' : 'ACNS'}</title>`,
+    /*
+     * The tab title, and it stays territory-neutral on purpose (`029` FR-2704): what
+     * the document is called comes from her normativa and is in the document's own
+     * heading, which is where she reads it. A title bar is not worth threading a corpus
+     * through, and «ACNS» there was one community's word in every teacher's window.
+     */
+    `<title>${mark ? 'BORRADOR — adaptación curricular' : 'Adaptación curricular'}</title>`,
     '<style>',
     'body{font:16px/1.5 system-ui,sans-serif;max-width:40em;margin:2rem auto;padding:0 1rem}',
     'blockquote{border-left:4px solid #8a2f2c;margin:1.2rem 0;padding:.2rem 0 .2rem 1rem;',

@@ -2,6 +2,7 @@ import type { IRDocument, Block, Notice } from '../ir/types.js';
 import { parseRecipeRef } from '../ir/provenance.js';
 import { recipeRef, type Selection } from '../recipes/index.js';
 import { parseReportNotes } from './notes.js';
+import { phraseOf } from '../guide/corpus.js';
 
 /**
  * The adaptation report, grouped by decision rather than by paragraph.
@@ -55,6 +56,17 @@ export interface ReportInput {
    * nothing rather than claiming a rule governed something it did not.
    */
   kind?: { id: string; label: string; forbids: string[] } | null;
+  /**
+   * Which normativa's wording names what this adaptation is (`029` T009/T012).
+   *
+   * The sentence below used to name one community's platform in a string literal, in a
+   * report every teacher in Spain reads. Absent is generic mode — the report still says
+   * what was and was not changed, and simply does not claim to know where she registers
+   * things.
+   */
+  wording?: { phrases?: Record<string, string>; generic?: Record<string, string> };
+  /** Printed under it, so the document says which corpus it followed (FR-2705). */
+  provenanceLine?: string;
   /**
    * Pictograms, **only when she turned them on** (018 FR-1607).
    *
@@ -203,22 +215,24 @@ export function buildReport(input: ReportInput): Report {
    * objective, which is Principle III stated as regulation. It had never said so, and
    * that mattered in both directions:
    *
-   * - She has to write and register an ACNS in Séneca, and a report that describes its
+   * - She has to write and register that document, and a report that describes its
    *   contents without naming it leaves her to make the connection.
-   * - Naming it is also a **limit**: what Rampa did is not an ACS, and a document that
-   *   left that open invites somebody to treat it as one.
+   * - Naming it is also a **limit**: what Rampa did is not the significant kind, and a
+   *   document that left that open invites somebody to treat it as one.
    *
-   * Séneca is named in the same breath, because the one thing this must never be
+   * The register is named in the same breath, because the one thing this must never be
    * mistaken for is a filed document (`017` FR-1502, SC-1506).
+   *
+   * What that document is *called* and where it is registered comes from her normativa
+   * (`029` T009) — it was a string literal naming Andalucía's platform, in a report
+   * every teacher in Spain reads.
    */
   md.push(
-    '> Lo que hay aquí es una **adaptación curricular no significativa (ACNS)**: he',
-    '> cambiado cómo se presenta, en qué orden y cuánto hay por página. **Ningún',
-    '> objetivo ni criterio de evaluación cambia** — eso sería una adaptación',
-    '> significativa, y no la decide una herramienta.',
-    '>',
-    '> Esto no está registrado. El registro es **Séneca**: si esta adaptación va al',
-    '> expediente, la ACNS la coordina el tutor o la tutora y se registra allí.',
+    ...phraseOf('report-note', input.wording?.phrases, input.wording?.generic)
+      .split('\n').map((l) => `> ${l}`.trimEnd()),
+    ...(input.provenanceLine
+      ? ['>', ...input.provenanceLine.split('\n').map((l) => `> ${l}`.trimEnd())]
+      : []),
     '');
 
   /*

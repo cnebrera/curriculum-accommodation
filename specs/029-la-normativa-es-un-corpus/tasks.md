@@ -76,7 +76,7 @@ pre-extraction shape would be built twice.
       the selection and activation log in `normative/selection.md`, origin derived
       (bundled | subido | modificado-by-hash), IPC handlers registered from
       `corpus/index.ts` (FR-2701)
-- [ ] T009 Move the four hardcoded normative strings out of TypeScript into corpus
+- [x] T009 Move the four hardcoded normative strings out of TypeScript into corpus
       phrases (research R5): the draft header and name line in
       `app/packages/core/src/guide/acns.ts`, the registro line in
       `app/packages/core/src/report/index.ts`, `ACS_FOOTER` in
@@ -84,7 +84,7 @@ pre-extraction shape would be built twice.
       `app/ui/src/learners/LearnerSections.tsx` — each supplied by the resolved corpus,
       or by the generic template in `guide.md` when generic. Latent Principle I
       violations; T001 is what stops them creeping back (FR-2704)
-- [ ] T010 Consumers read the resolved corpus: `jobs/guide.ts` assembles prompts as
+- [x] T010 Consumers read the resolved corpus: `jobs/guide.ts` assembles prompts as
       hard-rules + generic `guide.md`/`acs.md` + the resolved corpus's raw file;
       `draftAcns` takes its document type and sections from the corpus (or the generic
       scaffold); an imported or modified corpus travels **inside P18's fence-with-nonce
@@ -108,7 +108,7 @@ follows it, and every drafted document prints its provenance.
 **Independent Test**: two configurations, two territories, one identical request — each
 draft cites its own corpus and register and names the corpus it followed.
 
-- [ ] T012 [US1] Provenance printed: every drafted normative document **and its report**
+- [x] T012 [US1] Provenance printed: every drafted normative document **and its report**
       carry the resolver's provenance line — «siguiendo el corpus normativo: Andalucía
       (incluido, sin revisar)» — in the document itself, not only on screen, from the
       template T004 put in the corpus layer (FR-2705, FR-2706)
@@ -117,12 +117,12 @@ draft cites its own corpus and register and names the corpus it followed.
       pre-selected, generic named as what she has when nothing is; selection by corpus
       id, never by territory string (spec edge case); deselecting returns to generic
       (FR-2701)
-- [ ] T014 [US1] The per-learner override: `normative_corpus` parsed in
+- [x] T014 [US1] The per-learner override: `normative_corpus` parsed in
       `app/packages/core/src/vault/schema.ts` (beside `018`'s pictogram `overrides`),
       editable on the learner's screen, `none` offered for the cross-territory case; it
       never appears in learner-facing output — the existing output check extends to it
       (FR-2702, `011` FR-910's rule)
-- [ ] T015 [P] [US1] Assert the review-status honesty: an unreviewed, imported or
+- [x] T015 [P] [US1] Assert the review-status honesty: an unreviewed, imported or
       locally-modified corpus can never print as reviewed, because the provenance line
       is built in one place from `review` + derived origin (FR-2706)
 - [ ] T016 [US1] `app/e2e/normative.spec.ts`, quickstart §5 items 1–2: select Andalucía
@@ -142,14 +142,14 @@ plainly what is hers to verify.
 **Independent Test**: with no corpus selected, draft an adaptation document; no
 territory-specific register, law or procedure named; the generic disclaimer present.
 
-- [ ] T017 [US2] Generic drafting end to end: the generic scaffold's sections only, the
+- [x] T017 [US2] Generic drafting end to end: the generic scaffold's sections only, the
       generic statement with one pointer to the orientador, and the §1 artefact grep
       asserted over the rendered output — zero territory names in any generic rendering
       (FR-2703, SC-2702)
-- [ ] T018 [US2] Selecting or importing a corpus later affects **new drafts only**:
+- [x] T018 [US2] Selecting or importing a corpus later affects **new drafts only**:
       assert that a selection change writes no existing document — a document is what it
       was when signed, and its provenance line is already inside it (FR-2710)
-- [ ] T019 [US2] Deleting or deactivating the selected corpus falls back to generic
+- [x] T019 [US2] Deleting or deactivating the selected corpus falls back to generic
       **with the notice**, never to a silently different corpus — the resolver's
       `selected-missing` case reaching the screen and the next draft (FR-2711)
 
