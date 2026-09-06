@@ -23,13 +23,25 @@ import type { LoadedLearner } from '@rampa/core';
  * assertion is over its **contents** — what the flow wrote, not what it says it wrote.
  */
 vi.mock('electron', () => ({ ipcMain: { handle: () => {} }, app: {}, dialog: {}, shell: {} }));
+/*
+ * The corpus reader, replaced with one that reads `instructions/` directly.
+ *
+ * `loadInstruction` resolves through `corpusRoot()`, which asks Electron where the app
+ * is — and `app/corpus/` is **generated** by `bundle-corpus.mjs`, which `npm run
+ * test:all` does not run. So this reads the source of truth instead of a copy whose
+ * freshness depends on when somebody last ran `npm run dev`.
+ */
+vi.mock('../src/corpus/index.js', () => ({
+  loadInstruction: async (name: string) =>
+    readFileSync(join(repoRoot, 'instructions', `${name}.md`), 'utf8'),
+}));
 
 const repoRoot = join(dirname(new URL(import.meta.url).pathname), '..', '..', '..', '..');
 const framing = parseFrontMatter(
   readFileSync(join(repoRoot, 'instructions', 'coordination.md'), 'utf8'),
 ).data['framing'] as string;
 
-const { inspectPacket, academicYearOf, lastPacketDate } =
+const { inspectPacket, academicYearOf, lastPacketDate, holdPacket, linkPacket, acceptItem } =
   await import('../src/ipc/coordination.js');
 
 const scratch = async () => {
@@ -199,5 +211,105 @@ describe('nothing anywhere writes `observed` from an import (FR-2805)', () => {
     });
     expect(Object.keys(packet)).not.toContain('evidence');
     for (const item of packet.items) expect(Object.keys(item)).not.toContain('evidence');
+  });
+});
+
+/**
+ * A packet about a child she does not have (030 T023/T024/T025, US3, FR-2807).
+ *
+ * The walk end to end, because each step's promise is about **the step before it**:
+ * holding must not link, linking must not accept, and undoing must leave a vault that
+ * looks like the one before the link — which can only be checked by doing all of them
+ * in order over one directory.
+ */
+describe('unknown → hold → link → undo → link → accept', () => {
+  it('walks, and the only thing that ever writes into her learner is the accept', async () => {
+    const { dir, vault } = await scratch();
+    await vault.writeRaw('profiles/M07/profile.yaml', '---\ncode: M07\n---\n');
+    const raw = packetRaw({ role: 'tutora' });
+
+    // 1 · Unknown. Nothing is guessed and nothing is written.
+    const seen = await inspectPacket(vault, raw);
+    expect(seen.known).toBe(false);
+    const afterOpen = await tree(dir);
+
+    // 2 · Held: her copy of somebody else's file, verbatim.
+    const path = await holdPacket(vault, raw, 'de la tutora.md');
+    expect(path).toBe('handover/received/de_la_tutora.md');
+    expect(await vault.readRaw(path)).toBe(raw);
+    // And still nothing about M07 has changed.
+    expect((await tree(dir)).filter((f) => f.startsWith('profiles/')))
+      .toEqual(afterOpen.filter((f) => f.startsWith('profiles/')));
+
+    // 3 · Linked: one front-matter key, on the local copy only.
+    await linkPacket(vault, path, 'M07');
+    const linked = parseFrontMatter((await vault.readRaw(path))!, path);
+    expect(linked.data['linked']).toBe('M07');
+    /*
+     * And the sender's own code is untouched: the link is **her** note about their
+     * document, and rewriting `code:` would be Rampa editing what her colleague sent.
+     */
+    expect(linked.data['code']).toBe('L01');
+
+    // 4 · Undone. The annotation goes and nothing else changed, because nothing else
+    // happened.
+    await linkPacket(vault, path, '');
+    expect(parseFrontMatter((await vault.readRaw(path))!, path).data['linked'])
+      .toBeUndefined();
+    expect((await tree(dir)).filter((f) => f.startsWith('profiles/')))
+      .toEqual(afterOpen.filter((f) => f.startsWith('profiles/')));
+
+    // 5 · Linked again, and accepted — attributed to **her** learner, not the sender's.
+    await linkPacket(vault, path, 'M07');
+    const wrote = await acceptItem(vault, {
+      code: 'M07', role: 'tutora', filename: 'de la tutora.md',
+      item: { of: 'note', date: '2026-10-03', heading: 'arranque', text: 'No arranca solo.' },
+    });
+    expect(wrote).toBe('note');
+
+    const notes = (await vault.readRaw('profiles/M07/notes.md'))!;
+    expect(notes).toContain('No arranca solo.');
+    expect(notes).toContain('recibido por paquete (tutora, 2026-10-03)');
+    expect(notes).toContain('de la tutora.md');
+    // Attributed to hers. The sender's code appears nowhere in her learner's notes.
+    expect(notes).not.toContain('L01');
+    await rm(dir, { recursive: true, force: true });
+  });
+
+  it('a material line writes nothing, because there is nothing of hers to write it into', async () => {
+    /*
+     * «Le preparó una hoja de fracciones» is a fact about the **sender's** vault.
+     * Inventing a record entry would put a row in her record pointing at a file that
+     * does not exist — a record that lies about what she has.
+     */
+    const { dir, vault } = await scratch();
+    const before = await tree(dir);
+    const wrote = await acceptItem(vault, {
+      code: 'M07', role: 'tutora', filename: 'x.md',
+      item: { of: 'material', date: '2026-10-10', title: 'job-u4', signed: true },
+    });
+    expect(wrote).toBe('nothing');
+    expect(await tree(dir)).toEqual(before);
+    await rm(dir, { recursive: true, force: true });
+  });
+
+  it('and a profile delta lands as a dated note, never as a profile change', async () => {
+    /*
+     * Accepting a claim and changing her profile are two decisions. The conflict case
+     * exists precisely because they come apart: she may want the note and not the axis,
+     * and a handler that did both would have made that impossible.
+     */
+    const { dir, vault } = await scratch();
+    await vault.writeRaw('profiles/M07/profile.yaml', '---\ncode: M07\naxes: {}\n---\n');
+    await acceptItem(vault, {
+      code: 'M07', role: 'PT', filename: 'x.md',
+      item: { of: 'profile-delta', date: '', text: 'COG = 2' },
+    });
+    expect((await vault.readRaw('profiles/M07/notes.md'))!).toContain('COG = 2');
+    // Undated in the packet, said so here — never stamped with today's.
+    expect((await vault.readRaw('profiles/M07/notes.md'))!).toContain('sin fecha');
+    // The profile itself is exactly what it was.
+    expect((await vault.readRaw('profiles/M07/profile.yaml'))!).toContain('axes: {}');
+    await rm(dir, { recursive: true, force: true });
   });
 });

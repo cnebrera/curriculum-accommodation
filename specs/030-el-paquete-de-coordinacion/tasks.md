@@ -172,15 +172,15 @@ undoable, accepting attributes correctly.
 
 **Independent Test**: quickstart §5 step 5.
 
-- [ ] T023 [US3] Unknown `code` on open: **no automatic match attempted** — codes are
+- [x] T023 [US3] Unknown `code` on open: **no automatic match attempted** — codes are
       opaque and names absent by design, so matching is human; the screen says what the
       packet claims and offers link-or-hold. Hold copies the file **verbatim** to
       `handover/received/`, listed with the held ones (FR-2807)
-- [ ] T024 [US3] Link: explicit act, shown for confirmation before any item can be
+- [x] T024 [US3] Link: explicit act, shown for confirmation before any item can be
       accepted, recorded as `linked: <local-code>` in the **local copy's** front matter
       (never in a file that travels), reversible until the first accept — undo removes
       the annotation and nothing else changed, because nothing else happened (FR-2807)
-- [ ] T025 [US3] Test the walk in T002's suite: import unknown → hold → link → undo →
+- [x] T025 [US3] Test the walk in T002's suite: import unknown → hold → link → undo →
       link → accept attributes to the linked learner; and the erasure hook — the
       `linked:` annotation carries the local code so `forget` can find a packet whose
       internal code it could never match

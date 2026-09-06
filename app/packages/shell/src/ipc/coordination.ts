@@ -196,14 +196,10 @@ export function registerCoordinationIpc(): void {
    * colleague's file, which is not the same artefact.
    */
   handle('coordination:hold', async (raw: unknown, filename: unknown) => {
-    const vault = currentVault();
     if (typeof raw !== 'string' || typeof filename !== 'string') {
       throw new RampaError('vault-unreadable', 'No he recibido el fichero.');
     }
-    const safe = basename(filename).replace(/[^A-Za-z0-9._-]/g, '_');
-    const path = `${VAULT.handover}/received/${safe}`;
-    await vault.writeRaw(path, raw);
-    return { path };
+    return { path: await holdPacket(currentVault(), raw, filename) };
   });
 
   /**
@@ -218,15 +214,10 @@ export function registerCoordinationIpc(): void {
    * and could never be matched — the annotation is the only thing that carries hers.
    */
   handle('coordination:link', async (path: unknown, code: unknown) => {
-    const vault = currentVault();
     if (typeof path !== 'string' || typeof code !== 'string') {
       throw new RampaError('vault-unreadable', 'Falta el fichero o el alumno.');
     }
-    const raw = await vault.readRaw(path);
-    if (raw === null) throw new RampaError('vault-unreadable', 'Ese paquete ya no está.');
-    const { data, body } = parseFrontMatter(raw, path);
-    await vault.writeRaw(path, stringifyFrontMatter(
-      code === '' ? withoutLinked(data) : { ...data, linked: code }, body));
+    await linkPacket(currentVault(), path, code);
     return { ok: true as const };
   });
 
@@ -241,35 +232,15 @@ export function registerCoordinationIpc(): void {
   handle('coordination:accept', async (
     code: unknown, role: unknown, filename: unknown, item: unknown,
   ) => {
-    const vault = currentVault();
     if (typeof code !== 'string' || typeof role !== 'string' || typeof filename !== 'string') {
       throw new RampaError('vault-unreadable', 'Falta el alumno o de dónde viene esto.');
     }
-    const parsed = item as PacketItem;
-    const mark = await receivedLine(role, todayOr(parsed));
-
-    if (parsed.of === 'note') {
-      await appendNote(vault, code, `${parsed.heading} (de otra aula)`,
-        `${parsed.text}\n\n${mark} · ${filename}`);
-      return { ok: true as const, wrote: 'note' as const };
-    }
-
-    if (parsed.of === 'profile-delta') {
-      /*
-       * The note, always. The **profile itself** is changed only when she said so at the
-       * door — «tu perfil dice X, el paquete dice Y» ends in a choice, and this handler
-       * is reached once per choice. What is unconditional is that the claim is written
-       * down somewhere she will find it, attributed.
-       */
-      await appendNote(vault, code, 'del paquete de coordinación',
-        `${parsed.text}\n\n${mark} · ${filename}`);
-      return { ok: true as const, wrote: 'note' as const };
-    }
-
-    // A material line is a fact about the sender's vault. There is nothing to write into
-    // hers, and inventing a record entry for a sheet she does not have would put a row
-    // in her record pointing at a file that does not exist.
-    return { ok: true as const, wrote: 'nothing' as const };
+    return {
+      ok: true as const,
+      wrote: await acceptItem(currentVault(), {
+        code, role, filename, item: item as PacketItem,
+      }),
+    };
   });
 
   /**
@@ -310,13 +281,85 @@ export function registerCoordinationIpc(): void {
   });
 }
 
+/**
+ * Keep somebody else's file, **verbatim**, in `handover/received/`.
+ *
+ * Verbatim because it is their document and she may need to show it to them — «esto es
+ * lo que me mandaste». A re-rendered copy would be Rampa's version of her colleague's
+ * file, which is not the same artefact.
+ *
+ * Its own function so the walk (hold → link → undo → link → accept) is something a test
+ * can run, rather than a claim about five handlers.
+ */
+export async function holdPacket(
+  vault: Vault, raw: string, filename: string,
+): Promise<string> {
+  // Her filename, made safe. `resolveInVault` would refuse a path that leaves the vault
+  // rather than sanitising it — this is about the name being readable, not about escape.
+  const safe = basename(filename).replace(/[^A-Za-z0-9._-]/g, '_');
+  const path = `${VAULT.handover}/received/${safe}`;
+  await vault.writeRaw(path, raw);
+  return path;
+}
+
+/**
+ * Say which of her learners a held packet is about — or unsay it (FR-2807).
+ *
+ * `code === ''` is the undo, and it removes the annotation and **nothing else**, because
+ * nothing else happened: until the first accept, linking has written one front-matter
+ * key on a copy of somebody else's file.
+ */
+export async function linkPacket(vault: Vault, path: string, code: string): Promise<void> {
+  const raw = await vault.readRaw(path);
+  if (raw === null) throw new RampaError('vault-unreadable', 'Ese paquete ya no está.');
+  const { data, body } = parseFrontMatter(raw, path);
+  await vault.writeRaw(path, stringifyFrontMatter(
+    code === '' ? withoutLinked(data) : { ...data, linked: code }, body));
+}
+
+/**
+ * The only writer (FR-2804/2805).
+ *
+ * Every write carries the packet, the role and the date — and `reported`, which is
+ * **assigned here**. There is no parameter for it and the file has no field the importer
+ * reads: a packet asserting its own credibility is the anchor `004` exists to avoid.
+ */
+export async function acceptItem(vault: Vault, args: {
+  code: string; role: string; filename: string; item: PacketItem;
+}): Promise<'note' | 'nothing'> {
+  const { item } = args;
+  const mark = await receivedLine(args.role, item.date);
+
+  if (item.of === 'note') {
+    await appendNote(vault, args.code, `${item.heading} (de otra aula)`,
+      `${item.text}\n\n${mark} · ${args.filename}`);
+    return 'note';
+  }
+
+  if (item.of === 'profile-delta') {
+    /*
+     * The note, always. The **profile itself** changes only when she says so — «tu
+     * perfil dice X, el paquete dice Y» ends in a choice, and `applyDelta` is where that
+     * choice lands. What is unconditional is that the claim is written down somewhere
+     * she will find it, attributed.
+     */
+    await appendNote(vault, args.code, 'del paquete de coordinación',
+      `${item.text}\n\n${mark} · ${args.filename}`);
+    return 'note';
+  }
+
+  /*
+   * A material line is a fact about the **sender's** vault. There is nothing to write
+   * into hers, and inventing a record entry for a sheet she does not have would put a
+   * row in her record pointing at a file that does not exist.
+   */
+  return 'nothing';
+}
+
 const withoutLinked = (data: Record<string, unknown>): Record<string, unknown> => {
   const { linked: _linked, ...rest } = data;
   return rest;
 };
-
-/** A packet item's own date, or none — never today's. */
-const todayOr = (item: PacketItem): string => item.date;
 
 /**
  * Parse, scan and stale-check, with **no writes**. Extracted so the door's promise is
