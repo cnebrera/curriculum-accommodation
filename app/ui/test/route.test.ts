@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import {
-  startRoute, reduceRoute, learnerTabs, settingsPanes,
+  startRoute, reduceRoute, learnerTabs, settingsPanes, whatIsMissing, flowReady,
   type Route, type SettingsPane,
 } from '../src/nav/route.js';
 
@@ -362,5 +362,91 @@ describe('a reconnection she started is something she is in the middle of (FLU-0
     expect(at).toEqual({ at: 'settings', pane: 'service', from, reconnecting: 'anthropic' });
     at = reduceRoute(at, { type: 'settings', pane: 'pictograms' });
     expect(at).toEqual({ at: 'settings', pane: 'pictograms', from });
+  });
+});
+
+/**
+ * The two rules that came out of `door/intent.ts` (020 T021, research R2).
+ *
+ * They were rules about a value living in a screen's reducer, and the door is going. A
+ * rule about a value belongs with the value: the kind is now part of the flow, so
+ * «changing branch drops the kind» is something the route either does or fails a test —
+ * where a screen can be reviewed into compliance and then edited out of it.
+ */
+describe('the kind belongs to the flow, and a change of branch drops it', () => {
+  const inFlow = () => {
+    let r = reduceRoute(startRoute(), { type: 'learner/open', code: 'M7' });
+    r = reduceRoute(r, { type: 'flow/start', of: 'adapt' });
+    return reduceRoute(r, { type: 'flow/kind', kind: 'exam' });
+  };
+
+  it('she says what the material is and it is remembered', () => {
+    const r = inFlow();
+    expect(r.at === 'learner' && r.flow?.of === 'adapt' && r.flow.kind).toBe('exam');
+  });
+
+  it('and switching to composing drops it, because a composed sheet is not an exam', () => {
+    /*
+     * `012`'s silent mislabelling, prevented by the shape rather than by a line: the new
+     * flow is built fresh, so there is no `kind` to carry and no clearing step to
+     * forget. Carrying «examen» across would assert that composed practice is an exam,
+     * and the exam rules are the strictest ones there are.
+     */
+    const r = reduceRoute(inFlow(), { type: 'flow/start', of: 'compose' });
+    expect(r.at === 'learner' && r.flow?.of).toBe('compose');
+    expect(r.at === 'learner' && 'kind' in (r.flow ?? {})).toBe(false);
+  });
+
+  it('and switching back to adapting does not resurrect it either', () => {
+    let r = reduceRoute(inFlow(), { type: 'flow/start', of: 'compose' });
+    r = reduceRoute(r, { type: 'flow/start', of: 'adapt' });
+    expect(r.at === 'learner' && r.flow?.of === 'adapt' && r.flow.kind).toBeUndefined();
+  });
+
+  it('the learners DO survive the switch, which is the other half of the rule', () => {
+    // `016` FR-1408. She said who it was for; asking again would tell her the first
+    // answer did not register.
+    const r = reduceRoute(inFlow(), { type: 'flow/start', of: 'compose' });
+    expect(r.at === 'learner' && r.also).toEqual(['M7']);
+  });
+
+  it('and asking for a kind on the compose branch is a no-op, not a field that appears', () => {
+    let r = reduceRoute(startRoute(), { type: 'learner/open', code: 'M7' });
+    r = reduceRoute(r, { type: 'flow/start', of: 'compose' });
+    const after = reduceRoute(r, { type: 'flow/kind', kind: 'exam' });
+    expect(after).toBe(r);
+  });
+});
+
+describe('what is still missing, one thing at a time', () => {
+  it('says the next thing in the order the steps ask it', () => {
+    expect(whatIsMissing(startRoute())).toContain('para quién');
+
+    let r = reduceRoute(startRoute(), { type: 'learner/open', code: 'M7' });
+    expect(whatIsMissing(r)).toContain('qué quieres hacer');
+
+    r = reduceRoute(r, { type: 'flow/start', of: 'adapt' });
+    expect(whatIsMissing(r)).toContain('qué es este material');
+
+    r = reduceRoute(r, { type: 'flow/kind', kind: 'exam' });
+    expect(whatIsMissing(r)).toBeNull();
+    expect(flowReady(r)).toBe(true);
+  });
+
+  it('and composing needs no kind, so it is ready as soon as it starts', () => {
+    let r = reduceRoute(startRoute(), { type: 'learner/open', code: 'M7' });
+    r = reduceRoute(r, { type: 'flow/start', of: 'compose' });
+    expect(whatIsMissing(r)).toBeNull();
+  });
+
+  it('and a flow with nobody in it is not ready, which cannot happen and is checked anyway', () => {
+    /*
+     * `flow/start` puts the entered learner in `also` by construction (FR-1814), so this
+     * state is unreachable — and it is checked because the alternative is a `whatIsMissing`
+     * that returns `null` for an empty batch if that ever stops being true.
+     */
+    const empty = { at: 'learner' as const, code: 'M7', tab: 'prepare' as const,
+      flow: { of: 'compose' as const, step: 'ask' as const }, also: [] };
+    expect(whatIsMissing(empty)).toContain('para quién');
   });
 });

@@ -123,17 +123,17 @@ sequencing decision and not a requirement quietly unmet.
 **Independent Test**: from inside a learner, adapt one worksheet for her and the same
 worksheet for three, and confirm the source was read once.
  *(done, plus `scripts/screenshot.mjs`, which walked the old rail and timed out on a control the rail no longer holds — the screenshots now include the learner's rail at 560, 880, 892 and 1024, which is where option A either holds or does not.)*
-- [ ] T019 [US2] `app/ui/src/prepare/` — the two branches offered as peers with neither
+- [x] T019 [US2] `app/ui/src/prepare/` — the two branches offered as peers with neither
       pre-selected (FR-1812). This is `016` FR-1401's substance, relocated
-- [ ] T020 [US2] Step 1 asks what the material is, explicitly and with no default
+- [x] T020 [US2] Step 1 asks what the material is, explicitly and with no default
       (FR-1813), still reading `instructions/material-kinds.md` — the kind picker must
       not become a hard-coded list on its way across the application
-- [ ] T021 [P] [US2] Move `whatIsMissing` and the drop-the-kind-when-the-branch-changes
+- [x] T021 [P] [US2] Move `whatIsMissing` and the drop-the-kind-when-the-branch-changes
       rule out of `door/intent.ts` **with their tests** (research R2). An exam that
       becomes a composition must not silently keep «examen»
-- [ ] T022 [US2] Steps 2 and 3 — bring the material, check the reading — inside the
+- [x] T022 [US2] Steps 2 and 3 — bring the material, check the reading — inside the
       section, with the learner's menu still visible and the current step marked
-- [ ] T023 [US2] Step 4, «¿para quién más?», with the entered learner already included
+- [x] T023 [US2] Step 4, «¿para quién más?», with the entered learner already included
       and no re-asking of the work or the material (FR-1814, FR-1816)
 - [ ] T024 [US2] The batch's cost stated as one figure before the run, with the
       unusual-cost gate considering the batch (`005` FR-514/FR-515) — which is why step 4
@@ -158,10 +158,10 @@ worksheet for three, and confirm the source was read once.
 - [ ] T028 [US2] Retire the door: remove it from the top level and delete
       `app/ui/src/door/`, with `016` FR-1401 already marked retired in its own spec
       (FR-1801)
-- [ ] T029 [P] [US2] Leaving a flow midway says what has already been spent and does not
+- [x] T029 [P] [US2] Leaving a flow midway says what has already been spent and does not
       block (FR-1808). A teacher with a class in ten minutes must never be held inside a
       screen
-- [ ] T030 [US2] Extend `e2e/nav.spec.ts` with the five steps, and keep
+- [x] T030 [US2] Extend `e2e/nav.spec.ts` with the five steps, and keep
       `e2e/group.spec.ts`'s «no way to sign two documents with one action» passing over
       the new screens
 

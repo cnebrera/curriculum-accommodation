@@ -6,6 +6,7 @@ import { Rail } from './nav/Rail.js';
 import { startRoute, reduceRoute, type LearnerTab } from './nav/route.js';
 import { useLearners } from './data/learners.js';
 import { DoorScreen } from './door/DoorScreen.js';
+import { PrepareFlow } from './prepare/PrepareFlow.js';
 import { ComposeScreen, ComposeSummary } from './compose/ComposeScreen.js';
 import {
   GuideScreen, AcnsDraftScreen, GuideConversation, AcsHelpScreen,
@@ -454,7 +455,26 @@ export function App() {
           The rail carries who this is and which section she is in, so the content area
           is the section itself and nothing wraps it.
         */}
-        {route.at === 'learner' ? (
+        {/*
+          Un flujo en marcha se dibuja **dentro** de su sección (`020` US2, FR-1809).
+          El raíl del alumno sigue a la vista, así que se puede salir sin acabar — que es
+          FR-1808 y no una comodidad: una maestra con clase en diez minutos no puede
+          quedarse atrapada dentro de una pantalla.
+
+          Antes de esta línea, `route.flow` lo escribía el reductor y **no lo leía nadie**
+          — el defecto insignia de este repositorio, en la versión más incómoda: un
+          reductor probado y sin lector.
+        */}
+        {route.at === 'learner' && route.tab === 'prepare' && route.flow ? (
+          <PrepareFlow
+            code={route.code}
+            flow={route.flow}
+            also={route.also ?? [route.code]}
+            {...(route.job ? { job: route.job } : {})}
+            go={go}
+            composed={composed}
+            setComposed={setComposed} />
+        ) : route.at === 'learner' ? (
           <LearnerSection
               code={route.code}
               {...(whoIs(route.code)?.name ? { name: whoIs(route.code)!.name } : {})}
@@ -498,11 +518,12 @@ export function App() {
                * shippable without taking anything away: the section is real and works,
                * and US2 replaces what is inside it rather than where it is.
                */
-              onPrepare={() => {
-                dispatch({ type: 'reset' });
-                dispatch({ type: 'learner/add', code: route.code });
-                go({ type: 'legacy', view: 'door' });
-              }}
+              /*
+               * Arranca el flujo **aquí dentro** (`020` T019). Antes era «llévame a la
+               * puerta con este alumno ya elegido», que es lo que hizo US1 entregable sin
+               * quitar nada; ahora el flujo vive en la ruta y la puerta sobra.
+               */
+              onPrepare={(of) => go({ type: 'flow/start', of })}
               onErased={() => go({ type: 'caseload' })}
               /*
                * Out to Configuración ▸ Pictogramas **carrying where she came from**, so

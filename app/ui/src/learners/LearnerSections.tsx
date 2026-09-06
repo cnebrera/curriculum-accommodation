@@ -6,6 +6,7 @@ import { HandoverReview } from './HandoverReview.js';
 import { ForgetLearner } from './ForgetLearner.js';
 import type { LearnerTab } from '../nav/route.js';
 import { StructureScreen } from '../structure/StructureScreen.js';
+import { ChooseBranch } from '../prepare/PrepareSteps.js';
 import { useNormative, documentName, registerName } from '../data/normative.js';
 import { ExportPacketSection } from '../coordination/ExportPacket.js';
 
@@ -123,7 +124,14 @@ export function LearnerSection({
    * which is what makes US1 shippable without removing anything: the section exists, it
    * works, and US2 changes what is inside it rather than where it is.
    */
-  onPrepare: () => void;
+  /**
+   * Empezar un flujo, con la rama que ha elegido (`020` T019).
+   *
+   * Era «llévame a la puerta con este alumno ya elegido», que es lo que hacía que US1
+   * fuese entregable sin quitar nada. Ahora es «arranca el flujo aquí»: la puerta se
+   * retira en T028 y esto ya no la necesita.
+   */
+  onPrepare: (of: 'adapt' | 'compose') => void;
   /** She erased this learner: there is no learner left to be inside. */
   onErased: () => void;
   /** Into Configuración ▸ Pictogramas, and back to him after (`025` FR-2303/2304). */
@@ -142,23 +150,15 @@ export function LearnerSection({
       );
 
     case 'prepare':
-      return (
-        <Page title={`Prepararle algo a ${name ?? code}`}
-              lede="Adaptar algo que ya tienes, o hacer material desde cero para lo que le hace falta.">
-          <Section>
-            <Callout intent="info" title="Esto se está mudando aquí">
-              Ahora mismo esto te lleva al camino de siempre, con {name ?? code} ya
-              elegido. Los pasos van a vivir en esta sección: qué material es, tráelo,
-              comprueba que lo he leído bien, para quién más, y revisar.
-            </Callout>
-            <div className="row">
-              <button className="btn btn-primary" onClick={onPrepare}>
-                Preparar material para {name ?? code}
-              </button>
-            </div>
-          </Section>
-        </Page>
-      );
+      /*
+       * Paso 1 (`020` T019, FR-1812): qué necesitas, y nada más — de quién es ya se sabe,
+       * porque se ha entrado por él.
+       *
+       * Los pasos siguientes los dibuja `PrepareFlow` desde `App.tsx`, porque viven en la
+       * ruta y no en esta pantalla. Los dos defectos de navegación de este proyecto eran
+       * estado sostenido en algo que navegar destruye.
+       */
+      return <ChooseBranch code={code} {...(name ? { name } : {})} onStart={onPrepare} />;
 
     case 'structure':
       /*

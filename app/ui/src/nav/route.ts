@@ -94,8 +94,28 @@ export const settingsPanes: readonly SettingsPane[] =
  * would price a run that may never happen.
  */
 export type Flow =
-  | { of: 'adapt'; step: 'kind' | 'bring' | 'verify' | 'whoElse' | 'review' }
-  | { of: 'compose'; step: 'ask' | 'summary' | 'whoElse' | 'review' };
+  | {
+      of: 'adapt';
+      step: 'kind' | 'bring' | 'verify' | 'whoElse' | 'review';
+      /**
+       * What the material is (`012` FR-1001), `undefined` until she says (`020` T020).
+       *
+       * Here rather than in a screen's `useState`, and the reason is the rule below it:
+       * **changing branch drops it**. That rule lived in `door/intent.ts`; a rule about a
+       * value belongs with the value, and a value carried in a component is a value the
+       * next component forgets to clear (`020` T021, research R2).
+       */
+      kind?: string;
+    }
+  | {
+      of: 'compose';
+      step: 'ask' | 'summary' | 'whoElse' | 'review';
+      /**
+       * Composed practice **is** a worksheet: the kind is a fact about what was produced
+       * rather than something she chose, so nothing asks and nothing carries it here.
+       * Deliberately absent rather than optional — see `flow/start`.
+       */
+    };
 
 const FIRST_STEP = { adapt: 'kind', compose: 'ask' } as const;
 
@@ -251,6 +271,7 @@ export type RouteAction =
   | { type: 'learner/tab'; tab: LearnerTab }
   | { type: 'flow/start'; of: 'adapt' | 'compose' }
   | { type: 'flow/step'; step: Flow['step'] }
+  | { type: 'flow/kind'; kind: string }
   | { type: 'flow/job'; job: string }
   | { type: 'flow/also'; codes: readonly string[] }
   | { type: 'flow/leave' }
@@ -323,14 +344,32 @@ export function reduceRoute(route: Route, action: RouteAction): Route {
 
     case 'flow/start': {
       if (route.at !== 'learner') return route;
-      // A flow belongs to `prepare`. Starting one from another section moves her to the
-      // section that owns it rather than rendering a step under «Quién es».
+      /*
+       * A flow belongs to `prepare`. Starting one from another section moves her to the
+       * section that owns it rather than rendering a step under «Quién es».
+       *
+       * And **the kind does not survive a change of branch** (`016` FR-1408's other
+       * half, moved here from `door/intent.ts` by `020` T021). The learners do survive —
+       * they are in `also` and this action rebuilds it from the same code — but carrying
+       * «examen» onto the compose branch would assert that a composed practice sheet is
+       * an exam, which is exactly the silent mislabelling `012` exists to prevent.
+       *
+       * It falls out of the shape rather than being coded: the new flow is built fresh,
+       * so there is no `kind` to carry and no line that clears one.
+       */
       return {
         ...route,
         tab: 'prepare',
         flow: { of: action.of, step: FIRST_STEP[action.of] } as Flow,
         also: withSelf(route.code, []),
       };
+    }
+
+    case 'flow/kind': {
+      // Only the adapt branch has one to set. On `compose` the kind is a fact about what
+      // was produced, so this is a no-op rather than a field that quietly appears.
+      if (route.at !== 'learner' || route.flow?.of !== 'adapt') return route;
+      return { ...route, flow: { ...route.flow, kind: action.kind } };
     }
 
     case 'flow/step': {
@@ -379,3 +418,25 @@ export function reduceRoute(route: Route, action: RouteAction): Route {
 /** True while she is inside this learner, whatever section she is in. */
 export const insideLearner = (route: Route, code: string): boolean =>
   route.at === 'learner' && route.code === code;
+
+/**
+ * What is still missing before the run can start, in her words (`013` FR-1105).
+ *
+ * Moved out of `door/intent.ts` with its tests (`020` T021). One thing at a time, in the
+ * order the steps ask: a primary action that goes grey with no explanation is a dead end
+ * she cannot debug, and «dime qué es este material» is a next step.
+ *
+ * Returns `null` when nothing is missing.
+ */
+export function whatIsMissing(route: Route): string | null {
+  if (route.at !== 'learner') return 'Dime primero para quién es.';
+  if (!route.flow) return 'Dime qué quieres hacer.';
+  if (route.flow.of === 'adapt' && route.flow.kind === undefined) {
+    return 'Dime qué es este material.';
+  }
+  if ((route.also ?? []).length === 0) return 'Dime primero para quién es.';
+  return null;
+}
+
+/** Ready to start: the branch chosen, the kind said when it is asked, and somebody to do it for. */
+export const flowReady = (route: Route): boolean => whatIsMissing(route) === null;

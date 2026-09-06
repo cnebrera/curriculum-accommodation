@@ -314,3 +314,150 @@ test.describe('the official document has a way in', () => {
     await app.close();
   });
 });
+
+/**
+ * Los pasos, dentro del alumno (020 T030, US2, FR-1809…1816).
+ *
+ * ## Lo que este suite puede recorrer y lo que no
+ *
+ * Los pasos 3 y 5 —traer el material y adaptarlo— necesitan un proveedor, y aquí no hay
+ * ninguno: la clave sembrada es falsa a propósito. Así que se recorre hasta donde se
+ * puede sin gastar, que es exactamente donde están las promesas que se rompen en
+ * silencio: que ninguna rama viene preelegida, que el tipo de material no viene puesto,
+ * que el menú del alumno **no desaparece**, y que irse a mitad no cuesta nada.
+ *
+ * Lo que pasa después de pagar lo cubren `e2e/group.spec.ts` y `e2e/adapt.spec.ts`, que
+ * ya existían y siguen pasando sobre estas pantallas — que es la otra mitad de T030.
+ */
+test.describe('preparar algo, desde dentro del alumno', () => {
+  let app: ElectronApplication;
+  let page: Page;
+
+  test.beforeAll(async () => {
+    let vault: string;
+    ({ app, page, vault } = await launch());
+    await seed(page, vault);
+  });
+
+  test.afterAll(async () => { await app.close(); });
+
+  /*
+   * Cada caso empieza en la sección, y no donde lo dejó el anterior.
+   *
+   * La primera versión los encadenaba y pasaban en orden y fallaban solos — que es un
+   * suite que no se puede correr con `-g` para mirar uno, justo cuando hace falta. Y el
+   * nombre lo lee del raíl en vez de cablearlo: la lista no está en el orden en que un
+   * test la sembró.
+   */
+  test.beforeEach(async () => {
+    await intoLearner(page);
+    await toTab(page, 'prepare');
+  });
+
+  /** Cómo le llama ella a este niño, según el propio raíl. */
+  const whoIsThis = async (): Promise<string> => {
+    const label = await learnerRail(page).getAttribute('aria-label');
+    return (label ?? '').replace(/^Apartados de\s*/, '').trim();
+  };
+
+  test('las dos ramas se ofrecen como iguales, y ninguna viene elegida', async () => {
+    /*
+     * FR-1812. Una por defecto sería nuestra idea de lo que suele hacer presentada como
+     * la suya — y la rama equivocada no se nota hasta tres pasos después.
+     */
+    const adapt = page.getByRole('button', { name: /Adaptar algo que tengo/ });
+    const compose = page.getByRole('button', { name: /Hacer material para que aprenda/ });
+    await expect(adapt).toBeVisible();
+    await expect(compose).toBeVisible();
+    for (const b of [adapt, compose]) {
+      expect(await b.getAttribute('aria-pressed')).toBeNull();
+    }
+  });
+
+  test('y ya sabe de quién es: no lo vuelve a preguntar', async () => {
+    /*
+     * La puerta preguntaba «¿para quién?» primero. Aquí se ha entrado por él, así que la
+     * pregunta que queda es la otra — y `withSelf` en el reductor garantiza que el que
+     * entró está **en** el lote y no al lado (FR-1814).
+     */
+    await expect(page.getByRole('heading', { name: `Prepararle algo a ${await whoIsThis()}` }))
+      .toBeVisible();
+    await expect(page.getByText('¿Para quién?')).toHaveCount(0);
+  });
+
+  test('el tipo de material se pregunta y no viene puesto', async () => {
+    /*
+     * FR-1813. Un «ficha» por defecto es cómo un examen se adapta como ficha, en
+     * silencio, con la regla dura sobre el criterio sin nada que le diga a qué documento
+     * gobernaba.
+     */
+    await page.getByRole('button', { name: /Adaptar algo que tengo/ }).click();
+    await expect(page.getByRole('heading', { name: '¿Qué es este material?' })).toBeVisible();
+    await expect(page.getByText('Dime qué es este material.')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Seguir' })).toBeDisabled();
+    // FR-1809: el menú del alumno sigue ahí, que es la diferencia entre un paso y un
+    // flujo que se lleva la navegación por delante.
+    await expect(learnerRail(page)).toBeVisible();
+    await expect(learnerRail(page).getByRole('button', { name: TAB.made })).toBeVisible();
+  });
+
+  test('elegir un examen dice lo que se compromete a no tocar', async () => {
+    /*
+     * FR-1405, y en la fila de la acción y no en un aviso arriba: un aviso arriba se lee
+     * una vez y luego es mobiliario. La frase sale del `before:` del corpus, así que un
+     * tipo nuevo tiene su frase sin que ninguna pantalla cambie.
+     */
+    await page.getByRole('button', { name: /Adaptar algo que tengo/ }).click();
+    await page.getByRole('button', { name: /Un examen o una prueba/ }).click();
+    await expect(page.getByRole('button', { name: 'Seguir' })).toBeEnabled();
+    await expect(page.getByText('Dime qué es este material.')).toHaveCount(0);
+  });
+
+  test('seguir lleva al paso de traerlo, con la tira marcando dónde está', async () => {
+    await page.getByRole('button', { name: /Adaptar algo que tengo/ }).click();
+    await page.getByRole('button', { name: /Un examen o una prueba/ }).click();
+    await page.getByRole('button', { name: 'Seguir' }).click();
+    await expect(page.getByText('2. Tráelo')).toBeVisible();
+    // `010` FR-812: el paso actual no se señala sólo con color.
+    await expect(page.locator('[aria-current="step"]')).toContainText('Tráelo');
+    await expect(learnerRail(page)).toBeVisible();
+  });
+
+  test('y dejarlo a mitad no cuesta nada ni pierde el alumno', async () => {
+    /*
+     * FR-1808. Y vuelve a **su** sección, no a la lista: irse de un paso no es irse del
+     * niño.
+     */
+    const who = await whoIsThis();
+    await page.getByRole('button', { name: /Adaptar algo que tengo/ }).click();
+    await page.getByRole('button', { name: /Un examen o una prueba/ }).click();
+    await page.getByRole('button', { name: 'Seguir' }).click();
+    await page.getByRole('button', { name: 'Dejarlo por ahora' }).click();
+    await expect(page.getByRole('heading', { name: `Prepararle algo a ${who}` })).toBeVisible();
+    await expect(learnerRail(page)).toBeVisible();
+  });
+
+  test('la otra rama arranca en su propia primera pregunta', async () => {
+    await page.getByRole('button', { name: /Hacer material para que aprenda/ }).click();
+    await expect(page.getByText('1. ¿Qué tiene que aprender?')).toBeVisible();
+    // Y no pregunta qué tipo de material es: lo compuesto es una ficha por lo que es, no
+    // por lo que ella diga (`012`).
+    await expect(page.getByRole('heading', { name: '¿Qué es este material?' })).toHaveCount(0);
+  });
+
+  test('y cambiar de rama no se trae el tipo de material puesto', async () => {
+    /*
+     * `016` FR-1408, ahora una regla del reductor y no de una pantalla. Si «examen»
+     * sobreviviera, un material compuesto se adaptaría bajo las reglas de examen sin que
+     * nadie lo dijera.
+     */
+    await page.getByRole('button', { name: /Adaptar algo que tengo/ }).click();
+    await page.getByRole('button', { name: /Un examen o una prueba/ }).click();
+    await page.getByRole('button', { name: 'Dejarlo' }).click();
+    await page.getByRole('button', { name: /Hacer material para que aprenda/ }).click();
+    await page.getByRole('button', { name: 'Dejarlo por ahora' }).click();
+    await page.getByRole('button', { name: /Adaptar algo que tengo/ }).click();
+    await expect(page.getByText('Dime qué es este material.')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Seguir' })).toBeDisabled();
+  });
+});
