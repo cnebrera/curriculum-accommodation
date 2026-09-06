@@ -232,8 +232,13 @@ describe('Configuración', () => {
      * `normative` joined in `029`: which normativa her documents are written in is a
      * fact about her school, not about a child, so it sits beside the pictogram set for
      * the same reason that one is here.
+     *
+     * `criterio` joined in `034`: the recipes and instructions themselves, brought from
+     * the repository and reloadable from here. Its own section rather than a button
+     * inside another, because it is the one thing in Configuración that changes **what
+     * Rampa does**, and it has an offer to read and a history to go back through.
      */
-    const panes: SettingsPane[] = ['pictograms', 'normative', 'service', 'about'];
+    const panes: SettingsPane[] = ['pictograms', 'normative', 'criterio', 'service', 'about'];
     expect([...settingsPanes].sort()).toEqual([...panes].sort());
   });
 });

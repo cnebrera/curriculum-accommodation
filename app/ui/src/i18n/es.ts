@@ -28,7 +28,10 @@ export const es = {
          settings: 'Configuración', pictograms: 'Pictogramas',
          // `029`: which normativa her documents are written in. A fact about her
          // school, not about a child — so it lives beside the pictogram set.
-         normative: 'Normativa' },
+         normative: 'Normativa',
+         // `034`: las recetas y las instrucciones con las que adapta. Se traen del
+         // repositorio y se recargan desde aquí.
+         criterio: 'El criterio pedagógico' },
 
   onboarding: {
     welcome: 'Vamos a dejarlo listo',

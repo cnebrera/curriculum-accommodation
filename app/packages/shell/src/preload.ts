@@ -108,6 +108,23 @@ const api = {
     setConsent: (on: boolean) => invoke('updates:setConsent', on),
   },
   /**
+   * El criterio pedagógico: traerlo, leerlo, aceptarlo, volver atrás (`034` US2/US3).
+   *
+   * Two acts and they are separate on purpose: `look` connects and stages, `accept` is
+   * one rename and a pointer. The corpus is the judgement layer, and it changing under
+   * her without her reading it is what this feature exists to prevent.
+   */
+  corpusUpdate: {
+    state: () => invoke('corpus:updateState'),
+    look: () => invoke('corpus:updateLook'),
+    /** One changed file, before and after, so «enséñamelo entero» is possible. */
+    file: (path: string) => invoke('corpus:updateFile', path),
+    accept: () => invoke('corpus:updateAccept'),
+    decline: () => invoke('corpus:updateDecline'),
+    /** `null` goes back to the corpus that came with the application. */
+    revert: (version: number | null) => invoke('corpus:updateRevert', version),
+  },
+  /**
    * Which normativa she works under (029).
    *
    * `list` carries labels, origin and review status and **no raw file**: the corpus

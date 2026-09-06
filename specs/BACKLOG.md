@@ -413,35 +413,43 @@ every moment should have a spec. What it added beyond the seams pass:
    journey sentence → T094). Handover *import* (004 US2) recorded as deliberately
    deferred rather than silently missing.
 
-## G53 · El canal de actualización del corpus no tiene todavía una llave
+## G53 · La firma del corpus, retirada el mismo día que se escribió
 
-**Abierto 2026-09-06** por `034`. **Necesita una decisión tuya, y no la he inventado.**
+**Cerrado 2026-09-06**, y anotado porque el razonamiento sirve para lo siguiente.
 
-La maquinaria está construida y probada: firma Ed25519 sobre bytes canónicos, hashes por
-fichero dentro de lo firmado, escaneo de lo verificado antes de activar, publicación por
-un `rename` atómico, puntero, vuelta atrás y conservación del histórico. Lo que falta no
-es código: es que **exista un par de claves del proyecto**.
+Escribí el canal de actualización del corpus con una firma Ed25519 sobre bytes canónicos
+verificada contra una clave compilada en la aplicación, y lo presenté como bloqueado
+esperando que alguien decidiera dónde vive la privada. Carlos lo retiró: «te conectas al
+repo y fuera, tienes la firma de GitHub».
 
-Las preguntas que van con eso, y son tuyas:
+**Tenía razón, y el argumento es el que importa.** La privada habría vivido en un secreto
+de CI — así que **cualquiera con acceso de escritura al repositorio** podría haber
+cambiado `/recipes` y hacer que CI lo firmara. La firma defendía sólo contra un atacante
+capaz de alterar lo que sirve GitHub **sin** tener acceso al repositorio ni a CI: un CA
+comprometido, un intermediario. Para una herramienta pequeña de PTs en centros españoles
+eso es un modelo de amenaza inventado, y el coste era real: una clave que nadie sabía
+gestionar, un proceso de release que se puede romper, y un modo de fallo en el que se
+pierde la clave y el canal muere.
 
-1. **Dónde vive la privada.** Un secreto de CI es lo obvio; también significa que quien
-   tenga acceso al repositorio en GitHub puede publicar criterio pedagógico firmado.
-2. **Quién puede publicar una corrección del corpus**, y si eso es la misma lista de
-   personas que puede hacer merge.
-3. **Qué pasa si esa clave se pierde o se filtra.** Hoy no hay rotación: la pública está
-   compilada en la aplicación, así que cambiarla es publicar una versión. Eso puede estar
-   bien —es lo mismo que pasa con cualquier raíz de confianza pequeña— pero conviene que
-   sea una decisión y no una sorpresa.
-4. **Y si el canal se enciende ya o no.** Todo lo de `034` funciona apagado: sin release
-   `corpus-v<n>` publicada, no hay nada que ofrecer y no se pide nada.
+Y chocaba con el resto de la arquitectura. Este proyecto ya trata el corpus como **texto
+que la gente edita**: `recipes-local/` gana por id, `instructions/` es juicio que se
+invita a corregir, y `029` deja importar un corpus normativo que nadie firma, defendido
+por un escaneo. Firmar la copia del proyecto mientras ella edita la suya libremente era
+coherente y pesado.
 
-Hasta que eso esté decidido, el aviso de versión de la aplicación (US1) **sí** funciona:
-es sólo una frase y un enlace, no lleva firma y no descarga nada.
+**Lo que quedó en su lugar.** Los hashes, como integridad y no como autoría: cazan una
+descarga truncada, que es un fallo real y barato de cazar. La comprobación de rutas, para
+que una lista de ficheros hostil no escriba fuera de su sitio. El escaneo de inyección
+antes de que nada gobierne — que pasa de defensa en profundidad a **la** defensa, así que
+gana importancia en vez de perderla. Y que nada gobierna hasta que ella lo lee y dice que
+sí.
 
-Ojo con no confundirlo con **P52**, que es firmar los **instaladores** de macOS y Windows.
-Son dos deudas distintas: ésta es sobre firmar *contenido* que Rampa aplica sola después
-de que ella lo acepte; aquélla es sobre que el sistema operativo deje instalar la
-aplicación sin una advertencia de que viene de un desarrollador sin identificar.
+**La lección de proceso, que es mía.** Construí ~100 líneas de criptografía y 14 casos de
+test para una amenaza que nadie había pedido defender, y luego describí el resultado como
+«bloqueado por una decisión tuya» — que suena mejor que «he construido algo de más». La
+pregunta que no me hice fue *contra quién* protege esto, y la respuesta —contra
+prácticamente nadie que no tenga ya acceso de escritura— estaba disponible antes de
+escribir la primera línea.
 
 ## G51 · Un corpus normativo no se puede actualizar: se reimporta
 

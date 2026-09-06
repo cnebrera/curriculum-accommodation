@@ -1,39 +1,38 @@
-import { createHash, verify, createPublicKey } from 'node:crypto';
-import { logger } from '../log.js';
+import { createHash } from 'node:crypto';
 
 /**
- * What an update says about itself, and whether to believe it (034 T005, FR-3211).
+ * What a corpus release says it contains (034 T005, FR-3210, FR-3211).
  *
- * ## Why a signature and not just HTTPS
+ * ## No signature, and the reason is worth keeping
  *
- * HTTPS authenticates the **host**, not the project. The threat this feature names is «a
- * malicious corpus update», which is `029`'s import threat with a distribution channel
- * attached — and a distribution channel is worse in one specific way: an import happens
- * because she went looking for a file, and an update arrives because she opened the
- * application.
+ * This was an Ed25519 detached signature verified against a key compiled into the
+ * application. Carlos removed it on 2026-09-06 and the argument is the one that matters:
  *
- * So the truth is an **Ed25519 detached signature over canonical manifest bytes**,
- * verified against a public key **compiled into the application**. The corpus cannot
- * vouch for itself: a key delivered by the channel it protects verifies nothing.
+ * The private half would live in a CI secret. **Anybody who can write to the repository
+ * can change `/recipes` and have CI sign it** — so the signature defends only against an
+ * attacker who can alter what GitHub serves *without* having repository or CI access: a
+ * compromised CA, a man in the middle. For a small tool used by PTs in Spanish schools
+ * that is an invented threat model, and the cost was real — a key nobody had decided how
+ * to manage, a release process that can break, and a failure mode where the key is lost
+ * and the whole channel dies.
  *
- * ## The order of operations is the contract
+ * It also sat badly with the rest of the architecture. This project already treats the
+ * corpus as **text people edit**: `recipes-local/` wins by id, `instructions/` is
+ * judgement a PT is invited to correct, and `029` lets her import a normative corpus
+ * nobody signs at all, defended by a scan. Signing the project's copy while she edits her
+ * own freely was coherent and heavy.
  *
- * 1. Verify the signature. **Unverified bytes are shown to nobody and written nowhere
- *    permanent** — not even to a temp file she could be shown.
- * 2. Show her the offer, from the verified manifest.
- * 3. On acceptance, fetch every listed file, checking each against its manifest hash.
- * 4. Only when the snapshot is complete and every hash matches: one atomic rename.
+ * ## What is left, and what it is for
  *
- * Any failure at any step leaves **zero files changed**, which is what SC-3204 checks by
- * hashing the store rather than by the absence of an error message.
+ * The hashes stay. They are **integrity, not authority**: they catch a truncated or
+ * corrupted download, which is a real and cheap failure to catch. They do not claim
+ * anything about who wrote the bytes — the repository is public and what it says is what
+ * it says.
  *
- * ## Canonical bytes, because a signature over «the JSON» signs nothing
- *
- * Two encoders disagree about key order and whitespace, so «the bytes I signed» and «the
- * bytes you parsed» must be derivable from the same structure by both sides. Sorted keys,
- * no whitespace, UTF-8 — and the signature is over **that**, never over the file as
- * received. A signature over the received bytes would verify a file and say nothing about
- * what the file means once parsed.
+ * What actually defends this channel is the same thing that defends `029`'s imports:
+ * every file is scanned for instruction-shaped text before it can govern, and nothing
+ * governs until she has read it and said yes. That was defence in depth; it is now the
+ * defence, which is a reason to keep it sharp rather than a reason to be uneasy.
  */
 
 export interface ManifestFile {
@@ -49,61 +48,35 @@ export interface UpdateManifest {
   /** Plain language, Spanish. She reads this before anything else (FR-3206). */
   summary: string;
   publishedAt: string;
-  /** **The complete corpus at that version, not a delta** — see below. */
+  /** **The complete corpus at that version, not a delta.** */
   files: ManifestFile[];
 }
 
 /**
  * The format this build's parsers understand (FR-3210).
  *
- * Beside the verification rather than in a config file, because the number means «what
- * the code in this repository can read» and it should move when that changes — in the
- * same commit, where a reviewer sees both.
+ * Beside the parsing rather than in a config file, because the number means «what the
+ * code in this repository can read» and it should move when that changes — in the same
+ * commit, where a reviewer sees both.
  */
 export const SUPPORTED_FORMAT = 1;
-
-/**
- * The bytes that are signed, derivable identically on both sides.
- *
- * `files` is sorted by path and the keys are emitted in a fixed order, so a publisher
- * that re-serialises the manifest and a client that parses it arrive at the same string.
- */
-export function canonicalManifest(m: UpdateManifest): string {
-  return JSON.stringify({
-    files: [...m.files]
-      .sort((a, b) => (a.path < b.path ? -1 : a.path > b.path ? 1 : 0))
-      .map((f) => ({ bytes: f.bytes, path: f.path, sha256: f.sha256 })),
-    formatVersion: m.formatVersion,
-    publishedAt: m.publishedAt,
-    summary: m.summary,
-    version: m.version,
-  });
-}
 
 export type ManifestVerdict =
   | { of: 'ok'; manifest: UpdateManifest }
   /** Refused whole. `say` is what she reads; nothing partial is ever returned. */
   | { of: 'refused'; say: string; because: RefusalKind };
 
-export type RefusalKind =
-  | 'unparseable' | 'malformed' | 'bad-signature' | 'unsupported-format';
+export type RefusalKind = 'unparseable' | 'malformed' | 'unsupported-format';
 
 /**
- * Parse and verify, in that order, returning nothing usable unless both succeed.
+ * Read it, or refuse it whole.
  *
- * A single function rather than parse-then-verify as two steps a caller sequences: two
- * steps is one caller away from a screen that shows a parsed manifest it never checked,
- * and «unverified bytes are shown to nobody» has to be true of every caller rather than
- * remembered by each.
+ * One function rather than parse-then-check as two steps a caller sequences: two steps is
+ * one caller away from a screen that shows a manifest whose format it never checked.
  */
-export function verifyManifest(args: {
-  raw: string;
-  signature: Uint8Array;
-  /** The project's public key, compiled into the application. */
-  publicKeyPem: string;
-}): ManifestVerdict {
+export function readManifest(raw: string): ManifestVerdict {
   let parsed: unknown;
-  try { parsed = JSON.parse(args.raw); } catch {
+  try { parsed = JSON.parse(raw); } catch {
     return {
       of: 'refused', because: 'unparseable',
       say: 'No he podido leer lo que dice esa actualización, así que no la he traído. '
@@ -121,38 +94,11 @@ export function verifyManifest(args: {
   }
 
   /*
-   * The signature, over the **canonical** bytes and not over `args.raw`.
+   * The format gate, **before anything is fetched**.
    *
-   * Over the raw file it would verify a file: change a space and it fails, which sounds
-   * stricter and is in fact weaker in the way that matters — it would say nothing about
-   * whether what the parser *understood* is what the publisher signed.
-   */
-  let ok = false;
-  try {
-    ok = verify(null, Buffer.from(canonicalManifest(manifest), 'utf8'),
-      createPublicKey(args.publicKeyPem), Buffer.from(args.signature));
-  } catch (e: unknown) {
-    logger.warn('corpus-update.verify-threw', {
-      message: e instanceof Error ? e.message.slice(0, 80) : 'unknown',
-    });
-    ok = false;
-  }
-  if (!ok) {
-    return {
-      of: 'refused', because: 'bad-signature',
-      say: 'Esa actualización no viene firmada por el proyecto, así que no me la creo y '
-        + 'no la he traído. No ha cambiado nada de lo que tienes. Si te ha llegado por '
-        + 'otro sitio, no la uses.',
-    };
-  }
-
-  /*
-   * The format gate, **after** the signature and **before** anything is fetched.
-   *
-   * After, because an unsigned manifest's `formatVersion` is a claim by whoever wrote
-   * it. Before the fetch, because a corpus written for a newer Rampa must be refused
-   * whole rather than half-read — FR-3210, and «half-read» here means a recipe whose
-   * new required field this build ignores, silently adapting worse.
+   * A corpus written for a newer Rampa is refused whole rather than half-read, and
+   * «half-read» here means a recipe whose new required field this build ignores —
+   * adapting worse, silently, with a version number saying it is current.
    */
   if (manifest.formatVersion > SUPPORTED_FORMAT) {
     return {
@@ -167,7 +113,12 @@ export function verifyManifest(args: {
   return { of: 'ok', manifest };
 }
 
-/** One file's bytes against what the signed manifest says they are. */
+/**
+ * One file's bytes against what the manifest says they are.
+ *
+ * Length **and** hash, because they fail differently: a truncated download can have been
+ * cut anywhere, and checking only the length would be no check at all.
+ */
 export function fileMatches(bytes: Uint8Array, expected: ManifestFile): boolean {
   if (bytes.byteLength !== expected.bytes) return false;
   return createHash('sha256').update(bytes).digest('hex') === expected.sha256;
@@ -194,8 +145,9 @@ function shapeOf(v: unknown): UpdateManifest | null {
     const bytes = e['bytes'];
     /*
      * A path that could leave the corpus root is a malformed manifest, not a path to
-     * sanitise. Refusal is the vault boundary's house rule and it applies here for a
-     * stronger reason: this one arrives from the network.
+     * sanitise. Refusal is the vault boundary's house rule, and it matters more here
+     * because this one arrives from the network — and, now that nothing is signed, this
+     * is one of the two things standing between a hostile file list and her disk.
      */
     if (!path || path.startsWith('/') || path.includes('..') || path.includes('\\')) return null;
     if (!/^[0-9a-f]{64}$/.test(sha256)) return null;

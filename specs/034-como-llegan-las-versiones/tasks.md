@@ -27,7 +27,7 @@ is mostly `releases.ts` learning to say one more sentence.
       altered bytes, truncation, interruption, unsupported format — is refused whole and
       `userData/corpus/` is **byte-identical** after, checked by hashing the store, not by
       the absence of an error (**FR-3211**, **FR-3210**, SC-3204)
-- [ ] T003 [P] Fixture feeds in `app/packages/providers/test/fixtures/`: a release feed
+- [x] T003 [P] Fixture feeds in `app/packages/providers/test/fixtures/`: a release feed
       (newer / same / 404 / garbage), a corpus feed (manifest + files + signature under a
       **fixture keypair**), and the tampered variants T002 consumes
 
@@ -81,7 +81,7 @@ silence; no network → silence and no error.
       `summary` (the release's plain-language notes), the endpoint comes from the
       declared destinations (T007), and failure stays a sentence, never a dialog
       (**FR-3201**, **FR-3202**)
-- [ ] T010 [US1] `app/ui/src/updates/` · the notice: one quiet line naming the version,
+- [x] T010 [US1] `app/ui/src/updates/` · the notice: one quiet line naming the version,
       the summary in her language, one link opened via the `links.ts` rule — declared
       https URL, never from the renderer — and it does nothing else (**FR-3201**). It
       never appears inside ensayo (`035`) and never interrupts a running job
@@ -127,11 +127,11 @@ whole, governing new jobs only.
       scan (`app/packages/core/src/ir/injection.ts` tiers plus section-spoofing);
       findings shown, quoted and located, activation refused by default (**FR-3211** —
       an update is an import with better provenance, not a bypass)
-- [ ] T018 [US2] `app/ui/src/updates/` · the offer: summary first, then **every changed
+- [x] T018 [US2] `app/ui/src/updates/` · the offer: summary first, then **every changed
       file readable in full** (diff computed locally as a view, full text one gesture
       away), explicit accept as its own act, decline stable and unnagged with the offer
       remaining available (**FR-3206**, the `029` FR-2707 pattern)
-- [ ] T019 [US2] Apply = pointer move: new jobs read the new corpus and their reports cite
+- [x] T019 [US2] Apply = pointer move: new jobs read the new corpus and their reports cite
       it (T008); **signed documents and existing outputs untouched** — asserted both ways:
       byte-identical `output/` across an update, and structurally, no code path from the
       update store to `output/` (**FR-3207**)
@@ -140,7 +140,7 @@ whole, governing new jobs only.
       default and free, **take** renames her file aside dated in her vault — visible,
       never deleted — **view both** shows both; undecided blocks nothing and hers keeps
       winning (**FR-3209**, research R3 — no merge, ever)
-- [ ] T021 [US2] `app/e2e/corpus-update.spec.ts` · quickstart §5 end to end against the
+- [x] T021 [US2] `app/e2e/corpus-update.spec.ts` · quickstart §5 end to end against the
       fixture feed: shown → declined → accepted → cited in the next report → signed
       document byte-identical (SC-3201, **FR-3206**, **FR-3207**)
 
@@ -159,7 +159,7 @@ reinstall, read before it acts.
       screen: every accepted version retained (research R1 — nothing deleted implicitly),
       revert is a pointer move recorded in `active.json` history, and the prior version
       governs new jobs (**FR-3208**)
-- [ ] T023 [P] [US3] Reports after a revert cite the version she returned to (**FR-3207**),
+- [x] T023 [P] [US3] Reports after a revert cite the version she returned to (**FR-3207**),
       and the history shows the revert as plainly as the update — including the
       `superseded-by-bundled` entry when a newer app arrives with a newer bundled corpus
       (**FR-3208**, data-model rule 2)
@@ -180,7 +180,7 @@ reinstall, read before it acts.
       `app/packages/core/src/cost/index.ts` («an update and not a release» — BACKLOG G29)
       now true — record in BACKLOG that the vehicle exists; `029`'s assumption («corpus
       updates travel via 034») pointed here
-- [ ] T027 **Look at it** (`013` FR-1113): `npm run shots` — the notice at its quietest,
+- [x] T027 **Look at it** (`013` FR-1113): `npm run shots` — the notice at its quietest,
       the offer with a long diff narrow and at `xlarge`, the conflict screen's «la tuya /
       la nueva», and whether a revert looks as dignified as an update (quickstart §7)
 - [ ] T028 [P] Run the full suite with the machinery in place and the network unplugged —

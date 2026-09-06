@@ -66,7 +66,7 @@ export const MAIN_TABS: readonly LearnerTab[] =
  * type that can express a destination nothing can draw is a type that will be trusted
  * by a caller and then crash — or worse, render blank.
  */
-export type SettingsPane = 'pictograms' | 'normative' | 'service' | 'about';
+export type SettingsPane = 'pictograms' | 'normative' | 'criterio' | 'service' | 'about';
 
 /**
  * In menu order, and the rail renders from **this** rather than a second list.
@@ -75,7 +75,7 @@ export type SettingsPane = 'pictograms' | 'normative' | 'service' | 'about';
  * sections exist» is where one gets a destination the other does not.
  */
 export const settingsPanes: readonly SettingsPane[] =
-  ['pictograms', 'normative', 'service', 'about'] as const;
+  ['pictograms', 'normative', 'criterio', 'service', 'about'] as const;
 
 /*
  * No `display` pane. The text size, contrast and motion controls already live in the

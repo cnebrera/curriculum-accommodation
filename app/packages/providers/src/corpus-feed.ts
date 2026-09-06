@@ -12,6 +12,19 @@
  * one thing this channel must not have is a way to be exploited before the signature has
  * been checked.
  *
+ * ## No signature: GitHub and HTTPS are the answer
+ *
+ * Carlos, 2026-09-06: «te conectas al repo y fuera, tienes la firma de GitHub». He is
+ * right, and the argument is that the private half of any signing key would live in a CI
+ * secret — so anybody who can write to the repository could have CI sign whatever they
+ * pushed. The signature would have defended only against someone able to alter what
+ * GitHub serves *without* repository or CI access, which for this project is an invented
+ * threat model with a real cost: a key nobody had decided how to manage.
+ *
+ * What defends this channel is what defends `029`'s imports: the hashes catch a broken
+ * download, every file is scanned before it can govern, and nothing governs until she has
+ * read it and said yes.
+ *
  * ## The gate mints the transport
  *
  * There is **no exported transport**. `023`'s own history is the argument, written in
@@ -109,7 +122,6 @@ export interface CorpusRelease {
   /** The corpus version this release publishes. */
   version: number;
   manifestUrl: string;
-  signatureUrl: string;
   /** Where the files themselves live, at that tag. */
   filesBase: string;
 }
@@ -156,14 +168,9 @@ export async function newestCorpusRelease(args: {
       return null;
     };
     const manifestUrl = urlOf('manifest.json');
-    const signatureUrl = urlOf('manifest.sig');
-    /*
-     * Both, or neither. A release with a manifest and no signature is not a release this
-     * application can do anything with, and offering it would put unverified bytes in
-     * front of her while the screen worked out what to say.
-     */
-    if (!manifestUrl || !signatureUrl) continue;
-    best = { version, manifestUrl, signatureUrl, filesBase: `${args.filesBase}corpus-v${version}/` };
+    // No manifest, nothing to offer: a release with no file list is not a corpus release.
+    if (!manifestUrl) continue;
+    best = { version, manifestUrl, filesBase: `${args.filesBase}corpus-v${version}/` };
   }
   return best;
 }

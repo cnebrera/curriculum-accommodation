@@ -333,8 +333,17 @@ describe('inside packages/shell, the surface is small and named', () => {
      * `updates/notice.ts`, which takes the settings directory as an argument and imports
      * no Electron.
      *
+     * **Raised to 1046 on 2026-09-06** for `034`'s corpus channel: six channels in the
+     * preload and one registration line. `updates/corpus.ts` — the whole «look, read,
+     * accept, revert» flow — imports no Electron, because the store directory is
+     * injected like everything else this bound has pushed out.
+     *
+     * Six channels is the design and not sprawl: looking, reading one file, accepting,
+     * declining and reverting are separate acts, and collapsing two to save a line here
+     * would collapse two of her decisions.
+     *
      * 25, not 100. A bound raised to a round number stops being a measurement.
      */
-    expect(lines).toBeLessThan(1035);
+    expect(lines).toBeLessThan(1046);
   });
 });

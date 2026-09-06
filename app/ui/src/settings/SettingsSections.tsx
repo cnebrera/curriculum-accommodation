@@ -4,6 +4,7 @@ import { MyVocabulary } from '../pictograms/MyVocabulary.js';
 import { ConnectionScreen } from './ConnectionScreen.js';
 import { AboutScreen } from '../about/AboutScreen.js';
 import { NormativeSection } from './NormativeSection.js';
+import { CorpusSection } from './CorpusSection.js';
 import type { SettingsPane } from '../nav/route.js';
 
 /**
@@ -44,6 +45,7 @@ export function SettingsSections({ pane, onReconnect, onEnsayo }: {
 }) {
   if (pane === 'service') return <ConnectionScreen onReconnect={onReconnect} onEnsayo={onEnsayo} />;
   if (pane === 'normative') return <NormativeSection />;
+  if (pane === 'criterio') return <CorpusSection />;
   if (pane === 'about') return <AboutScreen />;
   return (
     <Page

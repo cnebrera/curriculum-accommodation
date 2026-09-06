@@ -2,12 +2,20 @@ import { describe, it, expect, vi } from 'vitest';
 import { mkdtemp, mkdir, writeFile, readFile, rm, readdir } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { createHash, generateKeyPairSync, sign } from 'node:crypto';
-import { canonicalManifest, type UpdateManifest } from '@rampa/core';
+import { createHash } from 'node:crypto';
+import type { UpdateManifest } from '@rampa/core';
 import type { CorpusTransport, CorpusRelease } from '@rampa/providers';
 
 /**
  * Verify, then publish — and a failure changes nothing (034 T015/T016/T017, SC-3204).
+ *
+ * ## No signature, since 2026-09-06
+ *
+ * The «signed by somebody else» case went with the signature itself: its private half
+ * would have lived in a CI secret, so anybody who can write to the repository could have
+ * had CI sign whatever they pushed. What is checked here is that a **broken or
+ * malformed** update changes nothing, and that instruction-shaped text in a perfectly
+ * well-formed one is still shown before anything governs.
  *
  * ## Checked by hashing the store, not by the absence of an error
  *
@@ -18,13 +26,11 @@ import type { CorpusTransport, CorpusRelease } from '@rampa/providers';
  */
 vi.mock('electron', () => ({ ipcMain: { handle: () => {} }, app: {}, dialog: {}, shell: {} }));
 
+const repoRoot = join(process.cwd(), '..');
+
 const {
   fetchUpdate, acceptUpdate, declineUpdate, revertTo, readPointer, acceptedVersions,
 } = await import('../src/corpus/updates.js');
-
-const { publicKey, privateKey } = generateKeyPairSync('ed25519');
-const publicKeyPem = publicKey.export({ type: 'spki', format: 'pem' }).toString();
-const other = generateKeyPairSync('ed25519');
 
 const FILES: Record<string, string> = {
   'recipes/core/una.md': '---\nid: una\n---\n\n# Una receta corregida\n',
@@ -48,22 +54,18 @@ const manifestOf = (over: Partial<UpdateManifest> = {}): UpdateManifest => ({
 const release: CorpusRelease = {
   version: 4,
   manifestUrl: 'https://example/manifest.json',
-  signatureUrl: 'https://example/manifest.sig',
   filesBase: 'https://example/files/',
 };
 
-/** A transport that serves a manifest, its signature, and the files. */
+/** A transport that serves a manifest and the files it lists. */
 function transportOf(opts: {
-  manifest?: UpdateManifest; signer?: typeof privateKey; corrupt?: string;
+  manifest?: UpdateManifest; corrupt?: string;
 } = {}): CorpusTransport {
   const m = opts.manifest ?? manifestOf();
-  const sig = new Uint8Array(
-    sign(null, Buffer.from(canonicalManifest(m), 'utf8'), opts.signer ?? privateKey));
   return {
     json: async () => null,
     text: async (url) => (url === release.manifestUrl ? JSON.stringify(m) : null),
     bytes: async (url) => {
-      if (url === release.signatureUrl) return sig;
       const path = url.replace(release.filesBase, '');
       const content = FILES[path];
       if (content === undefined) return null;
@@ -111,7 +113,7 @@ async function fingerprint(root: string): Promise<string[]> {
 const offer = (transport: CorpusTransport, store: string, governing: string) =>
   fetchUpdate({
     transport, release, store, governingRoot: governing,
-    localOverrides: [], publicKeyPem,
+    localOverrides: [],
   });
 
 describe('a good update', () => {
@@ -171,7 +173,6 @@ describe('a good update', () => {
 
 describe('and a bad one changes zero files', () => {
   const cases: Array<[string, () => CorpusTransport]> = [
-    ['signed by somebody else', () => transportOf({ signer: other.privateKey })],
     ['a file that is not what the manifest says', () => transportOf({ corrupt: 'instructions/adapt.md' })],
     ['written for a newer Rampa', () => transportOf({ manifest: manifestOf({ formatVersion: 99 }) })],
   ];
@@ -204,21 +205,15 @@ describe('and a bad one changes zero files', () => {
      */
     const { dir, store, governing } = await scratch();
     const m = manifestOf({ formatVersion: 99 });
-    const sig = new Uint8Array(
-      sign(null, Buffer.from(canonicalManifest(m), 'utf8'), privateKey));
     let filesFetched = 0;
     const counting: CorpusTransport = {
       json: async () => null,
       text: async () => JSON.stringify(m),
-      bytes: async (url) => {
-        if (url === release.signatureUrl) return sig;
-        filesFetched += 1;
-        return new Uint8Array();
-      },
+      bytes: async () => { filesFetched += 1; return new Uint8Array(); },
     };
     const got = await fetchUpdate({
       transport: counting, release, store, governingRoot: governing,
-      localOverrides: [], publicKeyPem,
+      localOverrides: [],
     });
     expect(got.of).toBe('refused');
     expect(filesFetched).toBe(0);
@@ -246,13 +241,10 @@ describe('the scan runs on the verified files, before anything governs', () => {
         sha256: createHash('sha256').update(content, 'utf8').digest('hex'),
       })),
     };
-    const sig = new Uint8Array(
-      sign(null, Buffer.from(canonicalManifest(m), 'utf8'), privateKey));
     const transport: CorpusTransport = {
       json: async () => null,
       text: async () => JSON.stringify(m),
       bytes: async (url) => {
-        if (url === release.signatureUrl) return sig;
         const path = url.replace(release.filesBase, '');
         return hostile[path] ? new TextEncoder().encode(hostile[path]) : null;
       },
@@ -260,7 +252,7 @@ describe('the scan runs on the verified files, before anything governs', () => {
 
     const { dir, store, governing } = await scratch();
     const got = await fetchUpdate({
-      transport, release, store, governingRoot: governing, localOverrides: [], publicKeyPem,
+      transport, release, store, governingRoot: governing, localOverrides: [],
     });
     expect(got.of).toBe('offer');
     if (got.of !== 'offer') return;
@@ -277,7 +269,7 @@ describe('her own edits are named, never overwritten (FR-3209)', () => {
     const { dir, store, governing } = await scratch();
     const got = await fetchUpdate({
       transport: transportOf(), release, store, governingRoot: governing,
-      localOverrides: ['una'], publicKeyPem,
+      localOverrides: ['una'],
     });
     expect(got.of).toBe('offer');
     if (got.of !== 'offer') return;
@@ -295,7 +287,7 @@ describe('her own edits are named, never overwritten (FR-3209)', () => {
     const { dir, store, governing } = await scratch();
     const got = await fetchUpdate({
       transport: transportOf(), release, store, governingRoot: governing,
-      localOverrides: ['una'], publicKeyPem,
+      localOverrides: ['una'],
     });
     if (got.of !== 'offer') throw new Error('expected an offer');
     await acceptUpdate({ store, update: got.update, on: '2026-09-21' });
@@ -337,9 +329,64 @@ describe('and nothing reaches the network unasked', () => {
     const { dir, store, governing } = await scratch();
     const got = await fetchUpdate({
       transport: forbidden, release, store, governingRoot: governing,
-      localOverrides: [], publicKeyPem,
+      localOverrides: [],
     });
     expect(got.of).toBe('none');
+    await rm(dir, { recursive: true, force: true });
+  });
+});
+
+describe('an update governs new jobs only (FR-3207)', () => {
+  it('and there is no code path from the store to `output/` — asserted as an absence', async () => {
+    /*
+     * The guarantee is «what she has already signed is what it was». Not «we are careful
+     * not to rewrite it»: there is nothing that **could**, and that is what makes the
+     * promise cheap to keep.
+     *
+     * Asserted over the source rather than by rendering a document twice, because the
+     * claim is about every future edit — the same shape as `007`'s «one writer of signed
+     * output». A day somebody adds «re-render the outputs after an update», this fails.
+     */
+    const { readFileSync, readdirSync } = await import('node:fs');
+    const dir = join(repoRoot, 'app', 'packages', 'shell', 'src', 'updates');
+    const files = [
+      ...readdirSync(dir).map((f) => join(dir, f)),
+      join(repoRoot, 'app', 'packages', 'shell', 'src', 'corpus', 'updates.ts'),
+      join(repoRoot, 'app', 'packages', 'shell', 'src', 'corpus', 'active.ts'),
+    ].filter((f) => f.endsWith('.ts'));
+    expect(files.length).toBeGreaterThan(2);
+
+    for (const f of files) {
+      const code = readFileSync(f, 'utf8')
+        .replace(/\/\*[\s\S]*?\*\//g, '').replace(/^[ \t]*\/\/.*$/gm, '');
+      for (const word of ['VAULT.output', 'jobRendered', 'jobAdapted', 'renderJob', 'signAcns']) {
+        expect(code, `${f} · ${word}`).not.toContain(word);
+      }
+    }
+  });
+
+  it('and after going back, what governs is the version she went back to (T023)', async () => {
+    /*
+     * Which is what the next report will cite. The chain is: revert moves the pointer,
+     * `forgetActiveCorpus()` drops the memoised answer, and `buildReport` asks
+     * `governingCorpus()` at the moment it writes — so a report written after a revert
+     * says the version she is actually using, not the one she was using when the
+     * application started.
+     */
+    const { dir, store, governing } = await scratch();
+    const got = await offer(transportOf(), store, governing);
+    if (got.of !== 'offer') throw new Error('expected an offer');
+    await acceptUpdate({ store, update: got.update, on: '2026-09-21' });
+
+    const { resolveActiveCorpus } = await import('../src/corpus/active.js');
+    expect((await resolveActiveCorpus({ store, bundled: governing })).version).toBe(4);
+
+    await revertTo({ store, version: null, on: '2026-09-22' });
+    const back = await resolveActiveCorpus({ store, bundled: governing });
+    expect(back.source).toBe('bundled');
+    // The bundled fixture declares no version, so «antes de que esto se numerara» — said
+    // rather than invented, which is what a report citing it has to be able to do.
+    expect(back.version).toBe(0);
     await rm(dir, { recursive: true, force: true });
   });
 });

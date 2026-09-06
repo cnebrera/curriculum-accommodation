@@ -1,32 +1,31 @@
 import { describe, it, expect } from 'vitest';
-import { generateKeyPairSync, sign, createHash } from 'node:crypto';
+import { createHash } from 'node:crypto';
 import {
-  verifyManifest, canonicalManifest, fileMatches, sha256Of, SUPPORTED_FORMAT,
-  type UpdateManifest,
+  readManifest, fileMatches, sha256Of, SUPPORTED_FORMAT, type UpdateManifest,
 } from '../src/index.js';
 
 /**
- * A tampered update changes zero files (034 T002, FR-3210/FR-3211, SC-3204).
+ * A broken or malformed update changes zero files (034 T002, FR-3210, SC-3204).
  *
  * ## Written before the machinery it constrains
  *
- * An invariant test written after the feature works is a test written to fit what
- * already happens — and both of these failures are silent. «Nothing changed» is not
- * something a user notices; it is something a hash notices.
+ * An invariant test written after the feature works is a test written to fit what already
+ * happens — and this failure is silent. «Nothing changed» is not something a user
+ * notices; it is something a hash notices.
  *
- * ## The fixture keypair, and why the real one is not here
+ * ## No signature cases, on purpose
  *
- * These sign with a keypair minted in the test. The project's private key never touches
- * this repository, and the public key that ships in the application is not the one used
- * here — which is the point: verification is a property of the code, and the code must
- * refuse anything not signed by whichever key it was given.
+ * This file used to sign with a fixture keypair and check that a manifest signed by
+ * somebody else was refused. That went with the signature itself on 2026-09-06: the
+ * private half would have lived in a CI secret, so anybody who can write to the
+ * repository could have had CI sign it — and the signature defended only against an
+ * attacker able to alter what GitHub serves without repository or CI access.
+ *
+ * What is checked here now is **integrity, not authority**: does what arrived match what
+ * the file list says arrived. Authority is HTTPS and a public repository; what stands
+ * between a hostile file and her disk is the path check below, the scan before
+ * activation, and her reading the offer.
  */
-const { publicKey, privateKey } = generateKeyPairSync('ed25519');
-const publicKeyPem = publicKey.export({ type: 'spki', format: 'pem' }).toString();
-
-/** A second, unrelated keypair: somebody else's signature is still a signature. */
-const other = generateKeyPairSync('ed25519');
-
 const bytesOf = (s: string) => new TextEncoder().encode(s);
 
 const fileEntry = (path: string, content: string) => ({
@@ -45,30 +44,20 @@ const MANIFEST: UpdateManifest = {
   ],
 };
 
-const signWith = (key: typeof privateKey, m: UpdateManifest = MANIFEST): Uint8Array =>
-  new Uint8Array(sign(null, Buffer.from(canonicalManifest(m), 'utf8'), key));
-
 const raw = (m: UpdateManifest = MANIFEST) => JSON.stringify(m, null, 2);
 
-describe('a manifest the project signed', () => {
-  it('verifies, and only then is anything about it usable', () => {
-    const said = verifyManifest({ raw: raw(), signature: signWith(privateKey), publicKeyPem });
+describe('a manifest this build can read', () => {
+  it('is read, and says what it brings', () => {
+    const said = readManifest(raw());
     expect(said.of).toBe('ok');
     if (said.of === 'ok') {
       expect(said.manifest.version).toBe(4);
       expect(said.manifest.summary).toContain('tilde');
+      expect(said.manifest.files).toHaveLength(2);
     }
   });
 
-  it('and the signature is over what the parser understood, not over the file', () => {
-    /*
-     * Re-serialised with different whitespace and key order — the same manifest, a
-     * different file. It must still verify, because what was signed is the **meaning**.
-     *
-     * A signature over the received bytes would be stricter in a way that helps nobody:
-     * it would verify a file and say nothing about whether what the parser understood is
-     * what the publisher signed.
-     */
+  it('and key order and whitespace do not matter, because it is parsed and not matched', () => {
     const reordered = JSON.stringify({
       publishedAt: MANIFEST.publishedAt,
       files: [...MANIFEST.files].reverse(),
@@ -76,79 +65,43 @@ describe('a manifest the project signed', () => {
       version: MANIFEST.version,
       formatVersion: MANIFEST.formatVersion,
     });
-    const said = verifyManifest({
-      raw: reordered, signature: signWith(privateKey), publicKeyPem,
-    });
-    expect(said.of).toBe('ok');
+    expect(readManifest(reordered).of).toBe('ok');
   });
 });
 
 describe('and everything else is refused whole', () => {
-  const refusal = (over: Partial<Parameters<typeof verifyManifest>[0]> = {}) =>
-    verifyManifest({ raw: raw(), signature: signWith(privateKey), publicKeyPem, ...over });
-
-  it('a signature by somebody else — a signature is not the same as the signature', () => {
-    const said = refusal({ signature: signWith(other.privateKey) });
-    expect(said.of).toBe('refused');
-    if (said.of === 'refused') {
-      expect(said.because).toBe('bad-signature');
-      // And it says what she should do about a file that arrived some other way.
-      expect(said.say).toContain('no la uses');
-      expect(said.say).toContain('No ha cambiado nada');
-    }
-  });
-
-  it('altered bytes: one changed hash and the whole thing goes', () => {
-    /*
-     * The realistic attack is not a forged signature; it is a genuine manifest with one
-     * file's hash swapped for a hostile file's. The signature is over the file list, so
-     * changing one entry invalidates the whole manifest — which is why the hashes live
-     * **inside** what is signed and the file host needs no trust of its own.
-     */
-    const tampered = { ...MANIFEST, files: [
-      { ...MANIFEST.files[0]!, sha256: 'a'.repeat(64) }, MANIFEST.files[1]!,
-    ] };
-    const said = verifyManifest({
-      raw: raw(tampered), signature: signWith(privateKey), publicKeyPem,
-    });
-    expect(said.of === 'refused' && said.because).toBe('bad-signature');
-  });
-
-  it('and a changed summary too, because the summary is what she reads to decide', () => {
-    // The one field a hostile publisher would most want to change without changing the
-    // files: «una corrección menor» over a rewritten refusal rule.
-    const lying = { ...MANIFEST, summary: 'Una corrección menor de ortografía.' };
-    expect(verifyManifest({
-      raw: raw(lying), signature: signWith(privateKey), publicKeyPem,
-    }).of).toBe('refused');
-  });
-
   it('truncation: half a manifest is not a manifest', () => {
-    const said = refusal({ raw: raw().slice(0, 40) });
+    const said = readManifest(raw().slice(0, 40));
     expect(said.of === 'refused' && said.because).toBe('unparseable');
+    if (said.of === 'refused') expect(said.say).toContain('No ha cambiado nada');
   });
 
   it('an empty file list, which would «apply» to nothing and publish a version', () => {
     /*
-     * The subtle one. A well-formed, correctly signed manifest with no files would mint
-     * a version number governing an empty corpus — every recipe gone, every instruction
-     * gone, and the application still running. Refused at the shape.
+     * The subtle one. A well-formed manifest with no files would mint a version number
+     * governing an empty corpus — every recipe gone, every instruction gone, and the
+     * application still running. Refused at the shape.
      */
-    const empty = { ...MANIFEST, files: [] };
-    expect(verifyManifest({
-      raw: raw(empty), signature: signWith(privateKey, empty), publicKeyPem,
-    }).of === 'refused').toBe(true);
+    expect(readManifest(raw({ ...MANIFEST, files: [] })).of).toBe('refused');
   });
 
   it('a path that would leave the corpus root — refused, never sanitised', () => {
+    /*
+     * One of the two things standing between a hostile file list and her disk, now that
+     * nothing is signed. Refusal is the vault boundary's house rule, and it matters more
+     * here because this one arrives from the network.
+     */
     for (const path of ['../../etc/passwd', '/etc/passwd', 'recipes/../../out', 'a\\b']) {
       const escaping = { ...MANIFEST, files: [{ path, sha256: 'b'.repeat(64), bytes: 1 }] };
-      const said = verifyManifest({
-        raw: raw(escaping), signature: signWith(privateKey, escaping), publicKeyPem,
-      });
+      const said = readManifest(raw(escaping));
       expect(said.of, path).toBe('refused');
       expect(said.of === 'refused' && said.because, path).toBe('malformed');
     }
+  });
+
+  it('a hash that is not a hash', () => {
+    const odd = { ...MANIFEST, files: [{ path: 'recipes/a.md', sha256: 'no', bytes: 1 }] };
+    expect(readManifest(raw(odd)).of === 'refused').toBe(true);
   });
 
   it('a format newer than this build understands — refused whole, with the reason', () => {
@@ -157,38 +110,17 @@ describe('and everything else is refused whole', () => {
      * this build ignores adapts worse, silently, with a version number saying it is
      * current.
      */
-    const future = { ...MANIFEST, formatVersion: SUPPORTED_FORMAT + 1 };
-    const said = verifyManifest({
-      raw: raw(future), signature: signWith(privateKey, future), publicKeyPem,
-    });
+    const said = readManifest(raw({ ...MANIFEST, formatVersion: SUPPORTED_FORMAT + 1 }));
     expect(said.of === 'refused' && said.because).toBe('unsupported-format');
     if (said.of === 'refused') {
       expect(said.say).toContain('más nueva que la tuya');
       expect(said.say).toContain('leerla a medias sería peor');
-      // And what she can do about it.
       expect(said.say).toContain('Actualiza Rampa');
     }
   });
-
-  it('and the format gate runs AFTER the signature, because an unsigned claim is a claim', () => {
-    // A hostile file declaring `formatVersion: 99` must be refused for **not being
-    // signed**, not for its own claim about itself.
-    const future = { ...MANIFEST, formatVersion: 99 };
-    const said = verifyManifest({
-      raw: raw(future), signature: signWith(other.privateKey, future), publicKeyPem,
-    });
-    expect(said.of === 'refused' && said.because).toBe('bad-signature');
-  });
-
-  it('a garbage public key does not throw its way past the check', () => {
-    const said = verifyManifest({
-      raw: raw(), signature: signWith(privateKey), publicKeyPem: 'no soy una clave',
-    });
-    expect(said.of === 'refused' && said.because).toBe('bad-signature');
-  });
 });
 
-describe('and every file is checked against the signed manifest', () => {
+describe('and every file is checked against the list', () => {
   it('the right bytes match', () => {
     expect(fileMatches(bytesOf('# Examen\n'), MANIFEST.files[0]!)).toBe(true);
   });
@@ -200,8 +132,7 @@ describe('and every file is checked against the signed manifest', () => {
   it('and neither does the right hash at the wrong length', () => {
     /*
      * Length **and** hash, because they fail differently: a truncated download can have
-     * been cut anywhere, and checking only the hash means reading the whole thing before
-     * finding out. Checking only the length would be no check at all.
+     * been cut anywhere, and checking only the length would be no check at all.
      */
     const short = bytesOf('# Exame');
     expect(sha256Of(short)).not.toBe(MANIFEST.files[0]!.sha256);
