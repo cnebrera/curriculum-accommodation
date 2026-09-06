@@ -1471,57 +1471,57 @@ a línea; el pipeline de adaptación entrega bloques enteros.
 haciendo la segunda mirada sobre un examen de verdad, por su transporte de verdad, para
 ver si el bucle cabe en una semana de colegio.
 
-### 3.11 · `034` — la maquinaria está hecha y el canal no se puede encender
+### 3.11 · `034` implementada — el criterio se trae, y la firma se fue
 
-`f7e6a44`, `b57e352`, `34a32ca`, `74f525c` · **21 de 29 tareas, 10 de 11 FRs** ·
-vitest 2.444 · e2e 220
+`2e9ad44`, `f7e6a44`, `b57e352`, `34a32ca`, `74f525c` · **28 de 29 tareas, 11 de 11
+FRs** · vitest 2.441 · e2e 225
 
-Los dos invariantes primero, porque los dos fallos son silenciosos: sin red, una
-comprobación es **silencio** —ni error, ni interrupción—, y una actualización manipulada
-cambia **cero** ficheros, comprobado hasheando el almacén entero antes y después en vez de
-por la ausencia de un error. «No ha cambiado nada» no es algo que se note: es algo que
-nota un hash.
+El corpus viajaba dentro del instalador, así que corregir la tilde de «exámenes» en una
+receta significaba publicar una versión de la aplicación y que cada maestra la
+reinstalara. Una maestra varada en un fallo del corpus se quedaba varada hasta la
+siguiente release.
 
-**Firma Ed25519 sobre bytes canónicos**, contra una clave compilada en la aplicación.
-HTTPS autentica al host, no al proyecto — y el corpus no puede avalarse a sí mismo, así
-que una clave entregada por el canal que protege no verifica nada. Sobre los bytes
-**canónicos** y no sobre el fichero: firmar el fichero suena más estricto y es más débil
-en lo que importa, porque verificaría un fichero y no diría nada sobre si lo que el parser
-entendió es lo que el editor firmó.
+**Escribí una firma Ed25519 y la retiraste, y tenías razón.** La mitad privada habría
+vivido en un secreto de CI — así que cualquiera con acceso de escritura al repositorio
+podría haber cambiado `/recipes` y hacer que CI lo firmara. La firma defendía sólo contra
+un atacante capaz de alterar lo que sirve GitHub **sin** tener acceso al repositorio ni a
+CI. Para esto es un modelo de amenaza inventado, y el coste era real. Y chocaba con el
+resto de la arquitectura: `recipes-local/` gana por id, `instructions/` es juicio que se
+invita a corregir, y `029` importa corpus normativos que nadie firma.
 
-Se rechazan enteros: firma de otro, un hash cambiado, **el resumen cambiado** (el campo
-que un editor hostil más querría tocar sin tocar los ficheros), un truncado, una lista de
-ficheros vacía —que acuñaría un número de versión gobernando un corpus vacío—, una ruta
-que se saldría de la raíz y un formato más nuevo del que esta build entiende. Y la puerta
-del formato corre **después** de la firma, porque el `formatVersion` de un manifiesto sin
-firmar es una afirmación de quien lo escribió.
+Fuera ~100 líneas y 14 casos de test. **Lo que quedó**: los hashes como integridad y no
+autoría —cazan una descarga truncada—, la comprobación de rutas para que una lista hostil
+no escriba fuera de su sitio, el escaneo de inyección antes de que nada gobierne (que pasa
+de defensa en profundidad a **la** defensa, así que gana importancia), y que nada gobierna
+hasta que ella lo lee y dice que sí.
 
-**Una sola resolución de «qué corpus gobierna»**, que devuelve el caso y no una ruta. Una
-instantánea incompleta o para una Rampa más nueva nunca gobierna; el incluido más nuevo
-gana al aceptado más viejo. Y un test estructural afirma que nadie más resuelve una ruta
-de corpus: un segundo lector con su propio `corpusRoot()` sería aplicación parcial por
-arquitectura, dentro de un mismo trabajo.
+**La descarga va en el paso de la carpeta**, no en un paso nuevo. Rampa ya lleva criterio
+dentro, así que es «traerte lo más nuevo» y nunca «sin esto no funciono». En el arranque
+se aplica; en Configuración es una oferta que se lee — ahí sí hay trabajo hecho debajo del
+criterio que cambia, que es cuando leer antes importa.
 
-**Los destinos, declarados en el corpus** y leídos por la pantalla **y** por el código.
-Dos listas no fallan porque el código llegue a un sitio no declarado — fallan porque se
-añade un tercer destino y la pantalla sigue diciendo dos.
+**Configuración ▸ El criterio pedagógico**: con qué versión trabaja y de dónde salió, por
+qué es ésa cuando algo se pasó por alto (incompleta, para una Rampa más nueva, superada
+por la incluida), buscar correcciones, leer **entero** cualquier fichero que cambia,
+aceptar o dejarlo, y volver a cualquier versión que aceptó.
 
-**Notify-only afirmado como ausencia**: ni `electron-updater`, ni `autoUpdater`, ni
-`child_process`, ni una URL de binario. Un requisito que se cumple porque algo no existe
-es el que deja de ser verdad en silencio.
+**Tres cosas que encontró el trabajo y no el diseño:**
 
-**Lo que falta, y por qué no lo he hecho.** No hay par de claves del proyecto. Eso no es
-código: es dónde vive la privada, quién puede publicar criterio pedagógico firmado, qué
-pasa si se pierde, y si el canal se enciende ya. **No lo he inventado** — está en el
-BACKLOG como G53. Con él quedan la pantalla de la oferta (FR-3206), su e2e, los fixtures
-de release y el lado de CI. El aviso de versión de la aplicación no lleva firma y **sí**
-funciona.
+- *Un fallo real.* Una instantánea publicada no llevaba su propio `CORPUS-VERSION.json`,
+  así que `activeCorpus` no podía leer su versión, la llamaba no soportada y caía al
+  incluido: **publicaba bien y nunca gobernaba**. Sólo se ve en el test que pregunta qué
+  gobierna después de aceptar.
+- *El e2e llamaba a casa.* Pulsar «Buscar correcciones» en el suite salía de verdad a
+  `api.github.com` — en CI una petición que nadie ha autorizado, en local una prueba que
+  pasa según la red. Fuera; el comportamiento sin red se prueba con un transporte que
+  **rompe el test si alguien lo llama**, que afirma que no hubo petición en vez de que no
+  se notó.
+- *Mirar la pantalla.* El botón del criterio estaba entre la ruta y los botones de la
+  carpeta, así que se leía la pregunta, una ruta, un botón de otra cosa, y sólo entonces la
+  respuesta.
 
-**Y el guardián de la superficie Electron rechazó dos veces más**, tercera y cuarta del
-proyecto, y las dos produjeron la forma mejor: `corpus/active.ts` no importa Electron
-porque el directorio del almacén se inyecta al arrancar, y los cuatro ajustes del aviso
-salieron de `corpus/links.ts` —que es «los dos handlers que salen de la máquina» y ninguno
-de ellos sale— a `updates/notice.ts`.
+Y la aserción que faltaba: **no hay ningún camino del almacén a `output/`**. Lo que ya
+está firmado es lo que era, y no por cuidado — porque no hay nada que pudiera.
 
 ## Notas de proceso
 
@@ -1560,23 +1560,19 @@ de ellos sale— a `updates/notice.ts`.
 
 **Lo que necesito de ti, en orden de cuánto bloquea.**
 
-### 1 · Un par de claves para el corpus (bloquea la mitad de `034`)
+### 1 · Publicar la primera release del corpus (no bloquea nada, pero hasta entonces el canal está vacío)
 
-La maquinaria de actualización está construida y probada; lo que no existe es una **clave
-del proyecto**. Cuatro decisiones que son tuyas y que no he inventado (G53 en el BACKLOG):
+El canal funciona y no necesita ninguna decisión tuya — la firma se fue y con ella G53.
+Lo que falta para que sirva de algo es que exista una release con el tag `corpus-v2` y un
+`manifest.json` entre sus assets. Hasta entonces «Buscar correcciones» contesta «no hay
+nada nuevo», que es correcto y es todo.
 
-- **Dónde vive la privada.** Un secreto de CI es lo obvio, y también significa que quien
-  tenga acceso al repositorio puede publicar criterio pedagógico firmado.
-- **Quién puede publicar una corrección del corpus**, y si es la misma lista de personas
-  que puede hacer merge.
-- **Qué pasa si esa clave se pierde o se filtra.** Hoy no hay rotación: la pública está
-  compilada en la aplicación, así que cambiarla es publicar una versión. Puede estar bien
-  —es lo que pasa con cualquier raíz de confianza pequeña— pero conviene que sea una
-  decisión y no una sorpresa.
-- **Si el canal se enciende ya.** Todo `034` funciona apagado: sin release `corpus-v<n>`
-  publicada no hay nada que ofrecer y no se pide nada.
+El manifiesto es una lista de ficheros con su hash, versión y un resumen en castellano de
+qué cambia. Puede generarlo un script en CI en una tarde; no lo he escrito porque cuándo
+y cómo publicáis es tu decisión, no mía.
 
-No lo confundas con **P52**, que es firmar los **instaladores**. Son dos deudas distintas.
+Y no lo confundas con **P52**, que es firmar los **instaladores** de macOS y Windows. Esa
+deuda sigue igual.
 
 ### 2 · ¿De dónde sale el vocabulario clave de una unidad? (`033` T023, sigue abierta)
 
@@ -1609,12 +1605,13 @@ Se acumulan y ninguna la puedo hacer yo:
 
 ### 5 · Dos cosas que decidí yo y conviene que confirmes
 
-- **La cota de la superficie Electron subió cuatro veces esta noche** (975 → 981 → 999 →
-  1017 → 1035), y cada subida está justificada por escrito en el propio test. Las cuatro
-  veces rechazó el primer intento y las cuatro veces produjo la forma mejor —
-  `ipc/pick.ts` con dos llamantes en vez de dos diálogos, `corpus/active.ts` sin Electron,
-  `updates/notice.ts` fuera de «los handlers que salen de la máquina». Si te parece que la
-  cota se está usando como permiso en vez de como medida, dilo y la congelo.
+- **La cota de la superficie Electron subió cinco veces esta noche** (975 → 981 → 999 →
+  1017 → 1035 → 1046), y cada subida está justificada por escrito en el propio test. Las
+  cinco veces rechazó el primer intento y las cinco produjo la forma mejor — `ipc/pick.ts`
+  con dos llamantes en vez de dos diálogos, y `corpus/active.ts`, `updates/notice.ts` y
+  `updates/corpus.ts` sin importar Electron porque el directorio se inyecta al arrancar.
+  Si te parece que la cota se está usando como permiso en vez de como medida, dilo y la
+  congelo.
 - **`instructions/coordination.md` es un fichero de corpus nuevo** con la frase que va en
   la cara de cada paquete («esto viene de otra aula») y la línea de procedencia de lo
   aceptado. Está ahí y no en TypeScript porque cómo debe leer una docente las
@@ -1640,8 +1637,8 @@ Se acumulan y ninguna la puedo hacer yo:
 | | |
 |---|---|
 | `npx tsc --noEmit` | verde (línea base) |
-| `npx vitest run` | verde — 2.444 casos |
-| `npm run test:e2e` | verde — 220 casos |
+| `npx vitest run` | verde — 2.441 casos |
+| `npm run test:e2e` | verde — 225 casos |
 | `scripts/check-fr-coverage.sh` | verde (línea base) |
 | `scripts/check-spec-kit.sh` | verde (línea base) |
 | `scripts/validate-recipes.sh` | verde — 19 recetas |
@@ -1650,6 +1647,6 @@ Se acumulan y ninguna la puedo hacer yo:
 ---
 
 **Lotes 0, 1 y 2 completos (5/5 · 17/17 · 12/12); Lote 3 con `027`, `022`, `026`, `031`,
-`032`, `028`, `035`, `033`, `029` y `030` implementadas, y `034` con la maquinaria hecha y
-el canal esperando una decisión tuya (G53).** Quedan **3.10** (`020` US2-US4), **3.13**
-(notas de BACKLOG) y el resto de `034`.
+`032`, `028`, `035`, `033`, `029`, `030` y `034` implementadas — las once con sus
+requisitos al 100%.** Quedan **3.10** (`020` US2-US4) y **3.13** (menores), más los
+veredictos con dueño humano.

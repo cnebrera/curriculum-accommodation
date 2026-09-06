@@ -565,22 +565,36 @@ sigue siendo el único ítem del lote sin tasks propios (sus tareas viven en spe
       que es para lo que se escribió vacío antes de que existiera nada.
 - [ ] **3.10 · Spec: 020 completo** — US2-US4: Preparar dentro del alumno, retirar el door, partir
       Mis notas, Configuración completa (P25/P29). Grande; los e2e de navegación son la red.
-- [ ] **3.11 · `034-como-llegan-las-versiones` — MAQUINARIA HECHA, CANAL SIN ENCENDER** (P49).
-      **2026-09-06, cuatro commits.** 21 de 29 tareas y **10 de 11 requisitos**.
-      Hecho: los dos invariantes primero (offline es silencio; una actualización manipulada
-      cambia **cero** ficheros, comprobado hasheando el almacén y no por la ausencia de un
-      error); firma Ed25519 sobre bytes canónicos contra una clave compilada en la
-      aplicación; puerta de formato **después** de la firma; una sola resolución de «qué
-      corpus gobierna» con test estructural de que nadie más resuelve una ruta de corpus;
-      el informe citando la versión; los destinos declarados en `instructions/updates.md`,
-      leídos por la pantalla **y** por el código; notify-only afirmado como **ausencia**;
-      el almacén con `rename` atómico, escaneo de lo verificado, vuelta atrás y conservación
-      del histórico; y la comprobación al abrir detrás del consentimiento, apagada por
-      defecto y semanal.
-      **Falta lo que necesita una decisión tuya** (G53 en el BACKLOG): no hay par de claves
-      del proyecto, así que el canal del corpus no se puede encender. Y con él quedan la
-      pantalla de la oferta (FR-3206), su e2e, los fixtures de release y el lado de CI.
-      El aviso de versión de la aplicación **sí** funciona: no lleva firma.
+- [x] **3.11 · `034-como-llegan-las-versiones` IMPLEMENTADA** (P49).
+      **Hecho 2026-09-06, cinco commits.** 28 de 29 tareas y **11 de 11 requisitos**; la
+      abierta es T029, que necesita una maestra leyendo una oferta de verdad.
+      El corpus viajaba dentro del instalador, así que corregir la tilde de «exámenes»
+      significaba publicar una versión y que cada maestra la reinstalara. Ahora se trae
+      desde la pantalla.
+      **Escribí una firma Ed25519 y la retiraste**, con razón: la privada habría vivido en
+      un secreto de CI, así que cualquiera con acceso de escritura al repo podría hacer
+      que CI firmara lo que empujara — la firma defendía sólo contra quien pudiera alterar
+      lo que sirve GitHub **sin** ese acceso. Fuera ~100 líneas y 14 casos. Quedan los
+      hashes como integridad (descarga truncada), la comprobación de rutas, el escaneo
+      antes de activar —que pasa a ser **la** defensa— y que nada gobierna hasta que ella
+      lo lee.
+      La descarga va **en el paso de la carpeta**, no en un paso nuevo. Rampa ya lleva
+      criterio dentro, así que es «traerte lo más nuevo» y no «sin esto no funciono»: un
+      centro con la red filtrada funciona el primer día.
+      Una sola resolución de «qué corpus gobierna», con test estructural de que nadie más
+      resuelve una ruta de corpus — un segundo lector sería aplicación parcial dentro de un
+      mismo trabajo. Publicar es un `rename` atómico; volver atrás es un puntero y cada
+      versión aceptada se conserva, porque borrarlas dejaría huérfano el número que cita un
+      informe de enero.
+      **Tres hallazgos del propio trabajo**: una instantánea publicaba bien y **nunca
+      gobernaba** (le faltaba su `CORPUS-VERSION.json`); el e2e salía de verdad a
+      `api.github.com`, que es justo lo que este proyecto rechaza en cualquier otro sitio;
+      y el botón del criterio estaba antes de los botones que contestaban a la pregunta del
+      paso.
+      Y la cota de Electron rechazó **tres** intentos más: `corpus/active.ts`,
+      `updates/notice.ts` y `updates/corpus.ts` no importan Electron porque el directorio
+      se inyecta al arrancar. Cuarta, quinta y sexta vez que esa cota produce la forma
+      mejor.
 - [x] **3.12 · `035-modo-ensayo` IMPLEMENTADA** (P16).
       **Hecho 2026-09-05, cinco commits.** 23 de 26 tareas y **11 de 11 requisitos**; las
       tres abiertas son una clave real (T018), una feature que aún no existe (T020, va con
