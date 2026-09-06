@@ -109,8 +109,13 @@ function Entry({ entry, onOpen, onReuse, onReview, onPrint, printing }: {
       */}
       {entry.secondLook ? (
         <span className="small">
+          {/*
+            `human()`, like the entry's own date two lines up. Found by looking at the
+            card: «10/09/2026 · Examen» and «el 2026-09-11» on the same card is one of
+            them coming from a screen and the other from a file.
+          */}
           Antes de firmarla la miró {entry.secondLook.by}
-          {entry.secondLook.date ? ` el ${entry.secondLook.date}` : ''}.
+          {entry.secondLook.date ? ` el ${human(entry.secondLook.date)}` : ''}.
         </span>
       ) : null}
 

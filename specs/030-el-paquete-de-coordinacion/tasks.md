@@ -202,7 +202,7 @@ undoable, accepting attributes correctly.
       the coordination channel — «un vault = una docente, siempre». Satisfied by a
       sentence and by nothing to point at: the coverage row below is the record that
       the absence is a decision (FR-2812)
-- [ ] T028 **Look at it** (`013`'s untestable rule), per quickstart §8: the packet body
+- [x] T028 **Look at it** (`013`'s untestable rule), per quickstart §8: the packet body
       as plain text through a colleague's eyes; the door with a flagged item at the
       narrowest width; corrections beside the draft; and whether «revisada por PT»
       reads as a fact or as an approval — the difference is FR-2810. Plus `axe` over
