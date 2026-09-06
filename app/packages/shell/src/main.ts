@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { registerVaultIpc, reopenVault, startWatching, stopWatching } from './ipc/vault.js';
 import { registerNamesIpc } from './ipc/names.js';
 import { registerKeysIpc } from './ipc/keys.js';
-import { registerCorpusIpc } from './corpus/index.js';
+import { registerCorpusIpc, setCorpusStore } from './corpus/index.js';
 import { registerCoordinationIpc } from './ipc/coordination.js';
 import { registerCostIpc } from './ipc/cost.js';
 import { registerMemoryIpc } from './ipc/memory.js';
@@ -160,6 +160,7 @@ else {
     registerVaultIpc(getWindow);
     registerNamesIpc();
     registerKeysIpc();
+    setCorpusStore(join(app.getPath('userData'), 'corpus'));
     registerCorpusIpc();
     registerCoordinationIpc();
     registerCostIpc();

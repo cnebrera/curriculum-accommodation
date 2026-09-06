@@ -17,6 +17,7 @@ import { chosenWords } from '../pictograms/bring.js';
 import { activeProvider } from '../ipc/keys.js';
 import {
   allRecipes, assertCorpus, loadInstruction, findYearInCorpus, materialKind, normativeFor,
+  governingCorpus,
 } from '../corpus/index.js';
 import { currentPictogramSet } from '../pictograms/access.js';
 import { recordCost } from '../ipc/cost.js';
@@ -475,6 +476,13 @@ export async function runAdaptation(
       ...(normative.of === 'corpus' ? { phrases: normative.corpus.phrases } : {}),
     },
     provenanceLine: normative.provenanceLine,
+    /*
+     * Which corpus produced this (`034` FR-3207). Read at the moment the report is
+     * written rather than at startup: the governing corpus can change between launching
+     * the application and finishing a job, and what the report has to cite is what
+     * actually ran.
+     */
+    corpusVersion: (await governingCorpus()).version,
     /*
      * Only when they are on (FR-1607). Where she has left them off the report says
      * nothing at all — a tool that keeps proposing pictograms is a tool arguing with

@@ -22,7 +22,7 @@ is mostly `releases.ts` learning to say one more sentence.
       with no network is silence — no error surfaced, no interruption, work unaffected
       (**FR-3202**, SC-3202) — and the update surface holds no vault reference to learner
       data
-- [ ] T002 [P] Write `app/packages/core/test/corpus-update-verify.test.ts` **first**, red:
+- [x] T002 [P] Write `app/packages/core/test/corpus-update-verify.test.ts` **first**, red:
       every tampered fixture from [quickstart.md](quickstart.md) §2 — bad signature,
       altered bytes, truncation, interruption, unsupported format — is refused whole and
       `userData/corpus/` is **byte-identical** after, checked by hashing the store, not by
@@ -40,16 +40,16 @@ before every reader goes through one resolution is partial application by archit
 some readers on the new corpus, some on the old — which is the on-disk version of what
 **FR-3210** forbids on the wire.
 
-- [ ] T004 `app/scripts/bundle-corpus.mjs` + `CORPUS-VERSION.json` gain `version`
+- [x] T004 `app/scripts/bundle-corpus.mjs` + `CORPUS-VERSION.json` gain `version`
       (monotonic integer) and `formatVersion` per [data-model.md](data-model.md); the app
       declares its supported format in one constant beside the parsers it describes
       (**FR-3210**, research R4 — and the sibling rule: the vault's schema version is
       P50's number, not this one, coupled nowhere)
-- [ ] T005 `app/packages/core/src/corpus-update/` · `UpdateManifest`, canonical manifest
+- [x] T005 `app/packages/core/src/corpus-update/` · `UpdateManifest`, canonical manifest
       bytes, Ed25519 verification via `node:crypto.verify` against the app-held public
       key, and per-file SHA-256 checks — pure functions over bytes, offline-testable,
       no new dependency (**FR-3211**, research R2). T002 goes green file by file here
-- [ ] T006 `app/packages/shell/src/corpus/active.ts` · `activeCorpus()` returning
+- [x] T006 `app/packages/shell/src/corpus/active.ts` · `activeCorpus()` returning
       `ActiveCorpus` — **the case, not just a path**: bundled vs snapshot, newest wins,
       an incomplete or unsupported snapshot never governs (**FR-3205** groundwork,
       data-model rules 1–2). Every `corpusRoot()` caller in
@@ -60,7 +60,7 @@ some readers on the new corpus, some on the old — which is the on-disk version
       declaration pattern, with the P23 sentence: these are the only hosts, reachable
       only when checking (**FR-3204**); parser in `app/packages/shell/src/corpus/`, and
       `releases.ts`'s constants become the bundled corpus's declaration read through it
-- [ ] T008 The governing corpus `version` reaches every job report
+- [x] T008 The governing corpus `version` reaches every job report
       (`app/packages/core/src/report/index.ts`): «con el criterio pedagógico versión N» —
       new jobs only, wired through where the report already receives its inputs
       (**FR-3207**, Principle VI)

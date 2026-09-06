@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "formatVersion": 1,
+
+  "_": "Dos números con dueños distintos (034 FR-3207/FR-3210).",
+
+  "_version": "Monotónico. Lo cita cada informe — «con el criterio pedagógico versión N» — así que un informe de enero sigue diciendo qué criterio lo produjo seis correcciones después. Sube cuando cambia el CONTENIDO: una receta nueva, una regla corregida, una frase del corpus reescrita.",
+
+  "_formatVersion": "Qué contrato tienen que entender los parsers de la aplicación. Sube cuando cambia la FORMA: un campo nuevo obligatorio en una receta, una clave que se renombra. Un corpus con un formato más nuevo que el que soporta la app se rechaza ENTERO, con su motivo, en vez de leerse a medias.",
+
+  "_ni-uno-ni-otro": "El número de esquema del vault (P50) no está aquí y no se toca desde aquí: ése versiona SUS datos frente a cualquier aplicación que los abra, y éstos versionan nuestras publicaciones frente a esta aplicación."
+}

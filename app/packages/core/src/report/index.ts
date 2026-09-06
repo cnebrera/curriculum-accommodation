@@ -68,6 +68,19 @@ export interface ReportInput {
   /** Printed under it, so the document says which corpus it followed (FR-2705). */
   provenanceLine?: string;
   /**
+   * Which version of the pedagogical corpus produced this (`034` FR-3207, Principle VI).
+   *
+   * A report from January has to keep saying which judgement made it, six corpus
+   * corrections later — otherwise «lo revisé y estaba bien» becomes unanswerable the
+   * moment a recipe changes. New jobs only: an update governs what happens next and
+   * never rewrites what is already signed.
+   *
+   * `0` and absent both mean «this was made before the corpus was numbered», which is
+   * every sheet in every vault that predates this feature, and is said rather than
+   * hidden.
+   */
+  corpusVersion?: number;
+  /**
    * Pictograms, **only when she turned them on** (018 FR-1607).
    *
    * Absent means she did not, and the report then says nothing at all about them.
@@ -232,6 +245,9 @@ export function buildReport(input: ReportInput): Report {
       .split('\n').map((l) => `> ${l}`.trimEnd()),
     ...(input.provenanceLine
       ? ['>', ...input.provenanceLine.split('\n').map((l) => `> ${l}`.trimEnd())]
+      : []),
+    ...(input.corpusVersion !== undefined && input.corpusVersion > 0
+      ? ['>', `> Hecho con el criterio pedagógico versión ${input.corpusVersion}.`]
       : []),
     '');
 

@@ -15,7 +15,16 @@ import { join, dirname } from 'node:path';
 const repoRoot = join(dirname(new URL(import.meta.url).pathname), '..', '..', '..', '..');
 vi.mock('../src/corpus/bundle.js', async (original) => ({
   ...(await original<Record<string, unknown>>()),
+  /*
+   * `governingRoot` and not `corpusRoot` (`034` T006).
+   *
+   * Every reader of recipes and instructions now asks «which corpus **governs**» rather
+   * than «where is the bundle», because an accepted update has to reach all of them or
+   * none. Mocking the old name silently stopped reaching these callers — which is the
+   * seam moving, and the tests following it.
+   */
   corpusRoot: () => repoRoot,
+  governingRoot: async () => repoRoot,
 }));
 
 const { parseFigureCorpus } = await import('@rampa/core');

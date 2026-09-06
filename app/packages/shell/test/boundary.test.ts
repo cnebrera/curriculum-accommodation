@@ -312,8 +312,18 @@ describe('inside packages/shell, the surface is small and named', () => {
      * per-act, and asking for a second look, replying to one, opening a reply, accepting
      * it and reading what was said are five different things a teacher does.
      *
+     * **Raised to 1017 on 2026-09-06**, by six lines, for `034`'s corpus resolution.
+     * `bundle.ts` gained «which corpus governs» beside «where is the bundle», and
+     * `main.ts` gained the line that tells it where `userData` is.
+     *
+     * It refused the first attempt, and that refusal is the reason `corpus/active.ts` —
+     * 140 lines of «is this snapshot complete, supported, newer than bundled» — imports
+     * no Electron at all: the store directory is **injected once at startup**, the same
+     * move `018`'s pictogram access and `035`'s rehearsal root were both pushed into by
+     * this bound. Three times now, which is a pattern rather than a coincidence.
+     *
      * 25, not 100. A bound raised to a round number stops being a measurement.
      */
-    expect(lines).toBeLessThan(1007);
+    expect(lines).toBeLessThan(1017);
   });
 });
