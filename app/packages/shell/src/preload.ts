@@ -115,6 +115,33 @@ const api = {
     activate: (raw: string, override?: boolean) =>
       invoke('normative:activate', raw, override === true),
   },
+  /**
+   * The coordination packet (`030`).
+   *
+   * Every channel here reads except `accept` and `applyDelta`. That split is the door:
+   * opening, parsing, scanning, showing, holding and linking write nothing, and the two
+   * writers take **one item at a time** and are reached by her pressing a button beside
+   * that item.
+   */
+  coordination: {
+    exportDraft: (code: string, from: string, to: string, role: string) =>
+      invoke('coordination:exportDraft', code, from, to, role),
+    exportWrite: (code: string, from: string, to: string, role: string, keep: number[]) =>
+      invoke('coordination:exportWrite', code, from, to, role, keep),
+    /** Pick a packet and read it. Writes nothing. */
+    open: () => invoke('coordination:open'),
+    /** Keep somebody else's file, verbatim, for later. */
+    hold: (raw: string, filename: string) => invoke('coordination:hold', raw, filename),
+    /** Say which of her learners a held packet is about. `''` undoes it. */
+    link: (path: string, code: string) => invoke('coordination:link', path, code),
+    /** The only writer, one item at a time. */
+    accept: (code: string, role: string, filename: string, item: unknown) =>
+      invoke('coordination:accept', code, role, filename, item),
+    /** And changing the profile is a second decision, taken separately. */
+    applyDelta: (code: string, axis: string, level: number) =>
+      invoke('coordination:applyDelta', code, axis, level),
+    list: (code?: string) => invoke('coordination:list', code),
+  },
   learners: {
     list: () => invoke('learners:list'),
     roster: () => invoke('learners:roster'),

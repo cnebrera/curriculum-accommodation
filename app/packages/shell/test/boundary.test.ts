@@ -296,8 +296,19 @@ describe('inside packages/shell, the surface is small and named', () => {
      * forget it. So `ipc/pick.ts` has two callers, `ingest.ts` gave its dialog up, and
      * the whole import flow of a feature cost five lines on this surface.
      *
+     * **Raised to 999 on 2026-09-06, by fourteen lines**, for `030`'s packet door. Eight
+     * channels in `preload.ts` and one registration in `main.ts`, and the count is the
+     * design rather than sprawl: opening, holding, linking, accepting and applying a
+     * delta are **separate acts on purpose** — the door is per-item, and collapsing two
+     * of them into one channel to save a line here would collapse two of her decisions.
+     *
+     * `ipc/coordination.ts` itself is not on the list above and that is the tell that
+     * this is the permitted shape: 300 lines of packet handling that import no Electron
+     * at all, because the file dialog is `ipc/pick.ts`'s and the vault is
+     * `ipc/vault.ts`'s. What grew is the bridge, which is what the bridge is for.
+     *
      * 25, not 100. A bound raised to a round number stops being a measurement.
      */
-    expect(lines).toBeLessThan(981);
+    expect(lines).toBeLessThan(999);
   });
 });

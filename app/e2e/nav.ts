@@ -29,6 +29,15 @@ export const TAB = {
   structure: 'Su día y sus rutinas',
   made: 'Lo que le he preparado',
   curriculum: 'Su adaptación curricular',
+  /**
+   * The two ways of telling somebody else about a child (`030`).
+   *
+   * `004`'s year-boundary handover and `030`'s fortnight packet share this page: the
+   * same child, a different question. They are below the rule in the rail because both
+   * are lifecycle rather than daily work.
+   */
+  handover: 'Preparar el traspaso',
+  erase: 'Borrar todo lo suyo',
 } as const;
 
 /**

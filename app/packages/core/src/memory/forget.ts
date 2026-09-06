@@ -156,12 +156,30 @@ export async function planForget(vault: Vault, code: string): Promise<ForgetPlan
    * screen reporting a residue it had refused to collect.
    */
   const word = new RegExp(`(?<![A-Za-z0-9])${code}(?![A-Za-z0-9])`);
-  for (const f of await vault.list(VAULT.handover)) {
-    const p = `${VAULT.handover}/${f}`;
-    if (f.startsWith(`${code}-`)) { paths.push(p); continue; }
-    const raw = await vault.readRaw(p);
-    if (raw && word.test(raw)) paths.push(p);
-  }
+  /*
+   * Recursively, since `030`.
+   *
+   * `handover/received/` holds packets **somebody else sent her**, kept verbatim. A
+   * received packet's internal code is the sender's and could never match hers — what
+   * carries hers is the `linked:` annotation she wrote on the local copy, which is
+   * inside the file and so is found by the content match below.
+   *
+   * The walk was flat, so those files were collected by nothing while `verifyForgotten`
+   * recurses and would have found them — a plan that refuses to collect what the
+   * verifier then reports as residue, which is P38's finding rebuilt one directory
+   * lower. Found by adding the directory rather than by the check firing, because this
+   * feature is what creates it.
+   */
+  const walkHandover = async (dir: string): Promise<void> => {
+    for (const f of await vault.list(dir)) {
+      const p = `${dir}/${f}`;
+      if (!f.includes('.')) { await walkHandover(p); continue; }
+      if (f.startsWith(`${code}-`)) { paths.push(p); continue; }
+      const raw = await vault.readRaw(p);
+      if (raw && word.test(raw)) paths.push(p);
+    }
+  };
+  await walkHandover(VAULT.handover);
 
   /*
    * The composition requests (COD-18).

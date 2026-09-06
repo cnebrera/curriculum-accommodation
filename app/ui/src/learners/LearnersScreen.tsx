@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { Page, Section, Actions } from '../shell/Page.js';
+import { PacketDoorSections } from '../coordination/PacketDoor.js';
 import { ProfileEditor } from './ProfileEditor.js';
 import { ForgetLearner } from './ForgetLearner.js';
-import { HandoverReview } from './HandoverReview.js';
 import { RecordScreen } from './RecordScreen.js';
 import { AxisStrip } from './AxisStrip.js';
 import { Badge } from '../components/Badge.js';
@@ -271,6 +271,14 @@ export function LearnersScreen({ onOpen, onNew }: {
                 </button>
               ) : null}
             </Actions>
+
+            {/*
+              The door (`030` T011). Here because a packet arrives about **somebody in
+              her class**, and until she opens it she does not know which one — so the
+              screen that lists her class is where she is standing when a colleague's
+              file lands.
+            */}
+            <PacketDoorSections learners={rows.map((r) => r.code)} />
           </>
         )}
       </Loaded>

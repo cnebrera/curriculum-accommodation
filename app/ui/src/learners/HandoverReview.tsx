@@ -23,9 +23,17 @@ const EVIDENCE: Record<string, string> = {
   observed: 'lo observé', inferred: 'lo deduje', reported: 'me lo contaron',
 };
 
-export function HandoverReview({ code, name, onDone }: {
+export function HandoverReview({ code, onDone }: {
   code: string;
-  name?: string;
+  /*
+   * No `name` prop any more (`030`).
+   *
+   * It existed for the `<h2>Traspaso de {name}</h2>` this component no longer has, and
+   * `props-are-read.test.ts` refused the change the moment the heading went — a prop
+   * declared, typed and read by nothing is this repository's signature defect, and the
+   * guard caught it being created rather than months later. The page above says whose
+   * handover this is.
+   */
   onDone: () => void;
 }) {
   const thisYear = new Date().getFullYear();
@@ -67,13 +75,18 @@ export function HandoverReview({ code, name, onDone }: {
 
   return (
     <div className="stack gap6">
-      <div className="stack gap2">
-        <h2>Traspaso de {name ?? code}</h2>
-        <p className="lede">
-          Lo que le contarías a quien lo tenga el año que viene. Tú decides qué va y
-          qué no: nada sale de aquí sin que lo revises.
-        </p>
-      </div>
+      {/*
+        No heading of its own (`030`, found by looking at the page).
+        `020` gave this component a `Page` whose title is already «El traspaso de
+        Lucía», so an `<h2>Traspaso de Lucía</h2>` two lines below it was the same
+        sentence twice — invisible while this was the only thing on the screen, obvious
+        the moment a second section joined it. The paragraph stays: it is the frame she
+        reviews within, and it is not a heading.
+      */}
+      <p className="lede">
+        Lo que le contarías a quien lo tenga el año que viene. Tú decides qué va y
+        qué no: nada sale de aquí sin que lo revises.
+      </p>
 
       {/*
         The limit, above the claims and before she starts editing — because it is

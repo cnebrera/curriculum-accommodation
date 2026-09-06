@@ -7,6 +7,7 @@ import { ForgetLearner } from './ForgetLearner.js';
 import type { LearnerTab } from '../nav/route.js';
 import { StructureScreen } from '../structure/StructureScreen.js';
 import { useNormative, documentName, registerName } from '../data/normative.js';
+import { ExportPacketSection } from '../coordination/ExportPacket.js';
 
 /**
  * What is inside a learner (020 T011-T014).
@@ -187,7 +188,26 @@ export function LearnerSection({
       return (
         <Page title={`El traspaso de ${name ?? code}`}
               lede="Un documento con lo que has aprendido de él, para quien lo tenga el año que viene. Lo revisas tú: decides qué va y qué no.">
-          <HandoverReview code={code} {...(name ? { name } : {})} onDone={() => { /* stays here */ }} />
+          {/*
+            `HandoverReview` carries its own heading, so it is **not** wrapped in a
+            Section. It was, for about an hour, and looking at the page is what found
+            it: «El traspaso de fin de curso» sitting directly above «Traspaso de
+            Lucía» — two headings for one thing, which is what a wrapper adds when the
+            thing already introduces itself.
+          */}
+          <HandoverReview code={code} onDone={() => { /* stays here */ }} />
+          {/*
+            `030`, below it and clearly second. The same child, a different question:
+            `004` is «todo, una vez, en septiembre» and this is «una quincena, ahora».
+            Grafting the year-boundary confirm/disconfirm lifecycle onto weekly notes
+            would make every Tuesday an audit, which is why they are two things on one
+            page rather than one thing with a mode.
+
+            And the page keeps `004`'s title, which is the rail's label: a screen whose
+            heading disagrees with the entry that reached it is a screen she thinks she
+            mis-clicked.
+          */}
+          <ExportPacketSection code={code} />
         </Page>
       );
 

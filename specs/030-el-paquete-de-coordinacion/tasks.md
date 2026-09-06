@@ -22,7 +22,7 @@ and the entire security model.
       mentioned in a note), no teacher name, no third party (SC-2801, FR-2802). Includes
       the gate case: a packet where a planted name survives redaction is **refused, not
       written**, and the refusal does not print the name
-- [ ] T002 [P] Write `app/packages/shell/test/coordination-door.test.ts` **first**, red,
+- [x] T002 [P] Write `app/packages/shell/test/coordination-door.test.ts` **first**, red,
       from quickstart §2: parse, scan, display, hold and link a packet with **zero vault
       writes** until the first explicit accept (SC-2802, FR-2804); a skipped item leaves
       no trace; every accepted claim is `reported` and **no code path writes `observed`
@@ -79,7 +79,7 @@ every skipped item traceless, no name anywhere in the file.
 
 **Independent Test**: quickstart §5 end to end over two temporary vaults.
 
-- [ ] T008 [US1] `app/packages/shell/src/ipc/coordination.ts` · the export two-step,
+- [x] T008 [US1] `app/packages/shell/src/ipc/coordination.ts` · the export two-step,
       mirroring `memory:handoverDraft`/`handoverWrite`'s shape (the reviewed-export
       pattern is `004`'s, reused not duplicated): `coordination:exportDraft(code,
       period, role)` returns items for review; `coordination:exportWrite` writes only
@@ -87,29 +87,29 @@ every skipped item traceless, no name anywhere in the file.
       Written to `handover/<code>-coord-<date>.md`, period defaulting from the newest
       such file (the filesystem is the pointer — no stored `last_packet` field)
       (FR-2801, FR-2803)
-- [ ] T009 [US1] `ui/src/coordination/` export screen: learner, period, items with
+- [x] T009 [US1] `ui/src/coordination/` export screen: learner, period, items with
       per-item uncheck, `findProbableNames` flags shown beside their items, and the
       once-only sentence that copies already sent are outside erasure's reach (the
       `003` «backups» honesty, extended to the thing this screen mails). Through a
       `ui/src/data/` hook, never `window.rampa` directly (013's rule)
-- [ ] T010 [US1] `coordination:open(path)` — parse, scan, stale-check, return items
+- [x] T010 [US1] `coordination:open(path)` — parse, scan, stale-check, return items
       plus the door state. **Writes nothing.** Electron's file dialog stays in
       `packages/shell`; `boundary.test.ts`'s list grows by the one file that needs it,
       with its reason written (FR-2804, FR-2806)
-- [ ] T011 [US1] The door screen: items presented individually for accept/skip; an
+- [x] T011 [US1] The door screen: items presented individually for accept/skip; an
       accepted note lands via `appendNote` with «→ recibido por paquete (<rol>,
       <fecha>)»; an accepted profile delta lands via `saveProfile` plus the dated note;
       the conflict case shows «tu perfil dice X, el paquete dice Y» and **she chooses —
       never a merge** (the edge case is the feature). Accept is the only writer
       (FR-2804, FR-2805)
-- [ ] T012 [US1] Provenance asserted structurally in T002's suite: packet filename,
+- [x] T012 [US1] Provenance asserted structurally in T002's suite: packet filename,
       role, date on every accepted item, `reported` assigned by the receiver — the
       importer does not read an evidence marker from the file, because a packet
       asserting its own credibility is the anchor `004` exists to avoid (FR-2805)
-- [ ] T013 [P] [US1] Exported packets are **listed** — beside `004`'s in whatever
+- [x] T013 [P] [US1] Exported packets are **listed** — beside `004`'s in whatever
       surface lists handover today, with kind and date, so «what have I sent about this
       child» is answerable without a file manager (FR-2803)
-- [ ] T014 [US1] `app/e2e/coordination.spec.ts` from quickstart §5 over two temp
+- [x] T014 [US1] `app/e2e/coordination.spec.ts` from quickstart §5 over two temp
       vaults: export → import → accept/skip → attribution, the conflict choice, and the
       stale packet marked on sight
 
@@ -189,7 +189,7 @@ undoable, accepting attributes correctly.
 
 ## Phase 6 · Erasure, the advice, and the parts that need people
 
-- [ ] T026 `app/packages/core/src/memory/forget.ts` · `planForget` lists
+- [x] T026 `app/packages/core/src/memory/forget.ts` · `planForget` lists
       `handover/<code>-*.md` and linked received copies; `verifyForgotten`'s walk gains
       `VAULT.handover` — it currently walks only profiles/material/output/memory, so
       **`004`'s packets were already invisible to it** (P38's finding; the full

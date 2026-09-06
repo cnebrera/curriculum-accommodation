@@ -4,6 +4,7 @@ import { registerVaultIpc, reopenVault, startWatching, stopWatching } from './ip
 import { registerNamesIpc } from './ipc/names.js';
 import { registerKeysIpc } from './ipc/keys.js';
 import { registerCorpusIpc } from './corpus/index.js';
+import { registerCoordinationIpc } from './ipc/coordination.js';
 import { registerCostIpc } from './ipc/cost.js';
 import { registerMemoryIpc } from './ipc/memory.js';
 import { registerRecordIpc } from './ipc/record.js';
@@ -160,6 +161,7 @@ else {
     registerNamesIpc();
     registerKeysIpc();
     registerCorpusIpc();
+    registerCoordinationIpc();
     registerCostIpc();
     registerMemoryIpc();
     registerRecordIpc();
