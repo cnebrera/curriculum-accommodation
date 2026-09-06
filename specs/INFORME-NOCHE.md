@@ -711,6 +711,42 @@ borres.
 costuras verificadas por mutación: los tres `yield { truncated: true }`, el system del sitio de
 llamada y el lector de `chunk.truncated`.
 
+### `020` · El alumno es el sitio — US2 (en curso)
+
+Los pasos de «Preparar» viven dentro del alumno y la puerta está retirada. Lo que hay
+hecho: las dos ramas como iguales sin ninguna preseleccionada, el tipo de material como
+paso propio y sin defecto, traer el material y comprobar la lectura dentro de la sección
+con el raíl del alumno a la vista, «¿para quién más?» con el que entró ya en el lote, y
+salirse a mitad sin que nadie te retenga.
+
+**El estado de navegación se mudó a la ruta**, y eso es la corrección de fondo: los dos
+defectos que este proyecto ha encontrado en su propia navegación —la puerta olvidando qué
+niño era al pulsar «Volver», «Mis alumnos» sin efecto desde dentro de un perfil— eran los
+dos estado sostenido en una pantalla que navegar destruye. `App.tsx` pierde el reductor
+`intent` y la máquina de vistas; el reductor de ruta es ahora el único que sabe dónde
+está.
+
+**Y lo que encontró retirar la puerta.** El checkpoint de T028 dice «la puerta se ha ido y
+nada de lo que hacía se ha perdido». Al borrar las pantallas era **falso**: el paso 2 trae
+un fichero, así que el cuadro de pegar texto —que estaba en la pantalla a la que la puerta
+llevaba directa— se había quedado sin ruta. Una maestra con el texto ya en la mano tenía
+que fotografiar su propia pantalla. `IngestScreen` ofrece «Ya lo tengo en texto», que se
+salta el paso 3 (de un texto que ella tiene delante no hay lectura que comprobar) y **no**
+el paso 4, que se llevaría el lote entero por delante; apuntarlo a `review` tira tres
+casos de `profile-gap`, así que la costura está observada.
+
+Los 233 e2e son la especificación ejecutable de esta navegación y estaban centralizados en
+`nav.ts` justo para esto: ocho ficheros que navegaban a mano se arreglaron arreglando el
+helper. `door.spec.ts` pasa a `prepare.spec.ts` con sus seis casos reescritos y **ninguno
+borrado** — un caso que se va con la pantalla que recorría es un requisito que se cae en
+silencio. Dos aserciones cambian de forma y las dos lo dicen donde están escritas: el
+`aria-pressed` de las ramas (ya no son una selección, son una salida) y FR-1408, donde el
+alumno ya no se puede perder porque se está dentro de él. El caso «US1 no quita nada: la
+puerta sigue ahí» se **invierte** en vez de borrarse.
+
+Quedan de US2: el coste del lote como una cifra antes de la tirada, revisar y firmar por
+alumno, `for_learner` en `ir.md`, y las dos de «tenías esto a medias».
+
 ## Saltados y por qué
 
 _(nada todavía)_
