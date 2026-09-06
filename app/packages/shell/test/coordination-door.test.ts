@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { mkdtemp, rm, readdir } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, dirname } from 'node:path';
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import {
   Vault, buildCoordinationPacket, writeCoordinationPacket, parseFrontMatter,
   type Profile, type RecordEntry,
@@ -311,5 +311,47 @@ describe('unknown → hold → link → undo → link → accept', () => {
     // The profile itself is exactly what it was.
     expect((await vault.readRaw('profiles/M07/profile.yaml'))!).toContain('axes: {}');
     await rm(dir, { recursive: true, force: true });
+  });
+});
+
+/**
+ * No third way to mutate a document (030 T018, FR-2809).
+ *
+ * A returned correction runs `job:revise` — the path that already existed, which produces
+ * a new revision and keeps the previous (`026` FR-2402). The claim worth asserting is not
+ * that it works; it is that `030` did **not** add a second one, because a second mutation
+ * path is a second set of guarantees and the second one is the one nobody tests.
+ */
+describe('`030` adds no way to rewrite an adapted sheet', () => {
+  it('the files that write an adapted document are exactly the ones that did before', () => {
+    const shellSrc = join(repoRoot, 'app', 'packages', 'shell', 'src');
+    const walkSrc = (dir: string): string[] => {
+      const out: string[] = [];
+      for (const e of readdirSync(dir, { withFileTypes: true })) {
+        const p = join(dir, e.name);
+        if (e.isDirectory()) out.push(...walkSrc(p));
+        else if (p.endsWith('.ts')) out.push(p);
+      }
+      return out;
+    };
+    const writers = walkSrc(shellSrc)
+      .filter((f) => {
+        const code = readFileSync(f, 'utf8')
+          .replace(/\/\*[\s\S]*?\*\//g, '').replace(/^[ \t]*\/\/.*$/gm, '');
+        return /writeRaw\(\s*jobAdapted|writeRaw\(\s*jobAdaptedRevision/.test(code);
+      })
+      .map((f) => f.replace(`${shellSrc}/`, ''))
+      .sort();
+
+    /*
+     * One. `jobs/adapt.ts` writes the sheet and its revisions, and every correction —
+     * hers, the conversation's, and now a colleague's — arrives through it.
+     *
+     * `ipc/coordination.ts` writes `second-look.md`, which sits **beside** the sheet and
+     * is not the sheet. That distinction is the whole of FR-2809: what a review does is
+     * record what somebody said, and what applying it does is what applying any
+     * correction does.
+     */
+    expect(writers).toEqual(['jobs/adapt.ts']);
   });
 });

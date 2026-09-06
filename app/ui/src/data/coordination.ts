@@ -86,3 +86,62 @@ export function usePackets(code?: string): Loadable<PacketList> {
   return useAsync(
     () => window.rampa.coordination.list(code) as Promise<PacketList>, [code]);
 }
+
+/* ── The second look (`030` US2) ────────────────────────────────────────────── */
+
+export interface SecondLookRecord {
+  by: string;
+  date: string;
+  revision: number;
+  fingerprint: string;
+  packet: string;
+  corrections: string[];
+}
+
+export interface ReviewIn {
+  job: string;
+  revision: number;
+  corrections: string[];
+  role: string;
+  date: string;
+  fingerprint: string;
+}
+
+/** What somebody else already said about this sheet, or nothing. */
+export function useSecondLook(job: string, learner: string): Loadable<SecondLookRecord | null> {
+  return useAsync(
+    () => window.rampa.coordination.secondLook(job, learner) as Promise<SecondLookRecord | null>,
+    [job, learner]);
+}
+
+/** The draft out, with its mark — derived from the document, never a parameter. */
+export function useRequestReview() {
+  return useCommand((job: string, learner: string, role: string) =>
+    window.rampa.coordination.reviewRequest(job, learner, role) as
+      Promise<{ path: string; revision: number; fingerprint: string }>);
+}
+
+/**
+ * A reply, opened. **Writes nothing** — the door's rule, unchanged.
+ *
+ * The file is chosen through the same picker every packet uses, so the renderer never
+ * composes a path.
+ */
+export function useOpenReview() {
+  return useCommand(async (learner: string) => {
+    const opened = await window.rampa.coordination.open() as { raw: string } | null;
+    if (!opened) return null;
+    return window.rampa.coordination.reviewOpen(opened.raw, learner) as Promise<{
+      refusal: string | null;
+      review: ReviewIn | null;
+      moved: string | null;
+    }>;
+  });
+}
+
+/** Accepting is what writes it beside the sheet, so it is not remade next term. */
+export function useAcceptReview() {
+  return useCommand((learner: string, packetFile: string, review: ReviewIn) =>
+    window.rampa.coordination.reviewAccept(learner, packetFile, review) as
+      Promise<{ ok: boolean; path: string }>);
+}

@@ -30,6 +30,9 @@ export function VaultStep({ onDone }: { onDone: (root: string) => void }) {
     <div className="stack">
       <h2>{es.onboarding.vaultTitle}</h2>
       <p>{es.onboarding.vaultWhy}</p>
+      {/* `030` FR-2812: the absence, said where somebody would otherwise pick a shared
+          OneDrive folder. There is no shared-vault mode to offer, and this is why. */}
+      <p className="small">{es.onboarding.vaultAlone}</p>
       <div className="card">
         <code>{suggested || '…'}</code>
       </div>

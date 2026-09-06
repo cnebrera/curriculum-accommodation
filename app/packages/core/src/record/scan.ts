@@ -154,6 +154,26 @@ export async function entryFor(
   }
   if (adapted !== null && isSignedOff(adapted)) signedRevision = revisions.length + 1;
 
+  /*
+   * Who else read it, from the signed document's own front matter (`030` FR-2810).
+   *
+   * Read here rather than from `second-look.md`, and the difference matters: the file
+   * beside the sheet is what **arrived**, and the signature block is what she signed
+   * **under**. If she took another turn after the review and signed that, the review
+   * file still exists and the signature says nothing about it — which is the honest
+   * answer, and the one a stored copy of the review would have got wrong.
+   */
+  const reviewBlock = adapted?.frontMatter['review'];
+  const look = reviewBlock && typeof reviewBlock === 'object'
+    ? (reviewBlock as Record<string, unknown>)['second_look'] : undefined;
+  const secondLook = look && typeof look === 'object'
+    && typeof (look as Record<string, unknown>)['by'] === 'string'
+    ? {
+        by: String((look as Record<string, unknown>)['by']),
+        date: String((look as Record<string, unknown>)['date'] ?? ''),
+      }
+    : undefined;
+
   const reportPath = jobReport(jobId, learner);
   const hasReport = await vault.exists(reportPath);
 
@@ -255,6 +275,7 @@ export async function entryFor(
      * signature belongs to the sheet (`005` FR-511), so the sheet is what is asked.
      */
     ...(signedRevision !== undefined ? { signedRevision } : {}),
+    ...(secondLook ? { secondLook } : {}),
     ...(adaptedRaw === null ? { pending: true } : {}),
     ...(freshness ? { freshness } : {}),
     revision: revisions.length + 1,

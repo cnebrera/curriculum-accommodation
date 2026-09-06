@@ -30,6 +30,15 @@ export interface RecordEntry {
   /** Composed and not yet adapted for this learner (`016` T006). */
   pending?: boolean;
   /**
+   * Who else read it before she signed (`030` FR-2810).
+   *
+   * A **fact**, not an approval: the screen shows it as plain text beside the signature
+   * line rather than as a badge, because a chip next to «Firmada» reads as a second
+   * sign-off. Absent when nobody did, and absent renders as nothing at all — «sin
+   * segunda mirada» would be an accusation about a teacher who has nobody to ask.
+   */
+  secondLook?: { by: string; date: string };
+  /**
    * Both axes of freshness (`031` FR-2901): the reading it was made from, and the
    * drawings it used.
    *

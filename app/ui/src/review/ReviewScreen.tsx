@@ -9,6 +9,7 @@ import { Callout } from '../components/Callout.js';
 import { ReportView, type Decision } from './ReportView.js';
 import { DraftMark } from '../components/DraftMark.js';
 import { ScopeQuestion } from './ScopeQuestion.js';
+import { SecondLook } from '../coordination/SecondLook.js';
 import { ConversationPanel } from './ConversationPanel.js';
 
 /**
@@ -223,6 +224,21 @@ export function ReviewScreen({ jobId, learner, recipes, back }: {
       <ConversationPanel jobId={jobId} learner={learner} />
 
       <ScopeQuestion learner={learner} recipes={applied} onCaptured={(c) => setCorrections((prev) => [...prev, c])} />
+
+      {/*
+        `030` US2, here rather than on a screen of its own: the question «¿me lo miras
+        antes de firmarlo?» is a step **inside** reviewing this sheet, and a destination
+        of its own would mean leaving the document to ask about the document.
+
+        What comes back lands in the same `corrections` list her own notes go into — so
+        applying it runs `job:revise`, the correction path that already exists. This
+        feature adds no third way to mutate a document.
+      */}
+      <SecondLook jobId={jobId} learner={learner}
+                  onCorrections={(texts) => setCorrections((prev) => [
+                    ...prev,
+                    ...texts.map((text) => ({ text, scope: 'learner' as const })),
+                  ])} />
 
       {corrections.length ? (
         <div className="card stack">

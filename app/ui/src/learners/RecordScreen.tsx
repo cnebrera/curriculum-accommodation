@@ -101,6 +101,19 @@ function Entry({ entry, onOpen, onReuse, onReview, onPrint, printing }: {
         </Badge>
       </div>
 
+      {/*
+        Who else read it (`030` FR-2810), and **as information rather than as a badge**.
+        Plain text beside the signature line, not a `Badge`: a chip beside «Firmada»
+        would read as a second approval, and the difference between «alguien más la
+        miró» and «alguien más la aprobó» is the whole requirement.
+      */}
+      {entry.secondLook ? (
+        <span className="small">
+          Antes de firmarla la miró {entry.secondLook.by}
+          {entry.secondLook.date ? ` el ${entry.secondLook.date}` : ''}.
+        </span>
+      ) : null}
+
       {entry.revision > 1 ? (
         <span className="small">
           Versión {entry.revision} — hay {entry.revision - 1}{' '}

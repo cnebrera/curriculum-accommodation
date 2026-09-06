@@ -141,6 +141,21 @@ const api = {
     applyDelta: (code: string, axis: string, level: number) =>
       invoke('coordination:applyDelta', code, axis, level),
     list: (code?: string) => invoke('coordination:list', code),
+    /**
+     * «¿Me lo miras antes de firmarlo?» (`030` US2).
+     *
+     * The draft goes out **with its mark**, derived from the document (`007` FR-509);
+     * what comes back is corrections bound to (job, revision, fingerprint), never a
+     * second copy of the sheet.
+     */
+    reviewRequest: (job: string, code: string, role: string) =>
+      invoke('coordination:reviewRequest', job, code, role),
+    reviewReply: (job: string, revision: number, print: string, role: string, corrections: string[]) =>
+      invoke('coordination:reviewReply', job, revision, print, role, corrections),
+    reviewOpen: (raw: string, code: string) => invoke('coordination:reviewOpen', raw, code),
+    reviewAccept: (code: string, packetFile: string, review: unknown) =>
+      invoke('coordination:reviewAccept', code, packetFile, review),
+    secondLook: (job: string, code: string) => invoke('coordination:secondLook', job, code),
   },
   learners: {
     list: () => invoke('learners:list'),

@@ -520,10 +520,22 @@ describe('FR-509 · only sign-off removes the draft mark', () => {
      * That is the whole point of enumerating rather than filtering: a rehearsal is
      * exactly where somebody thinks a copy is harmless, and a second way to unmark a
      * document is a teacher's signature meaning nothing.
+     *
+     * **A ninth arrived on 2026-09-06 and it only reads.** `ipc/coordination.ts` (`030`)
+     * asks `isSignedOff` in order to **refuse**: a second look at an already-signed sheet
+     * is a different conversation, and letting one out would mean a returned correction
+     * arriving attached to a document whose review is closed.
+     *
+     * It writes no signature. `030` does add a fact **beside** one — `second_look`, at
+     * sign-off — and that goes through `signDocument` in `ipc/signoff.ts` and
+     * `stampSignedOff` in core, which is why the one-author assertion below is unchanged.
+     * The temptation this list refused was writing the key from here, where the review
+     * arrives; the reason not to is that `second_look` is part of the signature block,
+     * and a block with two authors is a key that drifts.
      */
     expect(writers.sort()).toEqual([
-      'ensayo/ipc.ts', 'ipc/guide.ts', 'ipc/signoff.ts', 'jobs/export.ts', 'jobs/guide.ts',
-      'jobs/print.ts', 'main.ts', 'preload.ts',
+      'ensayo/ipc.ts', 'ipc/coordination.ts', 'ipc/guide.ts', 'ipc/signoff.ts',
+      'jobs/export.ts', 'jobs/guide.ts', 'jobs/print.ts', 'main.ts', 'preload.ts',
     ]);
   });
 

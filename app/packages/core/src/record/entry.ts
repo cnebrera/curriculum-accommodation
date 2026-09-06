@@ -83,6 +83,16 @@ export interface RecordEntry {
   /** 1 for the original; higher when she has corrected it (001). */
   revision: number;
   /**
+   * Somebody else read it before she signed (`030` FR-2810).
+   *
+   * **A fact in the listing, not a badge of approval.** Derived from the signed
+   * document's own front matter, like `signedRevision` — the signature belongs to the
+   * sheet (`005` FR-511), and so does what it says about who else read it. Absent when
+   * nobody did, which is also a fact and is shown as nothing at all rather than as «sin
+   * segunda mirada».
+   */
+  secondLook?: { by: string; date: string };
+  /**
    * Composed and not yet adapted (`016` T006).
    *
    * A state, not a fault. She has a sheet; nobody has presented it for this

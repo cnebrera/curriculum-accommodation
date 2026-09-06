@@ -2,7 +2,9 @@ import { basename } from 'node:path';
 import {
   buildCoordinationPacket, writeCoordinationPacket, parseCoordinationPacket,
   scanPacket, loadLearner, saveProfile, appendNote, recordFor, VAULT, RampaError, logger,
-  parseFrontMatter, stringifyFrontMatter,
+  parseFrontMatter, stringifyFrontMatter, renderCoordinationPacket,
+  resolveDocument, whyNoDocument, isSignedOff, parseIR, jobReport,
+  fingerprint, secondLookPath, renderSecondLook, parseSecondLook, checkFingerprint,
   type CoordinationPacket, type PacketItem, type Vault,
 } from '@rampa/core';
 import { readFile } from 'node:fs/promises';
@@ -279,6 +281,175 @@ export function registerCoordinationIpc(): void {
     }
     return { sent: mine, held };
   });
+
+  /**
+   * «¿Me lo miras antes de firmarlo?» — the draft, out (FR-2808).
+   *
+   * ## The mark travels because the document does
+   *
+   * `007` FR-509: the draft mark is derived from the document and never passed as a
+   * parameter, so what her colleague opens carries it for the same reason her own screen
+   * does. There is no path here that could produce an unmarked copy.
+   *
+   * ## And a signed sheet is refused
+   *
+   * A second look at something already signed is a different conversation — it is «creo
+   * que esto está mal», not «¿lo miras antes?» — and offering it here would let a
+   * returned correction arrive attached to a document whose review is closed.
+   */
+  handle('coordination:reviewRequest', async (
+    jobId: unknown, learnerCode: unknown, role: unknown,
+  ) => {
+    const vault = currentVault();
+    if (typeof jobId !== 'string' || typeof learnerCode !== 'string'
+      || typeof role !== 'string' || role.trim() === '') {
+      throw new RampaError('vault-unreadable', 'Falta la hoja o el papel que dices tener.');
+    }
+    const found = await resolveDocument(vault, jobId, learnerCode);
+    if (found.of === 'none') throw new RampaError('vault-unreadable', whyNoDocument(found));
+
+    const raw = (await vault.readRaw(found.path)) ?? '';
+    if (isSignedOff(parseIR(raw))) {
+      throw new RampaError('vault-unreadable',
+        'Esta hoja ya está firmada. Pedir una segunda mirada sobre algo firmado es otra '
+        + 'conversación: si crees que está mal, córrígela y vuelve a firmarla.');
+    }
+    const report = (await vault.readRaw(jobReport(jobId, learnerCode))) ?? '';
+    const revision = revisionOf(raw);
+
+    const packet: CoordinationPacket = {
+      kind: 'review-request',
+      code: learnerCode,
+      role: role.trim(),
+      academicYear: academicYearOf(today()),
+      period: { from: today(), to: today() },
+      createdAt: today(),
+      items: [],
+      draft: { job: jobId, revision, fingerprint: fingerprint(raw), document: raw, report },
+    };
+    const written = writeCoordinationPacket({
+      packet, framing: await framing(), known: await knownNames(vault),
+    });
+    if (written.of === 'refused') throw new RampaError('vault-unreadable', written.say);
+
+    const path = `${VAULT.handover}/${learnerCode}-review-${jobId}-r${revision}.md`;
+    await vault.writeRaw(path, written.raw);
+    return { path, revision, fingerprint: packet.draft!.fingerprint };
+  });
+
+  /**
+   * The corrections, composed in the second vault and sent back (FR-2808).
+   *
+   * The document is **not** sent back. What returns is the list of corrections bound to
+   * (job, revision, fingerprint) — a returned copy of the sheet would be a second
+   * document with the same name and a different history, and whichever of the two she
+   * opened next would be the one she believed.
+   */
+  handle('coordination:reviewReply', async (
+    job: unknown, revision: unknown, print: unknown, role: unknown, corrections: unknown,
+  ) => {
+    const vault = currentVault();
+    if (typeof job !== 'string' || typeof print !== 'string' || typeof role !== 'string') {
+      throw new RampaError('vault-unreadable', 'Falta la hoja o el papel que dices tener.');
+    }
+    const list = (Array.isArray(corrections) ? corrections : [])
+      .filter((c): c is string => typeof c === 'string' && c.trim() !== '')
+      .map((c) => c.trim());
+    if (list.length === 0) {
+      throw new RampaError('vault-unreadable', 'No has escrito ninguna corrección.');
+    }
+    const packet: CoordinationPacket = {
+      kind: 'review',
+      code: job,
+      role: role.trim(),
+      academicYear: academicYearOf(today()),
+      period: { from: today(), to: today() },
+      createdAt: today(),
+      items: [],
+      review: {
+        job, fingerprint: print,
+        revision: typeof revision === 'number' ? revision : 1,
+        corrections: list,
+      },
+    };
+    const written = writeCoordinationPacket({
+      packet, framing: await framing(), known: await knownNames(vault),
+    });
+    if (written.of === 'refused') throw new RampaError('vault-unreadable', written.say);
+    const path = `${VAULT.handover}/respuesta-${job}-r${packet.review!.revision}.md`;
+    await vault.writeRaw(path, written.raw);
+    return { path };
+  });
+
+  /**
+   * A review coming back (FR-2808/2811).
+   *
+   * Shown beside the draft, with the fingerprint verdict stated. **Accepting is what
+   * writes** — the door's rule, unchanged: opening a review and reading it are not
+   * importing it.
+   */
+  handle('coordination:reviewOpen', async (raw: unknown, learnerCode: unknown) => {
+    const vault = currentVault();
+    if (typeof raw !== 'string' || typeof learnerCode !== 'string') {
+      throw new RampaError('vault-unreadable', 'Falta el fichero o el alumno.');
+    }
+    const parsed = parseCoordinationPacket(raw);
+    if (parsed.of === 'refused') return { refusal: parsed.say, review: null };
+    const review = parsed.packet.review;
+    if (!review) {
+      return {
+        refusal: 'Este paquete no trae correcciones sobre ninguna hoja.', review: null,
+      };
+    }
+    const found = await resolveDocument(vault, review.job, learnerCode);
+    const current = found.of === 'none' ? '' : (await vault.readRaw(found.path)) ?? '';
+    return {
+      refusal: null,
+      review: {
+        job: review.job, revision: review.revision, corrections: review.corrections,
+        role: parsed.packet.role, date: parsed.packet.createdAt,
+        fingerprint: review.fingerprint,
+      },
+      /*
+       * Scanned like any other packet: corrections are the one part that arrives
+       * **already addressed to the application**, which is exactly where an injected
+       * line hides best.
+       */
+      flags: scanPacket(parsed.packet),
+      moved: current === '' ? null
+        : (() => {
+            const v = checkFingerprint(review, { revision: revisionOf(current), document: current });
+            return v.of === 'moved' ? v.say : null;
+          })(),
+    };
+  });
+
+  /** Accepting a review: written beside the sheet it is about, so it is not remade. */
+  handle('coordination:reviewAccept', async (
+    learnerCode: unknown, packetFile: unknown, review: unknown,
+  ) => {
+    const vault = currentVault();
+    if (typeof learnerCode !== 'string' || typeof packetFile !== 'string') {
+      throw new RampaError('vault-unreadable', 'Falta el alumno o de dónde viene esto.');
+    }
+    const r = review as {
+      job: string; revision: number; corrections: string[]; role: string; date: string;
+      fingerprint: string;
+    };
+    await vault.writeRaw(secondLookPath(r.job, learnerCode), renderSecondLook({
+      by: r.role, date: r.date, revision: r.revision, fingerprint: r.fingerprint,
+      packet: packetFile, corrections: r.corrections,
+    }));
+    return { ok: true as const, path: secondLookPath(r.job, learnerCode) };
+  });
+
+  /** What somebody else said about this sheet, for the screen that shows it beside it. */
+  handle('coordination:secondLook', async (job: unknown, learnerCode: unknown) => {
+    if (typeof job !== 'string' || typeof learnerCode !== 'string') return null;
+    const raw = await currentVault().readRaw(secondLookPath(job, learnerCode));
+    return raw === null ? null : parseSecondLook(raw);
+  });
+
 }
 
 /**
@@ -391,4 +562,17 @@ export async function inspectPacket(vault: Vault, raw: string): Promise<{
      */
     known: learners.includes(packet.code),
   };
+
+}
+
+/**
+ * Which revision a stored document is, from its own front matter.
+ *
+ * `1` when it says nothing, which is what `014` means by «the original». Read rather
+ * than counted from the directory: a `adapted.r3.md` beside `adapted.md` says how many
+ * revisions exist, not which one this file is.
+ */
+function revisionOf(raw: string): number {
+  const n = parseFrontMatter(raw).data['revision'];
+  return typeof n === 'number' && n > 0 ? n : 1;
 }

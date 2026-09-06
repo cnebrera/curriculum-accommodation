@@ -35,6 +35,15 @@ export const es = {
     intro: 'Tres pasos. Puedes cerrar y seguir mañana: no se pierde nada.',
     vaultTitle: '¿Dónde guardo tus cosas?',
     vaultWhy: 'Aquí se quedan tus alumnos y tus notas. Son tuyas: puedes abrirlas con cualquier editor y hacer copia copiando la carpeta.',
+    /*
+     * `030` FR-2812, said where the decision is made rather than in a manual.
+     *
+     * Dos personas escribiendo sobre la misma carpeta sincronizada es la forma más
+     * rápida de perder trabajo que hay en esta herramienta, y el vault está pensado para
+     * editarse en Obsidian — así que el conflicto no es un caso raro, es el martes. Se
+     * dice aquí porque aquí es donde alguien elige una carpeta de OneDrive compartida.
+     */
+    vaultAlone: 'Que sea tuya y de nadie más. Si dos personas escribís en la misma carpeta sincronizada, tarde o temprano se pierde trabajo. Para contarle algo de un alumno a una compañera está el paquete de coordinación, que va cosa por cosa.',
     vaultChoose: 'Elegir otra carpeta',
     vaultAccept: 'Usar esta carpeta',
     connectTitle: 'Conectar con tu servicio de IA',

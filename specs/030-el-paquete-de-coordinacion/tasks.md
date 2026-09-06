@@ -124,40 +124,40 @@ revision, signing records «revisada por <rol>» as a fact — and never as a ga
 
 **Independent Test**: quickstart §6 round trip.
 
-- [ ] T015 [US2] Export-for-review: `coordination:exportDraft` gains the draft payload —
+- [x] T015 [US2] Export-for-review: `coordination:exportDraft` gains the draft payload —
       the unsigned document **with its draft mark derived from the document** (`007`
       FR-509: the mark travels because the document does, never as a parameter), its
       report, job id, revision number and a byte fingerprint. Same name gate as any
       export; refuses a signed document (a second look at a signed sheet is a different
       conversation) (FR-2808)
-- [ ] T016 [US2] The annotation screen in the receiver's Rampa: the sheet rendered
+- [x] T016 [US2] The annotation screen in the receiver's Rampa: the sheet rendered
       read-only in the **sealed viewer** (`021`'s `seal()` — packet content is
       Principle IX content and this document came from another machine), corrections
       composed as a list, exported back as a `review` packet bound to (job, revision,
       fingerprint) (FR-2808)
-- [ ] T017 [US2] Import of a review: corrections displayed **beside the draft**;
+- [x] T017 [US2] Import of a review: corrections displayed **beside the draft**;
       accepting records them in `material/<job>/<learner>/second-look.md` (role, date,
       revision, packet file, corrections) — `review.md`'s own warning is the
       requirement: a correction not written down will be made again (FR-2808)
-- [ ] T018 [US2] Applying a returned correction runs **the existing correction path** —
+- [x] T018 [US2] Applying a returned correction runs **the existing correction path** —
       `runAdaptation` with corrections for adapted sheets, re-compose for composed ones
       — producing a new revision with the previous kept (`026` FR-2402's no-in-place
       rule; this feature adds no third mutation path, and composes with `026` when that
       spec is planned) (FR-2809)
-- [ ] T019 [US2] `app/packages/shell/src/ipc/signoff.ts` · at sign-off, if
+- [x] T019 [US2] `app/packages/shell/src/ipc/signoff.ts` · at sign-off, if
       `second-look.md` exists for the resolved document, the review block gains
       `second_look: {by, date, revision}` — **two facts, one signer**: the signature
       stays one person's (`005` FR-512) and nothing anywhere reads `second_look` to
       allow or block signing. The control case is part of the test: signing with no
       review recorded shows nothing and was never impeded (FR-2810)
-- [ ] T020 [US2] Fingerprint mismatch: a review returned for a superseded revision is
+- [x] T020 [US2] Fingerprint mismatch: a review returned for a superseded revision is
       **declared** on import — «estas correcciones eran sobre la revisión 3; vas por la
       4» — and the corrections still offered, never silently attached to the current
       revision (FR-2811)
-- [ ] T021 [P] [US2] The record (`014`) shows «revisada por <rol> · <fecha>» beside the
+- [x] T021 [P] [US2] The record (`014`) shows «revisada por <rol> · <fecha>» beside the
       signature line for sheets that have it — a fact in the listing, styled as
       information and not as a badge of approval (FR-2810)
-- [ ] T022 [US2] `app/e2e/second-look.spec.ts` from quickstart §6, including the
+- [x] T022 [US2] `app/e2e/second-look.spec.ts` from quickstart §6, including the
       mismatch case and the no-review control case
 
 **Checkpoint**: the tutor's blocking question — found verbatim by the persona review —
@@ -196,7 +196,7 @@ undoable, accepting attributes correctly.
       five-residue fix is `003`'s revision, but this feature must not ship a packet
       that widens the open gap). Test per quickstart §7:
       `app/packages/core/test/forget-handover.test.ts` (FR-2803)
-- [ ] T027 [P] FR-2812, the deliberate absence: no shared-vault mode is offered
+- [x] T027 [P] FR-2812, the deliberate absence: no shared-vault mode is offered
       anywhere, and the documentation (`docs/memory.md`, the vault-choice interface
       copy) **advises against** two writers on one synced folder, naming the packet as
       the coordination channel — «un vault = una docente, siempre». Satisfied by a

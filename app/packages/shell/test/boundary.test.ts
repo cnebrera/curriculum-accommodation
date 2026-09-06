@@ -307,8 +307,13 @@ describe('inside packages/shell, the surface is small and named', () => {
      * at all, because the file dialog is `ipc/pick.ts`'s and the vault is
      * `ipc/vault.ts`'s. What grew is the bridge, which is what the bridge is for.
      *
+     * **Raised to 1007 on 2026-09-06**, for `030` US2's second look: five more channels
+     * in `preload.ts`. Same shape as the raise above and the same argument — the door is
+     * per-act, and asking for a second look, replying to one, opening a reply, accepting
+     * it and reading what was said are five different things a teacher does.
+     *
      * 25, not 100. A bound raised to a round number stops being a measurement.
      */
-    expect(lines).toBeLessThan(999);
+    expect(lines).toBeLessThan(1007);
   });
 });

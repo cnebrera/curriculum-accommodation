@@ -1,4 +1,7 @@
-import { resolveDocument, RampaError, whyNoDocument, stampSignedOff, type Vault } from '@rampa/core';
+import {
+  resolveDocument, RampaError, whyNoDocument, stampSignedOff,
+  parseSecondLook, secondLookPath, type Vault,
+} from '@rampa/core';
 import { currentVault } from './vault.js';
 import { handle } from './wrap.js';
 import { refreshRecord } from './record.js';
@@ -56,7 +59,21 @@ export async function signDocument(
   const found = await resolveDocument(vault, jobId, learnerCode);
   if (found.of === 'none') throw new RampaError('vault-unreadable', whyNoDocument(found));
   const raw = (await vault.readRaw(found.path)) ?? '';
-  await vault.writeRaw(found.path, stampSignedOff(raw, role, stamp));
+
+  /*
+   * The second look, **when and only when** one is recorded (`030` FR-2810).
+   *
+   * Two facts, one signer. The signature stays one person's (`005` FR-512); this says
+   * who else read it and when, as information. **Nothing reads it to allow or block
+   * signing** — the control case is part of the test: signing with no review recorded
+   * shows nothing and was never impeded. A gate here would turn «¿me lo miras?» into a
+   * requirement, and the tutor who has nobody to ask would be the one it stopped.
+   */
+  const looked = await vault.readRaw(secondLookPath(jobId, learnerCode));
+  const look = looked === null ? null : parseSecondLook(looked);
+
+  await vault.writeRaw(found.path, stampSignedOff(raw, role, stamp,
+    look ? { by: look.by, date: look.date, revision: look.revision } : undefined));
   return { signedOff: true, date: stamp };
 }
 

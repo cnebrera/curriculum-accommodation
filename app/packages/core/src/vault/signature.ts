@@ -19,8 +19,28 @@
  * Unquoted, YAML hands `date` back as a `Date` object, and the next thing to validate
  * that block would drop it — the same defect the journal's own timestamp already had.
  */
-export function stampSignedOff(raw: string, by: string, date: string): string {
-  const block = `review:\n  signed_off: true\n  by: "${by.replace(/"/g, '')}"\n  date: "${date}"\n`;
+export function stampSignedOff(
+  raw: string, by: string, date: string,
+  /**
+   * A second look somebody else gave it, when there is one (`030` FR-2810).
+   *
+   * **Two facts, one signer.** The signature stays one person's (`005` FR-512): «by» is
+   * who signed, and this says who else read it and when. Nothing anywhere reads
+   * `second_look` to allow or block signing — a sheet signed with no second look simply
+   * has no key, which is also a fact.
+   *
+   * A parameter rather than something this function looks up, because `stampSignedOff`
+   * is pure and the file it would have to read lives in the vault. The caller that knows
+   * about the vault is the one that resolves it.
+   */
+  secondLook?: { by: string; date: string; revision: number },
+): string {
+  const extra = secondLook
+    ? `  second_look:\n    by: "${secondLook.by.replace(/"/g, '')}"\n`
+      + `    date: "${secondLook.date}"\n    revision: ${secondLook.revision}\n`
+    : '';
+  const block = `review:\n  signed_off: true\n  by: "${by.replace(/"/g, '')}"\n`
+    + `  date: "${date}"\n${extra}`;
   return /^---\r?\n/.test(raw)
     ? raw.replace(/^---\r?\n/, `---\n${block}`)
     : `---\n${block}---\n\n${raw}`;

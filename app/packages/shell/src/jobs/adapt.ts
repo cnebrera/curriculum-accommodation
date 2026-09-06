@@ -446,7 +446,7 @@ export async function runAdaptation(
   const withPicto = stampPicto(
     stampReading(/^---\r?\n/.test(result.out) ? stamped : result.out, readingFingerprint(doc)),
     pictoPerBlock(pictos));
-  await vault.writeRaw(jobAdapted(jobId, learnerCode), withPicto);
+  await vault.writeRaw(jobAdapted(jobId, learnerCode), withPicto);  // one writer (030 T018)
   /*
    * And the vault says it now records drawings (`031`, P50's marker).
    *

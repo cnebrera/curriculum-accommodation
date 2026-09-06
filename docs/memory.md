@@ -210,3 +210,27 @@ The distinction is enforced by the export, not by the teacher remembering.
 **Handover is more than this export.** Moving the files is the easy half; the
 hard half is the receiving teacher not believing them more than they should.
 Specified in `specs/004-handover/spec.md`.
+
+## Un vault = una docente, siempre
+
+**Rampa no ofrece un modo de vault compartido, y no es un hueco: es la decisión**
+(`030` FR-2812).
+
+Dos personas escribiendo sobre la misma carpeta sincronizada —OneDrive, Drive, un
+recurso de red— es la forma más rápida de perder trabajo que existe en esta
+herramienta. No hay bloqueo, no hay fusión y no hay historial: hay dos clientes de
+sincronización decidiendo cuál de dos ficheros gana, y el que pierde se llama
+`notes (copia en conflicto de Ana).md`. El vault está pensado para que ella lo edite
+en Obsidian, así que el conflicto no es un caso raro: es el martes.
+
+**El canal de coordinación es el paquete.** Un fichero, una quincena, revisado antes
+de salir, aceptado cosa por cosa al llegar. Es más lento que compartir una carpeta y
+esa es exactamente la propiedad que lo hace utilizable: cada cosa que entra en el vault
+de alguien ha pasado por delante de esa persona.
+
+Lo que sí se comparte copiando es `memory/house.md` — el estilo del centro, que no
+habla de ningún niño.
+
+Si algún día se construye un modo compartido, tendrá que responder primero a qué pasa
+cuando dos personas firman la misma hoja, y esa pregunta no tiene una respuesta técnica:
+una firma es de una persona (`005` FR-512).
