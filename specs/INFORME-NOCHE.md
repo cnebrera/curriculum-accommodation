@@ -1471,6 +1471,58 @@ a línea; el pipeline de adaptación entrega bloques enteros.
 haciendo la segunda mirada sobre un examen de verdad, por su transporte de verdad, para
 ver si el bucle cabe en una semana de colegio.
 
+### 3.11 · `034` — la maquinaria está hecha y el canal no se puede encender
+
+`f7e6a44`, `b57e352`, `34a32ca`, `74f525c` · **21 de 29 tareas, 10 de 11 FRs** ·
+vitest 2.444 · e2e 220
+
+Los dos invariantes primero, porque los dos fallos son silenciosos: sin red, una
+comprobación es **silencio** —ni error, ni interrupción—, y una actualización manipulada
+cambia **cero** ficheros, comprobado hasheando el almacén entero antes y después en vez de
+por la ausencia de un error. «No ha cambiado nada» no es algo que se note: es algo que
+nota un hash.
+
+**Firma Ed25519 sobre bytes canónicos**, contra una clave compilada en la aplicación.
+HTTPS autentica al host, no al proyecto — y el corpus no puede avalarse a sí mismo, así
+que una clave entregada por el canal que protege no verifica nada. Sobre los bytes
+**canónicos** y no sobre el fichero: firmar el fichero suena más estricto y es más débil
+en lo que importa, porque verificaría un fichero y no diría nada sobre si lo que el parser
+entendió es lo que el editor firmó.
+
+Se rechazan enteros: firma de otro, un hash cambiado, **el resumen cambiado** (el campo
+que un editor hostil más querría tocar sin tocar los ficheros), un truncado, una lista de
+ficheros vacía —que acuñaría un número de versión gobernando un corpus vacío—, una ruta
+que se saldría de la raíz y un formato más nuevo del que esta build entiende. Y la puerta
+del formato corre **después** de la firma, porque el `formatVersion` de un manifiesto sin
+firmar es una afirmación de quien lo escribió.
+
+**Una sola resolución de «qué corpus gobierna»**, que devuelve el caso y no una ruta. Una
+instantánea incompleta o para una Rampa más nueva nunca gobierna; el incluido más nuevo
+gana al aceptado más viejo. Y un test estructural afirma que nadie más resuelve una ruta
+de corpus: un segundo lector con su propio `corpusRoot()` sería aplicación parcial por
+arquitectura, dentro de un mismo trabajo.
+
+**Los destinos, declarados en el corpus** y leídos por la pantalla **y** por el código.
+Dos listas no fallan porque el código llegue a un sitio no declarado — fallan porque se
+añade un tercer destino y la pantalla sigue diciendo dos.
+
+**Notify-only afirmado como ausencia**: ni `electron-updater`, ni `autoUpdater`, ni
+`child_process`, ni una URL de binario. Un requisito que se cumple porque algo no existe
+es el que deja de ser verdad en silencio.
+
+**Lo que falta, y por qué no lo he hecho.** No hay par de claves del proyecto. Eso no es
+código: es dónde vive la privada, quién puede publicar criterio pedagógico firmado, qué
+pasa si se pierde, y si el canal se enciende ya. **No lo he inventado** — está en el
+BACKLOG como G53. Con él quedan la pantalla de la oferta (FR-3206), su e2e, los fixtures
+de release y el lado de CI. El aviso de versión de la aplicación no lleva firma y **sí**
+funciona.
+
+**Y el guardián de la superficie Electron rechazó dos veces más**, tercera y cuarta del
+proyecto, y las dos produjeron la forma mejor: `corpus/active.ts` no importa Electron
+porque el directorio del almacén se inyecta al arrancar, y los cuatro ajustes del aviso
+salieron de `corpus/links.ts` —que es «los dos handlers que salen de la máquina» y ninguno
+de ellos sale— a `updates/notice.ts`.
+
 ## Notas de proceso
 
 - **La instancia que me pediste, y por qué la he reiniciado.** La levanté con `npm run dev`
@@ -1538,7 +1590,7 @@ ver si el bucle cabe en una semana de colegio.
 | | |
 |---|---|
 | `npx tsc --noEmit` | verde (línea base) |
-| `npx vitest run` | verde — 2.384 casos |
+| `npx vitest run` | verde — 2.444 casos |
 | `npm run test:e2e` | verde — 220 casos |
 | `scripts/check-fr-coverage.sh` | verde (línea base) |
 | `scripts/check-spec-kit.sh` | verde (línea base) |
@@ -1546,5 +1598,6 @@ ver si el bucle cabe en una semana de colegio.
 ---
 
 **Lotes 0, 1 y 2 completos (5/5 · 17/17 · 12/12); Lote 3 con `027`, `022`, `026`, `031`,
-`032`, `028`, `035`, `033`, `029` y `030` implementadas.** Quedan **3.10** (`020`
-US2-US4), **3.13** (notas de BACKLOG) y **1 feature** por `/speckit-implement`: `034`.
+`032`, `028`, `035`, `033`, `029` y `030` implementadas, y `034` con la maquinaria hecha y
+el canal esperando una decisión tuya (G53).** Quedan **3.10** (`020` US2-US4), **3.13**
+(notas de BACKLOG) y el resto de `034`.

@@ -446,8 +446,47 @@ sigue siendo el único ítem del lote sin tasks propios (sus tareas viven en spe
       Y salió un fallo de borrado **anterior a esta spec** (G48): «borrar todo lo suyo» no
       alcanzaba ni una agenda ni una composición sin adaptar, porque preguntaba por un
       directorio con el nombre del niño. Pendiente de validación de protección de datos.
-- [x] **3.5 · Spec ESCRITA → `029-la-normativa-es-un-corpus`** (P3, incluye P8). Falta: clarify → plan → tasks → implement.
-- [x] **3.6 · Spec ESCRITA → `030-el-paquete-de-coordinacion`** (P5/P7/P13). Falta: clarify → plan → tasks → implement.
+- [x] **3.5 · `029-la-normativa-es-un-corpus` IMPLEMENTADA** (P3, incluye P8).
+      **Hecho 2026-09-06, siete commits.** 28 de 29 tareas y **11 de 11 requisitos**; la
+      abierta es T028, que no es código: una PT de un segundo territorio escribiendo su
+      corpus con el contrato delante.
+      Durante un año Rampa le dijo «Séneca» a todo el mundo, y era el fallo que este
+      proyecto era menos capaz de ver desde dentro — quien lo escribió trabaja bajo ese
+      marco, así que «España» y «Andalucía» se leían como sinónimos. `017` ya lo había
+      escrito en sus Assumptions y la segunda mitad no se cumplió.
+      El inventario se fijó **antes** de mover nada: 19 ficheros, y hoy queda **uno** —
+      `acsInOverlay`, que sigue leyendo «es una **ACS**» porque los `adaptations.md` que ya
+      están en los vaults la llevan, y una puerta que dejara de reconocerlos empezaría a
+      negar exámenes en silencio.
+      Un corpus **no tiene ningún campo que llegue a ninguna comprobación**: lo que declare
+      `exam_rules` o `draft_mark: off` aterriza en `unknown`, y el escaneo sólo tiene que
+      contarlo. El test del corpus hostil corre con el fichero **en vigor**.
+      La maestra de Sevilla no nota nada: su borrador sale byte a byte igual salvo la línea
+      de procedencia, y el test la pasa y la resta en vez de no pasarla.
+      **El e2e cazó lo que ningún test de unidad podía**: los handlers nuevos escritos
+      `(_e, id)` como si `ipcMain` pasara el evento, así que `select('es-an')` llegaba como
+      deselección y todo salía en genérico.
+- [x] **3.6 · `030-el-paquete-de-coordinacion` IMPLEMENTADA** (P5/P7/P13).
+      **Hecho 2026-09-06, seis commits.** 28 de 29 tareas y **12 de 12 requisitos**; la
+      abierta es T029, que necesita una tutora y una PT de verdad.
+      Lo primero fue un test sobre el nombre de un niño en un fichero que se manda por
+      correo, escrito contra un módulo que no existía. El corpus del test está salado, y la
+      interesante es la otra niña: una nota sobre Lucía puede nombrar a Vega, y un mapa por
+      ítem sería el emisor decidiendo quién cuenta como tercero.
+      **La puerta es todo el modelo**: abrir, escanear, enseñar, guardar y vincular no
+      escriben nada; aceptar coge **un** ítem. No hay camino desatendido entre un fichero
+      que alguien manda por correo y un cambio en su carpeta.
+      «¿Me lo miras antes de firmarlo?» — la pregunta que la revisión de personas encontró
+      literal de una tutora. `second_look` va al lado de la firma como **hecho**, nada lo
+      lee para permitir o impedir firmar, y en el expediente sale como texto y no como
+      chapa.
+      Y el **vault compartido no existe a propósito**: el único requisito que se cumple
+      porque algo no existe, o sea el que deja de ser verdad en silencio. Hay test, la
+      frase está en el paso de onboarding donde alguien elegiría una carpeta compartida, y
+      `docs/memory.md` dice por qué.
+      **El e2e volvió a cazar lo que tsc no ve**: cinco handlers aterrizados **después de
+      un `return`**, código inalcanzable, con el test de canales pasando por análisis
+      estático.
 - [x] **3.7 · `031-el-segundo-eje-de-frescura` IMPLEMENTADA** (P34, G35).
       **Hecho 2026-09-05, dos commits.** 23 de 23 tareas.
       El fallo de fondo no era el aviso que faltaba: era que **los pictogramas elegidos no
@@ -526,7 +565,22 @@ sigue siendo el único ítem del lote sin tasks propios (sus tareas viven en spe
       que es para lo que se escribió vacío antes de que existiera nada.
 - [ ] **3.10 · Spec: 020 completo** — US2-US4: Preparar dentro del alumno, retirar el door, partir
       Mis notas, Configuración completa (P25/P29). Grande; los e2e de navegación son la red.
-- [x] **3.11 · Spec ESCRITA → `034-como-llegan-las-versiones`** (P49). Falta: clarify → plan → tasks → implement.
+- [ ] **3.11 · `034-como-llegan-las-versiones` — MAQUINARIA HECHA, CANAL SIN ENCENDER** (P49).
+      **2026-09-06, cuatro commits.** 21 de 29 tareas y **10 de 11 requisitos**.
+      Hecho: los dos invariantes primero (offline es silencio; una actualización manipulada
+      cambia **cero** ficheros, comprobado hasheando el almacén y no por la ausencia de un
+      error); firma Ed25519 sobre bytes canónicos contra una clave compilada en la
+      aplicación; puerta de formato **después** de la firma; una sola resolución de «qué
+      corpus gobierna» con test estructural de que nadie más resuelve una ruta de corpus;
+      el informe citando la versión; los destinos declarados en `instructions/updates.md`,
+      leídos por la pantalla **y** por el código; notify-only afirmado como **ausencia**;
+      el almacén con `rename` atómico, escaneo de lo verificado, vuelta atrás y conservación
+      del histórico; y la comprobación al abrir detrás del consentimiento, apagada por
+      defecto y semanal.
+      **Falta lo que necesita una decisión tuya** (G53 en el BACKLOG): no hay par de claves
+      del proyecto, así que el canal del corpus no se puede encender. Y con él quedan la
+      pantalla de la oferta (FR-3206), su e2e, los fixtures de release y el lado de CI.
+      El aviso de versión de la aplicación **sí** funciona: no lleva firma.
 - [x] **3.12 · `035-modo-ensayo` IMPLEMENTADA** (P16).
       **Hecho 2026-09-05, cinco commits.** 23 de 26 tareas y **11 de 11 requisitos**; las
       tres abiertas son una clave real (T018), una feature que aún no existe (T020, va con
