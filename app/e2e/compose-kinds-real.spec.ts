@@ -2,7 +2,7 @@ import { test, expect, _electron as electron, type Page, type ElectronApplicatio
 import { mkdtemp, mkdir } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { throughDoorToCompose } from './nav.js';
+import { throughPrepareToCompose } from './nav.js';
 
 /**
  * The two kinds that were a storefront (027 T017/T023, quickstart §5).
@@ -163,7 +163,7 @@ test.describe('the quantity question counts the unit of the kind she chose', () 
     await seed(page, vault);
     // The centralised walk, so a navigation change fixes every spec at once — which is
     // the whole reason `nav.ts` exists.
-    await throughDoorToCompose(page);
+    await throughPrepareToCompose(page);
 
     /*
      * The walk above already chose «una ficha», so that one is asserted without

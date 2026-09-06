@@ -2,7 +2,8 @@ import { test, expect, _electron as electron, type Page, type ElectronApplicatio
 import { mkdtemp, mkdir } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { SCREENS, toScreen, TAB, intoLearner, toTab, throughDoorToAdapt } from './nav.js';
+import { SCREENS, toScreen, TAB, intoLearner, toTab, toPrepare,
+         throughPrepareToAdapt } from './nav.js';
 
 /**
  * One primary control per screen (`013` FR-1105, backlog G31, decision P35).
@@ -128,10 +129,10 @@ test.describe('one primary control per screen', () => {
       if (found.length > 1) offenders.push(`${where}: ${found.join(' + ')}`);
     };
 
-    await page.getByRole('button', { name: 'Preparar material', exact: true }).click();
-    await check('el door, antes de elegir');
+    await toPrepare(page);
+    await check('preparar · antes de elegir la rama');
 
-    await throughDoorToAdapt(page);
+    await throughPrepareToAdapt(page);
     await check('adaptar · pegar el texto');
 
     await page.locator('#text').fill('Las plantas fabrican su alimento con la luz del sol.');
@@ -163,7 +164,7 @@ test.describe('one primary control per screen', () => {
     const { app, page, vault } = await launch();
     await seed(page, vault);
 
-    await throughDoorToAdapt(page);
+    await throughPrepareToAdapt(page);
     // ~56 céntimos at the connected model's price list: over the threshold, which
     // is what makes the gate appear at all.
     await page.locator('#text').fill('Las plantas fabrican su alimento. '.repeat(11_500));

@@ -2,7 +2,7 @@ import { test, expect, _electron as electron, type Page, type ElectronApplicatio
 import { mkdtemp, mkdir } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { intoLearner, toCaseload, toTab, learnerRail, rail, TAB } from './nav.js';
+import { intoLearner, toCaseload, toTab, learnerRail, rail, TAB, toPrepare } from './nav.js';
 
 /**
  * The navigation, end to end (020 T017, quickstart §2).
@@ -173,16 +173,31 @@ test.describe('her caseload is where she starts', () => {
     await app.close();
   });
 
-  test('US1 removes nothing: the door is still reachable', async () => {
+  test('the door is gone, and the work it led to is not', async () => {
     /*
-     * The sequencing promise, asserted rather than trusted. `020` ships in pieces and
-     * the door goes at T028 — until then there must be no moment where the work cannot
-     * be done, and a test is the only way that stays true while the code moves.
+     * The other half of a promise this file used to assert the first half of.
+     *
+     * While `020` shipped in pieces the case here read «US1 removes nothing: the door
+     * is still reachable» — because until T028 there had to be no moment where the work
+     * could not be done. T028 is the moment it goes, so the case inverts rather than
+     * being deleted: **the entry is gone and both branches still are not.**
+     *
+     * Deleting it would have left the retirement unasserted, which is how a screen
+     * comes back six months later as «Preparar material» in a rail nobody meant to
+     * change.
      */
     const { app, page, vault } = await launch();
     await seed(page, vault);
-    await page.getByRole('button', { name: 'Preparar material' }).click();
-    await expect(page.getByRole('heading', { name: '¿Qué vas a hacer?' })).toBeVisible();
+
+    await expect(rail(page).getByRole('button', { name: 'Preparar material' }))
+      .toHaveCount(0);
+    await expect(page.getByRole('heading', { name: '¿Qué vas a hacer?' })).toHaveCount(0);
+
+    // And what it led to, from inside the learner it was always about.
+    await toPrepare(page, { name: 'Lucía' });
+    await expect(page.locator('.door', { hasText: 'Adaptar algo que tengo' })).toBeVisible();
+    await expect(page.locator('.door', { hasText: 'Hacer material para que aprenda' }))
+      .toBeVisible();
     await app.close();
   });
 });

@@ -155,9 +155,13 @@ worksheet for three, and confirm the source was read once.
       a provider
 - [ ] T027 [P] [US2] Half-finished work belonging to no learner — **all of it in any
       vault today** — surfaces in the caseload and asks who it is for (FR-1827)
-- [ ] T028 [US2] Retire the door: remove it from the top level and delete
+- [x] T028 [US2] Retire the door: remove it from the top level and delete
       `app/ui/src/door/`, with `016` FR-1401 already marked retired in its own spec
-      (FR-1801)
+      (FR-1801). The checkpoint below — «nothing it did was lost» — was **false when the
+      screens were deleted**: step 2 brings a file, so the adapt screen's paste box had
+      become unreachable and a teacher with the text already in hand had no way past it.
+      `IngestScreen` now offers «Ya lo tengo en texto», which skips the reading check
+      (there is no reading to check) and not step 4 (that would lose the batch)
 - [x] T029 [P] [US2] Leaving a flow midway says what has already been spent and does not
       block (FR-1808). A teacher with a class in ten minutes must never be held inside a
       screen

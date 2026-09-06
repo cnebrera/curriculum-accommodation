@@ -2,7 +2,7 @@ import { test, expect, _electron as electron, type Page, type ElectronApplicatio
 import { mkdtemp, mkdir } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { RAIL_WORK, KIND_WORKSHEET, KIND_EXAM, throughDoorToAdapt } from './nav.js';
+import { toPrepare, KIND_WORKSHEET, KIND_EXAM, throughPrepareToAdapt } from './nav.js';
 
 /**
  * «Qué es este material» (012 T016, quickstart §6).
@@ -56,22 +56,23 @@ test.describe('she says what the material is', () => {
     const { app, page, vault } = await launch();
     await seed(page, vault);
 
-    await page.getByRole('button', { name: RAIL_WORK }).click();
-    await page.locator('.pick').first().click();
+    await toPrepare(page, { name: 'Lucía' });
     await page.locator('.door', { hasText: 'Adaptar algo que tengo' }).click();
 
     /*
-     * Scoped to the kinds section, not to `.door` globally: the adapt door's own
-     * description says «Una ficha, un examen, unos apuntes, una hoja de problemas»,
-     * so a document-wide locator for a kind matches the door as well. Playwright's
-     * strict mode caught it, which is the same ambiguity a teacher meets as a
+     * Document-wide now, and the scoping comment that used to live here is worth
+     * keeping as history: the door asked «¿qué vas a hacer?» and «¿y qué es?» on one
+     * screen, and the adapt door's own description says «Una ficha, un examen, unos
+     * apuntes, una hoja de problemas» — so a locator for a kind matched the branch as
+     * well, and Playwright's strict mode caught the same ambiguity a teacher met as a
      * moment of hesitation.
+     *
+     * `020` made them two screens, so the branch is not on this one and the ambiguity
+     * is gone by construction rather than by a careful locator.
      */
-    const kinds = page.locator('.section', { hasText: '¿Y qué es?' });
-
     for (const kind of [KIND_WORKSHEET, KIND_EXAM, 'Apuntes o un texto para estudiar',
       'Una hoja de problemas']) {
-      const control = kinds.locator('.door', { hasText: kind });
+      const control = page.locator('.door', { hasText: kind });
       await expect(control, kind).toBeVisible();
       await expect(control, `${kind} must not be pre-selected`)
         .toHaveAttribute('aria-pressed', 'false');
@@ -84,17 +85,24 @@ test.describe('she says what the material is', () => {
   });
 
   /** FR-1402 — the interface stops calling everything «una ficha». */
-  test('nothing in the rail or the door calls everything a ficha', async () => {
+  test('nothing in the rail or the flow calls everything a ficha', async () => {
     const { app, page, vault } = await launch();
     await seed(page, vault);
 
-    // The rail control that used to say «Adaptar material».
-    await expect(page.getByRole('button', { name: RAIL_WORK })).toBeVisible();
+    // «Adaptar material» was the rail's word for all four kinds. `020` T028 took the
+    // whole entry out of the top level, so neither name is there to check any more —
+    // what is checked is that no name came back in its place.
     await expect(page.getByRole('button', { name: 'Adaptar material' })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'Preparar material' })).toHaveCount(0);
 
-    await page.getByRole('button', { name: RAIL_WORK }).click();
+    await toPrepare(page, { name: 'Lucía' });
     const heading = await page.getByRole('heading', { level: 1 }).textContent();
     expect(heading).not.toMatch(/ficha/i);
+
+    // And the step that does ask names all four rather than one of them.
+    await page.locator('.door', { hasText: 'Adaptar algo que tengo' }).click();
+    const step = await page.getByRole('heading', { level: 1 }).textContent();
+    expect(step).not.toMatch(/ficha/i);
 
     await app.close();
   });
@@ -110,8 +118,7 @@ test.describe('she says what the material is', () => {
     const { app, page, vault } = await launch();
     await seed(page, vault);
 
-    await page.getByRole('button', { name: RAIL_WORK }).click();
-    await page.locator('.pick').first().click();
+    await toPrepare(page, { name: 'Lucía' });
     await page.locator('.door', { hasText: 'Adaptar algo que tengo' }).click();
     await page.locator('.door', { hasText: KIND_EXAM }).click();
 
@@ -127,7 +134,7 @@ test.describe('she says what the material is', () => {
     const { app, page, vault } = await launch();
     await seed(page, vault);
 
-    await throughDoorToAdapt(page, { kind: KIND_EXAM });
+    await throughPrepareToAdapt(page, { kind: KIND_EXAM });
 
     // `016`'s contract rule 1: no screen re-asks what the intent already holds.
     const kindFieldset = page.locator('fieldset', { hasText: '¿Qué es?' });

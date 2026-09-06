@@ -8,15 +8,15 @@ import { expect, type Page } from '@playwright/test';
  * navigation the day one of its steps changes, so there is one file and every spec
  * imports it.
  *
- * ## Two shapes live here at once, on purpose
+ * ## One shape now (T028)
  *
- * `020` US1 **removes nothing**: the caseload becomes the opening screen and a learner
- * becomes a place with a menu, while «Preparar material» stays in the top level until
- * US2 has replaced it. So this file holds both walks, and the door's half is marked
- * with the task that deletes it (T028).
+ * For a while this file held two: US1 removed nothing, so «Preparar material» stayed in
+ * the top level next to the caseload until US2 had replaced it. The door is retired, so
+ * the walks go through the learner — `toPrepare` and the two `throughPrepareTo…`.
  *
- * What must not happen while both exist: an assertion loosened so that a walk passes.
- * The routes change; what they check does not.
+ * What did not happen on the way: an assertion loosened so that a walk passes. Every
+ * claim the door's helpers made is made here, of the new route. The one that changed
+ * shape says so where it is written (`assertPrepareAsksTheKind`).
  */
 
 /* ── The learner as a place (020 US1) ─────────────────────────────────────── */
@@ -93,52 +93,69 @@ export async function toTab(page: Page, tab: keyof typeof TAB): Promise<void> {
   await learnerRail(page).getByRole('button', { name: TAB[tab], exact: true }).click();
 }
 
-/* ── The door (016) · deleted by 020 T028 ─────────────────────────────────── */
-
-/** The rail control that opens the door. Was «Adaptar material» before `016`. */
-export const RAIL_WORK = 'Preparar material';
+/* ── Preparar, dentro del alumno (020 US2) ────────────────────────────────── */
 
 /**
- * Learner → work → material, and into the adapt screen.
+ * The kinds, by the words `instructions/material-kinds.md` uses.
  *
- * `learnerIndex` because the picker shows her the names, and a spec that seeded
- * three learners cares about *which*, not about the code.
+ * Exact names throughout, and the reason is worth keeping now that the door is gone:
+ * the adapt branch's own description says «Una ficha, un examen, unos apuntes…», so a
+ * substring locator for «Una ficha» matches the branch **and** the kind. Playwright's
+ * default is substring, which found a real ambiguity rather than being pedantic.
  */
 export const KIND_WORKSHEET = 'Una ficha o unos ejercicios';
 export const KIND_EXAM = 'Un examen o una prueba';
 
-/**
- * Exact names throughout, and the reason is worth recording: the adapt door's own
- * description says «Una ficha, un examen, unos apuntes…», so a substring locator
- * for «Una ficha» matches the door **and** the kind. Playwright's default is
- * substring, which found a real ambiguity rather than being pedantic about one.
- */
-export async function throughDoorToAdapt(
-  page: Page,
-  opts: { learnerIndex?: number; kind?: string } = {},
+/** Into a learner and to step 1, «¿Qué necesitas?». */
+export async function toPrepare(
+  page: Page, who: { name?: string; index?: number } = {},
 ): Promise<void> {
-  await page.getByRole('button', { name: RAIL_WORK }).click();
-  await page.getByRole('heading', { name: '¿Qué vas a hacer?' }).waitFor();
+  if (who.name !== undefined) await intoNamedLearner(page, who.name);
+  else await intoLearner(page, who.index ?? 0);
+  await toTab(page, 'prepare');
+  await page.getByRole('heading', { name: /^Prepararle algo a/ }).waitFor();
+}
 
-  await page.locator('.pick').nth(opts.learnerIndex ?? 0).click();
+/**
+ * Learner ▸ Preparar ▸ adaptar ▸ el tipo ▸ pegar, hasta la pantalla que adapta.
+ *
+ * Was `throughDoorToAdapt`. The walk is four steps rather than one because the flow
+ * **is** four steps now — and the last of them is the reason this helper takes the
+ * paste route: step 2 brings a file, so a walk that must arrive at the paste box says
+ * so out loud (`020` T028) instead of opening a file dialog no test can answer.
+ */
+export async function throughPrepareToAdapt(
+  page: Page,
+  opts: { learnerIndex?: number; learnerName?: string; kind?: string } = {},
+): Promise<void> {
+  await toPrepare(page, {
+    ...(opts.learnerName !== undefined ? { name: opts.learnerName } : {}),
+    ...(opts.learnerIndex !== undefined ? { index: opts.learnerIndex } : {}),
+  });
   await page.locator('.door', { hasText: 'Adaptar algo que tengo' }).click();
-  await page.locator('.door', { hasText: opts.kind ?? KIND_WORKSHEET }).click();
 
-  await page.getByRole('button', { name: 'Empezar', exact: true }).click();
+  await page.locator('.door', { hasText: opts.kind ?? KIND_WORKSHEET }).click();
+  await page.getByRole('button', { name: 'Seguir', exact: true }).click();
+
+  // Step 2 · «Ya lo tengo en texto» skips the reading check, which has nothing to check.
+  await page.getByRole('button', { name: /Ya lo tengo en texto/ }).click();
+  // Step 4 · the entered learner is already in the batch, so this is one click.
+  await page.getByRole('button', { name: 'Seguir', exact: true }).click();
+
   // The adapt screen owns the paste box, so its presence is the arrival.
   await page.locator('#text').waitFor();
 }
 
-/** Learner → «hacer material», and into the compose screen. */
-export async function throughDoorToCompose(
-  page: Page, opts: { learnerIndex?: number; kind?: string } = {},
+/** Learner ▸ Preparar ▸ hacer material, hasta la pantalla que compone. */
+export async function throughPrepareToCompose(
+  page: Page,
+  opts: { learnerIndex?: number; learnerName?: string; kind?: string } = {},
 ): Promise<void> {
-  await page.getByRole('button', { name: RAIL_WORK }).click();
-  await page.getByRole('heading', { name: '¿Qué vas a hacer?' }).waitFor();
-
-  await page.locator('.pick').nth(opts.learnerIndex ?? 0).click();
+  await toPrepare(page, {
+    ...(opts.learnerName !== undefined ? { name: opts.learnerName } : {}),
+    ...(opts.learnerIndex !== undefined ? { index: opts.learnerIndex } : {}),
+  });
   await page.locator('.door', { hasText: 'Hacer material para que aprenda' }).click();
-  await page.getByRole('button', { name: 'Empezar', exact: true }).click();
 
   await page.locator('#objetivos').waitFor();
   /*
@@ -154,28 +171,25 @@ export async function throughDoorToCompose(
 }
 
 /**
- * The door refuses to start until all three are answered, and **says which**
- * (FR-1105 · `016` T007).
+ * Step 1 refuses to go on until the material is named, and **says so** (`013` FR-1105,
+ * `016` FR-1403 restated as `020` FR-1813).
  *
- * Here rather than in one spec because it is the door's core promise and every
- * spec that walks through it depends on the walk being in that order.
+ * Two questions where the door asked three: for whom is not asked at all any more,
+ * because she came in through him. So the assertion that used to walk «dime primero
+ * para quién es» now asserts the learner is *already* settled — the rail carries his
+ * name while she answers — and that is the substance of the change rather than one
+ * fewer thing checked.
  */
-export async function assertDoorAsksInOrder(page: Page): Promise<void> {
-  await page.getByRole('button', { name: RAIL_WORK }).click();
-  const start = page.getByRole('button', { name: 'Empezar', exact: true });
-
-  await expect(start).toBeDisabled();
-  await expect(page.getByText('Dime primero para quién es.')).toBeVisible();
-
-  await page.locator('.pick').first().click();
-  await expect(page.getByText('Dime qué quieres hacer.')).toBeVisible();
-
+export async function assertPrepareAsksTheKind(page: Page): Promise<void> {
   await page.locator('.door', { hasText: 'Adaptar algo que tengo' }).click();
+  const on = page.getByRole('button', { name: 'Seguir', exact: true });
+
+  await expect(learnerRail(page)).toBeVisible();
+  await expect(on).toBeDisabled();
   await expect(page.getByText('Dime qué es este material.')).toBeVisible();
-  await expect(start).toBeDisabled();
 
   await page.locator('.door', { hasText: KIND_WORKSHEET }).click();
-  await expect(start).toBeEnabled();
+  await expect(on).toBeEnabled();
 }
 
 /* ── The screens the rail reaches (025 T015) ──────────────────────────────── */
@@ -184,15 +198,15 @@ export async function assertDoorAsksInOrder(page: Page): Promise<void> {
  * Every top-level screen, by the name she reads.
  *
  * `025` moved «Mi servicio de IA» and «Acerca de» into Configuración, so they are one
- * level deeper. Three specs hand-rolled `getByRole('button', {name}).click()` over a
- * flat list and all three broke — which is the right outcome and exactly what this
+ * level deeper, and `020` T028 took «Preparar material» out of the list entirely — it
+ * is not a screen any more, it is a section of a learner. Three specs hand-rolled
+ * `getByRole('button', {name}).click()` over a flat list and all three broke — which is the right outcome and exactly what this
  * file's opening note says: «a spec that hand-rolls a walk is a spec that quietly stops
  * testing the navigation the day one of its steps changes».
  *
  * So the walk is here and the sweeps iterate over `SCREENS`.
  */
 export const SCREENS = [
-  { label: RAIL_WORK },
   { label: 'Mis alumnos' },
   { label: 'Mis notas' },
   { label: 'Pictogramas', under: 'Configuración' },
@@ -206,8 +220,8 @@ export const SCREENS = [
  * Walk to one of them.
  *
  * `exact: true` throughout, because Playwright matches an accessible name by
- * **substring** and this application has «Parar» inside «Preparar», «Preparar material»
- * inside nothing but next to «Preparar», and «Configuración» twice once she is in it
+ * **substring** and this application has «Parar» inside «Preparar», «Preparar» itself
+ * inside the learner's rail, and «Configuración» twice once she is in it
  * (the rail's heading is an `h2`, not a button, but the entry and the section share
  * prefixes). Twenty minutes went into a defect that was in a locator.
  */

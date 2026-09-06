@@ -2,7 +2,7 @@ import { test, expect, _electron as electron, type Page, type ElectronApplicatio
 import { mkdtemp, mkdir } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { throughDoorToAdapt } from './nav.js';
+import { throughPrepareToAdapt } from './nav.js';
 
 /**
  * What the profile is not telling us yet, said **before she pays** (FLU-12, P15).
@@ -69,7 +69,7 @@ async function seed(page: Page, vault: string): Promise<void> {
 
 /** Through the door, paste something, and stop at the verification screen. */
 async function toVerify(page: Page): Promise<void> {
-  await throughDoorToAdapt(page);
+  await throughPrepareToAdapt(page);
   await page.locator('#text').fill('Las plantas fabrican su alimento con la luz del sol.');
   await page.getByRole('button', { name: 'Continuar' }).click();
   await page.getByRole('heading', { name: 'Comprueba que lo he leído bien' })

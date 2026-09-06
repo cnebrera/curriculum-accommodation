@@ -2,7 +2,7 @@ import { test, expect, _electron as electron, type Page, type ElectronApplicatio
 import { mkdtemp, mkdir } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { throughDoorToCompose } from './nav.js';
+import { toPrepare, throughPrepareToCompose } from './nav.js';
 
 /**
  * She says what kind of material she wants (021 T025, quickstart §5).
@@ -47,10 +47,8 @@ test.describe('what kind of material she wants', () => {
     const { app, page, vault } = await launch();
     await seedOne(page, vault);
     // Deliberately does NOT use the helper's kind step: this test is about that step.
-    await page.getByRole('button', { name: 'Preparar material' }).click();
-    await page.locator('.pick').first().click();
+    await toPrepare(page, { name: 'Lucía' });
     await page.locator('.door', { hasText: 'Hacer material para que aprenda' }).click();
-    await page.getByRole('button', { name: 'Empezar', exact: true }).click();
     await page.locator('#objetivos').waitFor();
 
     for (const label of ['Una ficha o unos ejercicios', 'Un examen o una prueba',
@@ -77,7 +75,7 @@ test.describe('what kind of material she wants', () => {
      */
     const { app, page, vault } = await launch();
     await seedOne(page, vault);
-    await throughDoorToCompose(page, { kind: 'Un examen o una prueba' });
+    await throughPrepareToCompose(page, { kind: 'Un examen o una prueba' });
 
     const exam = page.locator('.door', { hasText: 'Un examen o una prueba' });
     const worksheet = page.locator('.door', { hasText: 'Una ficha o unos ejercicios' });
@@ -99,10 +97,8 @@ test.describe('what kind of material she wants', () => {
   test('will not start until she has said which', async () => {
     const { app, page, vault } = await launch();
     await seedOne(page, vault);
-    await page.getByRole('button', { name: 'Preparar material' }).click();
-    await page.locator('.pick').first().click();
+    await toPrepare(page, { name: 'Lucía' });
     await page.locator('.door', { hasText: 'Hacer material para que aprenda' }).click();
-    await page.getByRole('button', { name: 'Empezar', exact: true }).click();
 
     await page.locator('#objetivos').fill('multiplicar con llevadas');
     const start = page.getByRole('button', { name: 'Preparar el material' });
@@ -124,7 +120,7 @@ test.describe('what kind of material she wants', () => {
      */
     const { app, page, vault } = await launch();
     await seedOne(page, vault);
-    await throughDoorToCompose(page, { kind: 'Un examen o una prueba' });
+    await throughPrepareToCompose(page, { kind: 'Un examen o una prueba' });
 
     const exam = page.locator('.door', { hasText: 'Un examen o una prueba' });
     await expect(exam).toContainText('validas');

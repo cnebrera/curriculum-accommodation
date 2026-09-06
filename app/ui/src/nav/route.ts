@@ -133,7 +133,16 @@ const FIRST_STEP = { adapt: 'kind', compose: 'ask' } as const;
  * takes the door and the flows.
  */
 export type LegacyView =
-  | 'door' | 'adapt' | 'compose' | 'composed'
+  /*
+   * `door`, `adapt`, `compose` y `composed` se fueron con `020` T028: los pasos viven
+   * dentro del alumno y los dibuja `prepare/PrepareFlow`. Quitados del tipo y no dejados
+   * como valores sueltos, porque `SettingsPane` se pasó dos especificaciones cargando
+   * tres destinos que nada podía dibujar.
+   *
+   * `ingest` y `verify` **no** son un resto: `017` trae su propio documento por la misma
+   * maquinaria, y ahí no hay alumno en el que estar dentro ni tipo de material que
+   * preguntar (decisión P37).
+   */
   | 'ingest' | 'verify' | 'review'
   /*
    * `connection` and `about` were removed by `025`: they are sections of Configuración
@@ -197,7 +206,13 @@ export interface LegacyContext {
    * review opened out of the record. Absent means the screen offers no way back,
    * which is what it did before and what P11 was answered against.
    */
-  back?: { of: 'batch' } | { of: 'learner'; code: string; tab: LearnerTab };
+  /*
+   * `{ of: 'batch' }` se fue con la vista que lo producía (`020` T028). Ahora una revisión
+   * siempre vuelve a un sitio con nombre —la sección del alumno de la que salió— y ese
+   * era el punto: «volver al lote» era volver a una pantalla que la ruta no sabía
+   * reconstruir.
+   */
+  back?: { of: 'learner'; code: string; tab: LearnerTab };
 }
 
 export type Route =

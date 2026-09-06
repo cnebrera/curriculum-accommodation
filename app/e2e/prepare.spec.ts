@@ -3,27 +3,33 @@ import { mkdtemp, mkdir } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import {
-  RAIL_WORK, throughDoorToCompose, assertDoorAsksInOrder, KIND_WORKSHEET, KIND_EXAM,
+  toPrepare, throughPrepareToCompose, assertPrepareAsksTheKind, KIND_WORKSHEET, KIND_EXAM,
 } from './nav.js';
 
 /**
- * The door (016).
+ * What the door promised, kept by «Preparar» (016 → 020 T028).
  *
- * The one that matters is **SC-1401**: a teacher with no material and one
- * objective gets to the compose screen without ever seeing a file picker. That
- * sentence is the whole reason this feature exists — `002` was finished code no
- * teacher could reach, because the only entry point asked for a file.
+ * Was `door.spec.ts`. The door is retired and **its claims are not**: `016` FR-1402
+ * through FR-1412 are restated by `020`, so every case here survived the move with its
+ * assertion intact and its route rewritten. A case deleted along with the screen it
+ * walked would have been this feature quietly dropping a requirement.
  *
- * What these tests cannot cover: the composition itself needs a provider, and
- * there is no key here on purpose. So they assert the *route* is open, which is
- * what `016` is responsible for, and `002`'s own suite asserts what happens down
- * it.
+ * The one that matters is **SC-1401**: a teacher with no material and one objective
+ * gets to the compose screen without ever seeing a file picker. That sentence is the
+ * whole reason `016` existed — `002` was finished code no teacher could reach, because
+ * the only entry point asked for a file. It is now one click further in (through the
+ * learner) and still true, which is the point of asserting it here rather than trusting
+ * that moving screens around cannot break it.
+ *
+ * What these tests cannot cover: the composition itself needs a provider, and there is
+ * no key here on purpose. So they assert the *route* is open, and `002`'s own suite
+ * asserts what happens down it.
  */
 const appRoot = process.cwd();
 
 async function launch(): Promise<{ app: ElectronApplication; page: Page; vault: string }> {
-  const userData = await mkdtemp(join(tmpdir(), 'rampa-door-'));
-  const vault = join(await mkdtemp(join(tmpdir(), 'rampa-door-v-')), 'Rampa');
+  const userData = await mkdtemp(join(tmpdir(), 'rampa-prepare-'));
+  const vault = join(await mkdtemp(join(tmpdir(), 'rampa-prepare-v-')), 'Rampa');
   await mkdir(vault, { recursive: true });
   const app = await electron.launch({
     args: [join(appRoot, 'out', 'main', 'main.js'), `--user-data-dir=${userData}`],
@@ -52,13 +58,13 @@ async function seedOne(page: Page, vault: string, name = 'Lucía'): Promise<stri
   return code;
 }
 
-test.describe('one door, two kinds of work', () => {
+test.describe('dentro del alumno, dos clases de trabajo', () => {
   /** SC-1401, and the reason `016` exists. */
   test('she reaches the compose screen without ever seeing a file picker', async () => {
     const { app, page, vault } = await launch();
     await seedOne(page, vault);
 
-    await throughDoorToCompose(page);
+    await throughPrepareToCompose(page);
 
     await expect(page.getByRole('heading', { name: /Hacer material para que aprenda/ }))
       .toBeVisible();
@@ -69,44 +75,69 @@ test.describe('one door, two kinds of work', () => {
     await app.close();
   });
 
-  /** FR-1401: both doors are peers, and neither is pre-selected. */
+  /**
+   * FR-1401's substance, relocated: the two branches are peers and neither is
+   * pre-selected (`020` FR-1812).
+   *
+   * `aria-pressed` is gone from these two and that is not a loosened assertion: in the
+   * door they were a *selection* that had to be shown as unmade, and here they are a
+   * departure — one click and you are in the branch, so there is no chosen-or-not state
+   * for the attribute to carry. What is asserted instead is that neither is marked as
+   * the way forward, which is the same promise in the shape the screen actually has.
+   */
   test('both kinds of work are offered, and neither is chosen for her', async () => {
     const { app, page, vault } = await launch();
     await seedOne(page, vault);
-    await page.getByRole('button', { name: RAIL_WORK }).click();
+    await toPrepare(page, { name: 'Lucía' });
 
-    await page.locator('.pick').first().click();
     const adapt = page.locator('.door', { hasText: 'Adaptar algo que tengo' });
     const make = page.locator('.door', { hasText: 'Hacer material para que aprenda' });
 
     await expect(adapt).toBeVisible();
     await expect(make).toBeVisible();
-    await expect(adapt).toHaveAttribute('aria-pressed', 'false');
-    await expect(make).toHaveAttribute('aria-pressed', 'false');
+    await expect(page.locator('.door-on')).toHaveCount(0);
+    await expect(page.locator('.btn-primary')).toHaveCount(0);
 
     await app.close();
   });
 
   /** `013` FR-1105 · the action says what is missing rather than going grey. */
-  test('the door says what is still missing, one thing at a time', async () => {
+  test('it says what is still missing, and no longer asks for whom', async () => {
     const { app, page, vault } = await launch();
     await seedOne(page, vault);
-    await assertDoorAsksInOrder(page);
+    await toPrepare(page, { name: 'Lucía' });
+    await assertPrepareAsksTheKind(page);
     await app.close();
   });
 
-  /** FR-1408 · going back does not lose what she typed. */
-  test('an objective survives a trip back to the door', async () => {
+  /**
+   * FR-1408 · one branch is reachable from the other without losing the learner.
+   *
+   * The door's version of this test asserted `.pick-on` — that backing out kept the
+   * child chosen — and it is worth being exact about what replaced it, because the
+   * temptation was to call the case obsolete and delete it.
+   *
+   * The child cannot be lost now: she is *inside* him, his name is in the rail, and
+   * leaving a flow lands on his own «¿Qué necesitas?» rather than on a picker. So the
+   * assertion is stronger than the old one and checks what FR-1408 was protecting.
+   *
+   * What is **not** claimed: that the objective she typed survives. It does not — it
+   * lives in the compose screen's own state, and it did not survive the door either.
+   * That test was called «an objective survives a trip back to the door» and then
+   * asserted the learner; recorded here rather than quietly re-asserted, because a
+   * name that overstates its assertion is how the gap lasted this long.
+   */
+  test('leaving one branch keeps the learner, and offers the other', async () => {
     const { app, page, vault } = await launch();
     await seedOne(page, vault);
-    await throughDoorToCompose(page);
+    await throughPrepareToCompose(page);
 
     await page.locator('#objetivos').fill('multiplicar con llevadas');
-    await page.getByRole('button', { name: 'Volver' }).click();
-    await page.getByRole('heading', { name: '¿Qué vas a hacer?' }).waitFor();
+    await page.getByRole('button', { name: /Dejarlo por ahora/ }).click();
 
-    // The learner is still chosen: she went back one step, not to the beginning.
-    await expect(page.locator('.pick-on')).toHaveCount(1);
+    await expect(page.getByRole('heading', { name: /^Prepararle algo a Lucía/ })).toBeVisible();
+    await expect(page.getByRole('navigation', { name: /^Apartados de/ })).toBeVisible();
+    await expect(page.locator('.door', { hasText: 'Adaptar algo que tengo' })).toBeVisible();
 
     await app.close();
   });
@@ -118,7 +149,7 @@ test.describe('one door, two kinds of work', () => {
   test('a content objective asks what to rest it on, before starting', async () => {
     const { app, page, vault } = await launch();
     await seedOne(page, vault);
-    await throughDoorToCompose(page);
+    await throughPrepareToCompose(page);
 
     const start = page.getByRole('button', { name: 'Preparar el material' });
 
@@ -144,8 +175,7 @@ test.describe('one door, two kinds of work', () => {
   test('an exam says what will not change, on the button she is about to press', async () => {
     const { app, page, vault } = await launch();
     await seedOne(page, vault);
-    await page.getByRole('button', { name: RAIL_WORK }).click();
-    await page.locator('.pick').first().click();
+    await toPrepare(page, { name: 'Lucía' });
     await page.locator('.door', { hasText: 'Adaptar algo que tengo' }).click();
 
     // Nothing pre-selected: a defaulted «ficha» is how an exam gets adapted as one.

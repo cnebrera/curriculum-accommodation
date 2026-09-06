@@ -69,7 +69,14 @@ export function PrepareFlow({
         <Framed flow={flow} onLeave={leave}>
           <IngestScreen
             onIngested={(r) => { go({ type: 'flow/job', job: r.jobId }); step('verify'); }}
-            onResume={(jobId) => { go({ type: 'flow/job', job: jobId }); step('verify'); }} />
+            onResume={(jobId) => { go({ type: 'flow/job', job: jobId }); step('verify'); }}
+            /*
+             * Pegar texto se salta el paso 3 y **eso es lo correcto**: comprobar la
+             * lectura (`008` FR-608) es comprobar lo que se leyó de una foto, y no hay
+             * nada que comprobar de un texto que ella misma tiene delante. Lo que no se
+             * salta es el paso 4: sin él, pegar texto perdería el lote entero.
+             */
+            onAlreadyText={() => step('whoElse')} />
         </Framed>
       );
     }

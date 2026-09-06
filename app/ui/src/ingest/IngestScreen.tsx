@@ -29,10 +29,22 @@ export interface StartedIngest {
 
 interface Pending { jobId: string; pages: number; confirmed: number; source: string }
 
-export function IngestScreen({ onIngested, onResume }: {
+export function IngestScreen({ onIngested, onResume, onAlreadyText }: {
   onIngested: (r: StartedIngest) => void;
   /** Reopen an extraction she started and did not finish confirming. */
   onResume?: (jobId: string) => void;
+  /**
+   * «Ya lo tengo en texto», when this screen is a step of a flow (`020` T028).
+   *
+   * The door used to reach the adapt screen directly, and that screen has the paste
+   * box. `020` put this screen in front of it as step 2, so until this existed
+   * **pasting text was unreachable** — the flow's own checkpoint says «the door is gone
+   * and nothing it did was lost», and that was not true.
+   *
+   * Optional because outside a flow this screen is still reached on its own, where
+   * there is no next step to hand her to.
+   */
+  onAlreadyText?: () => void;
 }) {
   const { t: es } = useStrings();
   const [paths, setPaths] = useState<string[]>([]);
@@ -128,6 +140,19 @@ export function IngestScreen({ onIngested, onResume }: {
           Elegir la ficha
         </button>
         {accepted ? <p className="small">{accepted.description}</p> : null}
+        {/*
+          Secondary, and deliberately below: the photograph is the common case and this
+          screen exists because the textarea was the wrong shape for it. But «wrong
+          default» is not «no way through», and a teacher who already has the text
+          should not have to photograph her own screen to get past step 2.
+        */}
+        {onAlreadyText ? (
+          <div className="row">
+            <button className="btn btn-sm" onClick={onAlreadyText}>
+              Ya lo tengo en texto, lo pego
+            </button>
+          </div>
+        ) : null}
       </div>
 
       {paths.length ? (

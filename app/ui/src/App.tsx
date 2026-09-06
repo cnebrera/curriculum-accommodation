@@ -5,15 +5,11 @@ import { LearnerSection } from './learners/LearnerSections.js';
 import { Rail } from './nav/Rail.js';
 import { startRoute, reduceRoute, type LearnerTab } from './nav/route.js';
 import { useLearners } from './data/learners.js';
-import { DoorScreen } from './door/DoorScreen.js';
 import { PrepareFlow } from './prepare/PrepareFlow.js';
-import { ComposeScreen, ComposeSummary } from './compose/ComposeScreen.js';
 import {
   GuideScreen, AcnsDraftScreen, GuideConversation, AcsHelpScreen,
 } from './guide/GuideScreen.js';
 import type { ComposeResult } from './data/compose.js';
-import { emptyIntent, reduceIntent } from './door/intent.js';
-import { AdaptScreen } from './adapt/AdaptScreen.js';
 import { IngestScreen } from './ingest/IngestScreen.js';
 import { VerifyScreen } from './ingest/VerifyScreen.js';
 import { ReviewScreen } from './review/ReviewScreen.js';
@@ -61,19 +57,18 @@ export function App() {
   const roster = useLearners();
   const learners = roster.state === 'ready' ? roster.value : [];
   const whoIs = (code: string) => learners.find((l) => l.code === code);
-  /**
-   * What the door answered (`016`, contracts/door.md).
+  /*
+   * No hay `intent` (`020` T028).
    *
-   * Held here rather than inside the door, and the e2e suite is why: with the
-   * reducer inside `DoorScreen`, pressing «Volver» from the compose screen
-   * returned to a door that had forgotten which child it was for — the screen had
-   * unmounted, and FR-1408 says entered work survives moving between the doors.
+   * `016` lo tenía aquí y por un buen motivo: con el reductor dentro de `DoorScreen`,
+   * pulsar «Volver» desde la composición volvía a una puerta que había olvidado de qué
+   * niño era — la pantalla se había desmontado. La lección era «lo que tiene que
+   * sobrevivir a navegar no puede vivir en algo que navegar destruye», y la conclusión de
+   * `020` es que el sitio donde eso vive es la **ruta**, no un segundo reductor al lado.
    *
-   * Deliberately **not** persisted across restarts: a half-finished intent
-   * restored on Monday is a screen that looks wrong with no visible cause, which
-   * is the reasoning `015` applied to filters.
+   * Dos cosas decidiendo dónde está es, literalmente, cómo «Mis alumnos» llegó a no hacer
+   * nada desde dentro de un perfil.
    */
-  const [intent, dispatch] = useReducer(reduceIntent, undefined, emptyIntent);
   /** A composition waiting for her to decide whether to adapt it (`002`, T013). */
   const [composed, setComposed] = useState<{ jobId: string; result: ComposeResult } | null>(null);
   /**
@@ -103,14 +98,13 @@ export function App() {
   /**
    * «Volver» from the review (FLU-01, P11).
    *
-   * Two destinations and no third: the batch she came from, re-derived from the vault
-   * by `AdaptScreen`; or the learner's section she opened the sheet out of. The route
-   * carries which, so the screen does not have to know where it was reached from.
+   * **One destination now** (`020` T028): the learner's section she opened the sheet out
+   * of. There used to be a second — «al lote» — which went to a top-level `adapt` view
+   * that re-derived the batch from the vault; that view is gone, and with it the case
+   * where «volver» went somewhere the route could not name.
    */
-  const goBack = (back: { of: 'batch' } | { of: 'learner'; code: string; tab: LearnerTab },
-                  job?: string): void => {
-    if (back.of === 'batch') go({ type: 'legacy', view: 'adapt', ...(job ? { job } : {}), ran: true });
-    else go({ type: 'learner/open', code: back.code, tab: back.tab });
+  const goBack = (back: { of: 'learner'; code: string; tab: LearnerTab }): void => {
+    go({ type: 'learner/open', code: back.code, tab: back.tab });
   };
 
   /**
@@ -120,16 +114,18 @@ export function App() {
    * the handler closes over it — the alternative was `route.back!` inside a callback,
    * and this file's own history says a `!` in a handler is how a real null gets in.
    */
-  const reviewBack = (
-    back?: { of: 'batch' } | { of: 'learner'; code: string; tab: LearnerTab },
-    job?: string,
-  ) => (back
+  const reviewBack = (back?: { of: 'learner'; code: string; tab: LearnerTab }) => (back
     ? {
         back: {
-          label: back.of === 'batch'
-            ? '← Volver a la tanda'
+          /*
+           * La etiqueta nombra el sitio, no la acción: «volver» a secas obliga a
+           * recordar por dónde entró. Y hay un solo destino desde `020` T028, así que
+           * tampoco hay que elegir entre dos frases.
+           */
+          label: back.tab === 'prepare'
+            ? '← Volver a lo que estaba preparando'
             : '← Volver a lo que le he preparado',
-          go: () => goBack(back, job),
+          go: () => goBack(back),
         },
       }
     : {});
@@ -222,7 +218,7 @@ export function App() {
             <h2>{es.onboarding.learnerTitle}</h2>
             <p>{es.onboarding.learnerWhy}</p>
             <ProfileEditor code={null} onConfigure={() => go({ type: 'settings' })}
-                           onSaved={() => { saveState({ step: 'done' }); setStep('done'); go({ type: 'legacy', view: 'door' }); }} />
+                           onSaved={() => { saveState({ step: 'done' }); setStep('done'); go({ type: 'caseload' }); }} />
           </div>
         )}
       </main>
@@ -255,40 +251,21 @@ export function App() {
           ) : null}
         </>} />
       <main className="main">
-        {route.at === 'legacy' && route.view === 'door' ? (
-          <DoorScreen
-            intent={intent}
-            dispatch={dispatch}
-            onAdapt={() => go({ type: 'legacy', view: 'adapt' })}
-            onCompose={() => go({ type: 'legacy', view: 'compose' })}
-            onNewLearner={() => go({ type: 'caseload' })} />
-        ) : null}
-        {route.at === 'legacy' && route.view === 'compose' ? (
-          <ComposeScreen
-            learners={intent.learners}
-            onComposed={(jobId, result) => { setComposed({ jobId, result }); go({ type: 'legacy', view: 'composed' }); }}
-            onBack={() => go({ type: 'legacy', view: 'door' })} />
-        ) : null}
-        {route.at === 'legacy' && route.view === 'composed' && composed ? (
-          /*
-           * The decision point research R2 argued for: she reads what nothing could
-           * check **before** paying to adapt it, and can abandon without spending
-           * more. Adapting reuses `presetJobId`, so the composed sheet goes through
-           * the existing pipeline unchanged (`002` T013).
-           */
-          <ComposeSummary
-            result={composed.result}
-            jobId={composed.jobId}
-            learners={intent.learners}
-            onAdapt={() => {
-              const job = composed.jobId;
-              // Let go of the summary as we leave it: a composition kept in state is one
-              // more thing written by a handler and cleared by nobody.
-              setComposed(null);
-              go({ type: 'legacy', view: 'adapt', job });
-            }}
-            onDiscard={() => { setComposed(null); go({ type: 'legacy', view: 'door' }); }} />
-        ) : null}
+        {/*
+          La puerta, la composición y su resumen **ya no están aquí** (`020` T028).
+
+          `016` FR-1401 decía que la primera pantalla debía preguntar qué tipo de trabajo
+          es. Lo elegiste tú en su `/speckit-clarify`, contra mi recomendación, y por el
+          motivo correcto: «ella llega pensando en un niño». `020` lleva ese argumento
+          hasta el final — si llega pensando en un niño, el niño es el **sitio**, no la
+          primera pregunta de un formulario. Así que la puerta se retira y su trabajo pasa
+          a `prepare/`, dentro del alumno.
+
+          Lo que hacía no se ha perdido: las dos ramas como iguales, el tipo de material
+          sin preseleccionar y «para quién más» dentro del flujo están en `PrepareFlow`,
+          con sus tests.
+        */}
+
         {route.at === 'legacy' && route.view === 'guide' && guideFor ? (
           <GuideScreen
             /*
@@ -346,18 +323,16 @@ export function App() {
           screen render nothing after one review — it was reading a value nothing ever
           reset, and the fix is that there is no such value (FLU-01).
         */}
-        {route.at === 'legacy' && route.view === 'adapt'
-          ? <AdaptScreen
-              onReview={(jobId, learner, recipes) => go({
-                type: 'legacy', view: 'review',
-                job: jobId, sheet: { learner, recipes }, back: { of: 'batch' },
-              })}
-              onChooseFile={() => go({ type: 'legacy', view: 'ingest' })}
-              onFinished={() => dispatch({ type: 'reset' })}
-              {...(route.ran ? { resumeBatch: route.job } : { presetJobId: route.job })}
-              presetLearners={intent.learners}
-              {...(intent.kind ? { presetKind: intent.kind } : {})} />
-          : null}
+        {/*
+          `adapt` tampoco (`020` T028). `AdaptScreen` sigue siendo la misma pantalla y
+          sigue haciendo lo mismo: lo que ha cambiado es quién la dibuja — `PrepareFlow`,
+          dentro de la sección del alumno y con su menú a la vista.
+
+          `ingest` y `verify` **se quedan** aquí, y no es un resto: `017` trae su propio
+          documento por la misma maquinaria, y ahí no hay ni alumno en el que estar dentro
+          ni tipo de material que preguntar (decisión P37).
+        */}
+
         {route.at === 'legacy' && route.view === 'ingest'
           ? <IngestScreen
               /*
@@ -387,14 +362,18 @@ export function App() {
                               why: 'Ya puedo sacarte las medidas de este documento. Las verás antes de que guarde nada.',
                             },
                           } : {})}
-                          onVerified={() => go(route.then === 'guide'
-                            ? { type: 'legacy', view: 'guide', job: route.job }
-                            : { type: 'legacy', view: 'adapt', job: route.job })} />
+                          /*
+                           * Sólo el camino de la guía llega aquí desde `020` T028: el de
+                           * adaptar tiene su propio paso dentro del alumno. Un `else` que
+                           * fuese a una vista que ya no existe sería una rama muerta con
+                           * pinta de estar viva.
+                           */
+                          onVerified={() => go({ type: 'legacy', view: 'guide', job: route.job })} />
           : null}
         {route.at === 'legacy' && route.view === 'review' && route.sheet
           ? <ReviewScreen jobId={route.job ?? ''} learner={route.sheet.learner}
                           {...(route.sheet.recipes ? { recipes: route.sheet.recipes } : {})}
-                          {...reviewBack(route.back, route.job)} />
+                          {...reviewBack(route.back)} />
           : null}
         {/*
           Her caseload: the opening screen, and the only thing it does is list and say
@@ -494,11 +473,18 @@ export function App() {
                * call is made for the reading (`016` FR-1409, SC-1405). The learners are
                * cleared and the kind is kept: same material, different child.
                */
+              /*
+               * T018 · «hazlo otra vez para otro alumno», ahora dentro del alumno
+               * (`020` T028). La extracción se reutiliza —`flow/job` salta el pegar y la
+               * puerta de verificación, así que no se llama a ningún proveedor para
+               * leerla (`016` FR-1409, SC-1405)— y aterriza en «¿para quién más?», que es
+               * literalmente la pregunta que ella acaba de hacerse.
+               */
               onReuse={(jobId, kind) => {
-                dispatch({ type: 'reset' });
-                dispatch({ type: 'work/set', work: 'adapt' });
-                dispatch({ type: 'kind/set', kind });
-                go({ type: 'legacy', view: 'adapt', job: jobId });
+                go({ type: 'flow/start', of: 'adapt' });
+                go({ type: 'flow/kind', kind });
+                go({ type: 'flow/job', job: jobId });
+                go({ type: 'flow/step', step: 'whoElse' });
               }}
               /*
                * «Revisar y firmar» for a draft that is still waiting (P11).

@@ -4,7 +4,7 @@ import { mkdtemp, mkdir } from 'node:fs/promises';
 import { readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { RAIL_WORK, throughDoorToAdapt, SCREENS, toScreen } from './nav.js';
+import { throughPrepareToAdapt, SCREENS, toScreen } from './nav.js';
 
 /**
  * The accessibility gate (spec 010 T018/T019, closing backlog G7 and 006 T075).
@@ -421,7 +421,7 @@ test.describe('accessibility · WCAG 2.2 AA', () => {
     const { app, page, vault } = await launch();
     await seed(page, vault);
 
-    await throughDoorToAdapt(page);
+    await throughPrepareToAdapt(page);
     await page.getByRole('button', { name: /Traer una foto/ }).click();
     await page.getByRole('heading', { name: 'Traer el material' }).waitFor();
     for (const m of MODES) { await setMode(page, m); await scan(page, `ingest · ${m.name}`); }
@@ -439,7 +439,7 @@ test.describe('accessibility · WCAG 2.2 AA', () => {
     await seedExtraction(page);
     await page.reload();
     await page.waitForLoadState('domcontentloaded');
-    await throughDoorToAdapt(page);
+    await throughPrepareToAdapt(page);
     await page.getByRole('button', { name: /Traer una foto/ }).click();
     await page.getByRole('button', { name: 'Seguir con esto' }).click();
     await page.getByRole('heading', { name: /Comprueba que lo he leído bien/ })

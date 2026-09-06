@@ -109,7 +109,7 @@ export function Rail({ route, go, learnerName, labels, foot }: {
     </button>
   );
 
-  const top = (view: 'notes' | 'door', label: string) => (
+  const top = (view: 'notes', label: string) => (
     <button aria-current={route.at === 'legacy' && route.view === view ? 'page' : undefined}
             onClick={() => go({ type: 'legacy', view })}>
       {label}
@@ -198,11 +198,14 @@ export function Rail({ route, go, learnerName, labels, foot }: {
             {labels.learners}
           </button>
           {/*
-            The door, still here and going at T028. `020` US1 removes nothing, so this
-            stays until `Preparar` inside the learner can do its job — which is why
-            FR-1802's «exactly two destinations» is met at T037 and not here.
+            La puerta se ha ido (`020` T028). «Preparar material» era una **acción** en
+            un raíl de sitios, y su trabajo vive ahora dentro del alumno — que es el
+            diagnóstico original de `020`: el raíl mezclaba una acción, una entidad,
+            datos, un ajuste e información como si fueran hermanos.
+
+            Quedan tres. «Mis alumnos» y «Configuración» son los dos que pide FR-1802;
+            «Mis notas» se parte en T034 y desaparece de aquí en T037.
           */}
-          {top('door', labels.work)}
           {top('notes', labels.notes)}
           {/*
             Four entries, not five (`025` FR-2310). «Mi servicio de IA» and «Acerca de»
