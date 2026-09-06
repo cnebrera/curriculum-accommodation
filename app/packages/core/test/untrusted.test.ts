@@ -532,10 +532,21 @@ describe('FR-509 · only sign-off removes the draft mark', () => {
      * The temptation this list refused was writing the key from here, where the review
      * arrives; the reason not to is that `second_look` is part of the signature block,
      * and a block with two authors is a key that drifts.
+     *
+     * **A tenth arrived on 2026-09-06 and it is a false friend.** `corpus/updates.ts`
+     * (`034`) matches on «manifiesto **firmado**» — a sentence about the update
+     * manifest's Ed25519 signature, which is a different thing signed by a different
+     * party for a different reason. It writes no `review:` block and touches no document.
+     *
+     * Kept in the list rather than filtered out, because the filter that would exclude
+     * it («only count `signed_off`») is the filter that stops catching the next
+     * `stampSignedOff` copy. A word that means two things is exactly when an enumerated
+     * list is worth its cost: somebody has to look, once.
      */
     expect(writers.sort()).toEqual([
-      'ensayo/ipc.ts', 'ipc/coordination.ts', 'ipc/guide.ts', 'ipc/signoff.ts',
-      'jobs/export.ts', 'jobs/guide.ts', 'jobs/print.ts', 'main.ts', 'preload.ts',
+      'corpus/updates.ts', 'ensayo/ipc.ts', 'ipc/coordination.ts', 'ipc/guide.ts',
+      'ipc/signoff.ts', 'jobs/export.ts', 'jobs/guide.ts', 'jobs/print.ts', 'main.ts',
+      'preload.ts',
     ]);
   });
 

@@ -159,8 +159,8 @@ export function verifyManifest(args: {
       of: 'refused', because: 'unsupported-format',
       say: `Esa actualización está hecha para una versión de Rampa más nueva que la `
         + `tuya (formato ${manifest.formatVersion}; yo entiendo el ${SUPPORTED_FORMAT}). `
-        + 'No la he traído: leerla a medias sería peor que no traerla. Actualiza Rampa y '
-        + 'vuelve a mirar.',
+        + 'No la he traído: leerla a medias sería peor que no traerla. No ha cambiado nada '
+        + 'de lo que tienes. Actualiza Rampa y vuelve a mirar.',
     };
   }
 

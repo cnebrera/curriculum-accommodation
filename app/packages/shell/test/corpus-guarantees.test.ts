@@ -64,11 +64,36 @@ describe('the corpus is read-only at runtime (T080, 006 FR-413)', () => {
       .toEqual([]);
   });
 
-  it('the vault is where writes go, and it is never the corpus', async () => {
-    const corpusIpc = await corpusModule();
-    // Reading is the whole job of that module.
-    expect(corpusIpc).toMatch(/readFile/);
-    expect(corpusIpc).not.toMatch(/writeFile|appendFile|rm\s*\(/);
+  it('the vault is where writes go, and it is never the BUNDLE', async () => {
+    /*
+     * Reading was the whole job of that module until `034`, and the distinction the
+     * feature forced is worth writing down rather than loosening around.
+     *
+     * `corpus/updates.ts` writes — into `userData/corpus/`, which is **not** the bundle.
+     * FR-413 is about the corpus that ships inside the application: it is read-only and
+     * an accepted update never touches it. What `034` adds is a second store beside it,
+     * and applying an update is a **pointer** moving between the two, not a copy over
+     * the first.
+     *
+     * So the check moves from «this directory contains no write» to the thing that was
+     * always meant: no file both knows where the bundle is and writes. That is the test
+     * above, and it still passes — `corpus/updates.ts` does not call `corpusRoot()`, and
+     * `corpus/active.ts` does not write.
+     */
+    const files = (await walk(shellSrc)).filter((f) => f.endsWith('.ts'));
+    const bundleWriters: string[] = [];
+    for (const f of files) {
+      const src = await readFile(f, 'utf8');
+      if (/corpusRoot\s*\(/.test(src) && /\b(writeFile|rename|rm|cp)\s*\(/.test(src)) {
+        bundleWriters.push(f.replace(appRoot, ''));
+      }
+    }
+    expect(bundleWriters).toEqual([]);
+
+    // And the module that does write says where: the store, never the bundle.
+    const updates = await readFile(join(shellSrc, 'corpus', 'updates.ts'), 'utf8');
+    expect(updates).toContain('args.store');
+    expect(updates).not.toMatch(/corpusRoot\s*\(/);
   });
 });
 

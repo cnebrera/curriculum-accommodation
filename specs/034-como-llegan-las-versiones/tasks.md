@@ -110,20 +110,20 @@ whole, governing new jobs only.
 
 **Independent Test**: quickstart §5 steps 1–4 against the fixture corpus feed.
 
-- [ ] T014 [US2] `app/packages/providers/src/corpus-feed.ts` · manifest + files through a
+- [x] T014 [US2] `app/packages/providers/src/corpus-feed.ts` · manifest + files through a
       **gate-minted, injectable transport** (`transportFor` — no exported transport, so no
       second caller can bypass the gate), timeouts, redirect discipline, hosts from the
       declared destinations only (**FR-3205**, **FR-3204**, research R6)
-- [ ] T015 [US2] `app/packages/shell/src/corpus/updates.ts` · the store: fetch to
+- [x] T015 [US2] `app/packages/shell/src/corpus/updates.ts` · the store: fetch to
       `tmp-<runid>/`, verify signature before anything is shown, hash-check every file,
       publish a **complete** snapshot with one atomic rename into
       `userData/corpus/versions/<n>/`, discard temp on any failure (**FR-3211**,
       **FR-3205**; `writeAtomic`'s virtues at snapshot scale). T002's fixtures all pass
       through this path
-- [ ] T016 [US2] Format gate: a manifest whose `formatVersion` exceeds the supported one
+- [x] T016 [US2] Format gate: a manifest whose `formatVersion` exceeds the supported one
       is refused **whole**, before fetch, with the reason and a pointer at the app notice
       (**FR-3210**) — never half-applied, never silently ignored
-- [ ] T017 [US2] Scan before activation: the verified files pass the `029`/`007` injection
+- [x] T017 [US2] Scan before activation: the verified files pass the `029`/`007` injection
       scan (`app/packages/core/src/ir/injection.ts` tiers plus section-spoofing);
       findings shown, quoted and located, activation refused by default (**FR-3211** —
       an update is an import with better provenance, not a bypass)
@@ -135,7 +135,7 @@ whole, governing new jobs only.
       it (T008); **signed documents and existing outputs untouched** — asserted both ways:
       byte-identical `output/` across an update, and structurally, no code path from the
       update store to `output/` (**FR-3207**)
-- [ ] T020 [US2] Conflicts per file (`app/packages/shell/src/corpus/updates.ts` + the
+- [x] T020 [US2] Conflicts per file (`app/packages/shell/src/corpus/updates.ts` + the
       offer screen): a file shadowed by a `recipes-local/` edit is marked; **keep** is
       default and free, **take** renames her file aside dated in her vault — visible,
       never deleted — **view both** shows both; undecided blocks nothing and hers keeps
@@ -155,7 +155,7 @@ reinstall, read before it acts.
 
 **Independent Test**: quickstart §5 step 5.
 
-- [ ] T022 [US3] Revert in `app/packages/shell/src/corpus/updates.ts` + the history
+- [x] T022 [US3] Revert in `app/packages/shell/src/corpus/updates.ts` + the history
       screen: every accepted version retained (research R1 — nothing deleted implicitly),
       revert is a pointer move recorded in `active.json` history, and the prior version
       governs new jobs (**FR-3208**)

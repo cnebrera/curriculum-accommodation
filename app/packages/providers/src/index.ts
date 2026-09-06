@@ -10,6 +10,7 @@ export * from './types.js';
 export * from './send.js';
 export * from './resilience.js';
 export * from './releases.js';
+export * from './corpus-feed.js';
 export { anthropic } from './anthropic.js';
 export { google } from './google.js';
 export { compatibleProvider, type CompatibleSpec, type CompatibleQuirk } from './compatible.js';
