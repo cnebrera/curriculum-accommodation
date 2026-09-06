@@ -1404,6 +1404,73 @@ la mitad de «enseñar el fichero» está cubierta por su test de unidad y por m
 mitad correcta en la que gastar un e2e: «me ha enseñado el fichero» falla a la vista;
 «ha activado una política sin preguntar» no.
 
+### 3.6 · `030` implementada — dos vaults, un niño, y ninguna carpeta compartida
+
+`8263331`, `c567b7c`, `1e265eb`, `4ccb5be`, `41ef001` · **28 de 29 tareas, 12 de 12
+FRs** · vitest 2.384 · e2e 220
+
+Lo primero fue un test sobre el nombre de un niño en un fichero que se manda por
+correo, escrito contra un módulo que no existía todavía. El corpus del test está salado:
+la alumna es «Lucía», sus notas mencionan a «Vega» y a «Marco» —otros dos niños de la
+misma clase— y la maestra firma «Ana». La interesante es Vega: una nota sobre Lucía
+puede nombrar a otro niño, y un mapa de nombres por ítem sería el emisor decidiendo
+quién cuenta como tercero. Y se **redacta**, no se borra: «Con V02 al lado sí» sigue
+siendo una observación real sobre cómo trabaja Lucía.
+
+**La puerta es todo el modelo.** Abrir, parsear, escanear, enseñar, guardar y vincular
+no escriben nada; `accept` es el único escritor, coge un ítem, y se llega a él pulsando
+un botón que está al lado de ese ítem. Lo mejor que le puede pasar a un paquete hostil
+es una frase que ella lee y rechaza. Un código que ella no tiene es sencillamente
+desconocido —emparejar es un acto humano— y aceptar una afirmación no es cambiar el
+perfil: son dos decisiones, y el caso del conflicto existe porque se separan.
+
+**«¿Me lo miras antes de firmarlo?»**, que es la pregunta que la revisión de personas
+encontró literal de una tutora. El borrador sale con su marca (derivada del documento,
+nunca un parámetro), vuelven correcciones atadas a (trabajo, revisión, huella), y un
+desajuste se **declara** nombrando las dos revisiones en vez de aplicarse en silencio.
+La firma gana `second_look` como **hecho**: la firma sigue siendo de una persona, nada
+lo lee para permitir o impedir firmar, y en el expediente sale como texto y no como
+chapa — la diferencia entre «alguien más la miró» y «alguien más la aprobó» es el
+requisito entero.
+
+**El vault compartido no existe a propósito**, y es el único requisito que se cumple
+porque algo **no** existe — o sea el que deja de ser verdad en silencio. Hay test sobre
+el código, la frase está en el paso de onboarding donde alguien elegiría una carpeta de
+OneDrive compartida (nombrando la alternativa, porque «no hagas eso» sin «haz esto» se
+esquiva), y `docs/memory.md` dice por qué: no hay bloqueo, no hay fusión, y la pregunta
+que un modo compartido tendría que contestar primero no tiene respuesta técnica — ¿qué
+pasa cuando dos personas firman la misma hoja?
+
+**Lo que arregla del borrado, y que va con la feature.** `planForget` recorría
+`handover/` en plano mientras `verifyForgotten` recorre en profundidad, así que
+`handover/received/` —que crea esta feature— habría sido un plan que se niega a recoger
+lo que el verificador luego reporta como residuo. El hallazgo de P38 un directorio más
+abajo, introducido por lo que crea el directorio.
+
+**Cuatro cosas que encontraron las disciplinas y no el diseño:**
+
+- *El e2e.* Los cinco handlers de la segunda mirada aterrizaron **después de un
+  `return`**, dentro de otra función: código inalcanzable. `tsc` no dice nada, el test
+  que comprueba preload↔handlers los encontró por análisis estático y pasó, y la
+  aplicación respondía «No handler registered».
+- *La mutación.* Cuatro en el módulo del paquete y tres en la puerta, todas rompen.
+- *Mirar la pantalla.* «El traspaso de fin de curso» encima de «Traspaso de Lucía» —la
+  misma frase dos veces, invisible mientras eso era lo único en la pantalla—; y luego
+  «el 2026-09-11» en la misma tarjeta que decía «10/09/2026».
+- *`props-are-read.test.ts`.* Al quitar ese `<h2>`, el prop `name` quedó declarado,
+  tipado y leído por nadie. El defecto insignia de este repositorio, cazado **al
+  crearse**.
+
+Y un defecto latente que salió al escanear el paquete: `detectInjection` reconstruía
+cada patrón como `new RegExp(source, 'i')`, tirando sus banderas propias — así que las
+formas de sección que añadió `029`, ancladas con `^…$` y `m`, sólo coincidían en la
+primera línea de un bloque. El escaneo de corpus de `029` no lo vio porque recorre línea
+a línea; el pipeline de adaptación entrega bloques enteros.
+
+**Lo que falta de `030` es T029**, que no es código: una tutora y una PT de verdad
+haciendo la segunda mirada sobre un examen de verdad, por su transporte de verdad, para
+ver si el bucle cabe en una semana de colegio.
+
 ## Notas de proceso
 
 - **La instancia que me pediste, y por qué la he reiniciado.** La levanté con `npm run dev`
@@ -1471,14 +1538,13 @@ mitad correcta en la que gastar un e2e: «me ha enseñado el fichero» falla a l
 | | |
 |---|---|
 | `npx tsc --noEmit` | verde (línea base) |
-| `npx vitest run` | verde — 2.324 casos |
-| `npm run test:e2e` | verde — 204 casos |
+| `npx vitest run` | verde — 2.384 casos |
+| `npm run test:e2e` | verde — 220 casos |
 | `scripts/check-fr-coverage.sh` | verde (línea base) |
 | `scripts/check-spec-kit.sh` | verde (línea base) |
 
 ---
 
 **Lotes 0, 1 y 2 completos (5/5 · 17/17 · 12/12); Lote 3 con `027`, `022`, `026`, `031`,
-`032`, `028`, `035`, `033` y `029` implementadas.** Quedan **3.10** (`020` US2-US4),
-**3.13** (notas de BACKLOG) y **2 features** por `/speckit-implement` en el orden
-030→034.
+`032`, `028`, `035`, `033`, `029` y `030` implementadas.** Quedan **3.10** (`020`
+US2-US4), **3.13** (notas de BACKLOG) y **1 feature** por `/speckit-implement`: `034`.
