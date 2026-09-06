@@ -168,7 +168,7 @@ reinstall, read before it acts.
 
 ## Phase 6 · Polish · and the parts that need a person
 
-- [ ] T024 The launch check behind the consent toggle: at most weekly, only at launch,
+- [x] T024 The launch check behind the consent toggle: at most weekly, only at launch,
       never during a job, never inside ensayo (`035`), silent in failure — one
       implementation shared with the button, so there is exactly one place a check can
       start from (**FR-3202**, research R5)
@@ -176,7 +176,7 @@ reinstall, read before it acts.
       flow with manifest + signature produced in CI (private key in CI secrets — signing
       the *installers* stays `COLA` P52's separate debt), and `docs/` note for
       contributors on when a corpus version bumps `version` vs `formatVersion`
-- [ ] T026 [P] Sweep the promises this vehicle was made for: `USD_TO_EUR` in
+- [x] T026 [P] Sweep the promises this vehicle was made for: `USD_TO_EUR` in
       `app/packages/core/src/cost/index.ts` («an update and not a release» — BACKLOG G29)
       now true — record in BACKLOG that the vehicle exists; `029`'s assumption («corpus
       updates travel via 034») pointed here

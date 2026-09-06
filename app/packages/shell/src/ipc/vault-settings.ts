@@ -97,6 +97,8 @@ export interface AppSettings {
    * because she turned it on, having read what it sends.
    */
   checkAtLaunch?: boolean;
+  /** When the last launch check ran, so «as much as weekly» is a fact and not a hope. */
+  lastLaunchCheck?: string;
 }
 
 const settingsPath = (dir: string) => join(dir, 'settings.json');

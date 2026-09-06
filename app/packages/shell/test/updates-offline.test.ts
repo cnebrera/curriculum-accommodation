@@ -1,6 +1,8 @@
 import { describe, it, expect, vi } from 'vitest';
 import { readFileSync, readdirSync } from 'node:fs';
 import { join, dirname } from 'node:path';
+import { mkdtemp, writeFile, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
 import { checkForUpdate } from '@rampa/providers';
 
 /**
@@ -145,5 +147,81 @@ describe('nothing reaches the network unless it is asked to', () => {
         expect(code, `${f} · ${word}`).not.toContain(word);
       }
     }
+  });
+});
+
+/**
+ * The launch check, if she asked for one (034 T024, FR-3202, research R5).
+ *
+ * Pure, so the three things that make it safe are checkable without a clock: consent,
+ * a weekly bound, and silence.
+ */
+describe('a check at launch happens only because she said so', () => {
+  it('absent consent is no, which is the requirement and not a default', async () => {
+    const { mayCheckAtLaunch } = await import('../src/updates/notice.js');
+    expect(mayCheckAtLaunch({}, '2026-09-20T08:00:00Z')).toBe(false);
+    expect(mayCheckAtLaunch({ checkAtLaunch: false }, '2026-09-20T08:00:00Z')).toBe(false);
+  });
+
+  it('and with consent it runs, at most weekly', async () => {
+    /*
+     * «At launch» in a school means every morning. A daily outbound request on a
+     * schedule nobody asked for is the thing the consent was supposed to be about.
+     */
+    const { mayCheckAtLaunch } = await import('../src/updates/notice.js');
+    const on = { checkAtLaunch: true };
+    expect(mayCheckAtLaunch(on, '2026-09-20T08:00:00Z')).toBe(true);
+    expect(mayCheckAtLaunch(
+      { ...on, lastLaunchCheck: '2026-09-19T08:00:00Z' }, '2026-09-20T08:00:00Z')).toBe(false);
+    expect(mayCheckAtLaunch(
+      { ...on, lastLaunchCheck: '2026-09-10T08:00:00Z' }, '2026-09-20T08:00:00Z')).toBe(true);
+  });
+
+  it('and an unreadable stamp allows it rather than blocking it for ever', async () => {
+    /*
+     * The failure directions are not symmetric. A check too many is one anonymous
+     * request; a check never again is a teacher who never learns about the fix she is
+     * stranded on.
+     */
+    const { mayCheckAtLaunch } = await import('../src/updates/notice.js');
+    expect(mayCheckAtLaunch(
+      { checkAtLaunch: true, lastLaunchCheck: 'ayer' }, '2026-09-20T08:00:00Z')).toBe(true);
+  });
+
+  it('a failing check is silent, and still counts as having run', async () => {
+    /*
+     * Silent, because a school with no outbound HTTP at 9am is the ordinary case and an
+     * error there teaches her the application is broken. And it counts, so a permanently
+     * offline machine tries once a week rather than on every launch.
+     */
+    const { launchCheck } = await import('../src/updates/notice.js');
+    const dir = await mkdtemp(join(tmpdir(), 'rampa-launch-'));
+    await writeFile(join(dir, 'settings.json'), JSON.stringify({ checkAtLaunch: true }));
+
+    const ran = await launchCheck({
+      settingsDir: dir, now: '2026-09-20T08:00:00Z',
+      check: async () => { throw new Error('no network'); },
+    });
+    expect(ran.ran).toBe(true);
+
+    // And the second launch that morning does not.
+    const again = await launchCheck({
+      settingsDir: dir, now: '2026-09-20T09:00:00Z', check: async () => {},
+    });
+    expect(again.ran).toBe(false);
+    await rm(dir, { recursive: true, force: true });
+  });
+
+  it('and with no consent the check function is never even called', async () => {
+    const { launchCheck } = await import('../src/updates/notice.js');
+    const dir = await mkdtemp(join(tmpdir(), 'rampa-launch-'));
+    let called = false;
+    const ran = await launchCheck({
+      settingsDir: dir, now: '2026-09-20T08:00:00Z',
+      check: async () => { called = true; },
+    });
+    expect(ran.ran).toBe(false);
+    expect(called).toBe(false);
+    await rm(dir, { recursive: true, force: true });
   });
 });

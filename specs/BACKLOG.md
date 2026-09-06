@@ -413,9 +413,46 @@ every moment should have a spec. What it added beyond the seams pass:
    journey sentence → T094). Handover *import* (004 US2) recorded as deliberately
    deferred rather than silently missing.
 
+## G53 · El canal de actualización del corpus no tiene todavía una llave
+
+**Abierto 2026-09-06** por `034`. **Necesita una decisión tuya, y no la he inventado.**
+
+La maquinaria está construida y probada: firma Ed25519 sobre bytes canónicos, hashes por
+fichero dentro de lo firmado, escaneo de lo verificado antes de activar, publicación por
+un `rename` atómico, puntero, vuelta atrás y conservación del histórico. Lo que falta no
+es código: es que **exista un par de claves del proyecto**.
+
+Las preguntas que van con eso, y son tuyas:
+
+1. **Dónde vive la privada.** Un secreto de CI es lo obvio; también significa que quien
+   tenga acceso al repositorio en GitHub puede publicar criterio pedagógico firmado.
+2. **Quién puede publicar una corrección del corpus**, y si eso es la misma lista de
+   personas que puede hacer merge.
+3. **Qué pasa si esa clave se pierde o se filtra.** Hoy no hay rotación: la pública está
+   compilada en la aplicación, así que cambiarla es publicar una versión. Eso puede estar
+   bien —es lo mismo que pasa con cualquier raíz de confianza pequeña— pero conviene que
+   sea una decisión y no una sorpresa.
+4. **Y si el canal se enciende ya o no.** Todo lo de `034` funciona apagado: sin release
+   `corpus-v<n>` publicada, no hay nada que ofrecer y no se pide nada.
+
+Hasta que eso esté decidido, el aviso de versión de la aplicación (US1) **sí** funciona:
+es sólo una frase y un enlace, no lleva firma y no descarga nada.
+
+Ojo con no confundirlo con **P52**, que es firmar los **instaladores** de macOS y Windows.
+Son dos deudas distintas: ésta es sobre firmar *contenido* que Rampa aplica sola después
+de que ella lo acepte; aquélla es sobre que el sistema operativo deje instalar la
+aplicación sin una advertencia de que viene de un desarrollador sin identificar.
+
 ## G51 · Un corpus normativo no se puede actualizar: se reimporta
 
 **Abierto 2026-09-06** por `029` T029. Va con `034-como-llegan-las-versiones`.
+
+> **Nota 2026-09-06, con `034` construida.** El canal de `034` publica el corpus
+> **incluido** —recetas, instrucciones, checklists— y `instructions/normative/` viaja
+> dentro de él, así que un corpus normativo **que envía el proyecto** ya se actualiza por
+> ahí. Lo que sigue abierto es el que **ella trae**: ése vive en su vault, el proyecto no
+> lo firma y no tiene por qué conocerlo. Reimportar sigue siendo el camino, y sigue siendo
+> fricción real para el escenario que hace que esa capa exista.
 
 Los corpus incluidos viajan en la release, como el resto del corpus. Los que ella
 trae **no**: si quien se lo pasó corrige un error el mes que viene, el camino es
@@ -1139,6 +1176,19 @@ rail as a commercial plan, which is what it looked like. The label is now on scr
   data and updated with the corpus». It is not. It belongs in the corpus by Principle I —
   a moving rate should be an update, not a release — and the same is true of `USD_TO_EUR`.
   Until then, unpriced services report nothing, which is at least honest.
+
+  **Actualizado 2026-09-06 (`034` T026): el vehículo ya existe.** «Una actualización y no
+  una release» era, hasta hoy, una frase sin nada detrás — el corpus viajaba dentro del
+  instalador, así que mover una tarifa significaba publicar una versión de la aplicación.
+  `034` construye el canal: un fichero del corpus firmado por el proyecto, enseñado
+  entero, aceptado por ella, aplicado moviendo un puntero. Mover `PRICES` y `USD_TO_EUR`
+  al corpus es ahora un trabajo pequeño y con sentido, y **sigue abierto**: el vehículo
+  existiendo no mueve nada por sí solo.
+
+  Lo que **no** cambia al moverlos: una tarifa en el corpus la ve ella antes de que se
+  aplique, como cualquier otra corrección. Una tarifa que se aplicara sola sería un número
+  sobre su dinero cambiando sin que nadie lo decidiera, que es el defecto original de G29
+  con otro disfraz.
 - **`cost_measured: false` on every catalogue entry.** Nobody has ever measured what a
   worksheet actually costs on any service. The figures the catalogue shows during
   onboarding are estimates that say so, but the honest fix is a measurement.

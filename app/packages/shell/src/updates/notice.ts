@@ -48,3 +48,57 @@ export function registerNoticeIpc(settingsDir: () => string): void {
     return on === true;
   });
 }
+
+/**
+ * May a launch check run right now? (034 T024, FR-3202, research R5.)
+ *
+ * Pure, so the three things that make this safe are testable without a clock and without
+ * a window:
+ *
+ * - **Consent, absent by default.** Not «has she seen the setting» — has she turned it
+ *   on. A version check is a phone-home from a machine holding data about children.
+ * - **At most weekly.** «At launch» in a school means every morning, and a daily
+ *   outbound request on a schedule nobody asked for is the thing the consent was for.
+ * - **Never mid-job**, which is the caller's half: this says «allowed», and the caller
+ *   only asks at launch.
+ *
+ * And it fails **silent**. A check that surfaces «no he podido comprobarlo» on a morning
+ * with no network is a check that teaches her the application is broken.
+ */
+export const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+
+export function mayCheckAtLaunch(
+  settings: { checkAtLaunch?: boolean; lastLaunchCheck?: string },
+  nowIso: string,
+): boolean {
+  if (settings.checkAtLaunch !== true) return false;
+  const last = settings.lastLaunchCheck;
+  if (!last) return true;
+  const since = Date.parse(nowIso) - Date.parse(last);
+  /*
+   * `NaN` — an unparseable stamp — reads as «no lo sé» and allows the check rather than
+   * blocking it for ever. The failure directions are not symmetric: a check too many is
+   * one anonymous request, and a check never again is a teacher who never learns about
+   * the fix she is stranded on.
+   */
+  return Number.isNaN(since) || since >= WEEK_MS;
+}
+
+/**
+ * Run it if allowed, record that it ran, and say nothing either way.
+ *
+ * One implementation shared with the button — `check` is the same handler's work —
+ * so there is exactly one place a check can start from, which is what makes «only these
+ * destinations, only when asked» a property rather than a habit.
+ */
+export async function launchCheck(args: {
+  settingsDir: string;
+  now: string;
+  check: () => Promise<unknown>;
+}): Promise<{ ran: boolean }> {
+  const settings = await loadSettings(args.settingsDir);
+  if (!mayCheckAtLaunch(settings, args.now)) return { ran: false };
+  try { await args.check(); } catch { /* silent, by requirement */ }
+  await saveSettings(args.settingsDir, { ...settings, lastLaunchCheck: args.now });
+  return { ran: true };
+}
