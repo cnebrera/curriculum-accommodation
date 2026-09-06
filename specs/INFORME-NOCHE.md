@@ -1558,32 +1558,82 @@ de ellos sale— a `updates/notice.ts`.
 
 ## Preguntas para Carlos
 
+**Lo que necesito de ti, en orden de cuánto bloquea.**
+
+### 1 · Un par de claves para el corpus (bloquea la mitad de `034`)
+
+La maquinaria de actualización está construida y probada; lo que no existe es una **clave
+del proyecto**. Cuatro decisiones que son tuyas y que no he inventado (G53 en el BACKLOG):
+
+- **Dónde vive la privada.** Un secreto de CI es lo obvio, y también significa que quien
+  tenga acceso al repositorio puede publicar criterio pedagógico firmado.
+- **Quién puede publicar una corrección del corpus**, y si es la misma lista de personas
+  que puede hacer merge.
+- **Qué pasa si esa clave se pierde o se filtra.** Hoy no hay rotación: la pública está
+  compilada en la aplicación, así que cambiarla es publicar una versión. Puede estar bien
+  —es lo que pasa con cualquier raíz de confianza pequeña— pero conviene que sea una
+  decisión y no una sorpresa.
+- **Si el canal se enciende ya.** Todo `034` funciona apagado: sin release `corpus-v<n>`
+  publicada no hay nada que ofrecer y no se pide nada.
+
+No lo confundas con **P52**, que es firmar los **instaladores**. Son dos deudas distintas.
+
+### 2 · ¿De dónde sale el vocabulario clave de una unidad? (`033` T023, sigue abierta)
+
+Lo dejé anotado ayer y sigue igual: `bridgeWords` está construido, probado y enchufado al
+prompt, y **nadie le da de comer**. Las opciones que veo siguen siendo (a) un campo donde
+ella escriba las palabras de la unidad, (b) que el modelo declare cuáles de sus palabras
+son clave y el código resuelva las glosas en una segunda vuelta, o (c) dejarlo sin glosas.
+
+### 3 · El directorio `.agents/` (sin cambios, sigo sin tocarlo)
+
+Sigue sin seguimiento en la raíz, con copias de las skills de Spec Kit. Una vez se me
+coló en un `git add -A` y **lo saqué del commit**; sigue igual que estaba. Si debe
+versionarse, dilo; si no, merece una línea en `.gitignore`.
+
+### 4 · Lo que necesita personas, no decisiones
+
+Se acumulan y ninguna la puedo hacer yo:
+
+- **Protección de datos / legal** — los dos hallazgos de borrado (0.2 y G48) siguen
+  esperando que los mire quien lleva RGPD antes de que esto se pueda presentar como
+  cumplimiento.
+- **Veredictos de maestras** — `032` SC-3004, `035` SC-3301/T026, `033` T026,
+  **`029` T028** (una PT de un segundo territorio escribiendo su corpus con el contrato
+  delante: es la afirmación que el Principio I se juega en esa capa) y **`030` T029** (una
+  tutora y una PT haciendo la segunda mirada sobre un examen de verdad, por su transporte
+  de verdad, para ver si el bucle cabe en una semana de colegio).
+- **Paseos con clave real** — `026` T031, `022` T025, `035` T018.
+- **Una fotocopiadora** — `022` SC-2005.
+- **Los términos de ARASAAC** (P26) y la **firma de código** (P52).
+
+### 5 · Dos cosas que decidí yo y conviene que confirmes
+
+- **La cota de la superficie Electron subió cuatro veces esta noche** (975 → 981 → 999 →
+  1017 → 1035), y cada subida está justificada por escrito en el propio test. Las cuatro
+  veces rechazó el primer intento y las cuatro veces produjo la forma mejor —
+  `ipc/pick.ts` con dos llamantes en vez de dos diálogos, `corpus/active.ts` sin Electron,
+  `updates/notice.ts` fuera de «los handlers que salen de la máquina». Si te parece que la
+  cota se está usando como permiso en vez de como medida, dilo y la congelo.
+- **`instructions/coordination.md` es un fichero de corpus nuevo** con la frase que va en
+  la cara de cada paquete («esto viene de otra aula») y la línea de procedencia de lo
+  aceptado. Está ahí y no en TypeScript porque cómo debe leer una docente las
+  observaciones de otra es exactamente el juicio del Principio I — pero es corpus nuevo,
+  y el corpus nuevo lo revisa alguien.
+
+### 6 · Las dos de las noches anteriores, que siguen abiertas
+
 - **0.2 · Validación de protección de datos (P38, tu propia condición).** El código hace lo
   que pedía el hallazgo y está cubierto por tests, pero *si el resultado satisface el derecho
   de supresión de datos de un menor* es un juicio de protección de datos, no un resultado de
-  test. Queda pendiente que lo revise quien lleve protección de datos / legal antes de que
-  esto se pueda presentar como cumplimiento. Anotado también en `validation.md`.
+  test. Y esta noche se le ha sumado uno más: `030` mete `handover/received/` en el plan de
+  borrado, que es otra carpeta con datos de un niño saliendo del alcance de «bórralo todo»
+  en cuanto ella manda una copia. Anotado también en `validation.md`.
 - **0.2 · Una decisión que tomé yo y conviene que confirmes.** Retiré `status: 'forgotten'`
   del enum del roster. Razón: nadie lo escribía nunca *y no se puede usar* — una fila con
   lápida sigue llevando el código, así que `verifyForgotten` la reportaría como residuo para
   siempre. Si querías que el roster guardara memoria de que hubo un alumno, eso vive en
   `.rampa/erasures.md` (fecha + código, nada suyo dentro). Dime si preferías otra cosa.
-- **`033` · ¿De dónde sale el vocabulario clave de una unidad?** El puente está construido,
-  probado y enchufado al prompt, y **no se le da de comer**. `bridgeWords` resuelve glosas
-  a partir de una lista de palabras clave, y qué palabras son clave es un juicio sobre la
-  unidad — `018` ya decidió que se pasa y nunca se adivina («inferirlo de la frecuencia
-  pondría un dibujo al lado de lo que se repita»), y hoy **nadie llena esa lista**:
-  `ApplyOptions.vocabulary` existe para lo mismo y tampoco la llena ningún llamante.
-  Las opciones que veo: (a) un campo en el perfil o en el trabajo donde ella escriba las
-  palabras de la unidad; (b) que el modelo declare cuáles de **sus** palabras son clave y
-  el código resuelva las glosas después, en una segunda vuelta; (c) dejarlo sin glosas y
-  que el apoyo sea sólo visual. No la he inventado. T023 (ampliar la metadata de idiomas
-  del publicador) va con esta decisión: sin fuente de palabras, sería un campo escrito y
-  no leído.
-- **Un directorio `.agents/` sin seguimiento, que no he tocado.** Apareció en la raíz con
-  copias de las skills de Spec Kit (`.agents/skills/speckit-*/SKILL.md`). No lo he creado ni
-  lo he commiteado: no sé si es tuyo, de una actualización de la herramienta, o basura. Si
-  debe versionarse, dilo; si no, tal vez merezca una línea en `.gitignore`.
 
 ## Estado de la verificación
 
@@ -1594,6 +1644,8 @@ de ellos sale— a `updates/notice.ts`.
 | `npm run test:e2e` | verde — 220 casos |
 | `scripts/check-fr-coverage.sh` | verde (línea base) |
 | `scripts/check-spec-kit.sh` | verde (línea base) |
+| `scripts/validate-recipes.sh` | verde — 19 recetas |
+| `npm run test:isolation` | verde — 124 casos |
 
 ---
 
