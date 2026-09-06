@@ -88,6 +88,24 @@ const api = {
      * corpus ships in the release, so this is how FR-414's "one action" works.
      */
     checkForUpdate: () => invoke('corpus:checkForUpdate'),
+    /** Where the update channel may connect, declared in the corpus (`034` FR-3204). */
+    destinations: () => invoke('corpus:destinations'),
+  },
+  /**
+   * The update notice (`034` US1).
+   *
+   * Notify only: there is no channel here that downloads or installs anything, and
+   * `notify-only.test.ts` asserts that as an **absence** — over the dependency tree and
+   * over the source, because a requirement satisfied by nothing existing is the one that
+   * quietly stops being true.
+   */
+  updates: {
+    /** The newest version she dismissed, or nothing. */
+    dismissed: () => invoke('updates:dismissed'),
+    dismiss: (version: string) => invoke('updates:dismiss', version),
+    /** Whether she has said Rampa may look at launch. Absent means no. */
+    consent: () => invoke('updates:consent'),
+    setConsent: (on: boolean) => invoke('updates:setConsent', on),
   },
   /**
    * Which normativa she works under (029).

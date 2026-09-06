@@ -76,6 +76,27 @@ export interface AppSettings {
     contrast?: 'normal' | 'high';
     motion?: 'normal' | 'reduced';
   };
+  /**
+   * The newest release notice she dismissed (`034` FR-3203).
+   *
+   * Here and not in the vault: which notice she dismissed on **this machine** is a fact
+   * about this installation, and a vault carrying it would dismiss the notice on her
+   * colleague's laptop too — the same reasoning that keeps the pictogram licence
+   * acceptance out of a handover packet.
+   *
+   * The notice returns only for something **newer**, which is the difference between a
+   * notice and a nag: a nag is one that comes back for the same news.
+   */
+  dismissedRelease?: string;
+  /**
+   * Whether she has said Rampa may look for updates at launch (`034` research R5).
+   *
+   * **Absent means no**, and that is the requirement rather than a default. A version
+   * check is a phone-home, and an outbound request on launch from a machine handling
+   * children's data is exactly what a school's DPO objects to — so it exists only
+   * because she turned it on, having read what it sends.
+   */
+  checkAtLaunch?: boolean;
 }
 
 const settingsPath = (dir: string) => join(dir, 'settings.json');

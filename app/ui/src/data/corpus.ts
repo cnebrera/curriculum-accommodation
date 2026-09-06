@@ -60,10 +60,42 @@ export function useLicences(): Loadable<{ code: string; content: string; notice:
  * holding data about children happens when she presses the button and at no
  * other moment, which is why this is a command and not a hook.
  */
+export interface UpdateStatusView {
+  current: string;
+  latest?: string;
+  newer: boolean;
+  page: string;
+  problem?: string;
+  /**
+   * What the release says it changes, in plain language (`034` FR-3201).
+   *
+   * Rendered as **text**, never as Markdown: release notes come off a network response,
+   * and a screen that rendered them would be a screen a release can style and link
+   * (Principle IX).
+   */
+  summary?: string;
+}
+
 export function useUpdateCheck() {
-  return useCommand(() => window.rampa.corpus.checkForUpdate() as Promise<{
-    current: string; latest?: string; newer: boolean; page: string; problem?: string;
-  }>);
+  return useCommand(() => window.rampa.corpus.checkForUpdate() as Promise<UpdateStatusView>);
+}
+
+/** Where the update channel may connect, declared in the corpus (`034` FR-3204). */
+export interface UpdateDestination {
+  id: string; what: string; host: string; url: string; when: string; sends: string;
+}
+
+export function useUpdateDestinations(): Loadable<UpdateDestination[]> {
+  return useAsync(() => window.rampa.corpus.destinations() as Promise<UpdateDestination[]>, []);
+}
+
+/** Off until she says otherwise (`034` research R5). Absent means no. */
+export function useLaunchCheckConsent(): Loadable<boolean> {
+  return useAsync(() => window.rampa.updates.consent() as Promise<boolean>, []);
+}
+
+export function useSetLaunchCheckConsent() {
+  return useCommand((on: boolean) => window.rampa.updates.setConsent(on) as Promise<boolean>);
 }
 
 export function useRecommendService() {

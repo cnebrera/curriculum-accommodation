@@ -45,6 +45,19 @@ export interface UpdateStatus {
   /** Where to get it. Always the releases page, never a binary URL. */
   page: string;
   /**
+   * What the release says it changes, in plain language (`034` FR-3201).
+   *
+   * The one line she reads to decide whether to care. Without it the notice is «hay una
+   * versión nueva», which is a nag: it tells her something is available and nothing
+   * about whether it matters — and the thing this feature exists for is «arreglada la
+   * regla de exámenes», which is exactly the sentence a fix-stranded teacher needs.
+   *
+   * **Truncated, never rendered as Markdown.** Release notes are text from a network
+   * response, and a screen that rendered them would be a screen a release can style,
+   * link and lay out (Principle IX).
+   */
+  summary?: string;
+  /**
    * Why there is no answer, when there is none. Never a status code: this is
    * shown to a teacher (006 US5).
    */
@@ -103,13 +116,25 @@ export async function checkForUpdate(
     if (res.status === 404) return { ...base, problem: 'not-published' };
     if (!res.ok) return { ...base, problem: 'unreadable' };
 
-    const body = await res.json() as { tag_name?: unknown; name?: unknown };
+    const body = await res.json() as { tag_name?: unknown; name?: unknown; body?: unknown };
     const tag = typeof body.tag_name === 'string' ? body.tag_name
       : typeof body.name === 'string' ? body.name : null;
     if (!tag) return { ...base, problem: 'unreadable' };
 
     const latest = tag.replace(/^v/, '');
-    return { ...base, latest, newer: isNewer(latest, currentVersion) };
+    /*
+     * Flattened and bounded before it crosses anything.
+     *
+     * Newlines out, because the notice is one quiet line and a release note with twenty
+     * of them would turn it into a panel. Bounded, because a length is not something a
+     * remote response gets to choose about a screen.
+     */
+    const notes = typeof body.body === 'string'
+      ? body.body.replace(/\s+/g, ' ').trim().slice(0, 240) : '';
+    return {
+      ...base, latest, newer: isNewer(latest, currentVersion),
+      ...(notes ? { summary: notes } : {}),
+    };
   } catch {
     // Aborted, refused, or no DNS. All the same thing to her: not now.
     return { ...base, problem: 'offline' };

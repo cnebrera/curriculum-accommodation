@@ -1,5 +1,9 @@
 import { useEffect, useState } from 'react';
-import { useCorpusVersion, useLicences, useUpdateCheck } from '../data/corpus.js';
+import {
+  useCorpusVersion, useLicences, useUpdateCheck, useUpdateDestinations,
+  useLaunchCheckConsent, useSetLaunchCheckConsent, type UpdateStatusView,
+} from '../data/corpus.js';
+import { Loaded } from '../data/Loaded.js';
 import { Page } from '../shell/Page.js';
 import { Wordmark } from '../components/Logo.js';
 import { Callout } from '../components/Callout.js';
@@ -16,9 +20,19 @@ export function AboutScreen() {
   const version = versionLoaded.state === 'ready' ? versionLoaded.value : null;
   const lic = licLoaded.state === 'ready' ? licLoaded.value : null;
   /** The update check (006 T073). Null until she asks; never on mount. */
-  const [update, setUpdate] = useState<
-    { current: string; latest?: string; newer: boolean; page: string; problem?: string } | null>(null);
+  /*
+   * `UpdateStatusView` from the data layer, not restated here.
+   *
+   * It was restated, and `034` is what found it: adding `summary` in `core`, in the
+   * provider and in the hook left this component compiling against a shape three files
+   * behind — which is exactly the defect `ui/src/data/record.ts` warns about in its own
+   * comment about `freshness`, one screen over.
+   */
+  const [update, setUpdate] = useState<UpdateStatusView | null>(null);
   const updateCheck = useUpdateCheck();
+  const destinations = useUpdateDestinations();
+  const consent = useLaunchCheckConsent();
+  const setConsent = useSetLaunchCheckConsent();
   const checking = updateCheck.busy;
 
   /*
@@ -100,11 +114,58 @@ export function AboutScreen() {
                 </button>
               </div>
               <p className="small" style={{ margin: 0 }}>
-                Sólo cuando lo pulses. Rampa no comprueba nada por su cuenta, y
-                no envía nada tuyo: pregunta qué versión hay publicada y ya está.
-                Las reglas de adaptación vienen dentro de la aplicación, así que
-                actualizarlas es actualizarla.
+                Sólo cuando lo pulses, salvo que abajo digas que puedo mirarlo al abrir.
+                No envía nada tuyo: pregunta qué versión hay publicada y ya está. Y
+                <strong> no descarga ni instala nada</strong>: te doy el enlace y lo
+                descargas tú, mirando lo que descargas.
               </p>
+
+              {/*
+                Consent, off by default (`034` T013, research R5), and it says what
+                leaves the machine **before** she turns it on rather than in a manual.
+
+                `releases.ts` says `checkedAutomatically` «does not exist and must not be
+                added» — the status of a check is not where a permission lives. So the
+                permission is here, it is hers, and it is absent until she gives it.
+              */}
+              {/*
+                `.check` and not a bare row: the class is what makes a checkbox 24×24 and
+                its target 44px (`010` T017, WCAG 2.2 SC 2.5.8). Written as a plain row
+                first, and `layout.spec.ts` caught it at 13×24 — the same guard that found
+                the 22×22 box eight weeks after it shipped.
+              */}
+              <label className="check">
+                <input type="checkbox"
+                       checked={consent.state === 'ready' ? consent.value : false}
+                       onChange={(e) => void setConsent.run(e.target.checked)
+                         .then(() => consent.reload())} />
+                <span className="small">
+                  Puedes mirarlo al abrir, como mucho una vez por semana. Nunca en mitad
+                  de un trabajo, y si falla no me dices nada.
+                </span>
+              </label>
+
+              {/*
+                The disclosure (FR-3204), read from the **same** declaration the code
+                connects through. Two lists do not fail by the code reaching somewhere
+                undeclared — they fail by a third destination being added and the screen
+                still saying two.
+              */}
+              <details>
+                <summary className="small">¿A dónde se conecta exactamente?</summary>
+                <Loaded from={destinations}>
+                  {(list) => (
+                    <ul>
+                      {list.map((d) => (
+                        <li key={d.id} className="small">
+                          <strong>{d.what}</strong> — <code>{d.host}</code>.<br />
+                          {d.when}. Manda: {d.sends.toLowerCase()}.
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </Loaded>
+              </details>
 
               <div role="status" aria-label="Resultado de la comprobación">
                 {/*
@@ -128,6 +189,22 @@ export function AboutScreen() {
                           : update.newer
                             ? `Hay una versión más nueva (${update.latest}). Tú tienes la ${update.current}.`
                             : `Estás al día. Tienes la ${update.current}.`}
+                    {/*
+                      What it changes, in her language (`034` FR-3201).
+
+                      Without it the notice is «hay una versión nueva», which is a nag:
+                      it says something is available and nothing about whether it
+                      matters. The sentence this feature exists for is «arreglada la
+                      regla de exámenes» — which is exactly what a teacher stranded on a
+                      fix needs to read.
+
+                      As **text**. Release notes come off a network response, and a
+                      screen that rendered them as Markdown would be a screen a release
+                      can style and link (Principle IX).
+                    */}
+                    {update.newer && update.summary ? (
+                      <> {update.summary}</>
+                    ) : null}
                     {update.newer || update.problem === 'unreadable' ? (
                       <>
                         {' '}

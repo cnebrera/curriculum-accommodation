@@ -16,7 +16,7 @@ is mostly `releases.ts` learning to say one more sentence.
 
 ## Phase 1 · Setup · the two invariants, first and red
 
-- [ ] T001 Write `app/packages/shell/test/updates-offline.test.ts` **first**, red where it
+- [x] T001 Write `app/packages/shell/test/updates-offline.test.ts` **first**, red where it
       can be: with the update machinery present and a transport that **fails the test if
       called at all** (the `transportFor` pattern), the full offline suite passes, a check
       with no network is silence — no error surfaced, no interruption, work unaffected
@@ -55,7 +55,7 @@ some readers on the new corpus, some on the old — which is the on-disk version
       data-model rules 1–2). Every `corpusRoot()` caller in
       `app/packages/shell/src/corpus/` routes through it, and a structural test asserts
       no reader resolves a corpus path anywhere else (the `021` resolver lesson)
-- [ ] T007 [P] `instructions/updates.md` · the declared destinations — release check,
+- [x] T007 [P] `instructions/updates.md` · the declared destinations — release check,
       corpus manifest, corpus files, releases page — in the `instructions/pictograms.md`
       declaration pattern, with the P23 sentence: these are the only hosts, reachable
       only when checking (**FR-3204**); parser in `app/packages/shell/src/corpus/`, and
@@ -77,7 +77,7 @@ else.
 **Independent Test**: quickstart §4 against the fixture feed: newer → notice; same →
 silence; no network → silence and no error.
 
-- [ ] T009 [US1] `app/packages/providers/src/releases.ts` · `UpdateStatus` gains
+- [x] T009 [US1] `app/packages/providers/src/releases.ts` · `UpdateStatus` gains
       `summary` (the release's plain-language notes), the endpoint comes from the
       declared destinations (T007), and failure stays a sentence, never a dialog
       (**FR-3201**, **FR-3202**)
@@ -85,14 +85,14 @@ silence; no network → silence and no error.
       the summary in her language, one link opened via the `links.ts` rule — declared
       https URL, never from the renderer — and it does nothing else (**FR-3201**). It
       never appears inside ensayo (`035`) and never interrupts a running job
-- [ ] T011 [P] [US1] Dismissal per version in `userData`
+- [x] T011 [P] [US1] Dismissal per version in `userData`
       (`app/packages/shell/src/ipc/`): dismissed stays dismissed for that version; only a
       newer one notices again (**FR-3203**)
-- [ ] T012 [US1] `app/packages/shell/test/notify-only.test.ts` · **the absence** (SC-3203,
+- [x] T012 [US1] `app/packages/shell/test/notify-only.test.ts` · **the absence** (SC-3203,
       **FR-3201**): no binary-download path, no installer spawn, no `electron-updater` in
       the dependency tree — the test fails if any appears. Notify-only enforced by what
       does not exist
-- [ ] T013 [P] [US1] Disclosure: `app/ui/src/about/AboutScreen.tsx` lists both
+- [x] T013 [P] [US1] Disclosure: `app/ui/src/about/AboutScreen.tsx` lists both
       destinations, matched **in a test** against `instructions/updates.md`'s declaration
       so the two cannot drift (**FR-3204**); the Configuración toggle «comprobar al abrir»
       arrives default **off**, its copy saying what leaves the machine, at most weekly,

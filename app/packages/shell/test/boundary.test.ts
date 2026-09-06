@@ -322,8 +322,19 @@ describe('inside packages/shell, the surface is small and named', () => {
      * move `018`'s pictogram access and `035`'s rehearsal root were both pushed into by
      * this bound. Three times now, which is a pattern rather than a coincidence.
      *
+     * **Raised to 1035 on 2026-09-06** for `034`'s notice: the release check reading its
+     * endpoint from the declared destinations instead of a constant, the destinations
+     * handler, and six lines of preload.
+     *
+     * And it refused the first attempt **again**, for the fourth time in this project's
+     * history and the second time today: the four settings handlers for «what she
+     * dismissed» and «may I look at launch» had landed in `corpus/links.ts`, which is
+     * «the two handlers that leave the machine» and none of them do. They became
+     * `updates/notice.ts`, which takes the settings directory as an argument and imports
+     * no Electron.
+     *
      * 25, not 100. A bound raised to a round number stops being a measurement.
      */
-    expect(lines).toBeLessThan(1017);
+    expect(lines).toBeLessThan(1035);
   });
 });
