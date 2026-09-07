@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { PICTOGRAM_PROGRESS_STAGE } from '../../packages/core/src/pictograms/fetch.js';
 import { Counted } from '../src/components/Progress.js';
-import { PICTOGRAM_PROGRESS_STAGE as RENDERER_STAGE } from '../src/data/pictograms.js';
+import { PICTOGRAM_PROGRESS_STAGE as RENDERER_STAGE, downloadShown } from '../src/data/pictograms.js';
 
 /**
  * The bar exists, and it says a true number (024 T012, 025 FR-2309).
@@ -84,3 +84,73 @@ describe('both sides of the boundary compare the same string', () => {
   });
 });
 
+/**
+ * A download in progress survives navigation (025 T009, FR-2309).
+ *
+ * ## What was already there, and what was not
+ *
+ * The main process has had the answer for a while: `lastProgress` lives beside the
+ * `AbortController`, and `pictograms:bringing` reports both. The screen asks on mount.
+ * So the requirement was **built** and its task still said «Not done» — which is its own
+ * small lesson: a note that records a defect has to be revisited when the defect is
+ * fixed, or it becomes a claim the repository makes about itself and nobody checks.
+ *
+ * What was missing is this: the derivation lived as four lines inside a component that
+ * **this suite cannot mount**. The test environment is `node`, so a static render sees
+ * the first frame of a `useAsync` and never the resolved one — the exact frame in which
+ * a mount-time read has not happened yet. A derivation nothing can check is where the
+ * requirement quietly stops being true.
+ *
+ * ## What this still does not prove
+ *
+ * That a real 157 MB download survives a real navigation. That needs the network and
+ * ARASAAC's servers, and it is `025` T019's «look at it with a download in progress» —
+ * a person, by hand. Said out loud rather than left to look covered.
+ */
+describe('walking into a download that was already running', () => {
+  it('shows the bar from what the main process reports, not from events it missed', () => {
+    // She has just arrived: no event has been received by this screen at all.
+    const { running, at } = downloadShown(
+      null, { running: true, done: 40_000, total: 157_000 }, false);
+
+    expect(running).toBe(true);
+    expect(at).toEqual({ done: 40_000, total: 157_000 });
+  });
+
+  it('offers nothing when nothing is running', () => {
+    expect(downloadShown(null, { running: false, done: 0, total: 0 }, false))
+      .toEqual({ running: false, at: null });
+  });
+
+  /**
+   * A finished download's last numbers are **not** a bar.
+   *
+   * `bringing()` keeps `lastProgress` beside the controller, and it is only cleared when
+   * a run ends — so `done`/`total` can be the tail of a completed download. Reading them
+   * without `running` would leave a full bar frozen on the screen of somebody who is not
+   * downloading anything, which reads as «stuck».
+   */
+  it('ignores the numbers of a download that has stopped', () => {
+    expect(downloadShown(null, { running: false, done: 157_000, total: 157_000 }, false).at)
+      .toBe(null);
+  });
+
+  /** The live event is newer than the snapshot she arrived with, so it wins. */
+  it('prefers what is happening now to what was reported on arrival', () => {
+    expect(downloadShown(
+      { done: 41_200, total: 157_000 }, { running: true, done: 40_000, total: 157_000 }, false).at)
+      .toEqual({ done: 41_200, total: 157_000 });
+  });
+
+  /**
+   * And she pressed the button a moment ago, before any event or answer.
+   *
+   * `running` has to be true on that frame: it is what disables the button, and a button
+   * that stays enabled for the first second of a 157 MB download is how a second
+   * concurrent run became reachable without malice.
+   */
+  it('counts as running the moment she presses, before anything has answered', () => {
+    expect(downloadShown(null, null, true).running).toBe(true);
+    expect(downloadShown(null, null, false).running).toBe(false);
+  });
+});

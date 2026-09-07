@@ -232,6 +232,41 @@ test.describe('accessibility · WCAG 2.2 AA', () => {
   });
 
   /**
+   * Configuración **at every width** (`025` T016, SC-2306).
+   *
+   * The loop above already walks its sections in all four modes, and at one width. This
+   * adds the dimension that was missing, and it is the one that matters for this screen:
+   * the rail becomes a **strip** on a narrow window, so the same page has a different set
+   * of headings and accessible names — a landmark or a name that is fine as a column can
+   * be wrong as a row, and axe would never see it from 1366px.
+   *
+   * The largest text throughout rather than in every mode, because contrast computed
+   * correctly at 16px says nothing about 24px, and this is where this project has broken
+   * its own layout twice.
+   *
+   * Its own case rather than another axis on the loop above: that loop is four modes over
+   * every screen, and multiplying it by three widths would be a hundred-odd scans for the
+   * three that this requirement is about.
+   */
+  test('Configuración, at every width and the largest text', async () => {
+    const { app, page, vault } = await launch();
+    await seed(page, vault);
+    await setMode(page, MODES[2]!);
+
+    const panes = SCREENS.filter((s) => s.under === 'Configuración');
+    expect(panes.length, 'Configuración has sections to scan').toBeGreaterThan(3);
+
+    for (const width of [1366, 900, 560]) {
+      await page.setViewportSize({ width, height: 900 });
+      for (const pane of panes) {
+        await toScreen(page, pane);
+        await scan(page, `${pane.label} · ${width}px · muy grande`);
+      }
+    }
+    await app.close();
+  });
+
+  /**
    * Inside a learner, and the viewer (`020` US1, `021` T017).
    *
    * Separate from the loop above because these are not reached from the rail's top level

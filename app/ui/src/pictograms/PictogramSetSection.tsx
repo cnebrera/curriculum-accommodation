@@ -8,7 +8,7 @@ import { PICTOGRAM_PROGRESS_STAGE } from '../data/pictograms.js';
 import {
   useCurrentSet, useChooseSet, useInspectSet, useUseSet, usePublishers,
   useAcceptLicence, useWithdrawLicence, useFetchPictograms, useSetState,
-  useCheckUpdate, useDeclineUpdate, useStopBringing, useBringing,
+  useCheckUpdate, useDeclineUpdate, useStopBringing, useBringing, downloadShown,
   type SetInspection, type FetchResult, type UpdateStatus,
 } from '../data/pictograms.js';
 
@@ -78,9 +78,8 @@ export function PictogramSetSection() {
    * used to lose the bar while the fetch carried on — and re-enable the button.
    */
   const already = useBringing();
-  const running = bring.busy || (already.state === 'ready' && already.value.running);
-  const shown = at ?? (already.state === 'ready' && already.value.running
-    ? { done: already.value.done, total: already.value.total } : null);
+  const { running, at: shown } = downloadShown(
+    at, already.state === 'ready' ? already.value : null, bring.busy);
   useJobProgress(useCallback((p: Progress) => {
     if (p.stage === PICTOGRAM_PROGRESS_STAGE && typeof p.total === 'number') {
       setAt({ done: p.done ?? 0, total: p.total });
@@ -171,8 +170,27 @@ export function PictogramSetSection() {
               The licence, before the picker. Not after — she is entitled to know
               that her own sheets inherit the licence before she builds a term of
               them on it.
+
+              ## `decide` until she has, `info` after (`025` T019)
+
+              The `decide` badge reads «Necesita tu decisión», and once she has accepted
+              there is no decision left here: what remains is the attribution rule and
+              what ShareAlike does to her own sheets, which she needs to **know** and
+              cannot change. A standing «necesita tu decisión» on a settled question is
+              the badge losing its meaning for the ones that really are pending.
+
+              Found by looking at it after accepting (T019), and it is the same
+              correction `020` made on the caseload's «esta carpeta la ha tocado una
+              versión más nueva» — for the same reason, on a callout that also had
+              nothing for her to decide. Second time, so the rule is worth stating:
+              `decide` is for a question waiting on her, not for a subject that is
+              serious.
+
+              The title moves with it. «Lo que tienes que saber **antes**» is about a
+              moment that has passed.
             */}
-            <Callout intent="decide" title="Lo que tienes que saber antes">
+            <Callout intent={accepted ? 'info' : 'decide'}
+                     title={accepted ? 'La licencia que aceptaste' : 'Lo que tienes que saber antes'}>
               <p>
                 Los pictogramas de <strong>{publisher?.label ?? 'ARASAAC'}</strong> son
                 propiedad del <strong>{publisher?.attribution.owner ?? 'Gobierno de Aragón'}</strong>,

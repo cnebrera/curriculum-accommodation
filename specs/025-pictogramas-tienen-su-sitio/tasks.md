@@ -30,14 +30,23 @@ them to be that is a feature deletion.
   improves things is a move nobody can review.
 - [X] T008 Her vocabulary, reviewable and changeable here (FR-2308) — `024` FR-2214
   finished, since only a report could reach it.
-- [ ] T009 A download in progress survives navigation (FR-2309): the progress subscription
-  belongs to the application, not to a screen. **Not done.** `bringPictograms` keeps the
-  `AbortController` at module level so the download itself survives, but the bar is
-  `PictogramSetSection`'s own `useState` — navigate away and back and it is gone while
-  the fetch continues. Recorded rather than ticked; the fix is progress in the same place
-  the controller already is.
-- [ ] T010 [P] e2e: every control `023` and `024` built, reached without opening a
-  learner (SC-2302).
+- [x] T009 A download in progress survives navigation (FR-2309): the progress subscription
+  belongs to the application, not to a screen. **The note above said «Not done» and was
+  stale** — `lastProgress` lives beside the `AbortController`, `pictograms:bringing`
+  reports both, and the screen asks on mount. Which is its own lesson: a note recording a
+  defect has to be revisited when the defect is fixed, or it becomes a claim the
+  repository makes about itself that nobody checks.
+  What *was* missing is a reader: the derivation lived as four lines inside a component
+  **this suite cannot mount** (the environment is `node`, so a static render only ever
+  sees the first frame of a `useAsync` — the exact frame in which a mount-time read has
+  not happened yet). Extracted as `downloadShown` with five cases, including that a
+  finished download's last numbers are not a bar. Verified by mutation.
+  What it still does not prove: that a real 157 MB download survives a real navigation.
+  That is T019's by-hand half.
+- [x] T010 [P] e2e: every control `023` and `024` built, reached without opening a
+  learner (SC-2302). `e2e/pictogram-settings.spec.ts`, and enumerated rather than
+  counted: the one that matters is whichever got left inside a learner's page. Both halves
+  — they are all in Configuración, and none of them is inside the learner.
 
 ## Phase 3: US1 — the learner's page is about the learner (P1)
 
@@ -48,8 +57,11 @@ them to be that is a feature deletion.
 - [X] T013 [P] Test: the learner's profile contains no licence text, no megabytes, no
   download control, and the block is under six lines (SC-2301, SC-2303) — measured,
   because «mucho más limpio» has to mean something.
-- [ ] T014 [P] e2e: turn pictograms on with no set, follow the pointer, arrive, come back
-  (US1 scenarios 2-4).
+- [x] T014 [P] e2e: turn pictograms on with no set, follow the pointer, arrive, come back
+  (US1 scenarios 2-4). The pointer and the return were already walked by `e2e/nav.spec.ts`
+  since `020`; what was missing and is now asserted is that leaving Configuración lands
+  her back in her caseload (FR-2314) — the rail losing an entry must not change where she
+  ends up.
 
 ## Phase 4: US3 — the rail stops mixing categories (P2)
 
@@ -62,18 +74,42 @@ them to be that is a feature deletion.
   `020`, invisible because the sweep only walked top-level screens and the rail only
   showed that heading inside a learner. Now a `<p>` — the `<nav>` already carries the
   accessible name (G34).
-- [ ] T016 [P] `axe` on Configuración at every width and the largest text (SC-2306).
+- [x] T016 [P] `axe` on Configuración at every width and the largest text (SC-2306). In
+  `a11y.spec.ts`, where `scan()` lives — and **not** copied into the new spec: that helper
+  injects axe-core rather than using `@axe-core/playwright`, because Electron answers
+  `Target.createTarget: Not supported`, and a second copy of that integration would carry
+  the reason in only one of the two. Three widths × six panes; the width is the dimension
+  that matters here because the rail becomes a strip and a strip is a different set of
+  headings. Verified by mutation with a nameless button.
 
 ## Phase 5: Polish
 
-- [ ] T017 `018` FR-1605 still holds: no axis enables pictograms, and moving the set out
+- [x] T017 `018` FR-1605 still holds: no axis enables pictograms, and moving the set out
   did not make it a global switch (FR-2313). And `020` FR-1801: Mis alumnos is still the
   opening screen (FR-2314) — the rail losing an entry must not change where she lands.
-- [ ] T018 Opening Configuración fetches nothing (FR-2315) — the transport spy again.
-- [ ] T019 Look at it: two widths and `xlarge`, including a download in progress
-  (`013` FR-1113/FR-1118).
-- [ ] T020 One primary control per screen (`013` FR-1105). G31 is open, so this is looked
-  at rather than trusted.
+  `pictograms-not-automatic.test.ts` asserts it over the **code**; this asserts it over
+  the **screens**, which is where `025` could have broken it. The learner is seeded with
+  COG, ATE and LEC all at 3 — the most loaded profile the model allows — and the switch
+  is still off.
+- [x] T018 Opening Configuración fetches nothing (FR-2315) — `035`'s network counter,
+  which counts **both stacks** because a provider call leaves through Node's `fetch` and a
+  listener on Chromium's session would sit at zero while something escaped. Opened three
+  times, not once: «abrirla cien veces no llega a nadie» does not distinguish «asks
+  nothing» from «asks once and caches» after a single visit.
+- [x] T019 Look at it: two widths and `xlarge`, including a download in progress
+  (`013` FR-1113/FR-1118). Two widths and both licence states looked at; it holds. **It
+  found one thing**: the licence callout kept `intent="decide"` — «Necesita tu decisión» —
+  after she had decided, and kept a title about a moment that had passed. The licence text
+  itself stays, because the attribution and the ShareAlike still apply and she cannot
+  change them; what goes is the demand. Same correction `020` made on the caseload's
+  newer-version callout, so the rule is worth stating: `decide` is for a question waiting
+  on her, not for a subject that is serious.
+  **A download in progress was not looked at**: it needs the network and ARASAAC's
+  servers. Left for a person, and said out loud rather than ticked.
+- [x] T020 One primary control per screen (`013` FR-1105). G31 is open, so this is looked
+  at rather than trusted — and it is also swept: `primary-control.spec.ts` walks every
+  screen the rail reaches, including this pane, at 900px with the largest text, which is
+  the width and the scale where `023` actually broke it.
 - [ ] T021 SC-2304 **needs a teacher**. Recorded as pending, not ticked.
 
 ## Dependencies

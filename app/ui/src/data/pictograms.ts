@@ -227,6 +227,43 @@ export function useBringing(): Loadable<Bringing> {
   return useAsync(() => window.rampa.pictograms.bringing() as Promise<Bringing>, []);
 }
 
+/**
+ * What the screen shows about a download, from the three things that can know.
+ *
+ * ## Why this is a function and not four lines in the component
+ *
+ * FR-2309 says a download in progress must **survive navigation**, because it is
+ * application state and not a screen's. The screen has three sources and they disagree
+ * on purpose:
+ *
+ * - `live` — the progress events, which only arrive while this screen is mounted.
+ * - `reported` — what the main process says when asked, which is what makes the
+ *   requirement true: the controller and the last progress live beside each other there,
+ *   so a screen that has just mounted can find out it walked into a download.
+ * - `pressing` — she pressed the button a moment ago and the first event has not landed.
+ *
+ * Extracted because the component cannot be mounted by this suite: the test environment
+ * is `node`, so `renderToStaticMarkup` renders the first frame of a `useAsync` and never
+ * the resolved one. A derivation that only exists inside a component nothing can mount
+ * is a derivation nothing can check — and this one carries the requirement.
+ */
+export function downloadShown(
+  live: { done: number; total: number } | null,
+  reported: Bringing | null,
+  pressing: boolean,
+): { running: boolean; at: { done: number; total: number } | null } {
+  const running = pressing || reported?.running === true;
+  /*
+   * `live` wins, because it is newer than the snapshot she arrived with — and the
+   * snapshot is used **only while it says running**: a finished download's last numbers
+   * would otherwise sit on the screen as a bar that never moves.
+   */
+  const at = live ?? (reported?.running
+    ? { done: reported.done, total: reported.total }
+    : null);
+  return { running, at };
+}
+
 /** She pressed «Parar». What arrived is already usable (`024` FR-2118). */
 export function useStopBringing() {
   return useCommand(() => window.rampa.pictograms.stop() as Promise<boolean>);
