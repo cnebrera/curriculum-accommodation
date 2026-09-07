@@ -83,10 +83,28 @@
   offline — the four-rung precedence, her vocabulary round-tripping, and `chosenWords`
   reaching `applyPictograms` — but the loop is not asserted in the real window.
 - [ ] T022 [P] Test: her vocabulary travels in a handover and her licence acceptance does
-  not (FR-2219, `004`). **Not done.** `vocabulario.md` is in the vault so a handover
-  packet carries it by construction, and the acceptance is in application settings so it
-  cannot — but «by construction» is what the twelve unread fields were. Recorded rather
-  than ticked.
+  not (FR-2219, `004`). **Half done, 2026-09-07, and left open because the other half is
+  a question.** `[ ]` rather than a half-marker on purpose: `check-fr-coverage.sh` reads
+  these boxes, and a marker it does not understand takes the requirement out of the count
+  altogether — which is the opposite of recording that something is outstanding.
+
+  Tested: her vocabulary is `vocabulario.md` at the root of the **vault** — so a copied
+  folder carries it — and her licence acceptance is written outside it, asserted by
+  content over every file in the vault rather than by a filename. That second half is the
+  sharp one: if acceptance lived in the vault, a colleague who received her folder would
+  open Rampa and find ARASAAC's terms **already accepted by somebody else**, and `023`
+  FR-2104 makes acceptance the gate before anything is fetched. A gate that can arrive
+  pre-opened in a zip file is not a gate. Verified by mutation — pointing the settings
+  directory at the vault, which is a change somebody could make for a good reason without
+  ever seeing this requirement.
+
+  **Not tested, because it is not built:** «travels in a handover» reading *handover* as
+  `004`'s **packet**. That packet is one markdown file built from a learner's profile and
+  her claims (`memory:handoverWrite`), and neither it nor `030`'s coordination packet
+  carries `vocabulario.md`. So FR-2219's first half is satisfied only if «handover» means
+  «the folder she copies», and that is a product decision I am not making — recorded as a
+  question for Carlos rather than resolved by picking the reading that makes the
+  requirement pass.
 
 ## Phase 5: US3 — asked once (P2)
 
