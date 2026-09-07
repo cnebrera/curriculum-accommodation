@@ -66,7 +66,8 @@ export const MAIN_TABS: readonly LearnerTab[] =
  * type that can express a destination nothing can draw is a type that will be trusted
  * by a caller and then crash — or worse, render blank.
  */
-export type SettingsPane = 'pictograms' | 'normative' | 'criterio' | 'service' | 'about';
+export type SettingsPane =
+  'pictograms' | 'normative' | 'house' | 'criterio' | 'service' | 'about';
 
 /**
  * In menu order, and the rail renders from **this** rather than a second list.
@@ -75,7 +76,7 @@ export type SettingsPane = 'pictograms' | 'normative' | 'criterio' | 'service' |
  * sections exist» is where one gets a destination the other does not.
  */
 export const settingsPanes: readonly SettingsPane[] =
-  ['pictograms', 'normative', 'criterio', 'service', 'about'] as const;
+  ['pictograms', 'normative', 'house', 'criterio', 'service', 'about'] as const;
 
 /*
  * No `display` pane. The text size, contrast and motion controls already live in the
@@ -148,8 +149,10 @@ export type LegacyView =
    * `connection` and `about` were removed by `025`: they are sections of Configuración
    * now. Removed from the type rather than left as spare values, because `SettingsPane`
    * spent two specifications carrying three destinations nothing could draw.
+   *
+   * `notes` se fue igual, con `020` T034: es el apartado «Cómo trabajo yo» de
+   * Configuración, y lo de cada niño se lee dentro del niño (FR-1818/FR-1819).
    */
-  | 'notes'
   | 'guide' | 'guide-ask' | 'acns' | 'acs';
 
 /**

@@ -23,7 +23,15 @@ export const es = {
    * keys stay and gain two neighbours. The rail reads all of them from here — a label
    * hardcoded in a component is a label the locale sweep cannot reach.
    */
-  nav: { learners: 'Mis alumnos', work: 'Preparar material', notes: 'Mis notas',
+  nav: { learners: 'Mis alumnos',
+         /*
+          * `work` y `notes` ya **no son destinos de nivel superior** (`020` T028/T037):
+          * preparar vive dentro del alumno y las notas se han partido por su ámbito. Las
+          * cadenas se quedan porque `notes` titula el apartado de Configuración y `work`
+          * lo sigue leyendo el raíl del alumno; el día que ninguna tenga lector, se
+          * borran como se borró `adapt.title`.
+          */
+         work: 'Preparar material', notes: 'Mis notas',
          connection: 'Mi servicio de IA', about: 'Acerca de y licencias',
          settings: 'Configuración', pictograms: 'Pictogramas',
          // `029`: which normativa her documents are written in. A fact about her
@@ -31,7 +39,14 @@ export const es = {
          normative: 'Normativa',
          // `034`: las recetas y las instrucciones con las que adapta. Se traen del
          // repositorio y se recargan desde aquí.
-         criterio: 'El criterio pedagógico' },
+         criterio: 'El criterio pedagógico',
+         /*
+          * `020` T034: su estilo de casa y lo que ha corregido de la práctica o del
+          * corpus. Se llama por lo que ella escribe ahí y no «Mis notas», que era el
+          * nombre de una pantalla que mezclaba tres ámbitos — lo de un niño se lee
+          * ahora dentro de ese niño (FR-1818).
+          */
+         house: 'Cómo trabajo yo' },
 
   onboarding: {
     welcome: 'Vamos a dejarlo listo',

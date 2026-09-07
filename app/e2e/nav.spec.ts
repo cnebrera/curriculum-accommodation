@@ -2,7 +2,8 @@ import { test, expect, _electron as electron, type Page, type ElectronApplicatio
 import { mkdtemp, mkdir } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { intoLearner, toCaseload, toTab, learnerRail, rail, TAB, toPrepare } from './nav.js';
+import { intoLearner, intoNamedLearner, toCaseload, toTab, learnerRail, rail, TAB,
+         toPrepare, toScreen } from './nav.js';
 
 /**
  * The navigation, end to end (020 T017, quickstart §2).
@@ -221,6 +222,142 @@ test.describe('her caseload is where she starts', () => {
  *    the official curricular adaptation. That one is closed by `0.1`: the job
  *    lives on the route now, so there is no session residue to inherit.
  */
+/**
+ * Exactly two destinations, and her memory split by its own scope (`020` US4).
+ *
+ * FR-1802 was **deferred** rather than dropped when `025` shipped a four-entry rail,
+ * with a note saying why: the entries could not be removed before their contents had
+ * somewhere to go. This is the assertion that the deferral has been honoured, and it is
+ * worth having as a test rather than as a reading of the rail — «five became two» is the
+ * one claim this whole specification is about, and it is one careless addition away from
+ * being false again.
+ */
+/** Her code for a name she set. The names live only in memory (`003`). */
+async function codeFor(page: Page, name: string): Promise<string> {
+  const names = await page.evaluate(() => window.rampa.names.all()) as Record<string, string>;
+  const found = Object.entries(names).find(([, n]) => n === name);
+  if (!found) throw new Error(`no learner called ${name}`);
+  return found[0];
+}
+
+test.describe('the top level is two places, and her notes went where they belong', () => {
+  /** FR-1802 · her learners and Configuración. A third is a new category. */
+  test('the rail offers exactly two, and neither is an action', async () => {
+    const { app, page, vault } = await launch();
+    await seed(page, vault);
+
+    const entries = rail(page).locator('button');
+    const labels = (await entries.allTextContents()).map((t) => t.trim()).filter(Boolean);
+
+    /*
+     * The foot is not a destination and is deliberately excluded (`013` FR-1106): the
+     * cost badge, «Cómo se ve» and the locale are things she adjusts from anywhere. So
+     * the assertion is over the destinations above the rule, which is what the
+     * requirement is about — and `.rail-foot` is where the shell puts the rest.
+     */
+    const foot = (await rail(page).locator('.rail-foot button').allTextContents())
+      .map((t) => t.trim());
+    const destinations = labels.filter((l) => !foot.includes(l));
+
+    expect(destinations).toEqual(['Mis alumnos', 'Configuración']);
+
+    // And the ones that went away did not come back as anything else.
+    for (const gone of ['Preparar material', 'Mis notas', 'Mi servicio de IA',
+                        'Acerca de y licencias']) {
+      await expect(rail(page).getByRole('button', { name: gone, exact: true }), gone)
+        .toHaveCount(0);
+    }
+    await app.close();
+  });
+
+  /**
+   * FR-1818 · what Rampa learned about a child, read where that child is discussed.
+   *
+   * The journal has carried `scope` and `learner` since `003`. The screen that read it
+   * did not, so a note she wrote about Lucía was in a list under «Mis notas» between her
+   * house style and her corrections to the corpus. Nothing is written or moved here
+   * (FR-1820) — the entry is seeded with the scope **she** would have set, and the only
+   * question is where it can be read.
+   */
+  test('a note about one child is read inside that child', async () => {
+    const { app, page, vault } = await launch();
+    await seed(page, vault);
+    /*
+     * Her code **by name**, and entered by name too.
+     *
+     * The first draft took `learners.list()[0]` and walked in with `intoLearner(page)`,
+     * which is caseload position 0 — and the two orders are not the same. It seeded the
+     * note for Lucía and opened Marco, which is the exact trap `nav.ts` records from
+     * `group.spec.ts`. A test that asserts «his note is on his page» has to be sure
+     * whose page it is on.
+     */
+    const code = await codeFor(page, 'Lucía');
+
+    await page.evaluate(async (who) => {
+      await window.rampa.vault.write('memory/journal/2026-09-01-lucia.md',
+        `---\ndate: "2026-09-01"\nscope: "learner"\nlearner: "${who}"\n`
+        + 'status: "confirmed"\nrecipes: ["one-task-per-page@1"]\n---\n\n'
+        + 'Con una tarea por hoja lo acaba; con dos se bloquea.\n');
+      // And one of hers, which must NOT appear inside him: she scoped it to her
+      // practice, and showing it in his page would reclassify what she decided.
+      await window.rampa.vault.write('memory/journal/2026-09-02-practica.md',
+        '---\ndate: "2026-09-02"\nscope: "practice"\nstatus: "confirmed"\n'
+        + 'recipes: []\n---\n\nLos enunciados en imperativo me funcionan mejor.\n');
+    }, code);
+    await page.reload();
+    await page.waitForLoadState('domcontentloaded');
+    await page.getByRole('navigation', { name: /Secciones/ }).waitFor({ timeout: 15000 });
+
+    await intoNamedLearner(page, 'Lucía');
+    await toTab(page, 'who');
+    await expect(page.getByText(/Con una tarea por hoja lo acaba/)).toBeVisible();
+    await expect(page.getByText(/imperativo me funcionan mejor/)).toHaveCount(0);
+
+    // FR-1819 · and hers is in Configuración, which is the other half of the split.
+    await toScreen(page, { label: 'Cómo trabajo yo', under: 'Configuración' });
+    await expect(page.getByRole('heading', { name: 'Cómo trabajo yo', level: 1 }))
+      .toBeVisible();
+    await app.close();
+  });
+
+  /**
+   * FR-1820 · nothing about what is written, where, or by whom changed.
+   *
+   * Asserted over the **files**, because that is the claim. A split that quietly
+   * rewrote a journal entry to carry the learner in a different field, or moved one
+   * between scopes to make a screen tidier, would be this application editing her
+   * memory — which is the one thing Principle VIII forbids.
+   */
+  test('reading her notes somewhere else does not rewrite them', async () => {
+    const { app, page, vault } = await launch();
+    await seed(page, vault);
+    const code = await codeFor(page, 'Lucía');
+
+    const written = `---\ndate: "2026-09-01"\nscope: "learner"\nlearner: "${code}"\n`
+      + 'status: "confirmed"\nrecipes: []\n---\n\nDos  espacios  y  todo.\n';
+    await page.evaluate(async (args) => {
+      const [path, body] = args as [string, string];
+      await window.rampa.vault.write(path, body);
+    }, ['memory/journal/2026-09-01-x.md', written] as [string, string]);
+    await page.reload();
+    await page.waitForLoadState('domcontentloaded');
+    await page.getByRole('navigation', { name: /Secciones/ }).waitFor({ timeout: 15000 });
+
+    await intoNamedLearner(page, 'Lucía');
+    await toTab(page, 'who');
+    await expect(page.getByText('Dos  espacios  y  todo.')).toBeVisible();
+
+    const after = await page.evaluate(() =>
+      window.rampa.vault.read('memory/journal/2026-09-01-x.md')) as
+        { content: string; data: Record<string, unknown> } | null;
+    expect(after?.data['scope']).toBe('learner');
+    expect(after?.data['learner']).toBe(code);
+    // The body byte for byte, double spaces included.
+    expect(after?.content).toContain('Dos  espacios  y  todo.');
+    await app.close();
+  });
+});
+
 /**
  * `Su adaptación curricular` holds all four, and the refusals came with them
  * (`020` T031/T032, FR-1806).

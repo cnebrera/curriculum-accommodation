@@ -13,7 +13,6 @@ import type { ComposeResult } from './data/compose.js';
 import { IngestScreen } from './ingest/IngestScreen.js';
 import { VerifyScreen } from './ingest/VerifyScreen.js';
 import { ReviewScreen } from './review/ReviewScreen.js';
-import { NotesScreen } from './notes/NotesScreen.js';
 import { SettingsSections } from './settings/SettingsSections.js';
 import { VaultStep } from './onboarding/VaultStep.js';
 import { ConnectStep } from './onboarding/ConnectStep.js';
@@ -550,7 +549,10 @@ export function App() {
               })} />
         ) : null}
 
-        {route.at === 'legacy' && route.view === 'notes' ? <NotesScreen /> : null}
+        {/*
+          «Mis notas» ya no es una vista (`020` T034/T037): es el apartado «Cómo trabajo
+          yo» de Configuración, y lo de cada alumno se lee dentro del alumno.
+        */}
         {/*
           Configuración (`025` FR-2305). «Mi servicio de IA» and «Acerca de» used to be
           top-level `legacy` views beside «Mis alumnos»; they are settings, so they are

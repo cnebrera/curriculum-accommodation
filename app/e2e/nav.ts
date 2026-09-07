@@ -230,7 +230,14 @@ export async function assertPrepareAsksTheKind(page: Page): Promise<void> {
  */
 export const SCREENS = [
   { label: 'Mis alumnos' },
-  { label: 'Mis notas' },
+  /*
+   * «Mis notas» came down a level in `020` T034, which is what took the top level to
+   * exactly two (FR-1802). What is left of it — her house style and her corrections to
+   * the practice and the corpus — is «Cómo trabajo yo»; what Rampa learned about a child
+   * is read inside that child, and a sweep of top-level screens is the wrong place to
+   * look for it.
+   */
+  { label: 'Cómo trabajo yo', under: 'Configuración' },
   { label: 'Pictogramas', under: 'Configuración' },
   { label: 'Normativa', under: 'Configuración' },
   { label: 'El criterio pedagógico', under: 'Configuración' },

@@ -17,6 +17,25 @@ export function useHouseStyle(): Loadable<unknown> {
 }
 
 /**
+ * What she has written about one child (`020` T035, FR-1818).
+ *
+ * Typed, because a screen that renders her own words has to know which field is the
+ * note and which is provenance — and `unknown` here would be an `as` at the point where
+ * the distinction matters.
+ */
+export interface LearnerNote {
+  path: string;
+  date?: string;
+  status?: string;
+  recipes: string[];
+  body: string;
+}
+
+export function useLearnerNotes(code: string): Loadable<LearnerNote[]> {
+  return useAsync(() => window.rampa.memory.forLearner(code) as Promise<LearnerNote[]>, [code]);
+}
+
+/**
  * What erasure would remove, shown before anything is removed.
  *
  * A command and not a hook on purpose: she presses "ver qué se borraría", and

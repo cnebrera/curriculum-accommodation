@@ -453,6 +453,8 @@ const api = {
     consolidate: () => invoke('memory:consolidate'),
     archive: (path: string) => invoke('memory:archive', path),
     house: () => invoke('memory:house'),
+    /** What she has written about one child (`020` FR-1818). */
+    forLearner: (code: string) => invoke('memory:forLearner', code),
     /**
      * The draft, for review. Returns the claims as well as the prose, because
      * FR-305 says nothing leaves without her review and reviewing needs the

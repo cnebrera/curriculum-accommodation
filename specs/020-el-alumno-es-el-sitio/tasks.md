@@ -214,18 +214,31 @@ refusals still refuse.
 **Independent Test**: every setting reachable from one top-level destination; a
 learner-scoped journal entry visible inside that learner.
 
-- [ ] T033 [US4] `Configuración` with the service, the house style, the display
-      controls, the vault location and the licences (FR-1817)
-- [ ] T034 [US4] Split `NotesScreen` by `scope`: house style plus `practice` and `corpus`
+- [x] T033 [US4] `Configuración` with the service, the house style, the display
+      controls, the vault location and the licences (FR-1817). Six sections now. **The
+      display controls are the one item read differently and it is on purpose**: they are
+      in the rail's foot (`013` FR-1106), visible from Configuración and from every other
+      screen, and a second home would be two copies of one truth — recorded in the spec
+      rather than resolved in favour of whichever requirement was read last
+- [x] T034 [US4] Split `NotesScreen` by `scope`: house style plus `practice` and `corpus`
       entries stay here (FR-1819). **Nothing about what is written, where, or by whom
-      changes** (FR-1820) — this is a change of where things are read
-- [ ] T035 [P] [US4] Journal entries scoped to a learner appear inside that learner
+      changes** (FR-1820) — this is a change of where things are read, and it is asserted
+      over the files: the entry's `scope`, its `learner` and its body survive byte for
+      byte being read somewhere else
+- [x] T035 [P] [US4] Journal entries scoped to a learner appear inside that learner
       (FR-1818). Nothing infers a scope and nothing moves an entry between scopes
-      (Principle VIII)
-- [ ] T036 [P] [US4] «Acerca de» and the licences move inside `Configuración`
-- [ ] T037 [US4] The top level is now **exactly two destinations** (FR-1802), and the
+      (Principle VIII): `journalFor` checks `scope` **as well as** `learner`, so a note
+      she scoped to her practice that happens to name a child stays where she put it.
+      Verified by mutation — letting the learner field alone decide fails the case.
+      Read-only, because her memory is hers to write
+- [x] T036 [P] [US4] «Acerca de» and the licences move inside `Configuración` — done by
+      `025` FR-2307, which moved the screen unchanged. Nothing was left for this task but
+      confirming it, and the sweep over `SCREENS` walks it
+- [x] T037 [US4] The top level is now **exactly two destinations** (FR-1802), and the
       rail's foot — cost badge, display preferences, locale — stays as it is (`013`
-      FR-1106)
+      FR-1106). Asserted rather than read off the screen, and the four labels that went
+      away are asserted **absent** too: «five became two» is the one claim this
+      specification is about, and it is one careless addition away from being false
 
 ---
 
@@ -280,7 +293,7 @@ five requirements sat uncited for a day and one of them was a live defect.
 | | Where it is satisfied |
 |---|---|
 | FR-1801 | T010 (caseload as the opening screen) · T028 (the door retired) |
-| FR-1802 | deferred: **T037**, and the spec now says so in its own text (P25, 2026-09-03). US1 removes nothing, so the top level held five destinations; `025` shipped a four-entry rail as an intermediate step and the last two entries cannot go until US2 puts «Preparar» inside the learner. Still the destination — a sequencing decision, not an unmet requirement, and now the guard reads it the same way the spec does |
+| FR-1802 | done: **T037** (2026-09-07). Held deferred from 2026-09-03 while `025` shipped a four-entry rail, because the entries could not go before their contents had somewhere to go — «Preparar material» went inside the learner in T028 and «Mis notas» split by `scope` in T034/T035. The rail is her learners and Configuración, asserted in `e2e/nav.spec.ts` with the four departed labels asserted absent |
 | FR-1803 | T009 · `LearnerShell` is the learner as a place |
 | FR-1804 | T009, T011, T012, T013 · four sections plus two set apart |
 | FR-1805 | **T012 and T014** · the record as its own destination, and the six cards stripped out of the profile editor. The defect this specification was opened for |
@@ -295,9 +308,9 @@ five requirements sat uncited for a day and one of them was a live defect.
 | FR-1814 | T003 (in the reducer) · T023 (on the screen) |
 | FR-1815 | T025 · T030 keeps `005` FR-512's assertion passing over the new screens |
 | FR-1816 | T023, and `014` already records against every learner |
-| FR-1817 | deferred: T033 · T036. `025` FR-2305 shipped three sections (Pictogramas, Mi servicio de IA, Acerca de); the house style, the vault location and the licences arrive with US4 (P25) |
+| FR-1817 | done: T033 · T036 (2026-09-07). Six sections. The display controls stay in the rail's foot on purpose (`013` FR-1106) — reachable from Configuración and from everywhere, and a second home would be two copies of one truth; the divergence is recorded in the spec rather than settled silently |
 | FR-1818 | T035 |
-| FR-1819 | deferred: T034. `025` keeps «Mis notas» at the top level as an intermediate step; splitting it by `scope` is queued with US4 (P25) |
+| FR-1819 | done: T034 (2026-09-07). «Mis notas» is Configuración ▸ «Cómo trabajo yo»; what Rampa learned about a child reads inside that child |
 | FR-1820 | T034 · asserted as an absence: the notes split changes no write path |
 | FR-1821 | T039 |
 | FR-1822 | T016 · T017 asserts keyboard reach |

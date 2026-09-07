@@ -237,8 +237,15 @@ describe('Configuración', () => {
      * the repository and reloadable from here. Its own section rather than a button
      * inside another, because it is the one thing in Configuración that changes **what
      * Rampa does**, and it has an offer to read and a history to go back through.
+     *
+     * `house` joined in `020` T034, and it is a **top-level destination coming down a
+     * level** rather than a new idea: «Mis notas» mixed her house style, her
+     * corrections to the corpus and what Rampa had learned about each child. The last
+     * of those now reads inside the child (FR-1818) and what is left is about how *she*
+     * works, which is a setting. That is what took the rail to exactly two (FR-1802).
      */
-    const panes: SettingsPane[] = ['pictograms', 'normative', 'criterio', 'service', 'about'];
+    const panes: SettingsPane[] =
+      ['pictograms', 'normative', 'house', 'criterio', 'service', 'about'];
     expect([...settingsPanes].sort()).toEqual([...panes].sort());
   });
 });

@@ -71,7 +71,7 @@ export function Rail({ route, go, learnerName, labels, foot }: {
   labels: {
     learners: string; work: string; notes: string;
     connection: string; about: string; settings: string; pictograms: string;
-    normative: string; criterio: string;
+    normative: string; criterio: string; house: string;
   };
   /** The cost badge, the display controls and the locale — unchanged (`013` FR-1106). */
   foot: ReactNode;
@@ -88,6 +88,7 @@ export function Rail({ route, go, learnerName, labels, foot }: {
   const paneLabel: Record<SettingsPane, string> = {
     pictograms: labels.pictograms,
     normative: labels.normative,
+    house: labels.house,
     criterio: labels.criterio,
     service: labels.connection,
     about: labels.about,
@@ -109,12 +110,12 @@ export function Rail({ route, go, learnerName, labels, foot }: {
     </button>
   );
 
-  const top = (view: 'notes', label: string) => (
-    <button aria-current={route.at === 'legacy' && route.view === view ? 'page' : undefined}
-            onClick={() => go({ type: 'legacy', view })}>
-      {label}
-    </button>
-  );
+  /*
+   * `top` se ha ido con «Mis notas» (T037). Era el ayudante que dibujaba una entrada de
+   * nivel superior que no es ni el alumnado ni Configuración, y ya no hay ninguna — el
+   * tipo del parámetro se había estrechado a `'notes'` en T028 y ahora no le queda
+   * ningún valor, que es la señal de que el ayudante sobra.
+   */
 
   return (
     <nav
@@ -198,15 +199,20 @@ export function Rail({ route, go, learnerName, labels, foot }: {
             {labels.learners}
           </button>
           {/*
-            La puerta se ha ido (`020` T028). «Preparar material» era una **acción** en
-            un raíl de sitios, y su trabajo vive ahora dentro del alumno — que es el
-            diagnóstico original de `020`: el raíl mezclaba una acción, una entidad,
-            datos, un ajuste e información como si fueran hermanos.
+            **Dos, exactamente dos** (FR-1802, T037).
 
-            Quedan tres. «Mis alumnos» y «Configuración» son los dos que pide FR-1802;
-            «Mis notas» se parte en T034 y desaparece de aquí en T037.
+            Eran cinco, y el diagnóstico de `020` era que mezclaban categorías como si
+            fueran hermanas: una acción («Preparar material»), una entidad («Mis
+            alumnos»), datos («Mis notas»), un ajuste («Mi servicio de IA») e
+            información («Acerca de»). Cada una se ha ido a donde pertenecía y ninguna
+            se ha perdido: la acción está dentro del alumno (T028), el ajuste y la
+            información en Configuración (`025`), y los datos se han partido por su
+            propio `scope` (T034/T035) — lo de un niño con ese niño, lo de ella en
+            Configuración.
+
+            Un tercer destino aquí es una categoría nueva, y esta especificación existe
+            porque había cinco.
           */}
-          {top('notes', labels.notes)}
           {/*
             Four entries, not five (`025` FR-2310). «Mi servicio de IA» and «Acerca de»
             were never siblings of «Mis alumnos» — `020`'s own diagnosis was that this

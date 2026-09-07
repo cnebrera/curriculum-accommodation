@@ -31,6 +31,30 @@ export async function loadJournal(vault: Vault): Promise<JournalDoc[]> {
   return out;
 }
 
+/**
+ * The entries she wrote about one child (`020` T035, FR-1818).
+ *
+ * ## It only filters
+ *
+ * No scope is inferred and nothing moves between scopes (Principle VIII, FR-1820). An
+ * entry is her observation about a child **because she said so** when she captured it,
+ * and a function that guessed «this mentions Lucía, so it is about Lucía» would be this
+ * application writing her memory for her.
+ *
+ * Which is why `scope` is checked as well as `learner`: an entry scoped to her practice
+ * that happens to carry a learner code — «con Lucía me funcionó, lo hago siempre» — is a
+ * note about *how she works*, and showing it inside the child would quietly reclassify
+ * what she decided. The two fields are asked in the order the requirement states them.
+ */
+export function journalFor(
+  entries: readonly JournalDoc[], learner: string,
+): JournalDoc[] {
+  return entries
+    .filter((e) => e.scope === 'learner' && e.learner === learner)
+    // Newest first: what she wrote last week is what she is looking for.
+    .sort((a, b) => (b.date ?? '').localeCompare(a.date ?? ''));
+}
+
 /** recipe id → entries. Derived, never hand-edited. Deterministic: no model. */
 export function buildIndex(entries: JournalDoc[]): string {
   const byRecipe = new Map<string, JournalDoc[]>();

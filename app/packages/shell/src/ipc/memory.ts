@@ -1,5 +1,6 @@
 import {
-  VAULT, loadJournal, writeIndex, houseStyleOverflowing, appendNote, loadLearner,
+  VAULT, loadJournal, journalFor, writeIndex, houseStyleOverflowing, appendNote,
+  loadLearner,
   saveProfile, buildPacket, packetToMarkdown, toShareable, planForget, executeForget,
   tombstone, listLearners, loadRoster, saveRoster, rosterNameRisk, generateCode, validateCode,
   rosterSchema, profileSchema, buildProposals, learnerNotes, knownAreas, vaultSchema,
@@ -121,6 +122,30 @@ export function registerMemoryIpc(): void {
   });
 
   handle('memory:house', async () => (await currentVault().readRaw(VAULT.house)) ?? '');
+
+  /**
+   * What she has written about one child (`020` T035, FR-1818).
+   *
+   * The journal has carried `scope` and `learner` since `003`, and until now the screen
+   * that read it mixed all three scopes into one list under «Mis notas» — so **what
+   * Rampa had learned about a child could not be read where that child is discussed**.
+   * This is a change of where things are read and nothing else (FR-1820): no entry is
+   * written, moved or re-scoped, and `journalFor` only filters.
+   *
+   * The body comes back because that *is* the note. What is deliberately not here is any
+   * way to edit or delete from this screen: her memory is hers, the files are plain text
+   * in her folder, and `003`'s answer to changing one is that she opens it.
+   */
+  handle('memory:forLearner', async (code: string) => {
+    const vault = currentVault();
+    return journalFor(await loadJournal(vault), code).map((e) => ({
+      path: e.path,
+      date: e.date,
+      status: e.status,
+      recipes: e.recipes,
+      body: e.body,
+    }));
+  });
 
   /**
    * The packet, for review (004 T006, FR-304/305).

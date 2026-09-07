@@ -4,6 +4,7 @@ import { ProfileEditor } from './ProfileEditor.js';
 import { RecordScreen } from './RecordScreen.js';
 import { HandoverReview } from './HandoverReview.js';
 import { ForgetLearner } from './ForgetLearner.js';
+import { LearnerNotes } from './LearnerNotes.js';
 import type { LearnerTab } from '../nav/route.js';
 import { StructureScreen } from '../structure/StructureScreen.js';
 import { ChooseBranch } from '../prepare/PrepareSteps.js';
@@ -152,10 +153,20 @@ export function LearnerSection({
        * Only the editor (T011). Everything else that used to hang below it is a sibling
        * of this section rather than a card inside it — and as of `025` that includes the
        * pictogram set, which was the last thing still living in the form.
+       *
+       * With one addition in `020` T035, and it is not a card coming back: what Rampa
+       * has learned about **this** child (FR-1818). It lived under «Mis notas» mixed
+       * with her house style and her corrections to the corpus, so the observations
+       * about a boy could not be read on the page about that boy. It is below the form
+       * and clearly second — the form is what she came to edit — and it is read-only:
+       * her memory is hers to write (Principle VIII).
        */
       return (
-        <ProfileEditor code={code} onConfigure={onConfigure}
-                       onSaved={() => { /* the list reloads on return */ }} />
+        <>
+          <ProfileEditor code={code} onConfigure={onConfigure}
+                         onSaved={() => { /* the list reloads on return */ }} />
+          <LearnerNotes code={code} {...(name ? { name } : {})} />
+        </>
       );
 
     case 'prepare':

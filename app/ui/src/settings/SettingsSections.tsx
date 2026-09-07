@@ -5,6 +5,7 @@ import { ConnectionScreen } from './ConnectionScreen.js';
 import { AboutScreen } from '../about/AboutScreen.js';
 import { NormativeSection } from './NormativeSection.js';
 import { CorpusSection } from './CorpusSection.js';
+import { NotesScreen } from '../notes/NotesScreen.js';
 import type { SettingsPane } from '../nav/route.js';
 
 /**
@@ -46,6 +47,13 @@ export function SettingsSections({ pane, onReconnect, onEnsayo }: {
   if (pane === 'service') return <ConnectionScreen onReconnect={onReconnect} onEnsayo={onEnsayo} />;
   if (pane === 'normative') return <NormativeSection />;
   if (pane === 'criterio') return <CorpusSection />;
+  /*
+   * `020` T034: su estilo de casa y sus correcciones, que eran un destino de nivel
+   * superior llamado «Mis notas». La pantalla es la misma menos la lista de lo aprendido
+   * de cada niño, que se lee dentro del niño (FR-1818) — un cambio de dónde se lee y no
+   * de qué se escribe (FR-1820).
+   */
+  if (pane === 'house') return <NotesScreen />;
   if (pane === 'about') return <AboutScreen />;
   return (
     <Page
