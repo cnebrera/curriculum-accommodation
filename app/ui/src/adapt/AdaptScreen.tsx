@@ -422,8 +422,24 @@ export function AdaptScreen({
   };
 
   return (
-    <Page title={es.adapt.title}
-          lede="Trae el material como lo tengas y dime para quién es y qué es.">
+    /*
+     * What this screen is, said from where she actually is (`020` T025).
+     *
+     * It used to say «Adaptar material · trae el material como lo tengas y dime para
+     * quién es y qué es», which is the whole job — written when the door led straight
+     * here and this was the only screen. Inside the flow it announced three steps she
+     * had already been through, under a strip reading «5. Revisar y firmar». Looking at
+     * it is what found it.
+     *
+     * Not conditional on being in a flow, and that is the point: `PrepareFlow` is the
+     * only thing that renders this screen, both of its branches, so an `inFlow ? … : …`
+     * would have been a second wording nothing can reach — which is the defect this
+     * repository keeps finding, written on purpose this time and caught before the
+     * commit.
+     */
+    <Page title="Última mirada antes de adaptar"
+          lede="Mira el texto, añade a quien falte y dime cuándo. Lo que es y de quién
+                ya me lo has dicho.">
       {!online ? <Callout intent="decide">{es.errors['offline']}</Callout> : null}
 
       {stage === 'compose' ? (

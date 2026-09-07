@@ -126,24 +126,46 @@ export async function toPrepare(
  */
 export async function throughPrepareToAdapt(
   page: Page,
-  opts: { learnerIndex?: number; learnerName?: string; kind?: string } = {},
+  opts: {
+    learnerIndex?: number; learnerName?: string; kind?: string;
+    /**
+     * Called at every step, named, for a spec sweeping the whole flow.
+     *
+     * Here rather than as a second walk because there must be **one** description of
+     * this route: a sweep that clicks its own way through stops covering the flow the
+     * day a step moves, which is this file's opening note and has come true four times.
+     */
+    at?: (where: string) => Promise<void>;
+    /** Also prepare for these, by the names she reads, at step 4. */
+    alsoNamed?: readonly string[];
+  } = {},
 ): Promise<void> {
+  const at = opts.at ?? (async () => {});
   await toPrepare(page, {
     ...(opts.learnerName !== undefined ? { name: opts.learnerName } : {}),
     ...(opts.learnerIndex !== undefined ? { index: opts.learnerIndex } : {}),
   });
+  await at('preparar · qué necesitas');
   await page.locator('.door', { hasText: 'Adaptar algo que tengo' }).click();
+  await at('paso 1 · qué es este material');
 
   await page.locator('.door', { hasText: opts.kind ?? KIND_WORKSHEET }).click();
   await page.getByRole('button', { name: 'Seguir', exact: true }).click();
+  await at('paso 2 · tráelo');
 
   // Step 2 · «Ya lo tengo en texto» skips the reading check, which has nothing to check.
   await page.getByRole('button', { name: /Ya lo tengo en texto/ }).click();
+  await page.getByRole('heading', { name: '¿Para quién más?' }).waitFor();
+  for (const name of opts.alsoNamed ?? []) {
+    await page.locator('.check').filter({ hasText: name }).locator('input').check();
+  }
+  await at('paso 4 · para quién más');
   // Step 4 · the entered learner is already in the batch, so this is one click.
   await page.getByRole('button', { name: 'Seguir', exact: true }).click();
 
   // The adapt screen owns the paste box, so its presence is the arrival.
   await page.locator('#text').waitFor();
+  await at('paso 5 · la última mirada');
 }
 
 /** Learner ▸ Preparar ▸ hacer material, hasta la pantalla que compone. */

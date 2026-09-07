@@ -142,8 +142,15 @@ worksheet for three, and confirm the source was read once.
       only when the answer is «more than normal», so the ordinary batch ran with no price
       at all. The batch arithmetic moved out of the renderer into `batchPromptChars`, so
       the figure she reads and the figure the gate judges cannot disagree
-- [ ] T025 [US2] Step 5 reviews and signs **per learner**, with no action anywhere that
-      signs two sheets (FR-1815)
+- [x] T025 [US2] Step 5 reviews and signs **per learner**, with no action anywhere that
+      signs two sheets (FR-1815). The signing itself was already per learner; what was
+      missing was **coverage**: `group.spec.ts`'s «no control anywhere signs more than
+      one» swept `SCREENS`, and the top level only ever led to the door, so the screens
+      where a batch of three actually exists were never in the sweep. It walks the flow
+      now, and mutation moved it one step further — a «Firmar todas» planted on the paste
+      screen failed it while the same control on the reading check **survived**. Step 5
+      also stopped announcing itself as «trae el material y dime para quién es y qué es»,
+      which is three steps she had already answered
 - [ ] T006 [US2] `packages/shell/src/jobs/ingest.ts` writes `for_learner` into `ir.md`
       at creation. **`startedFor()` already exists**: `021` T004 built it in
       `packages/core/src/vault/document.ts`, because that feature arrived first and needed

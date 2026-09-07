@@ -183,7 +183,13 @@ export const es = {
   },
 
   adapt: {
-    title: 'Adaptar material',
+    /*
+     * `title` fue de aquí y ya no está (`020` T025). Era «Adaptar material», el título
+     * de la pantalla cuando la puerta llevaba directa a ella; desde `020` esa pantalla
+     * es el paso 5 y se titula por lo que hace allí. Se borra en vez de dejarse: una
+     * cadena sin lector es lo mismo que un campo sin lector, y aquí además la traduciría
+     * alguien.
+     */
     paste: 'O pega aquí el texto',
     forWhom: '¿Para quién?',
     verifyTitle: 'Comprueba que lo he leído bien',

@@ -158,14 +158,48 @@ test.describe('one worksheet, several learners', () => {
      * longer exists. Fourth spec to hand-roll the walk and break, which is `nav.ts`'s
      * own opening note coming true.
      */
-    for (const screen of SCREENS) {
-      await toScreen(page, screen);
+    const offending = async (where: string) => {
       const labels = await page.evaluate(() =>
         Array.from(document.querySelectorAll('button, a, [role="button"]'))
           .map((el) => (el.textContent ?? '').trim()));
       expect(labels.filter((l) => forbidden.test(l)),
-        `${screen.label} offers a way to sign several documents at once`).toEqual([]);
+        `${where} offers a way to sign several documents at once`).toEqual([]);
+    };
+
+    for (const screen of SCREENS) {
+      await toScreen(page, screen);
+      await offending(screen.label);
     }
+
+    /*
+     * And the five steps of the flow, which `SCREENS` does not reach (`020` T025).
+     *
+     * Worth saying plainly, because this sweep looked complete and was not: the top
+     * level used to hold «Preparar material», so the loop above stopped at the door —
+     * which asked three questions and offered no signing at all. The screens where a
+     * batch of three actually exists were never in it. T028 removed the entry and made
+     * the hole visible; the flow is where the affordance would be built, so the flow is
+     * where it is checked.
+     */
+    await throughPrepareToAdapt(page, { at: offending, alsoNamed: ['Mateo', 'Iván'] });
+
+    /*
+     * And one step further, because mutation said the sweep stopped short.
+     *
+     * Planting a «Firmar todas» on the reading-check screen **survived** the walk above:
+     * step 5 arrives at the paste box, and the screen that actually fires a batch of
+     * three is one press later. That is the screen where such a control would be built,
+     * so the sweep goes there — and the same plant now fails it.
+     *
+     * Where it still does not reach: the list of «Revisar y firmar» after a real run,
+     * which needs a provider. `packages/shell/test/batch.test.ts` asserts no handler
+     * takes a list of learners, and «the second sheet of a batch can be signed» below
+     * walks that list from the vault. Said out loud rather than left to look covered.
+     */
+    await page.locator('#text').fill('Las plantas fabrican su alimento con la luz del sol.');
+    await page.getByRole('button', { name: 'Continuar' }).click();
+    await page.getByText('Comprueba que lo he leído bien').first().waitFor({ timeout: 15000 });
+    await offending('paso 5 · comprobar la lectura');
 
     await app.close();
   });
