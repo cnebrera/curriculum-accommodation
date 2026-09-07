@@ -238,16 +238,19 @@ learner-scoped journal entry visible inside that learner.
   **«Configuración»**. Adding a third is adding a category, and this feature exists
   because there were five. The second one carries **Carlos's own word** rather than one
   of ours (`012` FR-1011).
-  **DEFERRED 2026-09-03 by `025` FR-2310 (decision P25): still the destination.**
-  `025` ships a four-entry rail — Mis alumnos, Preparar material, Mis notas,
-  Configuración — as an intermediate step, because this spec's US2 (preparing
-  *inside* the learner) is not built yet and the entries cannot be removed before
-  their contents have somewhere to go. Carlos's decision is that `020`'s vision is
-  mounted complete: US2–US4 are queued, and when they land the rail returns to
-  exactly two destinations. Not retired — deferred, and this note is here so the
-  requirement does not quietly disappear (this spec's own assumption: «A
-  requirement that quietly disappears is a requirement nobody can argue with
-  later»).
+  **Deferred 2026-09-03 by `025` FR-2310 (decision P25) and MET 2026-09-07 by US2–US4.**
+  `025` shipped a four-entry rail — Mis alumnos, Preparar material, Mis notas,
+  Configuración — as an intermediate step, because the entries could not be removed
+  before their contents had somewhere to go. They do now: «Preparar material» went
+  inside the learner (T028) and «Mis notas» split by its own scope (T034/T035), so the
+  rail is her learners and Configuración. Asserted rather than read off the screen —
+  `e2e/nav.spec.ts`, «the rail offers exactly two, and neither is an action» — because
+  «five became two» is the one claim this specification is about and it is one careless
+  addition away from being false again.
+
+  The deferral note is kept rather than deleted, since it is the record of a requirement
+  that was *held* and not dropped: «a requirement that quietly disappears is a
+  requirement nobody can argue with later».
 - **FR-1803**: A learner MUST be a place she enters and not a form she opens.
 - **FR-1804**: Inside a learner, these MUST be first-level destinations: **who he is**,
   **preparing something**, **what has been prepared**, and **his curriculum
@@ -311,17 +314,29 @@ learner-scoped journal entry visible inside that learner.
 
 - **FR-1817**: *Configuración* MUST hold the AI service, her house style, the display
   controls, the vault location, and the licences.
-  **DEFERRED 2026-09-03 by `025` FR-2305 (decision P25): still the destination.**
-  `025`'s Configuración carries three sections (Pictogramas, Mi servicio de IA,
-  Acerca de) for now; the full Configuración of this requirement is queued with
-  `020` US2–US4 — see P25.
+  **Deferred 2026-09-03 by `025` FR-2305 (decision P25) and MET 2026-09-07 by T033/T034.**
+  Configuración now carries six sections: Pictogramas, Normativa, **Cómo trabajo yo**,
+  El criterio pedagógico, Mi servicio de IA, and Acerca de y licencias. Her house style
+  and the vault's location arrived with the notes split, which is where they already
+  lived.
+
+  **The display controls are the one item read differently, and it is on purpose.** The
+  text size, contrast and motion controls are in the rail's foot (`013` FR-1106, «the
+  rail's foot MUST be a composed block»), which is visible *while she is in
+  Configuración* and from every other screen too. A second home for them would be two
+  copies of one truth, and the copy she found first would be the one that felt broken.
+  So Configuración holds them in the sense that matters — they are reachable from it —
+  and there is deliberately no `display` pane. Recorded here rather than resolved
+  silently in favour of whichever requirement was read last.
 - **FR-1818**: Journal entries scoped to a learner MUST be visible inside that learner.
 - **FR-1819**: Her house style and entries scoped to her practice or to the corpus MUST
   live in *Configuración*, not inside a learner. The scope decides where it is shown,
   and she is still the only one who sets the scope (Principle VIII).
-  **DEFERRED 2026-09-03 by `025` (decision P25): still the destination.** `025`
-  keeps «Mis notas» in the rail's top level as an intermediate step; splitting the
-  notes screen is queued with `020` US2–US4 — see P25.
+  **Deferred 2026-09-03 by `025` (decision P25) and MET 2026-09-07 by T034/T035.**
+  «Mis notas» is Configuración ▸ «Cómo trabajo yo», and entries scoped to a learner are
+  read inside that learner. `journalFor` **only filters**: it checks `scope` as well as
+  `learner`, so an entry she scoped to her practice that happens to name a child stays
+  where she put it. Nothing infers a scope and nothing moves an entry between them.
 - **FR-1820**: Splitting the notes screen MUST NOT change what is written, where, or by
   whom. It is a change of where things are read.
 
