@@ -226,6 +226,33 @@ fetches only the difference.
   opposite of what the code did. See `specs/031-el-segundo-eje-de-frescura/`.
 - **FR-2219**: Her vocabulary MUST travel in a handover (`004`); her licence acceptance
   MUST NOT.
+
+  **CLARIFIED 2026-09-07 (decision: Carlos delegated, reasoning below): «a handover» is
+  the folder she copies, not `004`'s packet.**
+
+  The two things share the word. `004`'s packet is *one markdown file per child* —
+  header, the «these are observations from another classroom, not a diagnosis» warning,
+  «lo que te contaría tomando un café», and a table of claims about that child.
+  **Everything in it is about the child.** Her folder is what she copies to a new laptop
+  or hands to whoever replaces her, and `vocabulario.md` is at its root, so it travels
+  by construction.
+
+  It is the folder, and the argument is FR-2221 four lines below: her vocabulary MUST
+  NOT contain a learner's name, code or any other fact about a child. **So it is not
+  about any learner.** Putting it inside a document that exists to talk about one
+  particular child would place a fact about her installation in that child's file, and
+  send it to a colleague who may not use pictograms at all. It is the same reasoning
+  that keeps the licence acceptance out, applied from the other side.
+
+  Asserted rather than assumed, in `packages/shell/test/vocabulary-travels.test.ts`: the
+  vocabulary is at the vault root and the acceptance is written outside it, checked by
+  **content** over every file in the vault rather than by a filename.
+
+  **The other reading is a different feature, and a legitimate one**: «my vocabulary
+  should reach a colleague» as an act of its own rather than smuggled inside a child's
+  packet. It has a natural home — `003`'s shareable export (`toShareable`), which
+  already exists as a concept and is deferred waiting for a community corpus repository
+  (T005/T006). Recorded here so that if it is wanted, it arrives as itself.
 - **FR-2220**: Her vocabulary MUST be per language.
 - **FR-2221**: Her vocabulary MUST NOT contain a learner's name, code, or any other fact
   about a child (`011` FR-910).

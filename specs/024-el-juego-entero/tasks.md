@@ -82,11 +82,18 @@
   adaptation end to end, which is `023` T031's problem too. The pieces are covered
   offline — the four-rung precedence, her vocabulary round-tripping, and `chosenWords`
   reaching `applyPictograms` — but the loop is not asserted in the real window.
-- [ ] T022 [P] Test: her vocabulary travels in a handover and her licence acceptance does
-  not (FR-2219, `004`). **Half done, 2026-09-07, and left open because the other half is
-  a question.** `[ ]` rather than a half-marker on purpose: `check-fr-coverage.sh` reads
-  these boxes, and a marker it does not understand takes the requirement out of the count
-  altogether — which is the opposite of recording that something is outstanding.
+- [x] T022 [P] Test: her vocabulary travels in a handover and her licence acceptance does
+  not (FR-2219, `004`). Done 2026-09-07, and the question that kept it open is answered
+  in the spec: **«a handover» is the folder she copies, not `004`'s packet.** The packet
+  is one markdown per child and everything in it is about that child; her vocabulary is
+  forbidden from containing anything about a child (FR-2221), so it is not about any
+  learner and does not belong in one's file.
+
+  Tested by content and not by filename: the vocabulary at the vault root, the licence
+  acceptance written outside it, and every file in the vault checked for the acceptance —
+  a file called anything at all with it inside would be the same leak. Verified by
+  mutation, pointing the settings directory at the vault, which is a change somebody
+  could make for a good reason without ever seeing this requirement.
 
   Tested: her vocabulary is `vocabulario.md` at the root of the **vault** — so a copied
   folder carries it — and her licence acceptance is written outside it, asserted by
