@@ -454,6 +454,34 @@ cazó su primer error en la primera tirada, que era mi inventario: `looksLikeCon
 era huérfano y estaba en la lista, porque el prototipo del barrido no contaba los lectores
 del mismo fichero.
 
+### El hermano del barrido: 181 canales de IPC, once sin lector
+
+El mismo barrido sobre el puente encontró once canales expuestos que **no llama nadie**,
+ni la interfaz ni el e2e. Dos eran un requisito sin implementar y están arreglados
+(`updates:dismiss` y `updates:dismissed` → FR-3203, el aviso descartable; el segundo se
+borró porque `updates:notice` lo hace redundante por diseño).
+
+Los nueve que quedan **no tienen ningún requisito detrás**, así que son código muerto y no
+huecos:
+
+- `learners:roster`, `learners:validateCode`, `learners:nameRisk`
+- `pictograms:images`
+- `job:revisions`
+- `cost:wouldBeUnusual`
+- `diagnostics:path`, `diagnostics:reveal`, `diagnostics:tail`
+
+**Los tres de diagnóstico no los borro, y es una decisión tuya.** Son lo único que podría
+llevar a una maestra a su propio registro de errores, y ahora mismo **no hay forma de
+llegar a él**. Ningún requisito lo pide, así que no lo invento: o se borran los tres, o se
+decide que «mándame el registro cuando algo falle» es algo que la herramienta hace y
+entonces es una pantalla con su spec. Lo que no puede quedarse es en medio.
+
+Y siete canales más se llaman **sólo desde `e2e/`** (`corpus:recipes`,
+`corpus:instruction`, `coordination:reviewReply`, `learners:saveRoster`,
+`ingest:confirmPage`, `ingest:budget`, `diagnostics:network`). Ésos son legítimos —
+sembrar un vault o contar peticiones es lo que un test hace— pero conviene saber que la
+interfaz no los toca.
+
 ## G57 · El corpus core está en inglés, y su auditora es una PT española
 
 **Decisión de Carlos, 2026-09-03 (P28): español fuente.** Anotado aquí como **proyecto
