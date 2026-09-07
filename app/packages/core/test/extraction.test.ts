@@ -5,6 +5,7 @@ import {
 } from '../src/ingest/schema.js';
 import { validatePage } from '../src/ingest/validate.js';
 import { pagesToIR, irToMarkdown } from '../src/ingest/to-ir.js';
+import { jobIR } from '../src/vault/paths.js';
 import { planDownscale, tooSmallToRead } from '../src/ingest/downscale.js';
 import { parseIR } from '../src/ir/parse.js';
 
@@ -261,6 +262,59 @@ describe('conversion to IR', () => {
       goodPage({ page: 2, blocks: [{ id: 'b1', class: 'paragraph', text: 'dos' }] }),
     ], { source: 'photos' });
     expect(doc.blocks.map((b) => b.id)).toEqual(['p1-b1', 'p2-b1']);
+  });
+
+  /**
+   * FR-1010 · varias imágenes son **páginas de una parte**, nunca partes distintas.
+   *
+   * ## Por qué se puede afirmar hoy, con FR-1009 aplazada
+   *
+   * FR-1009 —un trabajo con varias partes, cada una con su tipo— está aplazada con su
+   * argumento escrito: es un *MAY* y exigiría que `material/<job>/` deje de ser un IR por
+   * trabajo, o sea tres funcionalidades entregadas y una migración de todos los vaults
+   * que existen. Y **precisamente por eso** FR-1010 se cumple de la forma más fuerte que
+   * hay: no es que el código elija no separar las páginas, es que **no hay dónde
+   * ponerlas** — `jobIR(job)` no toma índice de parte y no existe una segunda ruta.
+   *
+   * Lo que este caso protege es el día en que FR-1009 se implemente. La tentación al
+   * añadir partes es «una imagen, una parte», que es lo cómodo de programar y lo
+   * equivocado: una ficha de dos caras fotografiada dos veces son dos caras de la misma
+   * ficha, y tratarlas como dos documentos adaptaría cada cara sin la otra y numeraría
+   * los ejercicios dos veces desde uno.
+   *
+   * Así que se afirma como conteo: N imágenes entran, **un** documento sale.
+   */
+  it('keeps several images as pages of one document, never as several', () => {
+    const three = [1, 2, 3].map((page) => goodPage({
+      page, blocks: [{ id: 'b1', class: 'paragraph', text: `cara ${page}` }],
+    }));
+    const doc = pagesToIR(three, { source: 'photos' });
+
+    // Un documento: un front matter, y su cuenta de páginas es la de las imágenes.
+    expect((doc.frontMatter['extraction'] as Record<string, unknown>)['pages']).toBe(3);
+    // Los bloques de las tres, en el mismo documento y en su orden.
+    expect(doc.blocks.map((b) => b.content)).toEqual(['cara 1', 'cara 2', 'cara 3']);
+    // Y cada uno sabe de qué página salió, que es lo que hace que sea una parte con
+    // páginas en vez de tres documentos pegados.
+    expect(doc.blocks.map((b) => b.attrs['data-page'])).toEqual(['1', '2', '3']);
+  });
+
+  /**
+   * Y la mitad estructural: **no hay una segunda ruta** donde poner una parte.
+   *
+   * El caso de arriba dice que el código no separa las páginas; este dice que no podría.
+   * `015` demostró la versión de esto que dura —hacerlo inexpresable en vez de
+   * prohibido— y aquí sale gratis: `jobIR` toma un trabajo y nada más, así que «el IR de
+   * la parte 2» no es una ruta que se pueda escribir.
+   *
+   * Escrito sobre la **aridad**, que es lo que cambiaría el día que alguien implemente
+   * FR-1009: `jobIR(job, part)` compilaría en todos los llamantes con un segundo
+   * argumento opcional, y este caso es el que obliga a que ese día sea una decisión
+   * consciente en vez de un parámetro que aparece.
+   */
+  it('has no path for a second part, so pages cannot become documents', () => {
+    expect(jobIR.length, 'jobIR gained a parameter — see FR-1009/FR-1010').toBe(1);
+    expect(jobIR('job-x')).toMatch(/job-x\/ir\.md$/);
   });
 
   it('records the page and the source block, so a notice can be located on paper', () => {

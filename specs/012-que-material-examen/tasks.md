@@ -73,7 +73,29 @@ the change it protects, which is unusual enough to be its own task.
 
 - [ ] T017 [US3] Introduce `parts.json` and the `material/<job>/p1/` layout per data-model.md
 - [ ] T018 [US3] Migrate a job with `ir.md` at its root to one part with **kind absent** — never `worksheet`, which would bake the original lie into her existing material
-- [ ] T019 [US3] Let her bring several documents, each with its own kind, into one job; keep several images as pages of one part (FR-1010)
+- [ ] T019 [US3] Let her bring several documents, each with its own kind, into one job
+      (FR-1009) *(**deferred with FR-1009**, whose blockquote above is the whole argument:
+      a **MAY** that needs `material/<job>/` to stop being one IR per job — three shipped
+      features and a migration of every vault that exists, for a convenience.)*
+- [x] T019b [US3] Several images stay **pages of one part**, never separate parts
+      (FR-1010). Done 2026-09-07, and **split out of T019 so the coverage table tells the
+      truth**: it was one box over two requirements, so FR-1010 counted as open because
+      its deferred sibling shared the line.
+      It can be done now *because* FR-1009 is deferred, and in the strongest form there
+      is: not that the code chooses not to split the pages but that **there is nowhere to
+      put them** — `jobIR(job)` takes no part index, so «the IR of part 2» is not a path
+      that can be written. `015` proved the version of this that lasts (unexpressible
+      rather than forbidden) and here it costs nothing.
+      Asserted both ways in `extraction.test.ts`: as a count (three images in, one
+      document out, each block carrying its page) and over `jobIR`'s **arity**, which is
+      what would change the day somebody implements FR-1009 — `jobIR(job, part)` would
+      compile at every call site with an optional second argument, and that case is what
+      makes that day a decision rather than a parameter appearing.
+      What it protects is that day: the tempting shape when adding parts is «one image,
+      one part», which is the easy code and the wrong answer — a two-sided worksheet
+      photographed twice is two sides of one worksheet, and treating them as two documents
+      would adapt each side without the other and number the exercises twice from one.
+      Verified by mutation: dropping every page but the first fails three cases.
 - [ ] T020 [US3] Adapt each part under its own rule, into one report
 - [ ] T021 [P] [US3] Write `app/packages/core/test/parts.test.ts` covering quickstart §5
 
