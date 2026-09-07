@@ -244,8 +244,34 @@ provider-agnostic and has been tried on exactly one agent.
 Either build the matrix or soften the claim. Claiming agnosticism we have not
 tested is the kind of thing a teacher discovers at the worst moment.
 
-## G7 · Accessibility target for the output template
+## G7 · Accessibility target for the output template — *CLOSED 2026-09-07*
 
+**Closed 2026-09-07 by `037-la-hoja-comprobada`**, and the closing is worth reading because
+the gap was worse than this entry said.
+
+The target *was* declared by the time this was closed — `render/html.ts` says «Accessibility
+target: WCAG 2.2 level AA». What was missing was any test, and the reason nobody noticed is
+the sharp part: `a11y.spec.ts` excluded the sheet from its sweep saying its accessibility
+«is checked where those renderers are», and **it was checked nowhere**. A comment claiming
+a coverage that did not exist, in the place where it cost the most.
+
+What shipped:
+
+- **WCAG 2.2 A/AA over the three presentations** a sheet takes — draft, signed, largest
+  text — run from a hidden window in the Chromium **Electron already carries**. No browser
+  installed, no dependency added, and the viewer's `sandbox=""` untouched: those three
+  constraints together are what forced that shape (`037` research R4).
+- **A second, deterministic layer** over the markup, and it is not belt-and-braces: the
+  defect `037` repaired passes A/AA **clean**. Measured.
+- **The repair.** Measuring found `data-heading="true"` written by the ingest and read by
+  nothing, so a heading on the original worksheet came out as a paragraph and **the sheet
+  had no headings at all** — the sixteenth instance of this project's signature defect
+  (G36) and the first in the artefact a child receives. `signpost-the-page`, a core recipe
+  firing on `EJE>=2`, promised signposting while the renderer flattened it.
+
+**Still open and moved, not closed with it**: the sheet has no `<h1>` because it has no
+title, and inventing one would falsify the *what*. That is a content question and it is
+**G59**.
 The project produces material for learners with disabilities and states no
 conformance target for its own HTML output, and has no test for it. `references.md`
 cites WCAG 2.2; the template does not claim to meet it.
@@ -1173,6 +1199,21 @@ a line is not a test.»**
 
 ## G36 · «Is this declared field ever read?» needs the type checker
 
+> **Sixteenth instance, 2026-09-07, and the first in the artefact a child receives.**
+> `data-heading="true"` was written by `ingest/to-ir.ts` and read by nothing, so a heading
+> on the original worksheet came out as a paragraph and the adapted sheet had **no headings
+> at all**. Repaired by `037`.
+>
+> Two things about how it was found are worth keeping. It was **not** found by the type
+> checker this entry asks for — an attribute in a `Record<string, string>` is typed
+> correctly whether or not anybody reads it. And it was **not** found by a conformance
+> checker either: the sheet passed WCAG 2.2 A/AA clean with the defect in it. It was found
+> by rendering a real fixture and **looking at the output**, while measuring something
+> else.
+>
+> Partial progress on the entry's own ask: `ui/test/exports-have-readers.test.ts` (2026-09-07,
+> G58) now fails on an exported symbol no other module reaches. That covers functions and
+> constants. A **field of a payload** — which is what this one was — is still uncovered.
 **Open.** `props-are-read.test.ts` catches an unread **prop** because a prop is
 destructured — a mechanical, local signature. It cannot catch an unread **field of a
 payload**: two attempts at a text heuristic both passed while the actual subscription was

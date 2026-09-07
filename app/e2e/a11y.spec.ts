@@ -333,11 +333,28 @@ test.describe('accessibility · WCAG 2.2 AA', () => {
     /*
      * The viewer, rendered over a document seeded straight into the vault.
      *
-     * The frame's **contents** are deliberately out of scope: that is a rendered
-     * worksheet, whose accessibility is `007`/`019`'s business and is checked where those
-     * renderers are. What is checked here is the panel around it — the title, the close
-     * control, and that the frame has an accessible name rather than announcing itself as
-     * «frame».
+     * The frame's **contents** are out of scope here, and what is checked is the panel
+     * around it — the title, the close control, and that the frame has an accessible name
+     * rather than announcing itself as «frame».
+     *
+     * ## This comment used to claim a coverage that did not exist
+     *
+     * It said the sheet's accessibility «is checked where those renderers are». **It was
+     * not checked anywhere** — `contrast.test.ts` covers the application's palette, and no
+     * test ran a conformance check over `renderHTML`'s output. So this sweep exempted
+     * itself by pointing at a test that had never been written, and the sheet a child
+     * receives went unchecked for weeks. `037` was written from that finding.
+     *
+     * It is checked now, in two places, and this comment points at both:
+     *
+     * - `e2e/sheet-a11y.spec.ts` — WCAG 2.2 A/AA over the three presentations a sheet
+     *   takes, from a hidden window in the main process.
+     * - `packages/core/test/sheet-structure.test.ts` — the structure a conformance level
+     *   cannot see. That layer exists because the defect `037` repaired (headings
+     *   flattened into paragraphs) passed A/AA **clean**.
+     *
+     * A comment that claims a coverage is a comment somebody will trust. If either of
+     * those files goes, this one is wrong again.
      */
     await page.evaluate(async () => {
       await window.rampa.vault.write('material/job-view/ir.md',

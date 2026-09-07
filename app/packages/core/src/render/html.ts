@@ -234,8 +234,53 @@ export function renderBlock(
   const number = b.attrs['data-number'];
   const label = number ? `<span class="n">${esc(number)}.</span> ` : '';
   const pictos = renderPictos(b, images);
+  /*
+   * A heading on the original worksheet is a heading on the adapted one (`037` FR-3501).
+   *
+   * ## The sixteenth field nobody read, and this one reached the paper
+   *
+   * `ingest/to-ir.ts` has written `data-heading="true"` since it was written, and nothing
+   * here ever looked at it — so «Los ecosistemas» came out as a paragraph and **the sheet
+   * had no headings at all**. Measured, not assumed: a conformance check found zero WCAG
+   * A/AA violations on that sheet, because valid HTML that says something else is still
+   * valid HTML.
+   *
+   * It is not cosmetic. For a learner with an executive-function barrier headings are how
+   * a page becomes navigable — and `recipes/core/signpost-the-page.md` is a core recipe
+   * firing on `EJE>=2` that promises exactly that, so the corpus promised signposting and
+   * this function flattened it. For a learner using a screen reader they are the primary
+   * way of moving through a document.
+   *
+   * ## Inside the section, not instead of it
+   *
+   * The section carries the id, the classes and the whole `data-*` set — the recipe and
+   * the axis that justify each change (Principle VI). A bare `<h2>` here would drop all of
+   * it, turning «a change that states which recipe justifies it» into one that used to.
+   *
+   * ## `h2`, and every heading at the same level
+   *
+   * The IR marks *that* a block is a heading and carries **no level**. Deriving one from
+   * order — first is the title, the rest are inside it — would assert that «Parte 2» is
+   * contained in «Parte 1», which the source never said: adapting the *how* does not
+   * include inventing a structure the *what* never had (Principle III, FR-3502).
+   *
+   * And no `<h1>`: there is no document title to be one (`opts.title` is never passed and
+   * defaults to a constant), and inventing one is FR-3503. A best-practice checker will
+   * keep asking for a level-one heading and keep not getting one — the honest answer,
+   * with the content question behind it recorded as BACKLOG G59.
+   *
+   * ## Its text is text
+   *
+   * `esc`, not `md.render` (Principle IX, FR-3505). A heading's text comes from a
+   * document, and a document is never an instruction — nor a link, nor a style. Rendering
+   * it as markdown would make a heading a second parsing surface, where a `[link](…)` or
+   * a stray `#` in the source talks its way into structure.
+   */
+  const inner = b.attrs['data-heading'] === 'true'
+    ? `<h2>${esc(b.content.trim())}</h2>`
+    : md.render(b.content);
   return `<section id="${esc(b.id)}" class="${esc(cls)}"${data}>${label}`
-    + `${md.render(b.content)}${pictos}${answerSpace(b)}</section>`;
+    + `${inner}${pictos}${answerSpace(b)}</section>`;
 }
 
 /**
