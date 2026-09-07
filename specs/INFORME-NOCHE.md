@@ -848,6 +848,45 @@ páginas, es que **no hay dónde ponerlas** — `jobIR(job)` no toma índice de 
 Afirmado también sobre su **aridad**, que es lo que cambiaría el día que alguien implemente
 las partes, para que ese día sea una decisión y no un parámetro que aparece.
 
+### El barrido de afirmaciones rancias, y la guarda que sale de él
+
+Las dos cosas que acababan de pagar —la nota de `025` T009 diciendo «Not done» cuando ya
+estaba, y FR-1010 contando abierta sin estarlo— apuntaban a un problema de clase: **las
+notas de tareas hacen afirmaciones que nadie comprueba**. Así que barrí las 45 tareas
+abiertas de las 35 specs.
+
+**`035` T020 decía «BLOQUEADA: `034` no está implementada todavía»** y llevaba un día
+siendo falso. Y al ir a coordinarse salió algo peor: **`launchCheck` no tenía ningún
+llamante**. Escrita, documentada, probada y cableada a nadie — «comprobar al arrancar» era
+un requisito con implementación y sin nadie que la invocara, y es mío de anoche. La otra
+promesa de `034` T024, «una sola implementación compartida con el botón», tampoco era
+cierta: el trabajo vivía en el cuerpo de un manejador, que es exactamente por lo que la
+comprobación al arrancar no tenía a dónde ir.
+
+Arreglado: `lookForUpdate` es una función, el manejador la delega, el arranque la llama, y
+**no dispara durante un ensayo** —lo que afirma `035` es cero peticiones en el único camino
+construido para ser demostrablemente offline— devolviendo `ran: false` **sin sellar la
+semana**, porque sellarla dejaría sin comprobación hasta el lunes siguiente a quien ensaye
+un lunes.
+
+**Y de ahí sale la guarda durable** (`ui/test/exports-have-readers.test.ts`). Barre los 486
+exports de `ui/src` y `packages/shell/src` buscando los que ningún otro módulo del producto
+alcanza, y **los tests no cuentan como lector** — ése es el punto: `launchCheck` estaba
+probada y los tests pasaban mientras la funcionalidad no existía. Salieron **28**, que son
+tres problemas y no un número: diecisiete hooks de datos que nadie llama (para la mayoría
+el hook es el único lector de su canal, así que manejador + preload + hook son un camino
+muerto de tres capas), un componente entero más cuatro restos de las mudanzas de `020`, y
+seis ayudantes del proceso principal. No los borro: varios de esos canales se llaman
+directamente desde `e2e/`, así que quitar el camino tiene un radio que quiere revisión.
+Congelados en G58 con sus nombres — la lista puede encoger y no crecer.
+
+La guarda cazó su primer error en la primera tirada, y era **mi inventario**.
+
+**Y `021` T040**: por tipo, la pregunta que aplica y ninguna otra. La mitad positiva estaba
+recorrida; la negativa —ni una caja para un tipo que no cuenta nada, y ninguna etiqueta de
+otro tipo dejada atrás— es la que faltaba y está a un `hidden` de ser una pregunta que
+Rampa parece necesitar contestada.
+
 ## Saltados y por qué
 
 _(nada todavía)_
@@ -1774,8 +1813,8 @@ Se acumulan y ninguna la puedo hacer yo:
 | | |
 |---|---|
 | `npx tsc --noEmit` | verde (línea base) |
-| `npx vitest run` | verde — 2.458 casos |
-| `npm run test:e2e` | verde — 252 casos |
+| `npx vitest run` | verde — 2.463 casos |
+| `npm run test:e2e` | verde — 254 casos |
 | `scripts/check-fr-coverage.sh` | verde (línea base) |
 | `scripts/check-spec-kit.sh` | verde (línea base) |
 | `scripts/validate-recipes.sh` | verde — 19 recetas |
