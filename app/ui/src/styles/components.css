@@ -631,12 +631,34 @@ body { container: window / inline-size; }
 
 /* The one permitted <pre>: a licence, whose line breaks are part of the
    document. Reflowing a legal notice would change it. */
-.licence {
+/* Preformatted text, of which the design system permits exactly two — and both for the
+   same reason: their line breaks are **part of the document**.
+
+   `.licence` is a legal notice; reflowing it would change it.
+   `.logtail` is the log (`036` FR-3407): each line is one record, and a record split
+   across two lines or joined with the next is a record that reads as something else.
+
+   Two classes and not one shared: a log is not a licence, and a class name that means
+   «licence» carrying a diagnostic is the naming drift this repository keeps finding. The
+   shape is identical today and may not stay that way — a log wants a scroll and a licence
+   wants to be read once. */
+.licence, .logtail {
   white-space: pre-wrap; font-family: var(--font-mono); font-size: var(--text-xs);
   color: var(--ink-soft); margin: var(--s3) 0 0; max-height: 320px; overflow: auto;
   background: var(--surface); border: 1px solid var(--line);
   border-radius: var(--radius-control); padding: var(--s3);
 }
+
+/* And the log wraps rather than scrolling sideways: a 200-line block is the widest thing
+   «Acerca de» has ever held, and `013` FR-1115 says nothing scrolls the page sideways.
+   `pre-wrap` above does the wrapping; this stops a single very long line from widening
+   the column that holds it (SC-3405). */
+.logtail { overflow-wrap: anywhere; min-width: 0; }
+
+/* Y se ve cuando tiene el foco. Entra en el orden de tabulación porque tiene scroll y
+   nada enfocable dentro (WCAG 2.1.1), así que necesita anillo como cualquier otra parada
+   — una parada invisible es peor que ninguna. */
+.logtail:focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
 
 .quote { margin: 0; padding: var(--s2) var(--s3); border-left: 3px solid var(--draft-line);
   background: var(--paper); border-radius: 0 var(--radius-control) var(--radius-control) 0;

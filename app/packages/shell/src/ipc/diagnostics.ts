@@ -1,9 +1,10 @@
 import { app, shell } from 'electron';
-import { appendFile, mkdir, readFile, stat, rename } from 'node:fs/promises';
-import { join, dirname } from 'node:path';
+import { appendFile, mkdir, readFile } from 'node:fs/promises';
+import { dirname } from 'node:path';
 import { logger, formatLine, type LogRecord } from '@rampa/core';
 import { handle } from './wrap.js';
 import { networkLog } from '../net-counter.js';
+import { logFileIn, rotateIfLarge } from '../log-file.js';
 
 /**
  * The log lives in the OS application-data directory, NOT in the vault.
@@ -14,21 +15,37 @@ import { networkLog } from '../net-counter.js';
  * never contains a learner's name, her material, or anything that could
  * reproduce them.
  */
-const LOG_MAX_BYTES = 2_000_000;
-const logPath = () => join(app.getPath('userData'), 'logs', 'rampa.log');
-
-async function rotateIfLarge(path: string): Promise<void> {
-  try {
-    if ((await stat(path)).size > LOG_MAX_BYTES) await rename(path, `${path}.1`);
-  } catch { /* no log yet */ }
-}
+/*
+ * Where it lives and what bounds it are `../log-file.ts` since `036` T003a — extracted
+ * **unchanged**, taking the directory as an argument, so FR-3402 and FR-3403 can be
+ * asserted behaviourally instead of by reading source text. Eighth time the
+ * Electron-surface bound has produced that move.
+ */
+const logPath = () => logFileIn(app.getPath('userData'));
 
 export async function startLogging(): Promise<void> {
   const path = logPath();
-  await mkdir(dirname(path), { recursive: true });
-  await rotateIfLarge(path);
+  /*
+   * **Setting up the log may never stop the application starting** (`036` FR-3405).
+   *
+   * This was `await mkdir(...)` unguarded, and `main.ts` calls `startLogging()` as the
+   * first thing inside `whenReady` — so a locked profile, a full disk or a school-issued
+   * read-only folder aborted the whole startup chain. **No window at all.** Found by
+   * `036` T017 on its first run: the requirement said «a failure to write the log MUST
+   * NOT break, block or interrupt anything», and the one place it was not honoured was
+   * the place that costs everything.
+   *
+   * The file's own rule was already written for the sink — «never break the app for a
+   * log» — and the setup path had no such guard. Same rule, the other half.
+   */
+  const ready = await mkdir(dirname(path), { recursive: true })
+    .then(() => true).catch(() => false);
+  if (ready) await rotateIfLarge(path);
 
   logger.setLevel(app.isPackaged ? 'info' : 'debug');
+  // The sink is installed either way: `appendFile` swallows its own failure, so a log
+  // directory that appears later starts working without a restart. Installing it only
+  // when `ready` would make a transient failure permanent.
   logger.addSink((r: LogRecord) => { void appendFile(path, formatLine(r) + '\n', 'utf8').catch(() => { /* never break the app for a log */ }); });
   if (!app.isPackaged) logger.addSink((r) => { process.stdout.write(formatLine(r) + '\n'); });
 

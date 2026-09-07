@@ -468,13 +468,14 @@ huecos:
 - `pictograms:images`
 - `job:revisions`
 - `cost:wouldBeUnusual`
-- `diagnostics:path`, `diagnostics:reveal`, `diagnostics:tail`
+- ~~`diagnostics:path`, `diagnostics:reveal`, `diagnostics:tail`~~ — **leídos desde el
+  2026-09-07**: son la sección «Si algo va mal» de «Acerca de», que es `036-el-registro`.
 
-**Los tres de diagnóstico no los borro, y es una decisión tuya.** Son lo único que podría
-llevar a una maestra a su propio registro de errores, y ahora mismo **no hay forma de
-llegar a él**. Ningún requisito lo pide, así que no lo invento: o se borran los tres, o se
-decide que «mándame el registro cuando algo falle» es algo que la herramienta hace y
-entonces es una pantalla con su spec. Lo que no puede quedarse es en medio.
+**Los tres de diagnóstico eran una decisión de producto y se tomó.** Eran lo único que
+podía llevar a una maestra a su propio registro de errores, y no había forma de llegar a
+él; ningún requisito lo pedía, así que no lo inventé — Carlos eligió la pantalla, y salió
+`036`, que además escribió las reglas del registro que llevaban meses viviendo sólo en
+comentarios. Quedan seis canales sin lector, no nueve.
 
 ### Cómo esto se convierte en trabajo, y por qué no se ha convertido todavía
 

@@ -7,6 +7,7 @@ import { Loaded } from '../data/Loaded.js';
 import { Page } from '../shell/Page.js';
 import { Wordmark } from '../components/Logo.js';
 import { Callout } from '../components/Callout.js';
+import { LogSection } from './LogSection.js';
 
 /**
  * Both licences and the corpus attribution ship here (research R8). The
@@ -226,10 +227,25 @@ export function AboutScreen() {
             </summary>
             {/* A licence is legitimately preformatted text: its line breaks are
                 part of the document, and reflowing it would change a legal
-                notice. This is the one <pre> the design system permits. */}
+                notice. One of **two** `<pre>`s the design system permits since `036`:
+                the other is the log's tail, for the same reason — each line is one
+                record. Corrected here rather than left saying «the one», because a
+                comment that has stopped being true is what `036` exists about. */}
             <pre className="licence">{lic.notice}</pre>
           </details>
         )}
+      </section>
+
+      {/*
+        El registro, último y en su propio componente (`036` T011).
+
+        Último porque es lo que se busca cuando algo ha ido mal, no lo que se lee un
+        martes. Y en su propio componente porque esta pantalla ya lleva cuatro asuntos en
+        230 líneas: un quinto dentro es cómo una pantalla se convierte en un fichero que
+        nadie revisa.
+      */}
+      <section className="stack gap3">
+        <LogSection />
       </section>
     </Page>
   );
