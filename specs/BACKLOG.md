@@ -413,6 +413,72 @@ every moment should have a spec. What it added beyond the seams pass:
    journey sentence → T094). Handover *import* (004 US2) recorded as deliberately
    deferred rather than silently missing.
 
+## G54 · La navegación cambió de raíz, y conviene que se lea como una decisión
+
+**Anotado 2026-09-07 al cerrar `020-el-alumno-es-el-sitio`** (su T041). Dentro de seis
+meses el historial dirá que el nivel superior pasó de cinco entradas a dos y que una
+especificación entera —`016-una-puerta`— vio retirado su primer requisito. Sin esto se
+lee como deriva.
+
+### Lo que había
+
+Carlos, con la aplicación delante: «no tiene sentido el botón de preparar material… Todo
+parte siempre del alumno […] necesito que rediseñemos completamente la navegación, así
+es imposible usar esta herramienta.»
+
+Tenía razón y el código decía por qué. Cuatro cosas a la vez:
+
+1. **El editor de perfil se había convertido en el centro del alumno.** El expediente, la
+   guía, el borrador de la ACNS, la ayuda con la significativa, el traspaso y el borrado
+   eran **seis tarjetas apiladas debajo del formulario de editar**. Para ver lo que le
+   habías preparado a un niño había que entrar a *editarlo* y bajar seis tarjetas.
+2. **Dos puertas que preguntaban lo mismo y no se conocían.** «Preparar material»
+   preguntaba *¿para quién?* y «Mis alumnos» también empezaba por el alumno. Elegías a
+   Lucía en la puerta y no estabas «dentro de Lucía» en ningún sentido.
+3. **El raíl mezclaba cinco categorías** como si fueran hermanas: una acción, una
+   entidad, datos, un ajuste e información.
+4. **No existía «estoy dentro de un alumno».** `App.tsx` era un `useState<View>` plano
+   con dieciséis vistas y `LearnersScreen` escondía otras cinco en estado local. Veinte
+   destinos, cero jerarquía.
+
+### Por qué retirar FR-1401 no revoca su argumento
+
+`016` FR-1401 decía que **la primera pantalla debe preguntar qué tipo de trabajo es**.
+Carlos lo eligió él en su día, en `/speckit-clarify`, contra mi recomendación, y por el
+motivo correcto: *«ella llega pensando en un niño»*.
+
+Ese motivo se sostiene; la pantalla no. **Si llega pensando en un niño, el niño es el
+sitio, no la primera pregunta de un formulario.** La sustancia de FR-1401 —adaptar y
+componer ofrecidas como iguales, sin ninguna preseleccionada— sigue viva como `020`
+FR-1812, dentro del alumno. FR-1402 a FR-1412 no se tocaron.
+
+### Las dos lecciones que valen para la siguiente
+
+**Una.** Los dos defectos de navegación que este proyecto encontró en su propia
+navegación —la puerta olvidando qué niño era al pulsar «Volver», «Mis alumnos» sin
+efecto desde dentro de un perfil— eran **los dos estado sostenido en una pantalla que
+navegar destruye**. La ruta es ahora un reductor probado y no hay un segundo sitio que
+decida dónde está.
+
+**Dos.** Mudar cosas es cuando se pierden las negativas. Al retirar la puerta el
+checkpoint decía «nada de lo que hacía se ha perdido» y **era falso**: el cuadro de pegar
+texto se había quedado sin ruta, porque el paso nuevo trae un fichero. Lo encontró
+borrar las pantallas y volver a recorrerlas, no leer el diff. Y la pantalla de la
+adaptación significativa **no tenía ningún e2e**, así que «al mudarla sigue negándose» era
+una suposición durante toda la mudanza; ahora sus dos cerraduras están afirmadas y
+verificadas por mutación.
+
+### Lo que sigue abierto
+
+- **El orden de la lista con treinta alumnos.** No ordena por ningún eje —FR-1821 lo
+  prohíbe y hay un test que lo afirma cambiando todos los ejes y comprobando que el orden
+  no se mueve—, pero el orden que sale no encoda nada y con treinta cuesta encontrar a
+  uno. Ordenar por el nombre no compara a nadie y sería más fácil de barrer. Es una
+  decisión de producto y no la tomo yo: queda anotada.
+- **Un recorrido con clave de verdad** (`020` T040): tres hojas, una cifra de coste, una
+  firma cada vez, y una corrección después nombrando las hojas caducadas por alumno.
+  Necesita dinero y una persona.
+
 ## G53 · La firma del corpus, retirada el mismo día que se escribió
 
 **Cerrado 2026-09-06**, y anotado porque el razonamiento sirve para lo siguiente.
