@@ -47,6 +47,11 @@ next — a way in to a log that leaks a name is worse than no way in.
       string under an unlisted key is written through. Asserted as the current behaviour
       with the reason written — extending the key list is FR-3414's out-of-scope, and a
       test that pretended otherwise would make the next reader think it is handled
+- [ ] T003a Extract `logFileIn(dir)` and `rotateIfLarge(path, maxBytes)` into
+      `app/packages/shell/src/log-file.ts`, **unchanged**, taking what they need as
+      arguments — so FR-3402 and FR-3403 can be asserted behaviourally instead of by
+      reading source text. Off the Electron surface, which is the move this project's
+      boundary bound has forced seven times, and `diagnostics.ts` composes them
 - [ ] T003 Write `app/packages/shell/test/log-rules.test.ts`: the log path is **outside any
       vault** (FR-3402), checked as a path relationship and not as a string — the same
       shape as `024` T022's «by content, not by filename». And **FR-3404**: the uncaught
@@ -219,7 +224,7 @@ it is a separate story instead of a test inside US1.
 | FR-3411 | T009 — zero requests, both stacks. And structurally: this feature adds no channel that sends anything, which `contracts/diagnostics.md` states and T021's guard keeps true |
 | FR-3412 | T009 · and `034`'s declared-destinations test already fails if the list grows |
 | FR-3413 | T009 |
-| FR-3414 | Satisfied **by absence**, and it is the most consequential row here: no task touches `packages/core/src/log.ts` or `packages/shell/src/ipc/diagnostics.ts`. T001–T005 assert their behaviour without changing it. A specification that quietly redesigned the thing it was written to describe would be worse than none |
+| FR-3414 | Satisfied **by absence of behaviour change**, and it is the most consequential row here: nothing changes *what* is written, *at what level*, or *how it is redacted*. T001–T005 assert the existing behaviour. **Amended 2026-09-07 while implementing**: the first version of this row said «no task touches `log.ts` or `diagnostics.ts`», which was my paraphrase and stronger than the requirement — and it turned out to forbid making FR-3402 and FR-3403 testable at all, because `logPath` and `rotateIfLarge` are private and one of them reaches Electron. T003a extracts them **unchanged**, taking the directory as an argument, which is what this bound has forced seven times before. A requirement paraphrased into something stricter than it says is a requirement nobody can satisfy, and the false claim in a coverage table is the defect class this session has spent the day hunting |
 
 | Success criterion | Where |
 |---|---|
