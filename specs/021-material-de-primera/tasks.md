@@ -161,9 +161,19 @@ material fits, and FR-1928 makes it say so.
       sentence, and it belongs where she reads what happened *(done, first among the notes: «es una estimación mía, no una promesa: cuánto tarda este alumno en una página lo sabes tú y no yo».)*
 - [x] T039 [P] What she said reaches the material and is available to `017`'s
       temporalización (FR-1929) — one answer, used twice *(done — written to the material as `sessions` and `minutes_per_session`, where `017`'s temporalización reads them.)*
-- [ ] T040 Assert per kind that the screen asks the right question and **no other**
+- [x] T040 Assert per kind that the screen asks the right question and **no other**
       (SC-1909), over the rendered interface: this is a claim about what she is asked,
-      which a unit test cannot see
+      which a unit test cannot see. Done 2026-09-07 in `e2e/compose-kind.spec.ts`.
+      The positive half was already walked — the label case reads «cuántas preguntas»
+      against «cuántos ejercicios» over the four kinds. **The negative half is what this
+      adds**, and it is the whole point: for a kind with nothing to count, no box at all
+      and **none of the other kinds' labels left behind either**, which is one `hidden`
+      away from being a question Rampa appears to need answered. Verified by mutation:
+      making the box unconditional fails it.
+      And it checks that «no other question» did not take away the two she always gets
+      asked (FR-1926) — sessions and minutes, including for the kind that counts nothing,
+      where they are the only way she has to say how much she wants (FR-1927) — with the
+      estimate said out loud (FR-1928): «cuánto tarda él en una página lo sabes tú»
 
 ---
 

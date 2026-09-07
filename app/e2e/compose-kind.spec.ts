@@ -42,6 +42,112 @@ async function seedOne(page: Page, vault: string): Promise<void> {
   await page.getByRole('navigation', { name: 'Secciones de Rampa' }).waitFor({ timeout: 15000 });
 }
 
+/**
+ * Per kind, the right question and **no other** (`021` T040, SC-1909).
+ *
+ * ## Why over the rendered interface and not in a unit test
+ *
+ * The claim is about **what she is asked**, and «asking cuántos ejercicios for a study
+ * text is the interface talking about itself» (FR-1925) is a statement about a screen.
+ * A unit test can check that the corpus says `of: none`; only the window can check that
+ * the box is not there.
+ *
+ * ## And the negative half is the whole point
+ *
+ * «The right question» was already asserted — `compose-kind.spec.ts`'s label case walks
+ * the four kinds and reads «cuántas preguntas» against «cuántos ejercicios». What was
+ * missing is «and no other»: a quantity box for a kind with nothing to count, still
+ * carrying the previous kind's label, is one `hidden` away and reads as a question Rampa
+ * needs answered.
+ */
+test.describe('per kind, the question that applies and no other', () => {
+  /**
+   * The four kinds, and for each: does it count, and in whose words.
+   *
+   * The labels are the corpus's (`instructions/material-kinds.md`), restated here on
+   * purpose — this is the one place where restating the corpus is the assertion rather
+   * than a duplication, because what is being checked is that the screen says what the
+   * Markdown says.
+   */
+  const KINDS = [
+    { door: 'Una ficha o unos ejercicios', counts: 'Cuántos ejercicios de cada cosa' },
+    { door: 'Un examen o una prueba', counts: 'Cuántas preguntas de cada cosa' },
+    { door: 'Una hoja de problemas', counts: 'Cuántos problemas de cada cosa' },
+    /*
+     * `of: none` in the corpus, written **explicitly** rather than by the block being
+     * absent (`021` FR-1927): absence would mean nobody decided. A text has no unit, and
+     * for it the two session numbers are how she says how much she wants.
+     */
+    { door: 'Apuntes o un texto para estudiar', counts: null },
+  ] as const;
+
+  test('the quantity question appears in its own words, or not at all', async () => {
+    const { app, page, vault } = await launch();
+    await seedOne(page, vault);
+    await toPrepare(page, { name: 'Lucía' });
+    await page.locator('.door', { hasText: 'Hacer material para que aprenda' }).click();
+    await page.locator('#objetivos').waitFor();
+
+    // Every label any kind could use, so «no other» is checked against all of them.
+    const allLabels = KINDS.map((k) => k.counts).filter((l): l is string => l !== null);
+
+    for (const kind of KINDS) {
+      await page.locator('.door', { hasText: kind.door }).click();
+
+      if (kind.counts === null) {
+        // Nothing to count: **no box at all**, and none of the other kinds' labels
+        // left behind either.
+        await expect(page.locator('#cuantos'), kind.door).toHaveCount(0);
+        for (const label of allLabels) {
+          await expect(page.getByLabel(label), `${kind.door} still asks «${label}»`)
+            .toHaveCount(0);
+        }
+      } else {
+        await expect(page.getByLabel(kind.counts), kind.door).toBeVisible();
+        // And not a second quantity question wearing another kind's words.
+        for (const other of allLabels.filter((l) => l !== kind.counts)) {
+          await expect(page.getByLabel(other), `${kind.door} also asks «${other}»`)
+            .toHaveCount(0);
+        }
+      }
+    }
+    await app.close();
+  });
+
+  /**
+   * And the two she always gets asked (FR-1926), including the kind that counts nothing.
+   *
+   * Carlos's correction — «ambas cosas, sesiones y minutos por sesión» — is why there are
+   * two numbers and not one. They are her timetable, which she holds with certainty, and
+   * for a study text they are the only way she has to say how much she wants (FR-1927).
+   * So «no other question» must not have taken these away from any kind.
+   */
+  test('how many sessions and how long, for every kind including the one that counts nothing', async () => {
+    const { app, page, vault } = await launch();
+    await seedOne(page, vault);
+    await toPrepare(page, { name: 'Lucía' });
+    await page.locator('.door', { hasText: 'Hacer material para que aprenda' }).click();
+    await page.locator('#objetivos').waitFor();
+
+    for (const kind of KINDS) {
+      await page.locator('.door', { hasText: kind.door }).click();
+      await expect(page.getByLabel('¿Para cuántas sesiones es?'), kind.door).toBeVisible();
+      await expect(page.getByLabel('Minutos por sesión'), kind.door).toBeVisible();
+    }
+
+    /*
+     * And for the kind with nothing to count, what those two do is said as an
+     * **estimate** (FR-1928). «Cuánto tarda él en una página lo sabes tú» is the sentence,
+     * and it matters: a text calibrated to a time that does not hold is worse than a text
+     * with no time on it, and this is the one number in the exchange nobody here knows.
+     */
+    await page.locator('.door', { hasText: 'Apuntes o un texto para estudiar' }).click();
+    await expect(page.getByText(/estimación mía|lo sabes tú/)).toBeVisible();
+
+    await app.close();
+  });
+});
+
 test.describe('what kind of material she wants', () => {
   test('offers the four kinds, with nothing chosen for her', async () => {
     const { app, page, vault } = await launch();
