@@ -130,6 +130,19 @@ export function AdaptScreen({
   const setName = useSetName();
   const newCode = useNewLearnerCode();
   const estimate = useCostEstimate();
+  /**
+   * What the whole batch would cost, said **before** she presses (`005` FR-514).
+   *
+   * Until `020` T024 the only figure on this screen was the unusual-cost gate's, which
+   * by definition appears when the answer is «more than normal». So the ordinary case —
+   * three sheets, an ordinary bill — ran with no figure at all, and FR-514 asks for one
+   * every time, with the number of sheets it covers.
+   *
+   * `null` while it is being asked and when there is nothing to price yet; the line is
+   * simply absent then, because a blank where a price goes reads as free.
+   */
+  const [batchCost, setBatchCost] =
+    useState<{ formatted: string | null; sheets: number } | null>(null);
   const createJob = useCreateJob();
   const verifyJob = useVerifyJob();
   const adapt = useAdapt();
@@ -272,6 +285,30 @@ export function AdaptScreen({
     }
   }, [choices, learners.length]);
 
+  /**
+   * The batch's price, asked when she arrives at the screen that spends it.
+   *
+   * On `verify` and not on `compose`, deliberately: the material is settled by then, so
+   * this is one call rather than one per keystroke, and the figure describes the thing
+   * she is about to send rather than the thing she is still typing.
+   *
+   * It is **not** the figure the gate judges. That one is asked again at press time, for
+   * the learners actually going ahead — the profile notice can send her back and she can
+   * come forward with a different set. Both go through the same `cost:estimate`, which
+   * is now the only place the batch arithmetic lives, so they cannot disagree about how
+   * a batch is priced — only about when it was asked, which is the honest difference.
+   */
+  useEffect(() => {
+    if (stage !== 'verify' || !text.trim() || learners.length === 0) { setBatchCost(null); return; }
+    let live = true;
+    void estimate.run(text.length, learners.length).then((est) => {
+      if (live && est) setBatchCost({ formatted: est.formatted, sheets: learners.length });
+    });
+    return () => { live = false; };
+    // `estimate` is a stable command; including it would re-ask on every render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stage, text, learners.length]);
+
   const startJob = async () => {
     const check = await nameCheck.run(text);
     if (!check) return;  // the failure is on screen already
@@ -320,8 +357,13 @@ export function AdaptScreen({
        * The estimate is for the batch (005 FR-514/515): three ordinary sheets
        * can be an unusual bill, and pricing one of them would let exactly that
        * through the gate that exists to stop it.
+       *
+       * Which is why `who.length` is passed rather than multiplied in here. The
+       * multiplication used to be on this line, next to a bare `20_000`, and `020` T024
+       * needed the same number on screen before the press — two copies of it would be a
+       * screen quoting one price and refusing at another.
        */
-      const est = await estimate.run((text.length + 20_000) * who.length);
+      const est = await estimate.run(text.length, who.length);
       /*
        * `formatted !== null` written out rather than relied on (2026-09-01).
        *
@@ -604,6 +646,31 @@ export function AdaptScreen({
             on the notice added twenty minutes earlier, which is the whole argument
             for having written the test.
           */}
+          {/*
+            One figure for the whole batch, with the number of sheets it covers, on the
+            row she is about to press (`005` FR-514).
+
+            Next to the control rather than in a callout at the top: `012` FR-1006 made
+            that argument for the exam constraint and it is the same one — a notice above
+            the form is read once and then becomes furniture, and this sentence has to be
+            adjacent to the commitment.
+          */}
+          {batchCost ? (
+            <p className="small" role="status">
+              {batchCost.sheets === 1 ? 'Una hoja' : `${batchCost.sheets} hojas`}
+              {batchCost.formatted !== null
+                ? ` · unos ${batchCost.formatted} en total.`
+                /*
+                 * No price, no figure — the rule this whole module was rewritten around
+                 * on 2026-09-01. A teacher on a free service was being shown euros from
+                 * Anthropic's price list, so «no lo sé» is said out loud instead of a
+                 * blank, which she would read as «no cuesta nada».
+                 */
+                : '. No puedo decirte lo que costará: tu servicio no tiene tarifa'
+                  + ' publicada aquí.'}
+            </p>
+          ) : null}
+
           <div className="row">
             <button className={gateOpen ? 'btn' : 'btn btn-primary'}
                     onClick={() => void runAdapt()}>{es.adapt.verifyOk}</button>

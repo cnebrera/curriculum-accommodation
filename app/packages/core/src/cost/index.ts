@@ -151,3 +151,28 @@ export const isUnusuallyExpensive = (estimateCents: number, l: CostLedger): bool
  */
 export const addCost = (a: number | null, b: number | null): number | null =>
   a === null || b === null ? null : a + b;
+
+/**
+ * How big a batch's prompt is, for the one estimate that covers all of it
+ * (`005` FR-514/FR-515, `020` T024).
+ *
+ * One extraction, N adaptations (Principle IV): the material is read once, and then a
+ * prompt is assembled **per learner** carrying that material plus his profile, the
+ * recipes that fire for him and the corpus the run needs. So the batch is the per-sheet
+ * prompt times the number of sheets, and not the material plus a little.
+ *
+ * `PER_SHEET_OVERHEAD` is deliberately crude, like everything else here: this figure
+ * decides whether to *ask her*, and the real cost comes from the provider's own usage
+ * report once the job has run. What it must not be is *per batch* — pricing three sheets
+ * as one is exactly how «three ordinary sheets are an unusual bill» gets past the gate
+ * that exists to catch it.
+ *
+ * It lives here rather than at the call site because there are two call sites and they
+ * must agree: the figure she reads before pressing, and the figure the gate judges. Two
+ * copies of this arithmetic would be a screen that quotes one price and refuses at
+ * another.
+ */
+export const PER_SHEET_OVERHEAD = 20_000;
+
+export const batchPromptChars = (materialChars: number, sheets: number): number =>
+  (materialChars + PER_SHEET_OVERHEAD) * Math.max(0, sheets);

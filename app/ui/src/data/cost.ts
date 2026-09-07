@@ -24,8 +24,13 @@ export function useMonthCost(): Loadable<MonthCost> {
  *
  * `formatted: null` when her service's model has no price here; the caller must not
  * print a euro figure it was not given.
+ *
+ * **The material and the number of sheets, not a total** (`020` T024): the batch rule
+ * of `005` FR-515 — three ordinary sheets can be an unusual bill — belongs on the side
+ * that judges it, not in a screen multiplying by `learners.length` before it asks.
  */
 export function useCostEstimate() {
-  return useCommand((chars: number) =>
-    window.rampa.cost.estimate(chars) as Promise<{ unusual: boolean; formatted: string | null }>);
+  return useCommand((materialChars: number, sheets: number) =>
+    window.rampa.cost.estimate(materialChars, sheets) as
+      Promise<{ unusual: boolean; formatted: string | null }>);
 }

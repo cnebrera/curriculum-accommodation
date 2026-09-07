@@ -511,7 +511,8 @@ const api = {
   cost: {
     month: () => invoke('cost:month'),
     wouldBeUnusual: (cents: number) => invoke('cost:wouldBeUnusual', cents),
-    estimate: (promptChars: number) => invoke('cost:estimate', promptChars),
+    estimate: (materialChars: number, sheets: number) =>
+      invoke('cost:estimate', materialChars, sheets),
   },
 };
 

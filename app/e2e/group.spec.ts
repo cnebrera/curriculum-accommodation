@@ -62,9 +62,10 @@ test.describe('one worksheet, several learners', () => {
     await seedThree(page, vault);
 
     /*
-      Through the door since `016`: the rail opens it, and it asks learner → work →
-      material before either branch. The learner picked there is the first, not the
-      only one — the checkboxes below are still where she adds the rest (FR-1411).
+      Through the learner since `020`: «Preparar» asks the branch and the material, and
+      the child is settled by having been entered. He is the first and not the only one
+      — «¿para quién más?» is step 4, and these checkboxes are still where the rest are
+      added on the screen that runs it (FR-1411).
     */
     await throughPrepareToAdapt(page);
     const boxes = page.locator('.fieldset-bare input[type="checkbox"]');
@@ -77,6 +78,42 @@ test.describe('one worksheet, several learners', () => {
     await boxes.nth(1).check();
     await boxes.nth(2).check();
     for (let i = 0; i < 3; i++) await expect(boxes.nth(i)).toBeChecked();
+
+    await app.close();
+  });
+
+  /**
+   * FR-514 · one figure for the whole batch, before it runs.
+   *
+   * The gate for an unusual bill has been there since `006`, and by definition it only
+   * speaks when the answer is «more than normal» — so the ordinary batch, which is most
+   * of them, ran with no figure at all. `020` T024 is the other half: she is told what
+   * three sheets will cost while three sheets are still a decision.
+   *
+   * Asserted as **three** rather than as a euro amount. The amount depends on the price
+   * table and on her service, and pinning it would make this test a copy of `PRICES`;
+   * what must not drift is that the figure covers the batch she is about to run. A sheet
+   * count of one here would be the exact defect `005` FR-515 was written against,
+   * arriving through the screen instead of through the gate.
+   */
+  test('the price she is told covers every sheet, not the first one', async () => {
+    const { app, page, vault } = await launch();
+    await seedThree(page, vault);
+    await throughPrepareToAdapt(page);
+
+    // No proper noun in it: «Los ríos de España» stopped the walk dead on the
+    // name check, which is `007`'s notice doing its job to a test that had not
+    // thought about it.
+    await page.locator('#text').fill('Las plantas fabrican su alimento con la luz del sol.');
+    const boxes = page.locator('.fieldset-bare input[type="checkbox"]');
+    await boxes.nth(1).check();
+    await boxes.nth(2).check();
+
+    await page.getByRole('button', { name: 'Continuar' }).click();
+
+    const said = page.getByRole('status').filter({ hasText: /hoja/ });
+    await expect(said).toContainText('3 hojas');
+    await expect(said).toContainText(/en total|tarifa/);
 
     await app.close();
   });

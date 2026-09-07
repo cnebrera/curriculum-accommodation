@@ -8,7 +8,8 @@ import { checkProvenance, findUnaccountedBlocks, parseRecipeRef } from '../src/i
 import { renderHTML, presentationFor } from '../src/render/html.js';
 import { checkOutput, checkEssentialFigures } from '../src/render/check.js';
 import { checkPhotocopy, contrastRatio } from '../src/render/photocopy.js';
-import { costCents, formatCost, isUnusuallyExpensive, addCost, monthTotal } from '../src/cost/index.js';
+import { costCents, formatCost, isUnusuallyExpensive, addCost, monthTotal,
+         batchPromptChars, PER_SHEET_OVERHEAD } from '../src/cost/index.js';
 import { buildReport } from '../src/report/index.js';
 import { buildIndex } from '../src/memory/index.js';
 import { buildPacket, packetToMarkdown, toShareable, isStale } from '../src/memory/handover.js';
@@ -322,6 +323,37 @@ describe('cost is shown in the units of the worry', () => {
     const ledger = { month: '2026-09', jobs: [1, 2, 3].map((n) => ({ job: `j${n}`, cents: 5, at: '' })) };
     expect(isUnusuallyExpensive(200, ledger)).toBe(true);
     expect(isUnusuallyExpensive(6, ledger)).toBe(false);
+  });
+
+  /**
+   * `005` FR-515 · three ordinary sheets can be an unusual bill.
+   *
+   * The whole point of this function is the **times**: the material is read once and a
+   * prompt is assembled per learner, so a batch of three costs about three times a
+   * batch of one. Priced as one it would slide straight past the gate that exists for
+   * exactly that case, which is why this is asserted as a ratio rather than against a
+   * hard-coded total — a total would pin `PER_SHEET_OVERHEAD` and say nothing about the
+   * property that matters.
+   */
+  it('prices a batch as one prompt per sheet, not one prompt', () => {
+    const one = batchPromptChars(1_000, 1);
+    const three = batchPromptChars(1_000, 3);
+
+    expect(one).toBe(1_000 + PER_SHEET_OVERHEAD);
+    expect(three).toBe(one * 3);
+    // And the overhead is real: an empty batch of three is not free of prompt.
+    expect(batchPromptChars(0, 3)).toBe(PER_SHEET_OVERHEAD * 3);
+  });
+
+  /**
+   * Nothing to price is zero, and never a bare overhead.
+   *
+   * `learners.length === 0` reaches this on the way to a run that `runAdapt` refuses
+   * anyway, and «unos 0,02 €» for a batch of nobody is a figure about nothing.
+   */
+  it('a batch of nobody costs nothing', () => {
+    expect(batchPromptChars(5_000, 0)).toBe(0);
+    expect(batchPromptChars(5_000, -1)).toBe(0);
   });
 });
 

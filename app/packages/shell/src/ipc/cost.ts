@@ -1,4 +1,5 @@
-import { VAULT, formatCost, monthTotal, isUnusuallyExpensive, costCents, type CostLedger } from '@rampa/core';
+import { VAULT, formatCost, monthTotal, isUnusuallyExpensive, costCents,
+         batchPromptChars, type CostLedger } from '@rampa/core';
 import { currentVault } from './vault.js';
 import { activeProvider } from './keys.js';
 import { handle } from './wrap.js';
@@ -66,10 +67,20 @@ export function registerCostIpc(): void {
    *
    * `cents: null` when her service's model has no published price here. **Not unusual
    * either**: a gate that cannot see a number must not claim the number is large.
+   *
+   * ## Why it takes the sheet count rather than a total (`020` T024)
+   *
+   * It used to take assembled characters, and the one screen that called it multiplied
+   * by the number of learners itself — so the batch rule of `005` FR-515 lived in a
+   * renderer, next to a magic `20_000`, and the figure she read before pressing would
+   * have been a *second* copy of that arithmetic. Now the caller says what the material
+   * is and how many sheets it makes, and the size of the batch is worked out in one
+   * place by `batchPromptChars`.
    */
-  handle('cost:estimate', async (promptChars: number) => {
+  handle('cost:estimate', async (materialChars: number, sheets: number) => {
     const active = await activeProvider();
-    const cents = active ? estimateCents(promptChars, active.provider.defaultModel) : null;
+    const chars = batchPromptChars(materialChars, sheets);
+    const cents = active ? estimateCents(chars, active.provider.defaultModel) : null;
     return {
       cents,
       formatted: cents === null ? null : formatCost(cents),

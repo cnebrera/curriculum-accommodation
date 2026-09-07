@@ -135,9 +135,13 @@ worksheet for three, and confirm the source was read once.
       section, with the learner's menu still visible and the current step marked
 - [x] T023 [US2] Step 4, «¿para quién más?», with the entered learner already included
       and no re-asking of the work or the material (FR-1814, FR-1816)
-- [ ] T024 [US2] The batch's cost stated as one figure before the run, with the
+- [x] T024 [US2] The batch's cost stated as one figure before the run, with the
       unusual-cost gate considering the batch (`005` FR-514/FR-515) — which is why step 4
-      comes after verification and not before
+      comes after verification and not before. FR-515 was already there and FR-514 was
+      not: the only figure on the screen belonged to the gate, which by definition speaks
+      only when the answer is «more than normal», so the ordinary batch ran with no price
+      at all. The batch arithmetic moved out of the renderer into `batchPromptChars`, so
+      the figure she reads and the figure the gate judges cannot disagree
 - [ ] T025 [US2] Step 5 reviews and signs **per learner**, with no action anywhere that
       signs two sheets (FR-1815)
 - [ ] T006 [US2] `packages/shell/src/jobs/ingest.ts` writes `for_learner` into `ir.md`
