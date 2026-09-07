@@ -413,6 +413,47 @@ every moment should have a spec. What it added beyond the seams pass:
    journey sentence → T094). Handover *import* (004 US2) recorded as deliberately
    deferred rather than silently missing.
 
+## G58 · Veintiocho exports que no lee nadie, y la guarda que los cuenta
+
+**Anotado 2026-09-07**, y la guarda ya está: `ui/test/exports-have-readers.test.ts`.
+
+«Un campo escrito, tipado y leído por nada» es el defecto insignia de este proyecto
+(G36). Se ha encontrado a mano al menos quince veces: doce campos de perfil, `route.flow`,
+`PrepareFlow.name`, `HandoverReview.name`, `isBringing`, el progreso de la descarga de
+pictogramas — y el 2026-09-07, **un día después de escribirla**, `launchCheck`: la
+implementación entera de un requisito sin nadie que la llamara.
+
+`props-are-read.test.ts` cubría los props de React. Faltaba la otra forma, y al barrer los
+486 exports de `ui/src` y `packages/shell/src` salieron **28 sin ningún lector en el
+producto**. Los tests **no cuentan como lector**, y ése es justo el punto: `launchCheck`
+estaba escrita, documentada *y probada*, y los tests pasaban mientras la funcionalidad no
+existía.
+
+### Lo que hay, que son tres problemas y no un número
+
+1. **Diecisiete hooks de datos que nadie llama** (`useAxes`, `useServices`, `useChecklist`,
+   `useComposeDocs`, `useLearner`, `useNameStatus`, `useRecordSearch`, `useConnections`,
+   `useExtraction`, `useBlocks`, `usePageImage`, `useReportData`, `useSignedOff`,
+   `useEnsayoState`, `useSaveDisplayPrefs`, `useStructureCandidates`, `useCurrentProvider`).
+   Para la mayoría el hook es el **único** lector de su canal, así que el manejador, la
+   línea del preload y el hook son un camino muerto de tres capas.
+2. **Un componente entero** (`Segmented`) que nada renderiza, más `insideLearner`,
+   `flowReady`, `clearState` y `DEFAULTS` — restos de las dos mudanzas de `020`.
+3. **Seis ayudantes del proceso principal** sin llamante: `allSucceeded`,
+   `failedLearners`, `currentKey`, `recordPathFor`, `KEY_HEADING`, `resetNetworkLog`.
+
+### Por qué no se han borrado en el mismo sitio donde se encontraron
+
+Varios de esos canales se llaman **directamente desde `e2e/`** con
+`page.evaluate(() => window.rampa…)`, así que quitar el camino tiene un radio que quiere
+revisión y no una limpieza al final de una sesión larga. La guarda congela la lista: puede
+**encoger y no crecer**, y un huérfano nuevo falla en CI con su nombre y su fichero.
+
+Congelar deuda es peor que arreglarla y muchísimo mejor que no verla — y la propia guarda
+cazó su primer error en la primera tirada, que era mi inventario: `looksLikeContent` no
+era huérfano y estaba en la lista, porque el prototipo del barrido no contaba los lectores
+del mismo fichero.
+
 ## G57 · El corpus core está en inglés, y su auditora es una PT española
 
 **Decisión de Carlos, 2026-09-03 (P28): español fuente.** Anotado aquí como **proyecto
