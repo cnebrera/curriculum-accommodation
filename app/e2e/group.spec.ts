@@ -56,6 +56,40 @@ async function seedThree(page: Page, vault: string): Promise<string[]> {
   return codes;
 }
 
+/**
+ * Four, because the grouping control only appears from four (`015`).
+ *
+ * Two courses on purpose: a single group would let a grouped view that secretly sorted
+ * by axis pass, since there would be nothing to arrange.
+ */
+async function seedFour(page: Page, vault: string): Promise<string[]> {
+  await page.evaluate((root) => window.rampa.vault.use(root), vault);
+  const codes: string[] = [];
+  const people = [
+    { name: 'Lucía', axes: { COG: 1 }, year: 'es:primaria-5' },
+    { name: 'Mateo', axes: { COG: 3 }, year: 'es:primaria-5' },
+    { name: 'Iván', axes: { COG: 0 }, year: 'es:primaria-4' },
+    { name: 'Sara', axes: { COG: 2 }, year: 'es:primaria-4' },
+  ];
+  for (const p of people) {
+    const code: string = await page.evaluate(() => window.rampa.learners.newCode());
+    await page.evaluate((args) => {
+      const [c, axes, year] = args as [string, Record<string, number>, string];
+      return window.rampa.learners.save({
+        code: c, axes, year, works: [], avoid: [], interests: [],
+        response: { default: 'short' }, language: { instruction: 'es' },
+      });
+    }, [code, p.axes, p.year] as [string, Record<string, number>, string]);
+    await page.evaluate(([c, n]) => window.rampa.names.set(c as string, n as string), [code, p.name]);
+    codes.push(code);
+  }
+  await page.evaluate(() => window.rampa.providers.save('anthropic', 'sk-ant-e2e-not-a-real-key'));
+  await page.reload();
+  await page.waitForLoadState('domcontentloaded');
+  await page.getByRole('navigation', { name: /Secciones/ }).waitFor({ timeout: 15000 });
+  return codes;
+}
+
 test.describe('one worksheet, several learners', () => {
   test('she can choose three, and the screen says so', async () => {
     const { app, page, vault } = await launch();
@@ -320,6 +354,102 @@ test.describe('one worksheet, several learners', () => {
       return out;
     });
     expect(offenders).toEqual([]);
+
+    await app.close();
+  });
+
+  /**
+   * `020` T039 · FR-1821, the other three halves of it.
+   *
+   * The test above checks the **grid** on the list view. `020` rebuilt this screen, and
+   * FR-1821 forbids three more things that a rebuild is exactly the moment to introduce:
+   * ordering learners by an axis, comparing them, and showing any total or average over
+   * a child. The grouped view is named explicitly because it is the one view that
+   * *arranges* children, so it is the one where an ordering would look like a feature.
+   *
+   * Four learners because the grouping control only appears from four (`015`, corrected
+   * from six after Carlos tested with two) — a test that seeded three would have found
+   * no toggle and passed by not looking.
+   */
+  test('no view orders or compares them by an axis', async () => {
+    const { app, page, vault } = await launch();
+    const codes = await seedFour(page, vault);
+
+    await page.getByRole('button', { name: 'Mis alumnos' }).click();
+    const shown = async () => (await page.locator('.card-action strong').allTextContents())
+      .map((t) => t.trim());
+
+    const before = await shown();
+    expect(before.length, 'four learners on the caseload').toBe(4);
+
+    /*
+     * **Change every axis, and the order must not move.**
+     *
+     * Stated as an invariant rather than as «the order is not the axis order», because
+     * a negative like that passes by accident whenever two orders happen to coincide.
+     * If the screen sorted by COG at all, raising one child's COG to 3 and dropping
+     * another's to 0 would move them — and this is the assertion that says so.
+     */
+    await page.evaluate(async (all) => {
+      /*
+       * Written whole rather than loaded-and-patched: `learners:load` returns a wrapper
+       * and spreading it back into `learners:save` lost the code — the first draft of
+       * this test found that out from the validator, which is the validator doing its
+       * job to a test that assumed a shape.
+       *
+       * The courses are re-stated so the grouping stays two groups: the point here is
+       * the axes moving and nothing else.
+       */
+      const axes = [{ COG: 3 }, { COG: 0 }, { COG: 2 }, { COG: 1 }];
+      const years = ['es:primaria-5', 'es:primaria-5', 'es:primaria-4', 'es:primaria-4'];
+      for (let i = 0; i < (all as string[]).length; i++) {
+        await window.rampa.learners.save({
+          code: (all as string[])[i]!, axes: axes[i], year: years[i],
+          works: [], avoid: [], interests: [],
+          response: { default: 'short' }, language: { instruction: 'es' },
+        });
+      }
+    }, codes);
+    await page.reload();
+    await page.waitForLoadState('domcontentloaded');
+    await page.getByRole('navigation', { name: /Secciones/ }).waitFor({ timeout: 15000 });
+    await page.getByRole('button', { name: 'Mis alumnos' }).click();
+
+    expect(await shown(), 'the caseload order moved when the axes changed').toEqual(before);
+
+    // And the grouped view: grouped by course, never ranked (FR-1310).
+    await page.getByRole('button', { name: 'Agrupar por curso' }).click();
+    const grouped = await page.evaluate(() => {
+      const out: string[] = [];
+      for (const t of Array.from(document.querySelectorAll('table'))) {
+        if (t.querySelectorAll('.axis').length > 0) out.push('a table contains axis values');
+      }
+      for (const el of Array.from(document.querySelectorAll<HTMLElement>('*'))) {
+        const strips = el.querySelectorAll(':scope > * > .axis-strip, :scope > .axis-strip');
+        if (strips.length > 1 && getComputedStyle(el).flexDirection === 'row') {
+          out.push('two learners\' axis strips side by side in the grouped view');
+        }
+      }
+      return out;
+    });
+    expect(grouped).toEqual([]);
+
+    /*
+     * No total and no average over a child, in either view.
+     *
+     * A word sweep, and the words are enumerated with the reason: «media» and «total»
+     * are what a summary column would be called, «puntuación» and «nivel global» are
+     * what a score would be called. «N cosas preparadas» stays allowed and is on the
+     * screen — that is a count of **her work**, never a measure of him, which is the
+     * distinction `015` FR-1311 draws and the one this sweep must not blur.
+     */
+    for (const view of ['grouped', 'list'] as const) {
+      if (view === 'list') await page.getByRole('button', { name: 'Ver la lista' }).click();
+      const text = (await page.locator('main').textContent()) ?? '';
+      for (const word of [/\bmedia\b/i, /\btotal\b/i, /puntuaci/i, /nivel global/i]) {
+        expect(text, `${view}: ${word}`).not.toMatch(word);
+      }
+    }
 
     await app.close();
   });

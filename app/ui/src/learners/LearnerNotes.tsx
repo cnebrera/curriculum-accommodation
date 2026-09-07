@@ -43,12 +43,12 @@ export function LearnerNotes({ code, name }: { code: string; name?: string }) {
               <div className="card stack gap2" key={n.path}>
                 <span className="small">
                   {/*
-                    La fecha y el estado delante, porque una nota sin cuándo no se puede
-                    pesar contra lo que ella ve hoy en clase. `status` sale del fichero:
-                    una nota confirmada y una por confirmar no valen lo mismo (`004`).
+                    La fecha delante, porque una nota sin cuándo no se puede pesar contra
+                    lo que ella ve hoy en clase.
                   */}
                   <strong>{n.date ?? 'sin fecha'}</strong>
-                  {n.status ? <span className="meta"> · {n.status}</span> : null}
+                  {statusWord(n.status)
+                    ? <span className="meta"> · {statusWord(n.status)}</span> : null}
                   {n.recipes.length ? <span className="meta"> · {n.recipes.join(', ')}</span> : null}
                 </span>
                 <div className="material" lang="es">{n.body.trim()}</div>
@@ -59,4 +59,24 @@ export function LearnerNotes({ code, name }: { code: string; name?: string }) {
       </Loaded>
     </Section>
   );
+}
+
+/**
+ * El estado de una nota, en sus palabras — y `open` no dice nada.
+ *
+ * Se veía «open» en una pantalla en español, que es un enum interno asomando: el
+ * esquema del diario tiene `open | promoted | archived` y esta pantalla lo imprimía en
+ * crudo. Lo encontró mirarlo.
+ *
+ * Enumerado y no un formateo genérico, con una razón por valor. Y `open` —el caso
+ * común, «lo apunté y ahí está»— no imprime nada: una etiqueta en todas las filas es
+ * mobiliario, y «sin promover» le daría a cada observación suya el aire de estar a
+ * medias cuando está exactamente como ella la dejó.
+ *
+ * Precedente en `ConsolidateSection`, que hace lo mismo con su propio `because`.
+ */
+function statusWord(status?: string): string | null {
+  if (status === 'promoted') return 'ya es una regla';
+  if (status === 'archived') return 'archivada';
+  return null;
 }

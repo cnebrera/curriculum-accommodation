@@ -313,6 +313,20 @@ test.describe('the top level is two places, and her notes went where they belong
     await expect(page.getByText(/Con una tarea por hoja lo acaba/)).toBeVisible();
     await expect(page.getByText(/imperativo me funcionan mejor/)).toHaveCount(0);
 
+    /*
+     * And no internal enum on a Spanish screen.
+     *
+     * The journal's `status` is `open | promoted | archived`, and this section printed
+     * it raw — «open», in English, next to her own words. Looking at it is what found
+     * it. `open` is the common case and now says nothing at all: a label on every row
+     * is furniture, and «sin promover» would make every observation she wrote look
+     * half-done when it is exactly as she left it.
+     */
+    const said = (await page.locator('main').textContent()) ?? '';
+    for (const raw of ['open', 'promoted', 'archived']) {
+      expect(said, `the raw status «${raw}» is on the screen`).not.toContain(raw);
+    }
+
     // FR-1819 · and hers is in Configuración, which is the other half of the split.
     await toScreen(page, { label: 'Cómo trabajo yo', under: 'Configuración' });
     await expect(page.getByRole('heading', { name: 'Cómo trabajo yo', level: 1 }))

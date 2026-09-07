@@ -244,19 +244,35 @@ learner-scoped journal entry visible inside that learner.
 
 ## Phase 7 · Polish · and the parts that need a person
 
-- [ ] T038 **Look at it**, narrow and at `xlarge` (`013` FR-1113/FR-1118, SC-1805). Three
+- [x] T038 **Look at it**, narrow and at `xlarge` (`013` FR-1113/FR-1118, SC-1805). Three
       columns is the failure; the menu must have become a strip. Also: a learner with
       nothing prepared, a learner with thirty items, and the unfinished marker in a
-      caseload of thirty
-- [ ] T039 [P] Assert no view orders or compares learners by axis, including the grouped
+      caseload of thirty. It holds at 560px and `xlarge` — the rail is a strip of two, the
+      filters stack, nothing scrolls sideways. Three things it found: the journal's
+      `status` printing raw as «open» on a Spanish screen; `intoNamedLearner` matching by
+      **substring**, so «Alumno 1» opened «Alumno 19» — a helper silently opening the
+      wrong child; and the caseload's order with thirty learners, recorded as a product
+      question in G54 rather than changed
+- [x] T039 [P] Assert no view orders or compares learners by axis, including the grouped
       view (FR-1821, SC-1807). The caseload is the screen `015` wrote that rule about and
-      the screen this feature rebuilds
+      the screen this feature rebuilds. Stated as an **invariant**: change every axis and
+      the order must not move — a negative like «the order is not the axis order» passes
+      by accident whenever two orders coincide. Verified by mutation with a real
+      `sort((a,b) => b.axes.COG - a.axes.COG)`. Plus the grouped view (four learners,
+      because the toggle appears from four) and a sweep for «media», «total»,
+      «puntuación» and «nivel global» in both views
 - [ ] T040 Run quickstart §6 with a real key: three sheets, one cost figure, one
       signature at a time, and a correction afterwards naming the stale sheets by learner
-      (`005` FR-520 still working after the move)
-- [ ] T041 Archive it: the coverage table below kept current, and a `specs/BACKLOG.md`
+      (`005` FR-520 still working after the move). **Needs a person and money** — left
+      open on purpose rather than marked done from a simulation: a fake provider would
+      assert that the parser parses the fixture. Recorded in G54 and in the night's
+      report
+- [x] T041 Archive it: the coverage table below kept current, and a `specs/BACKLOG.md`
       entry recording **why** the navigation changed, so in six months it reads as a
-      decision and not as drift
+      decision and not as drift — **G54**, which carries Carlos's own sentence, the four
+      structural problems the code showed, why retiring `016` FR-1401 does not revoke its
+      argument, and the two lessons: navigation state must not live in a screen that
+      navigating destroys, and a move is when refusals get left behind
 
 ---
 

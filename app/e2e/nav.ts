@@ -84,7 +84,29 @@ export async function intoLearner(page: Page, index = 0): Promise<void> {
  */
 export async function intoNamedLearner(page: Page, name: string): Promise<void> {
   await toCaseload(page);
-  await page.locator('.card-action').filter({ hasText: name }).first().click();
+  /*
+   * **Exact**, and it took a caseload of thirty to find out why.
+   *
+   * `hasText` matches by substring, so `intoNamedLearner(page, 'Alumno 1')` opened
+   * «Alumno 19» — silently, into a child with a different profile and a different
+   * record. Every spec in the suite uses names that do not prefix one another (Lucía,
+   * Marco, Mateo, Iván, Sara), so nothing caught it; a helper that opens the wrong
+   * child when the names happen to overlap is a helper that will one day assert
+   * somebody else's sheet.
+   *
+   * The same trap `toScreen` records for «Parar» inside «Preparar». Playwright's
+   * default is substring, and on this project that default has now cost two debugging
+   * sessions — so both walks pin it.
+   */
+  await page.locator('.card-action')
+    .filter({ has: page.getByText(name, { exact: true }) }).first().click();
+  /*
+   * The rail's `<p class="rail-who">` holds the name **and** the code, so its own text
+   * is «Alumno 1H46» and an exact match on the name finds nothing there. The arrival is
+   * asserted on the card's heading being gone and the rail carrying the name as a
+   * substring, which is safe here: by this point the click has already happened against
+   * an exact match, so there is no wrong child left to confuse it with.
+   */
   await learnerRail(page).getByText(name).first().waitFor();
 }
 
