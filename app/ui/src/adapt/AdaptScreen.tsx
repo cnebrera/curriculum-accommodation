@@ -643,6 +643,8 @@ export function AdaptScreen({
 
           {costGate ? (
             <Callout intent="decide" title="Esto va a costar más de lo normal">
+              {/* «unos» aquí, porque esto **es** una estimación — y una sola vez: la
+                  función que da la cifra ya no lo pone. */}
               <p>Serían unos {costGate.formatted}, más de lo que te cuesta normalmente. Tú decides.</p>
               <div className="row">
                 <button className="btn btn-primary" onClick={() => void runAdapt(true, costGate.who)}>Adelante</button>

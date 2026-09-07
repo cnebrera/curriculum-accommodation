@@ -236,8 +236,35 @@ export function LearnersScreen({ onOpen, onNew, onContinue }: {
    * should mean three of her caseload, not three of whatever the last dropdown
    * left behind.
    */
-  const visible = searchRoster(
-    filterRoster(learners, filter, (code) => workedIn[code] ?? []), query) as LearnerRow[];
+  /*
+   * Por el nombre que ella le puso (decisión de Carlos, 2026-09-07, `020` T038).
+   *
+   * El orden anterior era el del roster, y `015` decidió con razón que **no encoda
+   * nada** — no ordena por ningún eje ni dice nada del niño, y hay un test que lo
+   * afirma cambiando todos los ejes y comprobando que el orden no se mueve. Pero con
+   * treinta alumnos «no encoda nada» se lee como aleatorio, y encontrar a uno cuesta.
+   * Lo encontró mirarlo con una lista de treinta (T038).
+   *
+   * Alfabético **sigue sin comparar a nadie**: es el nombre, que es lo único que ella
+   * usa para reconocerlo, y no una propiedad suya. Así que FR-1821 se cumple igual y el
+   * test de invariancia sigue verde — que es la comprobación de que este orden no se ha
+   * convertido en un ranking por la puerta de atrás.
+   *
+   * `localeCompare` con `es` porque «Álvaro» va antes de «Ana» y una comparación de
+   * cadenas cruda lo manda al final. Los que no tienen nombre todavía van **al final**
+   * y entre ellos por código: la lista los muestra como «Sin nombre todavía», y
+   * repartirlos por el alfabeto de un código que ella no lee sería colocarlos al azar
+   * dentro de un orden que promete no serlo.
+   */
+  const visible = (searchRoster(
+    filterRoster(learners, filter, (code) => workedIn[code] ?? []), query) as LearnerRow[])
+    .slice()
+    .sort((a, b) => {
+      if (!a.name && !b.name) return a.code.localeCompare(b.code);
+      if (!a.name) return 1;
+      if (!b.name) return -1;
+      return a.name.localeCompare(b.name, 'es', { sensitivity: 'base', numeric: true });
+    });
   const facets = facetsOf(learners);
 
   /* Which school years she has worked in, and with whom (014, via the data

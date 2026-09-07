@@ -90,6 +90,16 @@ async function seedFour(page: Page, vault: string): Promise<string[]> {
   return codes;
 }
 
+/**
+ * A learner's checkbox on the adapt screen, **by her name for him**.
+ *
+ * Not `nth(i)`: the caseload is sorted by name and this list is not, so a position in
+ * one is not a position in the other. Two cases here asserted `nth(0)` was pre-chosen
+ * and passed on the coincidence that the two orders agreed.
+ */
+const box = (page: Page, name: string) =>
+  page.locator('.check').filter({ has: page.getByText(name, { exact: true }) }).locator('input');
+
 test.describe('one worksheet, several learners', () => {
   test('she can choose three, and the screen says so', async () => {
     const { app, page, vault } = await launch();
@@ -101,16 +111,25 @@ test.describe('one worksheet, several learners', () => {
       — «¿para quién más?» is step 4, and these checkboxes are still where the rest are
       added on the screen that runs it (FR-1411).
     */
-    await throughPrepareToAdapt(page);
+    await throughPrepareToAdapt(page, { learnerName: 'Lucía' });
     const boxes = page.locator('.fieldset-bare input[type="checkbox"]');
     await expect(boxes).toHaveCount(3);
 
-    // The first is pre-chosen, as it always was: the common case is one child.
-    await expect(boxes.nth(0)).toBeChecked();
-    await expect(boxes.nth(1)).not.toBeChecked();
+    /*
+     * **The learner she came in through** is pre-chosen — by name, not by position.
+     *
+     * This asserted `boxes.nth(0)` and passed because the caseload's first row and the
+     * checkbox list's first row happened to be the same child. Sorting the caseload by
+     * name (Carlos's decision, 2026-09-07) separated them and this case failed, which is
+     * the right outcome: what FR-1411 promises is that *the child she entered through* is
+     * in the batch, and «row zero» was never that claim — it was a coincidence standing
+     * in for it.
+     */
+    await expect(box(page, 'Lucía')).toBeChecked();
+    // And nobody else, because the common case is one child.
+    await expect(page.locator('.fieldset-bare input[type="checkbox"]:checked')).toHaveCount(1);
 
-    await boxes.nth(1).check();
-    await boxes.nth(2).check();
+    for (const name of ['Mateo', 'Iván']) await box(page, name).check();
     for (let i = 0; i < 3; i++) await expect(boxes.nth(i)).toBeChecked();
 
     await app.close();
@@ -133,15 +152,14 @@ test.describe('one worksheet, several learners', () => {
   test('the price she is told covers every sheet, not the first one', async () => {
     const { app, page, vault } = await launch();
     await seedThree(page, vault);
-    await throughPrepareToAdapt(page);
+    // Named, so «three sheets» is three whatever order the caseload is in.
+    await throughPrepareToAdapt(page, { learnerName: 'Lucía' });
 
     // No proper noun in it: «Los ríos de España» stopped the walk dead on the
     // name check, which is `007`'s notice doing its job to a test that had not
     // thought about it.
     await page.locator('#text').fill('Las plantas fabrican su alimento con la luz del sol.');
-    const boxes = page.locator('.fieldset-bare input[type="checkbox"]');
-    await boxes.nth(1).check();
-    await boxes.nth(2).check();
+    for (const name of ['Mateo', 'Iván']) await box(page, name).check();
 
     await page.getByRole('button', { name: 'Continuar' }).click();
 
@@ -381,6 +399,23 @@ test.describe('one worksheet, several learners', () => {
 
     const before = await shown();
     expect(before.length, 'four learners on the caseload').toBe(4);
+
+    /*
+     * By the name she gave him (Carlos's decision, 2026-09-07).
+     *
+     * Asserted here rather than in its own case because it is the **same claim** as the
+     * invariant below, read from the other side: the order has to come from something
+     * that says nothing about the child, and the name is the one thing that qualifies.
+     * A test that only checked «the order does not move when the axes change» would
+     * still pass if the order came from nowhere, which is what it came from before and
+     * what made a caseload of thirty hard to scan.
+     *
+     * `localeCompare` with `es`, the same comparison the screen makes: «Iván» before
+     * «Lucía» before «Mateo» before «Sara» is only obvious in an alphabet that knows
+     * what to do with the accent.
+     */
+    expect(before).toEqual([...before].sort((a, b) => a.localeCompare(b, 'es')));
+    expect(before).toEqual(['Iván', 'Lucía', 'Mateo', 'Sara']);
 
     /*
      * **Change every axis, and the order must not move.**

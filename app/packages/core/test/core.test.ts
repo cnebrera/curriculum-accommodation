@@ -273,6 +273,17 @@ describe('cost is shown in the units of the worry', () => {
   it('never reports tokens', () => {
     expect(formatCost(129)).toBe('1,29 €');
     /*
+     * The figure and **not** a hedge (2026-09-07).
+     *
+     * It returned «unos 6 céntimos», and that «unos» is an estimate's word inside the
+     * function that also formats what she has already spent — so the rail's badge said
+     * «Llevas **unos** 6 céntimos este mes» about a number recorded in her own cost
+     * file, and both estimate call sites said «unos unos». Whoever estimates says
+     * «unos»; this says the amount.
+     */
+    expect(formatCost(6)).toBe('6 céntimos');
+    expect(formatCost(1)).toBe('1 céntimo');
+    /*
      * «nada», not «gratis». This function formats what **she has spent**, and «gratis» is
      * the vocabulary of a plan somebody is selling — «Este mes: gratis» reads as a
      * promotion that expires, in an application whose whole pitch is that there is

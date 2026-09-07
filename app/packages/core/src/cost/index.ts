@@ -99,8 +99,25 @@ export function formatCost(cents: number): string {
    * describes a provider's free tier, which is a fact about their plan rather than about
    * her spending.
    */
+  /*
+   * ## Y **sin** «unos» (2026-09-07)
+   *
+   * Decía `unos ${cents} céntimos`, y ese «unos» es la palabra de una *estimación*
+   * metida en la función que también formatea lo ya gastado. Un defecto con tres caras,
+   * y las tres estaban en pantalla:
+   *
+   * 1. El badge del raíl: «Llevas **unos** 6 céntimos en tu servicio de IA este mes» —
+   *    una duda sobre una cifra que está apuntada en su propio fichero de costes.
+   * 2. El aviso de coste inusual: «Serían **unos unos** 6 céntimos». La palabra
+   *    duplicada, porque el llamante también la pone.
+   * 3. La cifra del lote de `020` T024, igual, y ahí la vio un test.
+   *
+   * Así que esta función da la cifra y quien estima pone el «unos». La frase estaba
+   * media aquí y media en el llamante, que es la forma exacta de las dos copias de una
+   * verdad — y la copia que se leía primero era la que sonaba rota.
+   */
   if (cents === 0) return 'nada';
-  if (cents < 100) return `unos ${cents} céntimo${cents === 1 ? '' : 's'}`;
+  if (cents < 100) return `${cents} céntimo${cents === 1 ? '' : 's'}`;
   return `${(cents / 100).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €`;
 }
 
