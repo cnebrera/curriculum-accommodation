@@ -413,6 +413,93 @@ every moment should have a spec. What it added beyond the seams pass:
    journey sentence → T094). Handover *import* (004 US2) recorded as deliberately
    deferred rather than silently missing.
 
+## G57 · El corpus core está en inglés, y su auditora es una PT española
+
+**Decisión de Carlos, 2026-09-03 (P28): español fuente.** Anotado aquí como **proyecto
+propio** —así lo puso la cola— porque no es una traducción mecánica: es reescribir la
+política que la aplicación envía de verdad.
+
+El Principio I existe para que la política pedagógica la pueda auditar «una maestra de
+educación especial que no escribe código». En el locale objetivo eso es una PT española,
+y `instructions/hard-rules.md` —la política central, enviada en **cada** adaptación—,
+`review.md`, `ingest.md` y la mayoría de `recipes/core/` están en inglés. `adapt.md`
+alterna inglés y español dentro del mismo fichero. La contribuyente para la que se
+diseñó el camino de contribución no puede leer la mitad de la política real.
+
+**Y ya está derivando.** La revisión contó diez recetas core; hoy hay dieciocho, y las
+tres últimas —`apoyo-visual-instrucciones`, `lenguaje-claro-transitorio`,
+`vocabulario-clave-con-puente`, escritas por `019`, `033` y P6— están **en español**,
+título y prosa. Así que el corpus core es hoy bilingüe por acumulación y no por
+decisión: una PT que abra la carpeta encuentra tres ficheros que puede corregir y quince
+que no. Cada spec nueva que añada una receta ensancha la grieta, lo cual convierte esto
+en deuda que crece sola en vez de esperar quieta.
+
+**Lo que ya está hecho:** la regla dura 12 se corrigió en el Lote 1 — el informe habla a
+la maestra en su idioma, no en el del material. Era la mitad accionable de este hallazgo
+y además un defecto de verdad: con una ficha de inglés, las notas del informe salían en
+inglés mientras `buildReport` compone el esqueleto en español fijo, o sea un informe
+bilingüe incoherente en el caso más normal de un colegio español.
+
+**Lo que queda, y por qué es su propio proyecto:**
+
+- Quince recetas más cuatro ficheros de instrucciones. El texto **es** el producto: una
+  regla dura mal traducida cambia lo que se le pide al modelo en cada hoja de cada niño,
+  y no lo detecta ningún test — sólo una PT leyéndolo.
+- El inglés no se tira: con el multi-país de P3, cada lengua tiene su corpus (el patrón
+  `recipes/lang/`) y el inglés pasa a ser una más.
+- Necesita `reviewed_by_teacher` en cada fichero tocado, como `instructions/education/es.md`
+  (G16), y cerrarse con una PT **discrepando** de algo concreto, no asintiendo.
+
+Mientras no se haga, el camino de contribución que el Principio I promete está abierto
+sobre el papel y cerrado en la práctica. Eso es lo que hace que esto sea deuda y no
+preferencia.
+
+## G56 · Altas capacidades: el CUR sólo mira hacia abajo
+
+**Decisión de Carlos, 2026-09-03 (P9): sí, más adelante.** CUR bidireccional y modo
+enriquecimiento.
+
+El nivel curricular por área (`032`) modela «va por debajo de su curso» y la composición
+de material de otro curso tiene una puerta para bajar (`027` FR-2509, el examen que
+necesita una ACS registrada). **Hacia arriba no existe nada.** Un alumno de altas
+capacidades es NEAE en la misma normativa que aplica esta herramienta, y hoy la
+aplicación no tiene forma de decir «este objetivo lo tiene hecho, dale otro» ni de
+producir enriquecimiento en vez de andamiaje.
+
+No es un cambio de una pantalla. Todo el vocabulario de las recetas está escrito hacia
+la reducción de carga —una tarea por hoja, menos pasos, más tiempo— y enriquecer es la
+operación contraria: más profundidad con la misma carga. Un `CUR: +1` interpretado por
+recetas que sólo saben quitar produciría material más fácil para quien necesita lo
+opuesto, que es peor que no ofrecerlo.
+
+Registrado como no-objetivo **de v1** y no como no-objetivo: la decisión es que entra, y
+cuando entre trae su propia familia de recetas.
+
+## G55 · Una nota para casa, como salida extra
+
+**Decisión de Carlos, 2026-09-03 (P10): versión mínima, en el BACKLOG.**
+
+La familia existe hoy en la aplicación como **fuente** de información —lo que ella apunta
+de una conversación con la madre entra en el perfil— y nunca como destinataria. Eso es
+coherente: la herramienta es de la maestra, el vault es de la maestra, y nada del alumno
+sale del equipo.
+
+La versión mínima que Carlos sí quiere en alcance algún día: una **nota para casa**
+opcional, generada junto al render de la hoja, que diga qué se ha adaptado y cómo apoyar
+en casa sin convertirse en un informe. Salida extra del mismo trabajo, no un canal nuevo.
+
+Las tres cosas que habría que decidir antes de escribirla, anotadas para que no se
+resuelvan por descuido:
+
+1. **Qué NO lleva.** El diagnóstico no, los ejes no, el nivel curricular no. Una nota que
+   viaja en una mochila no puede llevar lo que no lleva la propia hoja adaptada
+   (Principio V: barreras, no diagnósticos).
+2. **El nombre.** Todo lo que Rampa escribe lleva código, no nombre (`003`). Una nota para
+   casa es el único documento cuyo destinatario **necesita** el nombre, así que es la
+   primera excepción a esa regla y tiene que ser explícita.
+3. **La firma.** El borrador se anuncia (Principio VII) y esto sale del equipo: no puede
+   imprimirse sin que ella lo haya mirado, igual que una hoja.
+
 ## G54 · La navegación cambió de raíz, y conviene que se lea como una decisión
 
 **Anotado 2026-09-07 al cerrar `020-el-alumno-es-el-sitio`** (su T041). Dentro de seis

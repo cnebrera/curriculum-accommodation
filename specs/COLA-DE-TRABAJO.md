@@ -563,8 +563,20 @@ sigue siendo el único ítem del lote sin tasks propios (sus tareas viven en spe
       **Dos guardianes existentes saltaron** (el de pictogramas en recetas y el de lectores
       del índice), y mi propio tripwire saltó con el primer lector de `vehicular.languages`,
       que es para lo que se escribió vacío antes de que existiera nada.
-- [ ] **3.10 · Spec: 020 completo** — US2-US4: Preparar dentro del alumno, retirar el door, partir
+- [x] **3.10 · Spec: 020 completo** — US2-US4: Preparar dentro del alumno, retirar el door, partir
       Mis notas, Configuración completa (P25/P29). Grande; los e2e de navegación son la red.
+      **Hecho 2026-09-07, ocho commits.** 40 de 41 tareas y **28 de 28 requisitos**; la
+      abierta es T040, que necesita clave de verdad y dinero.
+      Los e2e **fueron** la red, exactamente como decía este ítem: pasaron de 233 a 246 y
+      pillaron dos clases de defecto que `tsc` no ve. Y las tres FRs que `025` había
+      aplazado —el nivel superior en dos, Configuración completa, partir «Mis notas»—
+      quedan cumplidas, porque su propia condición era que US2 existiese.
+      Lo que encontró la mudanza y no el diff: el cuadro de pegar texto se había quedado
+      **sin ruta** al retirar la puerta (el checkpoint decía «nada se ha perdido» y era
+      falso); la pantalla de la adaptación significativa no tenía **ningún** e2e, así que
+      «sigue negándose» era una suposición; la barrida de «ningún control firma dos» no
+      llegaba a las pantallas donde un lote de tres existe; y `intoNamedLearner` abría al
+      niño equivocado por filtrar por subcadena.
 - [x] **3.11 · `034-como-llegan-las-versiones` IMPLEMENTADA** (P49).
       **Hecho 2026-09-06, cinco commits.** 28 de 29 tareas y **11 de 11 requisitos**; la
       abierta es T029, que necesita una maestra leyendo una oferta de verdad.
@@ -621,8 +633,20 @@ sigue siendo el único ítem del lote sin tasks propios (sus tareas viven en spe
       lectura, tamaño de la superficie Electron, un único escritor de firmas), y mirarlo
       cazó que la primera pantalla le enseñaba el IR crudo — front matter y `:::` incluidos
       — en su primera noche.
-- [ ] **3.13 · Menores/backlog:** nota para casa (P10) · CUR bidireccional/enriquecimiento (P9) ·
+- [x] **3.13 · Menores/backlog:** nota para casa (P10) · CUR bidireccional/enriquecimiento (P9) ·
       traducción del corpus core al español como proyecto propio (P28).
+      **Hecho 2026-09-07.** Las tres decisiones de Carlos eran «al BACKLOG» o «proyecto
+      propio», así que lo entregable era registrarlas con lo que hay que decidir antes de
+      escribirlas, no implementarlas: **G55** (nota para casa), **G56** (CUR bidireccional)
+      y **G57** (corpus core en español).
+      La mitad accionable de P28 **ya estaba hecha**: la regla dura 12 se corrigió en el
+      Lote 1, y era el defecto de verdad — con una ficha de inglés las notas del informe
+      salían en inglés mientras el esqueleto se compone en español fijo.
+      Y al comprobar las cifras del hallazgo antes de copiarlas apareció algo peor de lo
+      que decía: la revisión contó diez recetas core y hoy hay dieciocho, con las tres
+      últimas **en español**. El corpus core es bilingüe por acumulación y no por
+      decisión, así que cada spec que añade una receta ensancha la grieta — es deuda que
+      crece sola, no que espera quieta. Anotado en G57.
 
 ## Fuera de la cola, con dueño humano
 
