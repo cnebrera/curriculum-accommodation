@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Page } from '../shell/Page.js';
 import { useAcceptedFormats, usePhotoWarningSeen, usePendingIngest, useIngestProgress,
-         useChooseFiles, useIngestEstimate, useRunIngest, useAcknowledgePhotoWarning } from '../data/ingest.js';
+         useChooseFiles, useIngestEstimate, useRunIngest, useAcknowledgePhotoWarning,
+         type PendingIngest } from '../data/ingest.js';
 import { useStrings } from '../i18n/context.js';
 import { Callout } from '../components/Callout.js';
 import { Counted } from '../components/Progress.js';
@@ -27,9 +28,13 @@ export interface StartedIngest {
   pages: Array<{ page: number; problems: string[] }>;
 }
 
-interface Pending { jobId: string; pages: number; confirmed: number; source: string }
+/*
+ * `Pending` was declared here and again in `LearnersScreen` the day the caseload needed
+ * it (`020` T026). Two records describing one row is the drift this repository keeps
+ * finding, so it lives in the data layer as `PendingIngest` and this screen reads that.
+ */
 
-export function IngestScreen({ onIngested, onResume, onAlreadyText }: {
+export function IngestScreen({ onIngested, onResume, onAlreadyText, forLearner }: {
   onIngested: (r: StartedIngest) => void;
   /** Reopen an extraction she started and did not finish confirming. */
   onResume?: (jobId: string) => void;
@@ -45,6 +50,15 @@ export function IngestScreen({ onIngested, onResume, onAlreadyText }: {
    * there is no next step to hand her to.
    */
   onAlreadyText?: () => void;
+  /**
+   * Whose flow this is, stamped into `ir.md` at creation (`020` T006, FR-1828).
+   *
+   * Not for display — no step of this screen says a name — but so that an extraction
+   * she starts and abandons still knows who it was for. Without it, half-finished work
+   * belongs to nobody the moment she closes the window, and «tenías esto a medias»
+   * cannot say inside whose profile to show it.
+   */
+  forLearner?: string;
 }) {
   const { t: es } = useStrings();
   const [paths, setPaths] = useState<string[]>([]);
@@ -63,7 +77,7 @@ export function IngestScreen({ onIngested, onResume, onAlreadyText }: {
   const pendingLoaded = usePendingIngest();
   const accepted = acceptedLoaded.state === 'ready'
     ? acceptedLoaded.value as { description: string } : null;
-  const pending = pendingLoaded.state === 'ready' ? pendingLoaded.value as Pending[] : [];
+  const pending: PendingIngest[] = pendingLoaded.state === 'ready' ? pendingLoaded.value : [];
 
   const chooseFiles = useChooseFiles();
   const ingestEstimate = useIngestEstimate();
@@ -96,7 +110,7 @@ export function IngestScreen({ onIngested, onResume, onAlreadyText }: {
 
   const run = async () => {
     const jobId = `job-${new Date().toISOString().slice(0, 19).replace(/[:T]/g, '')}`;
-    const r = await runIngest.run(jobId, paths) as StartedIngest | undefined;
+    const r = await runIngest.run(jobId, paths, forLearner) as StartedIngest | undefined;
     setProgress(null);
     if (r) onIngested({ ...r, jobId });
   };

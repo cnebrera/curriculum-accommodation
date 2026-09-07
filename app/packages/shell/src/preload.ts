@@ -479,10 +479,12 @@ const api = {
     accepted: () => invoke('ingest:accepted'),
     /** Opens the OS dialog and returns what she picked. The renderer never composes a path. */
     choose: () => invoke('ingest:choose'),
-    run: (jobId: string, paths: string[]) => invoke('ingest:run', jobId, paths),
+    run: (jobId: string, paths: string[], forLearner?: string) =>
+      invoke('ingest:run', jobId, paths, forLearner),
     extraction: (jobId: string) => invoke('ingest:extraction', jobId),
     /** Extractions she started and has not finished confirming. */
     pending: () => invoke('ingest:pending'),
+    claim: (jobId: string, learner: string) => invoke('ingest:claim', jobId, learner),
     confirmPage: (jobId: string, page: number) => invoke('ingest:confirmPage', jobId, page),
     unconfirmPage: (jobId: string, page: number) => invoke('ingest:unconfirmPage', jobId, page),
     budget: () => invoke('ingest:budget'),

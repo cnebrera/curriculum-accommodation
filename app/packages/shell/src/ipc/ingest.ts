@@ -1,7 +1,8 @@
 import { app, type BrowserWindow } from 'electron';
 import { basename } from 'node:path';
 import {
-  jobIR, parseIR, formatCost, isUnusuallyExpensive, resolveInVault, irToMarkdown, VAULT,
+  jobIR, parseIR, parseFrontMatter, startedFor, formatCost, isUnusuallyExpensive,
+  resolveInVault, irToMarkdown, VAULT, type Vault,
 } from '@rampa/core';
 import { currentVault } from './vault.js';
 import { estimateCents, currentLedger } from './cost.js';
@@ -9,7 +10,8 @@ import { handle } from './wrap.js';
 import { pickFiles } from './pick.js';
 import { activeProvider } from './keys.js';
 import { photoWarningSeen, acknowledgePhotoWarning } from './vault-settings.js';
-import { runIngest, budget, readExtraction, setPageVerified } from '../jobs/ingest.js';
+import { runIngest, budget, readExtraction, setPageVerified, pendingIngests,
+         claimIngest } from '../jobs/ingest.js';
 
 /**
  * Wiring for reading a photograph, a PDF or a Word file (013 T019, FR-1111).
@@ -47,10 +49,26 @@ export function registerIngestIpc(getWindow: () => BrowserWindow | null): void {
     });
   });
 
-  handle('ingest:run', async (jobId: string, paths: string[]) =>
-    runIngest(jobId, paths, (p) => getWindow()?.webContents.send('ingest:progress', p)));
+  handle('ingest:run', async (jobId: string, paths: string[], forLearner?: string) =>
+    runIngest(jobId, paths,
+      (p) => getWindow()?.webContents.send('ingest:progress', p), forLearner));
 
   handle('ingest:extraction', async (jobId: string) => readExtraction(jobId));
+
+  /**
+   * Whose this half-finished job is, said by her (`020` T027, FR-1827).
+   *
+   * Every job in every vault that exists today is unowned — `for_learner` started being
+   * written in `020` T006 — so this is not a migration path for an edge case, it is how
+   * her current work becomes reachable at all.
+   *
+   * It **only fills a blank**. A job already stamped for one child is not re-pointed at
+   * another from here: that would be a way to move a reading between learners, which is
+   * not a question this screen is asking, and the answer would silently move whatever
+   * has already been adapted under the first one.
+   */
+  handle('ingest:claim', async (jobId: string, learner: string) =>
+    claimIngest(currentVault(), jobId, learner));
 
   /**
    * Extractions she started and has not finished confirming.
@@ -65,23 +83,7 @@ export function registerIngestIpc(getWindow: () => BrowserWindow | null): void {
    * Found by writing the accessibility test for that screen and discovering
    * there was no way to reach it.
    */
-  handle('ingest:pending', async () => {
-    const vault = currentVault();
-    const jobs = await vault.list(VAULT.material);
-    const pending: Array<{ jobId: string; pages: number; confirmed: number; source: string }> = [];
-    for (const jobId of jobs) {
-      const record = await readExtraction(jobId);
-      if (!record || record.verified) continue;
-      pending.push({
-        jobId,
-        pages: record.pages.length,
-        confirmed: record.pages.filter((p) => p.verified).length,
-        source: record.source,
-      });
-    }
-    // Most recent first: job ids carry their timestamp.
-    return pending.sort((a, b) => b.jobId.localeCompare(a.jobId));
-  });
+  handle('ingest:pending', async () => pendingIngests(currentVault()));
 
   /** One page, confirmed by her. The only thing that can move the gate. */
   handle('ingest:confirmPage', async (jobId: string, page: number) =>

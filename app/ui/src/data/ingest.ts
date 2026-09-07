@@ -15,8 +15,32 @@ export function useIngestProgress(onProgress: (p: IngestProgress) => void): void
   useEffect(() => window.rampa.ingest.onProgress(onProgress), [onProgress]);
 }
 
-export function usePendingIngest(): Loadable<unknown> {
-  return useAsync(() => window.rampa.ingest.pending(), []);
+/**
+ * Extractions she started and has not finished confirming (`020` T007).
+ *
+ * Typed rather than `unknown` because two screens now read it — `Preparar` inside a
+ * learner and her caseload — and «cuánto le falta» has to mean the same thing on both.
+ *
+ * `learner` is optional and stays optional: every job in every vault today has no such
+ * field, so «nobody claimed this» is a normal answer and not a broken record. It is what
+ * FR-1827's whole user story is about.
+ */
+export interface PendingIngest {
+  jobId: string;
+  pages: number;
+  confirmed: number;
+  source: string;
+  learner?: string;
+}
+
+export function usePendingIngest(): Loadable<PendingIngest[]> {
+  return useAsync(() => window.rampa.ingest.pending() as Promise<PendingIngest[]>, []);
+}
+
+/** Whose this half-finished job is, once she has said (`020` T027, FR-1827). */
+export function useClaimIngest() {
+  return useCommand((jobId: string, learner: string) =>
+    window.rampa.ingest.claim(jobId, learner));
 }
 
 export function useAcceptedFormats(): Loadable<unknown> {
@@ -64,7 +88,8 @@ export function useChooseFiles() {
 }
 
 export function useRunIngest() {
-  return useCommand((jobId: string, paths: string[]) => window.rampa.ingest.run(jobId, paths));
+  return useCommand((jobId: string, paths: string[], forLearner?: string) =>
+    window.rampa.ingest.run(jobId, paths, forLearner));
 }
 
 export function useIngestEstimate() {

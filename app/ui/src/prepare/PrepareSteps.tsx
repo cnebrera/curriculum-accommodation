@@ -3,6 +3,7 @@ import { Callout } from '../components/Callout.js';
 import { Loaded } from '../data/Loaded.js';
 import { useMaterialKinds } from '../data/corpus.js';
 import { useLearners } from '../data/learners.js';
+import { usePendingIngest } from '../data/ingest.js';
 import { whatIsMissing, type Flow, type RouteAction } from '../nav/route.js';
 
 /**
@@ -72,17 +73,58 @@ const STEPS: Record<Flow['of'], Array<{ step: string; label: string }>> = {
 /**
  * Paso 1: qué necesitas. Y nada más, porque de quién es ya se sabe.
  */
-export function ChooseBranch({ code, name, onStart }: {
+export function ChooseBranch({ code, name, onStart, onResume }: {
   code: string;
   name?: string;
   onStart: (of: 'adapt' | 'compose') => void;
+  /**
+   * Seguir con una lectura de él que quedó a medias (`020` T026, FR-1826).
+   *
+   * Optional so this screen can be rendered without it, but `LearnerSections` always
+   * passes it: la mitad del argumento de FR-1826 es que continuar **no vuelve a leer la
+   * fuente** por un proveedor, y eso lo garantiza a dónde lleva —a comprobar la lectura
+   * que ya está pagada— y no una promesa de esta pantalla.
+   */
+  onResume?: (jobId: string) => void;
 }) {
-  void code;
+  const pending = usePendingIngest();
+  /*
+   * Lo suyo, y sólo lo suyo.
+   *
+   * La lista completa está en la portada (FR-1827): un trabajo sin dueño no puede
+   * aparecer aquí como si fuera de este niño, porque decidir de quién es es justo la
+   * pregunta que ella tiene que contestar. Filtrar por `learner` es lo que hace que este
+   * bloque diga la verdad en un vault donde casi nada está estampado todavía.
+   */
+  const his = (pending.state === 'ready' ? pending.value : [])
+    .filter((j) => j.learner === code);
+
   return (
     <Page
       title={`Prepararle algo a ${name ?? 'este alumno'}`}
       lede="Adaptar algo que ya tienes, o hacer material desde cero para lo que le hace
             falta. Las dos cosas acaban en una hoja suya.">
+      {his.length && onResume ? (
+        <Section title="Tenías esto a medias">
+          {/*
+            Antes de las dos ramas, porque seguir con algo empezado es más barato que
+            empezar de cero y ella no se acuerda el miércoles de la ficha del martes.
+            La lectura ya está pagada: continuar la retoma donde estaba.
+          */}
+          {his.map((j) => (
+            <div className="row" key={j.jobId} style={{ justifyContent: 'space-between' }}>
+              <span className="small">
+                {j.confirmed} de {j.pages} páginas confirmadas
+                <span className="meta"> · {j.jobId}</span>
+              </span>
+              <button className="btn btn-sm" onClick={() => onResume(j.jobId)}>
+                Seguir con esto
+              </button>
+            </div>
+          ))}
+        </Section>
+      ) : null}
+
       <Section title="¿Qué necesitas?">
         {/*
           Ninguna preseleccionada (FR-1812). Una por defecto sería nuestra idea de lo

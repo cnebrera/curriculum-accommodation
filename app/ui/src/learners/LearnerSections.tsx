@@ -100,7 +100,8 @@ function CurriculumSection({ code, name, onGuide }: {
 }
 
 export function LearnerSection({
-  code, name, tab, onGuide, onReuse, onReview, onPrepare, onErased, onConfigure,
+  code, name, tab, onGuide, onReuse, onReview, onPrepare, onResumeIngest, onErased,
+  onConfigure,
 }: {
   code: string;
   name?: string;
@@ -132,6 +133,14 @@ export function LearnerSection({
    * retira en T028 y esto ya no la necesita.
    */
   onPrepare: (of: 'adapt' | 'compose') => void;
+  /**
+   * Seguir una lectura suya que quedó a medias (`020` T026, FR-1826).
+   *
+   * Lleva al paso 3 del flujo de adaptar con el trabajo ya puesto, así que continuar
+   * **no vuelve a leer la fuente** por un proveedor: la extracción está en su carpeta y
+   * pagada. Quien enruta es quien lo sabe, igual que todo lo demás de esta pantalla.
+   */
+  onResumeIngest: (jobId: string) => void;
   /** She erased this learner: there is no learner left to be inside. */
   onErased: () => void;
   /** Into Configuración ▸ Pictogramas, and back to him after (`025` FR-2303/2304). */
@@ -158,7 +167,10 @@ export function LearnerSection({
        * ruta y no en esta pantalla. Los dos defectos de navegación de este proyecto eran
        * estado sostenido en algo que navegar destruye.
        */
-      return <ChooseBranch code={code} {...(name ? { name } : {})} onStart={onPrepare} />;
+      return (
+        <ChooseBranch code={code} {...(name ? { name } : {})} onStart={onPrepare}
+                      onResume={onResumeIngest} />
+      );
 
     case 'structure':
       /*

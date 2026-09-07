@@ -151,21 +151,26 @@ worksheet for three, and confirm the source was read once.
       screen failed it while the same control on the reading check **survived**. Step 5
       also stopped announcing itself as «trae el material y dime para quién es y qué es»,
       which is three steps she had already answered
-- [ ] T006 [US2] `packages/shell/src/jobs/ingest.ts` writes `for_learner` into `ir.md`
+- [x] T006 [US2] `packages/shell/src/jobs/ingest.ts` writes `for_learner` into `ir.md`
       at creation. **`startedFor()` already exists**: `021` T004 built it in
       `packages/core/src/vault/document.ts`, because that feature arrived first and needed
       it — so this task shrank to the writer. And building it there immediately found a
       reader nobody had thought about: `record/scan.ts` read `composed_for` directly, so a
       job stamped with the current spelling vanished from her record
-- [ ] T007 [US2] `ingest:pending` returns `learner?`, from **one** walk of `material/`
+- [x] T007 [US2] `ingest:pending` returns `learner?`, from **one** walk of `material/`
       (FR-1828). Optional and it must stay optional: every job in every vault today has
       no such field, and treating its absence as an error would break the first vault it
       met
-- [ ] T026 [US2] «Tenías esto a medias» inside `Preparar`, and the marker on the learner
+- [x] T026 [US2] «Tenías esto a medias» inside `Preparar`, and the marker on the learner
       in the caseload (FR-1825, FR-1826). Continuing MUST NOT re-read the source through
-      a provider
-- [ ] T027 [P] [US2] Half-finished work belonging to no learner — **all of it in any
-      vault today** — surfaces in the caseload and asks who it is for (FR-1827)
+      a provider — which is guaranteed by **where it lands**, the reading check, and not
+      by a promise: going back to «Tráelo» would be offering to pay again for pages
+      already read
+- [x] T027 [P] [US2] Half-finished work belonging to no learner — **all of it in any
+      vault today** — surfaces in the caseload and asks who it is for (FR-1827). Her
+      answer is written into `ir.md` so she is not asked twice, and `claimIngest` only
+      ever **fills a blank**: re-pointing a reading at another child would strand
+      whatever had already been adapted under the first one
 - [x] T028 [US2] Retire the door: remove it from the top level and delete
       `app/ui/src/door/`, with `016` FR-1401 already marked retired in its own spec
       (FR-1801). The checkpoint below — «nothing it did was lost» — was **false when the

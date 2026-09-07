@@ -342,6 +342,17 @@ describe('inside packages/shell, the surface is small and named', () => {
      * declining and reverting are separate acts, and collapsing two to save a line here
      * would collapse two of her decisions.
      *
+     * **And a fifth refusal, on 2026-09-07, with no raise at all** (`020` T006/T007).
+     * «Which readings are half-finished, and whose are they» and «she said whose this
+     * one is» were written as `ipc/ingest.ts` functions and took the count to 1,072.
+     * They import no Electron and already took a vault as an argument, so they moved to
+     * `jobs/ingest.ts` beside `readExtraction` — which is where an extraction's own
+     * questions belong — and the number went back under the existing bound untouched.
+     *
+     * Fifth time this bound has produced a better shape rather than a bigger number,
+     * and the fourth by the same move: inject what the code needs and it stops being
+     * bridge. That is now the first thing to try when this test fails.
+     *
      * 25, not 100. A bound raised to a round number stops being a measurement.
      */
     expect(lines).toBeLessThan(1046);

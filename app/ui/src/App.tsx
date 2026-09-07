@@ -384,7 +384,21 @@ export function App() {
         {route.at === 'caseload' ? (
           <LearnersScreen
             onOpen={(code) => go({ type: 'learner/open', code })}
-            onNew={() => go({ type: 'learner/new' })} />
+            onNew={() => go({ type: 'learner/new' })}
+            /*
+             * Trabajo a medias que ella acaba de asignar (`020` T027, FR-1827).
+             *
+             * Entra en el alumno y arranca el flujo en comprobar la lectura, que es el
+             * mismo aterrizaje que «seguir con esto» dentro de él — un trabajo a medias
+             * es lo mismo esté donde esté la puerta por la que se llegó, y dos destinos
+             * distintos para la misma acción serían dos sitios donde arreglarla.
+             */
+            onContinue={(jobId, learner) => {
+              go({ type: 'learner/open', code: learner });
+              go({ type: 'flow/start', of: 'adapt' });
+              go({ type: 'flow/job', job: jobId });
+              go({ type: 'flow/step', step: 'verify' });
+            }} />
         ) : null}
 
         {/*
@@ -485,6 +499,20 @@ export function App() {
                 go({ type: 'flow/kind', kind });
                 go({ type: 'flow/job', job: jobId });
                 go({ type: 'flow/step', step: 'whoElse' });
+              }}
+              /*
+               * Seguir una lectura a medias suya (`020` T026, FR-1826).
+               *
+               * Al paso 3 —comprobar la lectura— y no al 2: la extracción existe y está
+               * pagada, así que volver a «Tráelo» sería ofrecerle gastar otra vez en
+               * páginas que ya están leídas. Sin tipo de material, porque una lectura a
+               * medias no lo lleva estampado y adivinarlo es cómo un examen se adapta
+               * como ficha.
+               */
+              onResumeIngest={(jobId) => {
+                go({ type: 'flow/start', of: 'adapt' });
+                go({ type: 'flow/job', job: jobId });
+                go({ type: 'flow/step', step: 'verify' });
               }}
               /*
                * «Revisar y firmar» for a draft that is still waiting (P11).

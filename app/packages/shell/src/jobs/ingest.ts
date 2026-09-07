@@ -4,7 +4,8 @@ import {
   validatePage, pagesToIR, irToMarkdown, EXTRACTION_JSON_SCHEMA,
   annotateInjection, redact, logger, RampaError, parseIR, formatCost, isUnusuallyExpensive,
   VAULT,
-  type ExtractedPage, type Flag, type IngestBudget, addCost,
+  type ExtractedPage, type Flag, type IngestBudget, type Vault, addCost,
+  parseFrontMatter, startedFor,
 } from '@rampa/core';
 import { sendRedacted } from '@rampa/providers';
 import { currentVault } from '../ipc/vault.js';
@@ -79,6 +80,20 @@ export async function runIngest(
   jobId: string,
   paths: readonly string[],
   onProgress: (p: IngestProgress) => void,
+  /**
+   * Who this material is being brought for (`020` T006, FR-1828).
+   *
+   * Stamped at creation, because that is the only moment it is known for free: she
+   * entered through a learner and pressed «Tráelo» inside his flow. Derived later it
+   * cannot be recovered at all — an extraction abandoned before step 4 has no folder
+   * under any learner, which is exactly the half-finished work `020` FR-1827 is about.
+   *
+   * Optional, and it must stay optional: every job in every vault today has no such
+   * field, and treating its absence as an error would break the first vault it met.
+   * `startedFor` already reads it, and read the older `composed_for` spelling before
+   * this existed.
+   */
+  forLearner?: string,
 ): Promise<IngestResult> {
   await assertCorpus();
   const vault = currentVault();
@@ -238,7 +253,10 @@ export async function runIngest(
     }
   }
 
-  let doc = pagesToIR(extracted, { source: read.source });
+  let doc = pagesToIR(extracted, {
+    source: read.source,
+    ...(forLearner ? { frontMatter: { for_learner: forLearner } } : {}),
+  });
 
   /*
    * T022 · Principle IX, and the reason it is not optional.
@@ -408,8 +426,18 @@ export interface ExtractionRecord {
   verified: boolean;
 }
 
-export async function readExtraction(jobId: string): Promise<ExtractionRecord | null> {
-  const raw = await currentVault().readRaw(join(jobDir(jobId), 'extraction.json'));
+export async function readExtraction(
+  jobId: string,
+  /**
+   * Which folder to read it from, defaulting to the open one.
+   *
+   * Explicit so `pendingIngests` can be tested against a scratch directory: a function
+   * that takes a vault and then reaches for `currentVault()` half way through is a
+   * parameter that lies, and the walk it belongs to is the one FR-1828 is about.
+   */
+  vault: Vault = currentVault(),
+): Promise<ExtractionRecord | null> {
+  const raw = await vault.readRaw(join(jobDir(jobId), 'extraction.json'));
   if (!raw) return null;
   try { return JSON.parse(raw) as ExtractionRecord; } catch { return null; }
 }
@@ -453,4 +481,88 @@ export async function setPageVerified(jobId: string, page: number, verified: boo
     ));
   }
   return next;
+}
+
+/**
+ * Extractions she started and has not finished confirming, with whose they are.
+ *
+ * A function rather than a handler body, and the reason is a defect this project has
+ * already paid for: five handlers written after a `return` inside another handler were
+ * unreachable, `tsc` said nothing, and the channel test passed by static analysis. A
+ * handler body is invisible to every unit test in the repository, so the walk lives
+ * here and `ingest:pending` is one line.
+ */
+export async function pendingIngests(vault: Vault): Promise<Array<{
+  jobId: string; pages: number; confirmed: number; source: string; learner?: string;
+}>> {
+  const jobs = await vault.list(VAULT.material);
+  const pending: Array<{
+    jobId: string; pages: number; confirmed: number; source: string; learner?: string;
+  }> = [];
+  for (const jobId of jobs) {
+    const record = await readExtraction(jobId, vault);
+    if (!record || record.verified) continue;
+    /*
+     * Who it was for, in **this** walk (`020` T007, FR-1828).
+     *
+     * A second pass over `material/` to answer «and whose is it?» would be two
+     * traversals disagreeing the moment one of them gains a filter — and this is the
+     * directory a teacher's vault grows without bound.
+     *
+     * `startedFor` and not `fm.for_learner`: `002` has been writing `composed_for` for
+     * weeks, and a vault written last week is the normal case rather than the edge one.
+     * Reading the field directly is precisely the defect `021` T004 found in
+     * `record/scan.ts`, where a job stamped with the current spelling vanished from her
+     * record.
+     */
+    const raw = await vault.readRaw(jobIR(jobId));
+    const who = raw === null
+      ? undefined
+      : startedFor(parseFrontMatter(raw, jobIR(jobId)).data);
+    pending.push({
+      jobId,
+      pages: record.pages.length,
+      confirmed: record.pages.filter((p) => p.verified).length,
+      source: record.source,
+      ...(who ? { learner: who } : {}),
+      // Absent rather than `null`: every job in every vault today has no such field, and
+      // `learner: null` would make «nobody has claimed this» look like a value somebody
+      // wrote.
+
+    });
+  }
+  // Most recent first: job ids carry their timestamp.
+  return pending.sort((a, b) => b.jobId.localeCompare(a.jobId));
+}
+
+/**
+ * Whose this half-finished job is, said by her (`020` T027, FR-1827).
+ *
+ * Every job in every vault that exists today is unowned — `for_learner` started being
+ * written in `020` T006 — so this is not a migration path for an edge case, it is how
+ * her current work becomes reachable at all.
+ *
+ * It **only fills a blank**. A job already stamped for one child is not re-pointed at
+ * another from here: that would be a way to move a reading between learners, which is
+ * not a question that screen is asking, and the answer would silently strand whatever
+ * had already been adapted under the first one.
+ */
+export async function claimIngest(
+  vault: Vault, jobId: string, learner: string,
+): Promise<boolean> {
+  const path = jobIR(jobId);
+  const raw = await vault.readRaw(path);
+  if (raw === null) return false;
+  if (startedFor(parseFrontMatter(raw, path).data)) return false;
+  /*
+   * Inserted into the front matter rather than rebuilt through `irToMarkdown`.
+   *
+   * The same reason `pictograms/apply.ts` gives for not round-tripping: a teacher may
+   * have hand-edited this file, and rewriting the whole document to add one line would
+   * quietly normalise everything she typed.
+   */
+  if (!/^---\n/.test(raw)) return false;
+  await vault.writeRaw(path,
+    raw.replace(/^---\n/, `---\nfor_learner: ${JSON.stringify(learner)}\n`));
+  return true;
 }

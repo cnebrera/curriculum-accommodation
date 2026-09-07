@@ -394,7 +394,21 @@ test.describe('every width the window can be', () => {
     expect(await railIsAStrip(), 'at 1100px and normal text the rail is a column').toBe(false);
 
     await page.evaluate(() => document.documentElement.setAttribute('data-text', 'xlarge'));
-    await page.waitForTimeout(180);
+    /*
+     * Wait for the rail to turn, not for 180 milliseconds.
+     *
+     * It was a bare sleep and it failed once in a full run and passed alone — the
+     * machine was at load 33 and the relayout had not happened yet. `nav.ts`'s own note
+     * warns against exactly this: «a sleep produces the fake timeouts the suite is
+     * already sensitive to», and a suite that fails for reasons unrelated to the code is
+     * a suite that gets ignored.
+     *
+     * The assertion below is unchanged and still fails if the rail never turns — this
+     * only stops it failing because the rail had not turned *yet*.
+     */
+    await page.waitForFunction(
+      () => getComputedStyle(document.querySelector('.rail')!).flexDirection === 'row',
+      undefined, { timeout: 5000 }).catch(() => {});
     expect(await railIsAStrip(), 'at 1100px and xlarge text the same window is too narrow for a column').toBe(true);
 
     for (const screen of SCREENS) {

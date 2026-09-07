@@ -68,6 +68,7 @@ export function PrepareFlow({
       return (
         <Framed flow={flow} onLeave={leave}>
           <IngestScreen
+            forLearner={code}
             onIngested={(r) => { go({ type: 'flow/job', job: r.jobId }); step('verify'); }}
             onResume={(jobId) => { go({ type: 'flow/job', job: jobId }); step('verify'); }}
             /*

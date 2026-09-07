@@ -9,6 +9,7 @@ import { Badge } from '../components/Badge.js';
 import { Callout } from '../components/Callout.js';
 import { useStrings } from '../i18n/context.js';
 import { useLearners, useVaultIsNewer, type LearnerRow } from '../data/learners.js';
+import { usePendingIngest, useClaimIngest } from '../data/ingest.js';
 import { RosterFilters, whyNothingMatched } from './RosterFilters.js';
 import { filterRoster, searchRoster, facetsOf, groupRoster, type RosterFilter }
   from '../../../packages/core/src/roster/filter.js';
@@ -30,12 +31,24 @@ import { Loaded } from '../data/Loaded.js';
  * copies would drift, and the way they would drift on this screen is one of them
  * growing a column — which is how a caseload becomes a table (Principle V).
  */
-function LearnerCard({ row, made, year, onOpen }: {
+function LearnerCard({ row, made, year, halfDone, onOpen }: {
   row: LearnerRow;
   /** How much she has prepared for him. Her work, never a measure of him. */
   made?: number;
   /** His course, in her words. */
   year?: string;
+  /**
+   * Work of his left half-finished, and how far it got (`020` T026, FR-1825).
+   *
+   * **In the caseload** rather than only inside him, and the requirement says why: on
+   * Wednesday she does not remember which child Tuesday's worksheet was for, and a
+   * marker visible only inside each learner would have her opening thirty of them to
+   * find one.
+   *
+   * Her work, like `made` — «se quedó a medias» is about the reading she did not finish
+   * confirming, and never a remark about the child.
+   */
+  halfDone?: { confirmed: number; pages: number };
   onOpen: (code: string) => void;
 }) {
   return (
@@ -79,11 +92,90 @@ function LearnerCard({ row, made, year, onOpen }: {
         {[year, row.age ? `${row.age} años` : null, row.school]
           .filter(Boolean).join(' · ') || 'Sin curso todavía'}
       </span>
+      {/*
+        Not a colour and not an icon alone (`010` FR-812): a sentence, because that is
+        what she can act on. «A medias» with no distance to go would send her in to find
+        out how much was left, which is the click this marker exists to save.
+      */}
+      {halfDone ? (
+        <span className="small">
+          <strong>Se quedó algo a medias</strong>
+          {` · ${halfDone.confirmed} de ${halfDone.pages} páginas confirmadas`}
+        </span>
+      ) : null}
     </button>
   );
 }
 
-export function LearnersScreen({ onOpen, onNew }: {
+/**
+ * Trabajo a medias que no es de nadie (`020` T027, FR-1827).
+ *
+ * **Todo el de cualquier vault que exista hoy**: `for_learner` se empezó a escribir en
+ * T006, así que esto no es el camino de un caso raro sino cómo su trabajo de esta semana
+ * llega a ser alcanzable. Y una lectura por la que ya se ha pagado a un proveedor es
+ * trabajo que ella ha metido (FR-1811), así que no puede quedarse sin puerta.
+ *
+ * Pregunta de quién es **antes** de continuar, y no lo adivina: la carpeta no lo sabe,
+ * el fichero no lo dice, y elegir por ella pondría la ficha de un niño en el expediente
+ * de otro. El `select` empieza sin nadie seleccionado por lo mismo.
+ */
+function OrphanWork({ rows, onContinue }: {
+  rows: readonly LearnerRow[];
+  onContinue: (jobId: string, learner: string) => void;
+}) {
+  const pending = usePendingIngest();
+  const claim = useClaimIngest();
+  const [whose, setWhose] = useState<Record<string, string>>({});
+
+  const orphans = (pending.state === 'ready' ? pending.value : [])
+    .filter((j) => j.learner === undefined);
+  if (!orphans.length) return null;
+
+  return (
+    <Section title="Esto se quedó a medias y no sé de quién es">
+      <p className="small">
+        Lo leí pero no me dijiste para quién era, o lo empezaste con una versión anterior
+        de Rampa. Dime de quién es y seguimos donde lo dejamos —{' '}
+        <strong>no vuelvo a leerlo</strong>, eso ya está pagado.
+      </p>
+      {orphans.map((j) => (
+        <div className="row gap2" key={j.jobId}
+             style={{ justifyContent: 'space-between', flexWrap: 'wrap' }}>
+          <span className="small">
+            {j.confirmed} de {j.pages} páginas confirmadas
+            <span className="meta"> · {j.jobId}</span>
+          </span>
+          <span className="row gap2">
+            <label className="small" htmlFor={`whose-${j.jobId}`}>¿De quién es?</label>
+            <select id={`whose-${j.jobId}`} className="select"
+                    value={whose[j.jobId] ?? ''}
+                    onChange={(e) => setWhose((w) => ({ ...w, [j.jobId]: e.target.value }))}>
+              <option value="">Dime de quién</option>
+              {rows.map((r) => (
+                <option key={r.code} value={r.code}>{r.name || r.code}</option>
+              ))}
+            </select>
+            <button className="btn btn-sm" disabled={!whose[j.jobId]}
+                    onClick={() => {
+                      const who = whose[j.jobId];
+                      if (!who) return;
+                      /*
+                       * Se estampa **y** se continúa. Sin estampar, cerrar la ventana a
+                       * mitad la traería aquí otra vez a contestar lo mismo, que es
+                       * preguntarle dos veces por una respuesta que ya dio.
+                       */
+                      void claim.run(j.jobId, who).then(() => onContinue(j.jobId, who));
+                    }}>
+              Seguir con esto
+            </button>
+          </span>
+        </div>
+      ))}
+    </Section>
+  );
+}
+
+export function LearnersScreen({ onOpen, onNew, onContinue }: {
   /**
    * She picked a learner (020 T010). The caseload's whole job.
    *
@@ -95,6 +187,14 @@ export function LearnersScreen({ onOpen, onNew }: {
   onOpen: (code: string) => void;
   /** «Añadir un alumno» — a learner who does not exist yet has no place to enter. */
   onNew: () => void;
+  /**
+   * Seguir un trabajo a medias, ya con dueño (`020` T027, FR-1827).
+   *
+   * Toma el alumno además del trabajo porque la respuesta la acaba de dar ella aquí: la
+   * portada es el único sitio donde se puede preguntar de quién es algo que no es de
+   * nadie todavía.
+   */
+  onContinue: (jobId: string, learner: string) => void;
 }) {
   const { t: es } = useStrings();
   /*
@@ -148,6 +248,25 @@ export function LearnersScreen({ onOpen, onNew }: {
     Object.fromEntries(Object.entries(facts).map(([code, f]) => [code, f.years]));
 
   const schoolYears = [...new Set(Object.values(workedIn).flat())].sort().reverse();
+
+  /*
+   * Quién tiene algo a medias, en **una** lectura de `material/` (FR-1828).
+   *
+   * Un `usePendingIngest` por tarjeta serían treinta recorridos del directorio que más
+   * crece en su carpeta, y `014` FR-1214 sólo permite una caché cuando una medida la
+   * pide. El manejador ya devuelve el alumno de cada trabajo, así que aquí sólo hay un
+   * índice por código — y `OrphanWork` lee el mismo hook, que React deduplica.
+   */
+  const pendingLoaded = usePendingIngest();
+  const halfDone: Record<string, { confirmed: number; pages: number }> = {};
+  for (const j of pendingLoaded.state === 'ready' ? pendingLoaded.value : []) {
+    if (!j.learner) continue;
+    // La más atrasada gana: si tiene dos a medias, la cifra que le sirve es la peor.
+    const seen = halfDone[j.learner];
+    if (!seen || j.confirmed < seen.confirmed) {
+      halfDone[j.learner] = { confirmed: j.confirmed, pages: j.pages };
+    }
+  }
 
   /** Courses in her words. Falls back to the id, which is at least stable. */
   const systems = useEducationSystems();
@@ -241,6 +360,7 @@ export function LearnersScreen({ onOpen, onNew }: {
                     {(members as LearnerRow[]).map((l) => (
                       <LearnerCard key={l.code} row={l} onOpen={onOpen}
                                    {...(facts[l.code] ? { made: facts[l.code]!.made } : {})}
+                                   {...(halfDone[l.code] ? { halfDone: halfDone[l.code]! } : {})}
                                    {...(l.year ? { year: yearLabel(l.year) } : {})} />
                     ))}
                   </Section>
@@ -251,6 +371,7 @@ export function LearnersScreen({ onOpen, onNew }: {
                 {visible.map((l) => (
                   <LearnerCard key={l.code} row={l} onOpen={onOpen}
                                {...(facts[l.code] ? { made: facts[l.code]!.made } : {})}
+                               {...(halfDone[l.code] ? { halfDone: halfDone[l.code]! } : {})}
                                {...(l.year ? { year: yearLabel(l.year) } : {})} />
                 ))}
               </div>
@@ -278,6 +399,12 @@ export function LearnersScreen({ onOpen, onNew }: {
               screen that lists her class is where she is standing when a colleague's
               file lands.
             */}
+            {/*
+              Antes de la puerta de los paquetes y después de la lista: es trabajo suyo
+              que ya existe, no algo que llega de fuera.
+            */}
+            <OrphanWork rows={rows} onContinue={onContinue} />
+
             <PacketDoorSections learners={rows.map((r) => r.code)} />
           </>
         )}
