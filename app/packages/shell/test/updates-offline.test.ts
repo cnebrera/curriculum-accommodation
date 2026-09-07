@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { readFileSync, readdirSync } from 'node:fs';
 import { join, dirname } from 'node:path';
-import { mkdtemp, writeFile, rm } from 'node:fs/promises';
+import { mkdtemp, writeFile, rm, readFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { checkForUpdate } from '@rampa/providers';
 
@@ -223,5 +223,78 @@ describe('a check at launch happens only because she said so', () => {
     expect(ran.ran).toBe(false);
     expect(called).toBe(false);
     await rm(dir, { recursive: true, force: true });
+  });
+
+  /**
+   * Never during a rehearsal (`035` T020, FR-3302 · `034` T024).
+   *
+   * `035`'s whole claim is **zero requests**, counted in Chromium's session and in Node's
+   * `fetch`, on the one path built to be provably offline — a fictional child, no
+   * connection, nothing spent. A launch check firing while she shows the sample to a
+   * colleague breaks that claim, and breaks it **silently**, because this check says
+   * nothing either way.
+   *
+   * `035` T020 said «if `034`'s notice is not yet built, record the obligation in the
+   * BACKLOG instead of building a stub; a task that cannot land must not land as an if».
+   * It is built, so this is the coordination it was waiting for.
+   */
+  it('does not fire during a rehearsal, and does not spend the week on it', async () => {
+    const { launchCheck } = await import('../src/updates/notice.js');
+    const dir = await mkdtemp(join(tmpdir(), 'rampa-launch-'));
+    await writeFile(join(dir, 'settings.json'), JSON.stringify({ checkAtLaunch: true }));
+
+    let called = false;
+    const during = await launchCheck({
+      settingsDir: dir, now: '2026-09-20T08:00:00Z',
+      check: async () => { called = true; },
+      rehearsing: async () => true,
+    });
+    expect(during.ran).toBe(false);
+    expect(during.because).toBe('rehearsal');
+    expect(called, 'a request left during a rehearsal').toBe(false);
+
+    /*
+     * And the week is **not** spent on it.
+     *
+     * No stamp was written, so the next launch outside a rehearsal checks. Recording the
+     * stamp would mean a teacher who rehearsed on Monday morning gets no check until the
+     * following Monday — a refusal turning into a week of silence, which is the failure
+     * direction `mayCheckAtLaunch` already argues is the worse one.
+     */
+    const after = await launchCheck({
+      settingsDir: dir, now: '2026-09-20T08:05:00Z',
+      check: async () => { called = true; },
+      rehearsing: async () => false,
+    });
+    expect(after.ran).toBe(true);
+    expect(called).toBe(true);
+    await rm(dir, { recursive: true, force: true });
+  });
+
+  /**
+   * And the check the button starts is the **same call** (`034` T024).
+   *
+   * That promise — «one implementation shared with the button, so there is exactly one
+   * place a check can start from» — was not true: the work lived in a handler body, which
+   * is why `launchCheck` had nothing to call and ended up wired to nobody. Asserted
+   * structurally, because what must hold is that neither path grows its own copy of
+   * «connect, list, hash, scan».
+   */
+  it('starts the same check the button does, from one place', async () => {
+    const src = await readFile(
+      join(dirname(new URL(import.meta.url).pathname), '..', 'src', 'updates', 'corpus.ts'),
+      'utf8');
+
+    // The handler delegates rather than doing the work.
+    expect(src).toMatch(/handle\('corpus:updateLook'[\s\S]{0,120}return lookForUpdate\(/);
+    // And the connecting happens once in the file, inside that function.
+    expect([...src.matchAll(/newestCorpusRelease\(/g)]).toHaveLength(1);
+
+    const links = await readFile(
+      join(dirname(new URL(import.meta.url).pathname), '..', 'src', 'corpus', 'links.ts'),
+      'utf8');
+    // The caller that was missing entirely.
+    expect(links, 'nothing calls launchCheck').toMatch(/launchCheck\(\{/);
+    expect(links, 'the launch check does not know about rehearsals').toMatch(/rehearsing:/);
   });
 });

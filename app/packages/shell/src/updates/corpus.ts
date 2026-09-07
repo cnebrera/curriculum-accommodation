@@ -31,6 +31,66 @@ import {
  */
 let pending: OfferedUpdate | null = null;
 
+/**
+ * Look for a newer corpus, and hand back an offer (`034` FR-3205…3209).
+ *
+ * ## A function, because two things start a check
+ *
+ * `034` T024 promised «one implementation shared with the button, so there is exactly one
+ * place a check can start from» — and this was a **handler body**, which nothing else can
+ * call. So the launch check had nowhere to go, and it was written, tested and wired to
+ * nobody: the fifteenth-odd value in this repository written by one place and read by
+ * none, and this time it was a whole requirement.
+ *
+ * Now the button's press and the launch check are the same call, which is what makes
+ * «only these destinations, only when asked» a property rather than a habit.
+ */
+export async function lookForUpdate(storeDir: string): Promise<
+  | { of: 'none' }
+  | { of: 'refused'; say: string }
+  | { of: 'offer'; version: number; summary: string; changed: string[];
+      conflicts: string[]; findings: OfferedUpdate['findings'] }
+> {
+    const listing = await destination('corpus-manifest');
+    const files = await destination('corpus-files');
+    if (!listing || !files) {
+      logger.error('corpus-update.no-destination', {});
+      throw new RampaError('vault-unreadable',
+        'No sé a dónde conectarme para buscar correcciones. Es un fallo mío, no tuyo.');
+    }
+    declareHosts((await updateDestinations()).map((d) => d.host));
+
+    const governing = await governingCorpus();
+    const transport = corpusTransportFor({ may: true });
+    const release = await newestCorpusRelease({
+      transport, listing: listing.url, filesBase: files.url,
+      currentVersion: governing.version,
+    }).catch(() => null);
+
+    // Nothing newer, or no answer: both are «no hay nada que traer», and neither is an
+    // error she has to do something about (FR-3202).
+    if (!release) return { of: 'none' as const };
+
+    const verdict = await fetchUpdate({
+      transport, release, store: storeDir, governingRoot: governing.root,
+      localOverrides: await localRecipeIds(),
+    });
+    if (verdict.of === 'refused') return { of: 'refused' as const, say: verdict.say };
+    if (verdict.of === 'none') return { of: 'none' as const };
+
+    // A previous offer she never answered is discarded rather than left on disk.
+    if (pending) await declineUpdate(pending);
+    pending = verdict.update;
+    return {
+      of: 'offer' as const,
+      version: pending.manifest.version,
+      summary: pending.manifest.summary,
+      changed: pending.changed,
+      conflicts: pending.conflicts,
+      findings: pending.findings,
+    };
+}
+
 export function registerCorpusUpdateIpc(storeDir: () => string): void {
   /** Where things stand: what governs, what she has, and what she has done. */
   handle('corpus:updateState', async () => {
@@ -63,44 +123,7 @@ export function registerCorpusUpdateIpc(storeDir: () => string): void {
    * transport, so a second caller cannot make a request by forgetting to ask.
    */
   handle('corpus:updateLook', async () => {
-    const listing = await destination('corpus-manifest');
-    const files = await destination('corpus-files');
-    if (!listing || !files) {
-      logger.error('corpus-update.no-destination', {});
-      throw new RampaError('vault-unreadable',
-        'No sé a dónde conectarme para buscar correcciones. Es un fallo mío, no tuyo.');
-    }
-    declareHosts((await updateDestinations()).map((d) => d.host));
-
-    const governing = await governingCorpus();
-    const transport = corpusTransportFor({ may: true });
-    const release = await newestCorpusRelease({
-      transport, listing: listing.url, filesBase: files.url,
-      currentVersion: governing.version,
-    }).catch(() => null);
-
-    // Nothing newer, or no answer: both are «no hay nada que traer», and neither is an
-    // error she has to do something about (FR-3202).
-    if (!release) return { of: 'none' as const };
-
-    const verdict = await fetchUpdate({
-      transport, release, store: storeDir(), governingRoot: governing.root,
-      localOverrides: await localRecipeIds(),
-    });
-    if (verdict.of === 'refused') return { of: 'refused' as const, say: verdict.say };
-    if (verdict.of === 'none') return { of: 'none' as const };
-
-    // A previous offer she never answered is discarded rather than left on disk.
-    if (pending) await declineUpdate(pending);
-    pending = verdict.update;
-    return {
-      of: 'offer' as const,
-      version: pending.manifest.version,
-      summary: pending.manifest.summary,
-      changed: pending.changed,
-      conflicts: pending.conflicts,
-      findings: pending.findings,
-    };
+    return lookForUpdate(storeDir());
   });
 
   /** What one changed file says now, so «enseñármelo entero» is something she can do. */

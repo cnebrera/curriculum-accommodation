@@ -160,10 +160,27 @@ and absent from everything real.
       resume or start over, and **either way the real vault was untouched** (US2 scenario
       3, covered by T002's hash running across a kill-and-relaunch in
       `app/e2e/ensayo-invariants.spec.ts`).
-- [ ] T020 *(BLOQUEADA: `034-como-llegan-las-versiones` no está implementada todavía, así que no hay aviso de actualización con el que coordinarse. Va con `034`.)* [P] [US2] Coordination with `034`: an update notice does not interrupt a
-      rehearsal — the notice waits (spec edge case). If `034`'s notice is not yet built,
-      record the obligation in `specs/BACKLOG.md` against `034` instead of building a stub
-      here; a task that cannot land must not land as an if.
+- [x] T020 [P] [US2] Coordination with `034`: an update notice does not interrupt a
+      rehearsal — the notice waits (spec edge case).
+      *(**Desbloqueada y hecha el 2026-09-07.** La nota decía «BLOQUEADA: `034` no está
+      implementada todavía» y llevaba un día siendo falsa — `034` se cerró con 11 de 11
+      requisitos. Encontrado barriendo las tareas abiertas en busca de afirmaciones
+      rancias, que es la misma clase de hallazgo que `025` T009.
+      Y al ir a coordinarse apareció algo peor: **`launchCheck` no tenía ningún
+      llamante**. Escrita, documentada, probada y cableada a nadie, así que «comprobar al
+      arrancar» era un requisito con implementación y sin nadie que la invocara — el
+      defecto insignia de este repositorio vestido de funcionalidad entera. Y la promesa
+      de `034` T024, «una sola implementación compartida con el botón», tampoco era
+      cierta: el trabajo vivía en el cuerpo de un manejador, que es justo por lo que la
+      comprobación al arrancar no tenía a dónde ir.
+      Ahora `lookForUpdate` es una función, el manejador la delega, y el arranque la llama
+      desde `corpus/links.ts` — que ya sabe dónde está `userData` y ya cablea estas dos,
+      así que `main.ts` no crece y la cota de Electron aguanta sin subir.
+      La puerta del ensayo devuelve `ran: false` **sin sellar la semana**: sellarla
+      significaría que una maestra que ensaya el lunes por la mañana no vuelve a tener
+      comprobación hasta el lunes siguiente, y `mayCheckAtLaunch` ya argumenta que ésa es
+      la dirección de fallo peor. Verificado por mutación las dos costuras: quitar la
+      puerta y quitar el llamante fallan un caso cada uno.)*
 
 **Checkpoint**: a fictional child cannot reach a real caseload — proven by bytes, standing
 in CI.

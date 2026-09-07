@@ -163,6 +163,42 @@ async function setMode(page: Page, m: typeof MODES[number]): Promise<void> {
 }
 
 /**
+ * Wait until the interface has **finished** arriving, before axe looks at it.
+ *
+ * ## The same lesson as `setMode`, one screen later
+ *
+ * `setMode` above carries a long note about scanning during a transition: one
+ * `color-contrast` violation per full run, on a different control each time, never when
+ * the spec ran alone. The fix was to await `document.getAnimations()` rather than a
+ * duration.
+ *
+ * `025` T016's width sweep produced the same shape from the other direction:
+ * `scrollable-region-focusable` on `main`, once per run, at **a different width each
+ * time** — 1366, then 900, then 560 — and clean when the case ran alone. `toScreen`
+ * returns as soon as the rail's `aria-current` flips, which is before the new pane has
+ * painted, so axe was measuring a `main` mid-swap: tall enough to scroll and not yet
+ * holding the pane's controls.
+ *
+ * Probed rather than assumed, which is worth recording because two of my hypotheses were
+ * wrong: it was not a real defect at a narrow width (axe is clean at 560 once settled)
+ * and it was not «the version loads asynchronously» either (the button is outside any
+ * `Loaded`, and a first-frame measurement already found two focusables).
+ *
+ * **This does not loosen the scan.** If the pane never settles, the wait ends and axe
+ * runs anyway on whatever is there — the assertion is unchanged and still fails.
+ */
+async function settle(page: Page): Promise<void> {
+  await page.evaluate(async () => {
+    await new Promise((done) => requestAnimationFrame(() => done(null)));
+    await Promise.race([
+      Promise.allSettled(document.getAnimations().map((a) => a.finished)),
+      new Promise((done) => setTimeout(done, 2000)),
+    ]);
+    await new Promise((done) => requestAnimationFrame(() => done(null)));
+  });
+}
+
+/**
  * axe-core, injected into the page rather than driven through
  * `@axe-core/playwright`.
  *
@@ -260,6 +296,7 @@ test.describe('accessibility · WCAG 2.2 AA', () => {
       await page.setViewportSize({ width, height: 900 });
       for (const pane of panes) {
         await toScreen(page, pane);
+        await settle(page);
         await scan(page, `${pane.label} · ${width}px · muy grande`);
       }
     }

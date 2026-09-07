@@ -90,14 +90,39 @@ export function mayCheckAtLaunch(
  * One implementation shared with the button — `check` is the same handler's work —
  * so there is exactly one place a check can start from, which is what makes «only these
  * destinations, only when asked» a property rather than a habit.
+ *
+ * ## And never during a rehearsal (`035` T020, `034` T024)
+ *
+ * `035`'s whole claim is **zero requests**: a fictional child, no connection, nothing
+ * spent, counted in both stacks. A launch check firing while she is showing the sample to
+ * a colleague would break that claim on the one path built to be provably offline — and
+ * it would break it *silently*, since this check says nothing either way.
+ *
+ * So the rehearsal is a reason to **not run**, not a reason to fail: `ran: false` and no
+ * stamp, so the check happens on the next launch outside a rehearsal instead of being
+ * consumed by one. Recording the stamp here would mean a teacher who rehearsed on Monday
+ * gets no check until the following Monday.
+ *
+ * `rehearsing` is injected rather than imported, for the reason this file has no Electron
+ * in it: `ensayoState` reaches `app.getPath`, and pulling it in here would put the whole
+ * framework behind a boolean. The caller knows.
  */
 export async function launchCheck(args: {
   settingsDir: string;
   now: string;
   check: () => Promise<unknown>;
-}): Promise<{ ran: boolean }> {
+  /** Is a rehearsal in progress? A check must not interrupt one (`035` FR-3302). */
+  rehearsing?: () => Promise<boolean>;
+}): Promise<{ ran: boolean; because?: 'consent' | 'too-soon' | 'rehearsal' }> {
   const settings = await loadSettings(args.settingsDir);
-  if (!mayCheckAtLaunch(settings, args.now)) return { ran: false };
+  if (!mayCheckAtLaunch(settings, args.now)) {
+    /*
+     * Which «no», because the two are different facts and the caller may want to log
+     * one: «she has not consented» is permanent until she does, «too soon» is a week.
+     */
+    return { ran: false, because: settings.checkAtLaunch === true ? 'too-soon' : 'consent' };
+  }
+  if (await args.rehearsing?.()) return { ran: false, because: 'rehearsal' };
   try { await args.check(); } catch { /* silent, by requirement */ }
   await saveSettings(args.settingsDir, { ...settings, lastLaunchCheck: args.now });
   return { ran: true };
