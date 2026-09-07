@@ -38,6 +38,20 @@ the 181 exposed channels for readers (BACKLOG G58), not by anybody using the app
 This specification therefore does two things: it **writes down the rules the log already
 obeys**, so they are auditable and cannot drift, and it gives her a way in.
 
+## Clarifications
+
+### Session 2026-09-07
+
+- Q: ¿Merece un «copiar al portapapeles» su superficie, o basta con adjuntar el fichero?
+  → A: **Sí, soportarlo.** Copiar es lo que ella hará de verdad para pegarlo en un correo.
+- Q: ¿El fichero rotado anterior se alcanza desde la pantalla o sólo por la carpeta?
+  → A: **Sólo por la carpeta**, y decidido por una medida y no por gusto: una línea son
+  unos 100 bytes, así que 2 MB son ~20.000 líneas y una versión empaquetada sólo escribe
+  de `info` para arriba — decenas de líneas por sesión, no miles. Son cientos de sesiones,
+  más de un curso, antes de que rote una vez. Y en el caso patológico —algo escupiendo
+  avisos y llenando 2 MB en días— el fichero interesante es el **actual**. Un selector
+  sería superficie para un caso que llega dentro de un año.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Something broke and she wants to say what (Priority: P1)
@@ -132,22 +146,32 @@ recent lines and find neither the name nor the material.
   without a text editor and without knowing where the operating system keeps
   application data.
 - **FR-3408**: She MUST be able to open the folder containing the log, so she can attach
-  the file herself.
-- **FR-3409**: What is shown MUST be presented as text and never rendered as markup
+  the file herself. That folder holds the rotated previous file too, and the screen MUST
+  say so — the screen itself offers no way to choose between them (clarified 2026-09-07:
+  a line is ~100 bytes, so 2 MB is ~20.000 lines and rotation is a once-a-year event at
+  most; a file selector would be surface for a case that arrives next year, and in the
+  pathological case the interesting file is the current one).
+- **FR-3409**: She MUST be able to **copy** what is shown, because pasting it into an email
+  is what she will actually do (clarified 2026-09-07). Copying is her act on her own
+  machine and reaches nothing: FR-3411 still holds unchanged.
+- **FR-3410**: What is shown MUST be presented as text and never rendered as markup
   (Principle IX). A log line can carry a fragment of a document, and a document is never
-  an instruction — nor a link, nor a style.
+  an instruction — nor a link, nor a style. **This governs the copy of FR-3409 as well**:
+  what reaches her clipboard is the text of the log and never anything a document could
+  have styled into it.
 
 #### What this MUST NOT become
 
-- **FR-3410**: Rampa MUST NOT transmit the log anywhere, ever, on any schedule or trigger.
+- **FR-3411**: Rampa MUST NOT transmit the log anywhere, ever, on any schedule or trigger.
   Sending it is **her** act, by hand, to a recipient she chose. Nothing about this feature
-  is a channel.
-- **FR-3411**: This feature MUST NOT introduce telemetry, usage counting, crash reporting
+  is a channel — and a clipboard is not one either: it does not leave her machine, and what
+  she does with it afterwards is hers.
+- **FR-3412**: This feature MUST NOT introduce telemetry, usage counting, crash reporting
   or any other outbound flow. The declared-destinations list (`034` FR-3204, the amended
   `007` FR-511) MUST NOT grow because of it.
-- **FR-3412**: Opening the screen MUST NOT reach the network. Not for a version, not for
+- **FR-3413**: Opening the screen MUST NOT reach the network. Not for a version, not for
   anything.
-- **FR-3413**: This feature MUST NOT change what is written to the log, at what level, or
+- **FR-3414**: This feature MUST NOT change what is written to the log, at what level, or
   how it is redacted. It writes down the existing behaviour and adds a way in; a
   specification that quietly redesigned the thing it was written to describe would be
   worse than none.
@@ -185,12 +209,11 @@ recent lines and find neither the name nor the material.
   licences and the declared destinations already are. Recorded rather than treated as
   obvious: the alternative — its own top-level entry — would contradict `020` FR-1802,
   which is exactly two destinations.
-- **No «copy to clipboard» in this specification.** Attaching a file is what an email
-  needs, and `/speckit-clarify` is the right place to ask whether a copy affordance is
-  worth it; assuming it now would add a surface nobody asked for.
-- **The rotated previous file is reachable through the folder, not through the screen.**
-  One file shown, both files present. Whether the screen should offer the older one is a
-  question for clarification rather than a guess.
+- ~~No «copy to clipboard»~~ and ~~whether the rotated file is reachable~~ were the two
+  questions left open here. **Both answered 2026-09-07** — see Clarifications above, and
+  FR-3408/FR-3409. Kept struck through rather than deleted: they are the record of two
+  things that were asked instead of guessed, which is the habit AGENTS.md says this
+  project's defects live in the absence of.
 
 ## Dependencies
 

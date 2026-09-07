@@ -47,13 +47,19 @@ just ticking, because they were the easy ones to get wrong here:
   that adapted material for a named learner. A criterion like «the log is anonymous» would
   have passed a reading and been uncheckable.
 
-**Two questions deliberately left for `/speckit-clarify`** rather than guessed, both
-recorded as assumptions in the spec:
+**Re-validated 2026-09-07 after clarification.** The two questions that were left open
+are answered and integrated (Clarifications ▸ Session 2026-09-07, and FR-3408/FR-3409):
 
-1. Whether a «copy to clipboard» affordance is worth its surface, or attaching the file is
-   enough.
-2. Whether the rotated previous file should be reachable from the screen, or only through
-   the folder — a failure she is reporting from last week may be in it.
+1. **A «copy» affordance: yes.** Pasting into an email is what she will actually do.
+   FR-3409, and FR-3410 governs it — what reaches her clipboard is the log's text and
+   never anything a document could have styled into it.
+2. **The rotated file: folder only, no selector on the screen.** Decided by a measurement
+   rather than a preference: a line is ~100 bytes, so 2 MB is ~20.000 lines, and a
+   packaged build writes `info` and above — tens of lines per session, not thousands.
+   Hundreds of sessions before it rotates once. And in the pathological case the
+   interesting file is the current one.
 
-AGENTS.md is explicit that this project's defects live in what nobody questioned, so
-neither is being decided here.
+The second one is worth keeping as a note about **how** it was answered: the question was
+put to Carlos and he said he did not know what it was for, which was fair — the question
+had no number attached to it. Measuring it answered it. A question that cannot be decided
+without a number should arrive with the number.
