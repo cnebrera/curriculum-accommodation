@@ -887,6 +887,54 @@ recorrida; la negativa —ni una caja para un tipo que no cuenta nada, y ninguna
 otro tipo dejada atrás— es la que faltaba y está a un `hidden` de ser una pregunta que
 Rampa parece necesitar contestada.
 
+### `036-el-registro` y `037-la-hoja-comprobada` — dos specs nuevas, 27 requisitos
+
+Las dos salieron de decisiones tuyas, y las dos encontraron defectos reales que sus
+propios tests cazaron.
+
+**`036` · el registro (14/14).** Los tres canales que llevaban a él no los llamaba nadie, y
+el subsistema entero —logger, rotación, redacción, «no en el vault»— estaba construido
+**sin ningún requisito en ninguna spec**. Cuatro decisiones buenas que nadie podía auditar.
+Tres defectos:
+
+1. **La aplicación no arrancaba con el directorio de logs roto.** `startLogging` hacía
+   `await mkdir(...)` sin guarda y `main.ts` lo llama como primera cosa dentro de
+   `whenReady`: un perfil bloqueado o una carpeta de sólo lectura abortaban la cadena
+   entera. **Sin ventana.**
+2. **Una barrera de accesibilidad mía**: la caja del registro tenía scroll y nada
+   enfocable dentro, así que un usuario de teclado no podía desplazarla.
+3. **Abría por arriba**, y ella entra ahí porque algo se rompió hace un minuto.
+
+Y SC-3402 —cero apariciones del nombre del alumno en el fichero tras una sesión real— pasó
+sin tocar nada, con la mutación demostrando que no pasa por suerte: una cadena corta bajo
+una clave que el saneador no conoce la tira. **Eso es lo que permite decirle a un DPO que
+el registro no lleva nada de ningún alumno y que sea suyo y no nuestro**, porque puede
+leerlo.
+
+**`037` · la hoja (13/13).** `render/html.ts` declaraba WCAG 2.2 AA en un comentario y nada
+lo comprobaba; la barrida se eximía apoyándose en una cobertura que no existía. Medido: a
+A/AA la hoja sale limpia. Y la medida encontró que **`data-heading` lo escribe el ingest y
+no lo lee nadie** — una cabecera del original salía como párrafo y la hoja no tenía ni una.
+Decimosexto caso del defecto insignia, y el primero en el producto que llega al niño.
+
+La asimetría que justifica dos capas ya es una medida y no un argumento: con la reparación
+deshecha, la estructural cae con cuatro casos y la de conformidad pasa 2/2. **Axe está
+verde sobre una hoja sin ninguna cabecera.** Y se comprueba sin instalar nada: Electron ya
+es un Chromium.
+
+### Y el barrido de afirmaciones rancias, que fue lo más rentable del día
+
+Tres cosas del mismo molde: `025` T009 decía «Not done» y estaba hecho, `035` T020 decía
+«bloqueada por `034`» un día después de entregar `034`, y `a11y.spec.ts` decía que la hoja
+se comprobaba «donde están esos renderizadores». Las tres eran afirmaciones que el
+repositorio hacía sobre sí mismo y nadie comprobaba.
+
+De ahí salieron **`launchCheck` sin llamante** (un requisito con implementación y sin nadie
+que la invocara), **FR-3203 sin lector** (el aviso no se podía descartar), y la guarda
+`exports-have-readers.test.ts`: 486 exports barridos, **28 huérfanos**, congelados en G58
+con su condición de descongelación. Los tests no cuentan como lector, y ése es el punto —
+`launchCheck` estaba probada mientras la funcionalidad no existía.
+
 ## Saltados y por qué
 
 _(nada todavía)_
@@ -1813,8 +1861,8 @@ Se acumulan y ninguna la puedo hacer yo:
 | | |
 |---|---|
 | `npx tsc --noEmit` | verde (línea base) |
-| `npx vitest run` | verde — 2.463 casos |
-| `npm run test:e2e` | verde — 254 casos |
+| `npx vitest run` | verde — 2.498 casos |
+| `npm run test:e2e` | verde — 265 casos |
 | `scripts/check-fr-coverage.sh` | verde (línea base) |
 | `scripts/check-spec-kit.sh` | verde (línea base) |
 | `scripts/validate-recipes.sh` | verde — 19 recetas |
