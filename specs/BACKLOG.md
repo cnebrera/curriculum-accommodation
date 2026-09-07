@@ -476,6 +476,29 @@ llegar a él**. Ningún requisito lo pide, así que no lo invento: o se borran l
 decide que «mándame el registro cuando algo falle» es algo que la herramienta hace y
 entonces es una pantalla con su spec. Lo que no puede quedarse es en medio.
 
+### Cómo esto se convierte en trabajo, y por qué no se ha convertido todavía
+
+**Decidido 2026-09-07.** Carlos delegó el borrado y al comprobar el proceso la respuesta
+cambió: AGENTS.md no tiene excepción para limpieza —«you do not write implementation code
+for work that has no `tasks.md`; not a "small" version, not a prototype, not "while I am
+here"»— y borrar 28 exports en dos paquetes, canales de IPC incluidos, no es un arreglo de
+typo.
+
+Y esa spec tendría **una pregunta legítima** que hoy nadie sabe contestar: para cada uno de
+los diecisiete hooks, ¿está muerto o esperando pantalla? `useRecordSearch` suena a una
+búsqueda del expediente que puede estar en la cabeza de alguien. Ése es
+`/speckit-clarify`, no un `rm`.
+
+Así que se queda congelado, y la condición para descongelarlo es explícita: **una spec
+propia, con esa pregunta hecha hook por hook.** Mientras tanto la guarda hace el trabajo
+que importa — no pueden crecer, y uno nuevo falla en CI con su nombre y su fichero.
+
+Una nota sobre el método, porque se repitió dos veces el mismo día: recomendé actuar
+—primero la pantalla del registro, luego este borrado— **y comprobé el coste de proceso
+después**. Las dos veces la comprobación cambió la respuesta. El orden correcto es el
+contrario, y AGENTS.md grita justo eso porque ya se racionalizó dos veces antes con el
+argumento «el trabajo es obvio».
+
 Y siete canales más se llaman **sólo desde `e2e/`** (`corpus:recipes`,
 `corpus:instruction`, `coordination:reviewReply`, `learners:saveRoster`,
 `ingest:confirmPage`, `ingest:budget`, `diagnostics:network`). Ésos son legítimos —
