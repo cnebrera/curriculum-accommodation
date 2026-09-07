@@ -413,6 +413,39 @@ every moment should have a spec. What it added beyond the seams pass:
    journey sentence → T094). Handover *import* (004 US2) recorded as deliberately
    deferred rather than silently missing.
 
+## G59 · La hoja que recibe el niño no dice qué es
+
+**Anotado 2026-09-07**, encontrado escribiendo `037-la-hoja-comprobada` y **dejado fuera
+de ella a propósito**: es una decisión de contenido y no de accesibilidad.
+
+El HTML de una hoja adaptada lleva un `<title>` que es la constante «Material adaptado»
+—nadie pasa uno de verdad— y **ningún título visible**. Así que la hoja que un niño recibe
+en la mano no dice qué es: empieza directamente por el primer bloque.
+
+Se ve desde tres sitios a la vez, que es lo que le da peso:
+
+1. **Accesibilidad.** Una comprobación de buenas prácticas pide una cabecera de nivel uno
+   y la hoja no la tiene, porque no hay título que poner ahí. `037` FR-3503 prohíbe
+   inventárselo —eso sería falsificar el *qué* (Principio III)— así que el aviso se queda
+   abierto honestamente hasta que exista un título de verdad.
+2. **La maestra.** Ella imprime tres hojas para tres niños de la misma ficha. Sobre la
+   mesa son tres papeles indistinguibles salvo por el código, y el código es un pseudónimo
+   que no le dice de qué asignatura es.
+3. **El niño.** Una hoja sin nombre es una hoja que no sabe dónde va en su carpeta.
+
+**Lo que habría que decidir antes de escribirlo**, y es el motivo de no adivinarlo:
+
+- **Qué lleva.** «Ficha · Los ecosistemas · 3.º de Primaria» tiene tres cosas y cada una
+  es una decisión: el tipo de material lo sabe el trabajo, el asunto habría que sacarlo de
+  la primera cabecera —que es justo la estructura que `037` acaba de recuperar— y el curso
+  es del perfil.
+- **Qué NO lleva.** El nombre no, el código quizá, el colegio no (`015` FR-1306 lo pone en
+  el conjunto que nunca sale, junto al nombre). Una hoja que viaja en una mochila tiene el
+  mismo límite que un traspaso.
+- **Si es de la maestra o de Rampa.** Un título que ella escribe es contenido suyo; uno
+  que Rampa deduce de la primera cabecera es una inferencia que puede equivocarse — y
+  equivocarse en el título es lo más visible que hay.
+
 ## G58 · Veintiocho exports que no lee nadie, y la guarda que los cuenta
 
 **Anotado 2026-09-07**, y la guarda ya está: `ui/test/exports-have-readers.test.ts`.
