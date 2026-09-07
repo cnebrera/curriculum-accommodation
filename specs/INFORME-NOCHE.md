@@ -711,7 +711,7 @@ borres.
 costuras verificadas por mutación: los tres `yield { truncated: true }`, el system del sitio de
 llamada y el lector de `chunk.truncated`.
 
-### `020` · El alumno es el sitio — US2 (en curso)
+### `020` · El alumno es el sitio — **completa** (28/28 requisitos, 40/41 tareas)
 
 Los pasos de «Preparar» viven dentro del alumno y la puerta está retirada. Lo que hay
 hecho: las dos ramas como iguales sin ninguna preseleccionada, el tipo de material como
@@ -744,8 +744,66 @@ silencio. Dos aserciones cambian de forma y las dos lo dicen donde están escrit
 alumno ya no se puede perder porque se está dentro de él. El caso «US1 no quita nada: la
 puerta sigue ahí» se **invierte** en vez de borrarse.
 
-Quedan de US2: el coste del lote como una cifra antes de la tirada, revisar y firmar por
-alumno, `for_learner` en `ir.md`, y las dos de «tenías esto a medias».
+**El coste del lote, dicho antes de pulsar** (T024). FR-515 —«tres hojas normales pueden
+ser una factura anormal»— ya estaba; FR-514 no. La única cifra de la pantalla era la del
+aviso de coste inusual, y ése por definición sólo habla cuando la respuesta es «más de lo
+normal», así que el lote ordinario se tiraba sin cifra ninguna. La aritmética del lote se
+salió del renderizador —estaba junto a un `20_000` mágico— a `batchPromptChars`, así que
+la cifra que ella lee y la que juzga el aviso no pueden discrepar.
+
+**El paso 5, y una barrida que parecía completa** (T025). Firmar ya era por alumno; lo
+que faltaba era cobertura. «Ningún control firma más de un documento» recorría las
+pantallas de nivel superior, y el nivel superior sólo llevaba a la puerta —que no ofrecía
+firmar nada—, así que las pantallas donde un lote de tres existe de verdad no estaban en
+la barrida. Ahora recorre el flujo, y la mutación la movió un paso más: un «Firmar todas»
+plantado en la pantalla de pegar la tira, pero el mismo control en la de comprobar la
+lectura **sobrevivió** — que es justo desde donde se tira el lote.
+
+**El trabajo a medias encuentra a su dueño** (T006/T007/T026/T027). La premisa de toda la
+aplicación es que la van a interrumpir, y hasta ahora una lectura a medias sólo aparecía
+dentro de la pantalla de traer material, a la que se llega empezando algo nuevo. El
+miércoles ella no se acuerda de para qué niño era la ficha del martes: la marca está en
+su lista, con cuánto le falta. `for_learner` se estampa al crear el trabajo —el único
+momento en que se sabe gratis— y una sola pasada de `material/` contesta quién y cuánto
+(FR-1828). Lo que no es de nadie —**todo lo de cualquier vault de hoy**— sale en la
+portada y pregunta de quién es; su respuesta se escribe para no preguntárselo dos veces, y
+el estampado sólo **rellena un hueco**.
+
+**La adaptación significativa sigue negándose desde su sitio nuevo** (T031/T032). Y esto
+merece decirse: esa pantalla **no tenía ningún e2e**, así que «al mudarla sigue
+negándose» era una suposición durante toda la mudanza. Sus dos cerraduras están ahora
+afirmadas desde el menú del alumno y verificadas por mutación.
+
+**Dos destinos, exactamente dos** (T033-T037). Era lo que `025` había aplazado con un
+motivo escrito: las entradas no podían quitarse antes de que su contenido tuviera a dónde
+irse. «Mis notas» se parte por su propio `scope` —el diario lo lleva desde `003` y la
+pantalla lo ignoraba, así que lo que Rampa había aprendido de un niño no se podía leer
+donde se habla de ese niño— y lo de ella es el apartado «Cómo trabajo yo». Las tres FRs
+aplazadas pasan a cumplidas en el texto de la spec, con la nota de aplazamiento **sin
+borrar**: es el registro de un requisito que se sostuvo.
+
+**Mirarlo** (T038) encontró tres cosas: el `status` del diario saliendo en crudo como
+«open» en una pantalla en español; `intoNamedLearner` filtrando por subcadena, así que
+«Alumno 1» abría a «Alumno 19» —un helper que abre al niño equivocado en silencio, y van
+dos sesiones de depuración a cuenta de ese valor por defecto de Playwright—; y el orden de
+la portada con treinta alumnos, que no ordena por ejes pero cuesta barrer. Ese último es
+decisión de producto: anotado en G54, no tomado.
+
+**Queda T040**, abierta a propósito: un recorrido con clave de verdad. Necesita dinero y
+una persona.
+
+### Cola 3.13 · las tres menores, registradas
+
+Las tres respuestas de Carlos eran «al BACKLOG» o «proyecto propio», así que lo entregable
+era registrarlas con lo que hay que decidir antes de escribirlas: **G55** (nota para casa),
+**G56** (CUR bidireccional y enriquecimiento) y **G57** (corpus core en español).
+
+La mitad accionable de P28 ya estaba hecha —la regla dura 12 se corrigió en el Lote 1—, y
+comprobar las cifras del hallazgo antes de copiarlas encontró algo peor de lo que decía:
+contaba diez recetas core y hoy hay dieciocho, con **las tres últimas en español**. El
+corpus core es bilingüe por acumulación y no por decisión, así que una PT que abra la
+carpeta encuentra tres ficheros que puede corregir y quince que no — y cada spec nueva que
+añada una receta ensancha la grieta.
 
 ## Saltados y por qué
 
@@ -1673,8 +1731,8 @@ Se acumulan y ninguna la puedo hacer yo:
 | | |
 |---|---|
 | `npx tsc --noEmit` | verde (línea base) |
-| `npx vitest run` | verde — 2.441 casos |
-| `npm run test:e2e` | verde — 225 casos |
+| `npx vitest run` | verde — 2.449 casos |
+| `npm run test:e2e` | verde — 246 casos |
 | `scripts/check-fr-coverage.sh` | verde (línea base) |
 | `scripts/check-spec-kit.sh` | verde (línea base) |
 | `scripts/validate-recipes.sh` | verde — 19 recetas |
@@ -1682,7 +1740,19 @@ Se acumulan y ninguna la puedo hacer yo:
 
 ---
 
-**Lotes 0, 1 y 2 completos (5/5 · 17/17 · 12/12); Lote 3 con `027`, `022`, `026`, `031`,
-`032`, `028`, `035`, `033`, `029`, `030` y `034` implementadas — las once con sus
-requisitos al 100%.** Quedan **3.10** (`020` US2-US4) y **3.13** (menores), más los
-veredictos con dueño humano.
+**La cola está a cero.** Lotes 0, 1 y 2 completos (5/5 · 17/17 · 12/12) y Lote 3 entero:
+`027`, `022`, `026`, `031`, `032`, `028`, `035`, `033`, `029`, `030`, `034` y `020`
+implementadas — las doce con sus requisitos al 100%, y 3.13 registrada.
+
+Lo que queda tiene **dueño humano** y está listado abajo: la validación de protección de
+datos, seis veredictos de maestra, cuatro recorridos con clave real (`020` T040 entre
+ellos), una fotocopiadora, los términos de ARASAAC, la firma de código, el directorio
+`.agents/` y la decisión de producto sobre el orden de la portada con treinta alumnos.
+
+Una cosa que decir del conjunto y no de cada ítem: **las disciplinas encontraron lo que el
+diseño no vio**, otra vez y en la misma proporción. El e2e cazó dos clases de defecto que
+`tsc` no puede ver, la mutación cazó cuatro tests que pasaban por el motivo equivocado,
+mirar las pantallas cazó ocho defectos de presentación, y la cota de superficie Electron
+rechazó un intento más —el quinto— y volvió a producir la forma mejor sin subir el número.
+Ninguna de las cuatro es una preferencia de estilo: cada una tiene un defecto concreto de
+este repositorio detrás.
