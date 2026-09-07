@@ -805,6 +805,49 @@ corpus core es bilingüe por acumulación y no por decisión, así que una PT qu
 carpeta encuentra tres ficheros que puede corregir y quince que no — y cada spec nueva que
 añada una receta ensancha la grieta.
 
+### Fuera de la cola: `025`, `024` T022 y `012` FR-1010
+
+La cola quedó a cero y eso no era «todo»: había 22 tareas y 9 requisitos abiertos en cinco
+specs, y no todas eran de dueño humano. Cerrado lo construible.
+
+**`025-pictogramas-tienen-su-sitio` — completa (15/15).** Cuatro requisitos se habían
+quedado sin afirmar, y son justo los que se rompen sin ruido al mover algo. Lo que enseñó:
+
+- **T009 tenía la nota obsoleta.** Decía «Not done» y era falso: `lastProgress` vive junto
+  al `AbortController` y la pantalla lo pregunta al montarse. Su propia lección — una nota
+  que registra un defecto hay que revisitarla cuando se arregla, o se convierte en una
+  afirmación que el repositorio hace sobre sí mismo y nadie comprueba. Lo que **sí**
+  faltaba era un lector: la derivación vivía dentro de un componente que esta suite **no
+  puede montar** (el entorno es `node`, así que un render estático sólo ve el primer
+  fotograma de un `useAsync` — exactamente el fotograma en el que la lectura al montar
+  todavía no ha pasado).
+- **El silencio se cuenta, no se supone.** Abrir Configuración tres veces con el contador
+  de `035` en las dos pilas: una sola visita no distingue «no pide nada» de «lo pide una
+  vez y lo cachea».
+- **`axe` a tres anchos** va en `a11y.spec.ts` y no copiado, porque ese `scan()` inyecta
+  axe-core por un motivo escrito (Electron contesta `Target.createTarget: Not supported`) y
+  dos copias lo llevarían en una sola.
+- **Mirarlo encontró una cosa:** el aviso de la licencia seguía diciendo «Necesita tu
+  decisión» después de que ella decidiera. Segunda vez que aparece este defecto —`020` lo
+  corrigió en la portada—, así que la regla merece decirse: `decide` es para una pregunta
+  que la espera, no para un asunto que sea serio.
+
+**`024` T022 — la mitad afilada, y una pregunta.** La tarea daba por bueno «por
+construcción» que su vocabulario viaja y la aceptación de la licencia no. «Por
+construcción» es lo que eran los doce campos que nadie leía, y las dos cosas están a un
+refactor de intercambiarse. Si la aceptación viviera en el vault, una compañera que
+recibiera su carpeta encontraría los términos de ARASAAC **ya aceptados por otra
+persona**, y `023` FR-2104 hace de la aceptación la puerta previa a traer nada — una
+puerta que llega abierta dentro de un zip no es una puerta. Afirmado por contenido sobre
+todos los ficheros del vault. La otra mitad **no está construida** y queda como pregunta.
+
+**`012` FR-1010 contaba como abierta y no lo estaba:** una sola casilla sobre dos
+requisitos, y el aplazado arrastraba al otro. Partida. Y se puede afirmar *porque* FR-1009
+está aplazada, en la forma más fuerte que hay: no es que el código elija no separar las
+páginas, es que **no hay dónde ponerlas** — `jobIR(job)` no toma índice de parte.
+Afirmado también sobre su **aridad**, que es lo que cambiaría el día que alguien implemente
+las partes, para que ese día sea una decisión y no un parámetro que aparece.
+
 ## Saltados y por qué
 
 _(nada todavía)_
@@ -1731,8 +1774,8 @@ Se acumulan y ninguna la puedo hacer yo:
 | | |
 |---|---|
 | `npx tsc --noEmit` | verde (línea base) |
-| `npx vitest run` | verde — 2.449 casos |
-| `npm run test:e2e` | verde — 246 casos |
+| `npx vitest run` | verde — 2.458 casos |
+| `npm run test:e2e` | verde — 252 casos |
 | `scripts/check-fr-coverage.sh` | verde (línea base) |
 | `scripts/check-spec-kit.sh` | verde (línea base) |
 | `scripts/validate-recipes.sh` | verde — 19 recetas |
