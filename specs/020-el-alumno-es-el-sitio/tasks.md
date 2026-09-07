@@ -196,11 +196,14 @@ worksheet for three, and confirm the source was read once.
 **Independent Test**: reach all four `017` screens from inside a learner, and confirm the
 refusals still refuse.
 
-- [ ] T031 [US3] `Su adaptación curricular` holds bringing the document, the ACNS draft
+- [x] T031 [US3] `Su adaptación curricular` holds bringing the document, the ACNS draft
       and ACS help, reached from the learner's menu
-- [ ] T032 [P] [US3] Assert the ACS locks survive the move: asking which objectives to
+- [x] T032 [P] [US3] Assert the ACS locks survive the move: asking which objectives to
       remove still declines and still names who decides. A move is exactly when a
-      refusal gets left behind
+      refusal gets left behind — and the ACS screen had **no e2e at all** before this,
+      so «it still refuses» was an assumption. Both locks are now walked from the
+      learner's menu and both were verified by mutation: deleting the refusal and
+      silencing the missing-assessment note each fail a case
 
 ---
 

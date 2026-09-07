@@ -221,6 +221,86 @@ test.describe('her caseload is where she starts', () => {
  *    the official curricular adaptation. That one is closed by `0.1`: the job
  *    lives on the route now, so there is no session residue to inherit.
  */
+/**
+ * `Su adaptación curricular` holds all four, and the refusals came with them
+ * (`020` T031/T032, FR-1806).
+ *
+ * The second one is the point: **a move is exactly when a refusal gets left behind.**
+ * The ACS screen's whole reason to exist is that it will not say which objectives to
+ * remove — that is the teaching team's decision with Orientación, on a psychopedagogical
+ * assessment — and a screen that quietly lost that sentence on its way into a menu would
+ * be worse than one that never had it, because the argument is what a PT trusts.
+ *
+ * Reached from the learner's menu, because the walk **is** what T031 changed: these were
+ * cards stacked under the edit-profile form, and getting to ACS help meant opening a
+ * child to *edit* him and scrolling past five other cards.
+ */
+test.describe('the significant adaptation still refuses, from its new place', () => {
+  test('it says what it will not do, before she types anything', async () => {
+    const { app, page, vault } = await launch();
+    await seed(page, vault);
+
+    await intoLearner(page);
+    await toTab(page, 'curriculum');
+    await page.getByRole('button', { name: 'Ayúdame con ello' }).click();
+
+    // The refusal, and **who decides** — a refusal that does not name the decider
+    // reads as a limitation of the tool rather than as whose call it is.
+    const refusal = page.getByText(/No propongo qué objetivos quitar/);
+    await expect(refusal).toBeVisible();
+    await expect(page.getByText(/equipo\s+docente con Orientación/)).toBeVisible();
+    await expect(page.getByText(/evaluación psicopedagógica/).first()).toBeVisible();
+
+    await app.close();
+  });
+
+  /**
+   * And it will not write one without the assessment.
+   *
+   * «Nula de procedimiento» is the reason and it is on the screen: a document that looks
+   * complete without an assessment harms the child, not the file. Asserted as the action
+   * refusing **and saying what is missing** (`013` FR-1105), because a grey button with
+   * no reason is how a teacher concludes the tool is broken.
+   */
+  test('it will not draft one without the assessment, and says which is missing', async () => {
+    const { app, page, vault } = await launch();
+    await seed(page, vault);
+
+    await intoLearner(page);
+    await toTab(page, 'curriculum');
+    await page.getByRole('button', { name: 'Ayúdame con ello' }).click();
+
+    const write = page.getByRole('button', { name: 'Ayúdame a redactarlo' });
+    await expect(write).toBeDisabled();
+    await expect(page.getByText('Sin evaluación psicopedagógica no puedo seguir.')).toBeVisible();
+
+    // With the assessment, it asks for the *team's* decision — never for its own.
+    await page.getByRole('checkbox', { name: /Existe evaluación psicopedagógica/ }).check();
+    await expect(write).toBeDisabled();
+    await expect(page.getByText('Dime qué ha decidido el equipo.')).toBeVisible();
+
+    await page.locator('#decided').fill('Se sustituye el objetivo de multiplicar por sumas repetidas.');
+    await expect(write).toBeEnabled();
+
+    await app.close();
+  });
+
+  /** All three of `017`'s entries are on the one section, reached from the menu (T031). */
+  test('the section offers the document, the draft and the help', async () => {
+    const { app, page, vault } = await launch();
+    await seed(page, vault);
+
+    await intoLearner(page);
+    await toTab(page, 'curriculum');
+
+    for (const label of ['Traer el documento que me han dado', 'Borrador de su adaptación',
+                         'Ayúdame con ello']) {
+      await expect(page.getByRole('button', { name: label }), label).toBeVisible();
+    }
+    await app.close();
+  });
+});
+
 test.describe('the official document has a way in', () => {
   test('«Su adaptación curricular» offers to bring it, from there', async () => {
     const { app, page, vault } = await launch();
