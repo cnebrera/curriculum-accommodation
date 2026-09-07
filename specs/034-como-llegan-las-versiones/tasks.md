@@ -172,6 +172,17 @@ reinstall, read before it acts.
       never during a job, never inside ensayo (`035`), silent in failure — one
       implementation shared with the button, so there is exactly one place a check can
       start from (**FR-3202**, research R5)
+      *(**Marcada hecha el 2026-09-06 y no lo estaba.** `launchCheck` no tenía ningún
+      llamante, y «una sola implementación compartida con el botón» era el cuerpo de un
+      manejador — que es exactamente por lo que la comprobación al arrancar no tenía a
+      dónde ir. Corregido el 2026-09-07: `appVersionCheck` es una función en
+      `updates/release.ts`, el manejador la delega y el arranque la llama.
+      Y estuvo una hora apuntando a la comprobación **equivocada**, la del corpus: el
+      consentimiento vive junto a «¿Hay una versión más nueva?» y sus palabras son «puedes
+      mirarlo al abrir», así que lo que corre al arrancar es la de la aplicación. El canal
+      del corpus no tiene ni quiere comprobación al abrir — FR-3206 hace de una
+      actualización algo que se le **muestra** antes de aceptar, y no hay nada que mostrar
+      hasta que ella pregunta.)*
 - [ ] T025 [P] Release side, so the channel has something to carry: `corpus-v<n>` release
       flow with manifest + signature produced in CI (private key in CI secrets — signing
       the *installers* stays `COLA` P52's separate debt), and `docs/` note for
@@ -227,7 +238,7 @@ Written **with** the tasks, per the lesson `002` taught on 2026-08-31.
 |---|---|
 | FR-3201 | T009, T010 (the notice: version, summary, link) · T012 (never installs — asserted as an absence, SC-3203) |
 | FR-3202 | T001 (the invariant, first and red) · T009 (silent failure) · T024 (silent whichever way a check starts) |
-| FR-3203 | T011 |
+| FR-3203 | T011 · **y T011 estaba a medias hasta el 2026-09-07**: el almacenamiento, el manejador y la línea del preload existían y **ningún lector los llamaba**, así que «cuando ella lo descarta» era un escenario sin sitio donde ocurrir. Encontrado barriendo los 181 canales después de `launchCheck` — el mismo defecto, una capa más arriba. Ahora hay un aviso en la portada con «No me lo recuerdes más», `updates:notice` contesta con su decisión ya aplicada (para que ninguna pantalla combine dos lecturas que pueden discrepar de una pregunta), y vuelve sólo para algo más nuevo |
 | FR-3204 | T007 (declared in the corpus, the amended `007` FR-511) · T013 (the disclosure, matched in a test) · T014 (declared hosts only, nothing beyond the request) |
 | FR-3205 | T014, T015 (obtainable and applicable in-app) · T006 (the resolution that makes «applicable without reinstall» true) |
 | FR-3206 | T018 (shown in full, explicit accept, stable decline) · T021 (walked end to end) |

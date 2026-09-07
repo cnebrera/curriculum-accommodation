@@ -101,7 +101,8 @@ const api = {
    */
   updates: {
     /** The newest version she dismissed, or nothing. */
-    dismissed: () => invoke('updates:dismissed'),
+    /** What the last launch check found, minus what she has dismissed. */
+    notice: () => invoke('updates:notice'),
     dismiss: (version: string) => invoke('updates:dismiss', version),
     /** Whether she has said Rampa may look at launch. Absent means no. */
     consent: () => invoke('updates:consent'),

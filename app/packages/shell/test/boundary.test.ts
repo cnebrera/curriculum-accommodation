@@ -353,6 +353,18 @@ describe('inside packages/shell, the surface is small and named', () => {
      * and the fourth by the same move: inject what the code needs and it stops being
      * bridge. That is now the first thing to try when this test fails.
      *
+     * **A sixth and seventh refusal, on 2026-09-07, also with no raise** (`034` FR-3203).
+     * Wiring the launch check took the count to 1,056. Two moves brought it back under:
+     * `rememberRelease` — «is this worth remembering» — went to `updates/notice.ts`, and
+     * `appVersionCheck` to a new `updates/release.ts` **taking the version as an
+     * argument**. The one thing that check needs from the framework is
+     * `app.getVersion()`, so the caller says it and the reasoning lives where a test can
+     * reach it without a window.
+     *
+     * That is now seven times out of seven by the same move, and the last four were the
+     * *first* thing tried rather than the third — which is the bound having taught the
+     * habit it exists to teach.
+     *
      * 25, not 100. A bound raised to a round number stops being a measurement.
      */
     expect(lines).toBeLessThan(1046);

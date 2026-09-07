@@ -272,6 +272,66 @@ describe('a check at launch happens only because she said so', () => {
   });
 
   /**
+   * FR-3203 · a dismissed notice stays dismissed, **for that version**.
+   *
+   * This requirement had storage, a handler, a preload line and **no reader**: nothing in
+   * the interface ever called `updates:dismiss` or `updates:dismissed`, so «she dismisses
+   * it» was a scenario with nowhere to happen. Found by sweeping the 181 channels after
+   * `launchCheck` — the same defect, one layer up.
+   *
+   * Asserted through `updates:notice`, which is what a screen reads: it answers with her
+   * decision **already applied**, so no screen has to fetch the notice and the dismissal
+   * separately and combine two reads that can disagree about one question.
+   */
+  it('a dismissed release stays dismissed, and a newer one comes back', async () => {
+    const { registerNoticeIpc } = await import('../src/updates/notice.js');
+    const dir = await mkdtemp(join(tmpdir(), 'rampa-notice-'));
+
+    /*
+     * The handlers are collected rather than mocked away: `handle` is wrapped and the
+     * electron mock makes `ipcMain.handle` a no-op, so a test that wants the **bodies**
+     * has to keep them. This is the lesson of the five handlers written after a `return`
+     * — unreachable, and a channel test that passed by static analysis.
+     */
+    const chans = new Map<string, (...a: unknown[]) => Promise<unknown>>();
+    const electron = await import('electron');
+    (electron as unknown as { ipcMain: { handle: unknown } }).ipcMain = {
+      handle: (name: string, fn: (...a: unknown[]) => Promise<unknown>) => chans.set(name, fn),
+    };
+    registerNoticeIpc(() => dir);
+
+    const notice = () => chans.get('updates:notice')!();
+    const dismiss = (v: string) => chans.get('updates:dismiss')!(undefined, v);
+
+    // Nothing found yet: no notice, rather than an empty one.
+    expect(await notice()).toBe(null);
+
+    await writeFile(join(dir, 'settings.json'), JSON.stringify({
+      lastRelease: { current: '0.9.0', latest: '1.0.0', newer: true, page: 'https://x/y',
+                     summary: 'Arreglada la regla de exámenes.' },
+    }));
+    expect(await notice()).toMatchObject({ latest: '1.0.0' });
+
+    // She dismisses it, and it is gone.
+    expect(await dismiss('1.0.0')).toBe(true);
+    expect(await notice(), 'a dismissed notice came back').toBe(null);
+
+    /*
+     * And something **newer** comes back. That is the whole difference between a notice
+     * and a nag, and the nag is worse here than in most applications: what is being
+     * announced is a fix she may need, so a teacher who has learned to click past this
+     * banner is one who will click past the one that matters.
+     */
+    await writeFile(join(dir, 'settings.json'), JSON.stringify({
+      dismissedRelease: '1.0.0',
+      lastRelease: { current: '0.9.0', latest: '1.1.0', newer: true, page: 'https://x/y' },
+    }));
+    expect(await notice()).toMatchObject({ latest: '1.1.0' });
+
+    await rm(dir, { recursive: true, force: true });
+  });
+
+  /**
    * And the check the button starts is the **same call** (`034` T024).
    *
    * That promise — «one implementation shared with the button, so there is exactly one
@@ -285,7 +345,7 @@ describe('a check at launch happens only because she said so', () => {
       join(dirname(new URL(import.meta.url).pathname), '..', 'src', 'updates', 'corpus.ts'),
       'utf8');
 
-    // The handler delegates rather than doing the work.
+    // The corpus handler delegates rather than doing the work.
     expect(src).toMatch(/handle\('corpus:updateLook'[\s\S]{0,120}return lookForUpdate\(/);
     // And the connecting happens once in the file, inside that function.
     expect([...src.matchAll(/newestCorpusRelease\(/g)]).toHaveLength(1);
@@ -296,5 +356,22 @@ describe('a check at launch happens only because she said so', () => {
     // The caller that was missing entirely.
     expect(links, 'nothing calls launchCheck').toMatch(/launchCheck\(\{/);
     expect(links, 'the launch check does not know about rehearsals').toMatch(/rehearsing:/);
+    /*
+     * And it runs the check **she consented to**, which is the application version.
+     *
+     * The consent lives next to «¿Hay una versión más nueva?» and its words are «puedes
+     * mirarlo al abrir». I first wired this to the corpus channel, which is a different
+     * promise entirely: FR-3206 makes a corpus update something she is *shown* before
+     * accepting, and there is nothing to show until she asks.
+     */
+    expect(links, 'the launch check runs the wrong check')
+      .toMatch(/check: \(\) => appVersionCheck\(/);
+    expect(links).toMatch(/handle\('corpus:checkForUpdate'[\s\S]{0,80}appVersionCheck\(/);
+    /*
+     * And it is **one** function, in a module off the Electron surface: two call sites
+     * both naming `appVersionCheck` is the promise, and the promise was broken by it
+     * being a handler body.
+     */
+    expect([...links.matchAll(/appVersionCheck\(/g)]).toHaveLength(2);
   });
 });

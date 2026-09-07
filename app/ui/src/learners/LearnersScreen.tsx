@@ -10,6 +10,7 @@ import { Callout } from '../components/Callout.js';
 import { useStrings } from '../i18n/context.js';
 import { useLearners, useVaultIsNewer, type LearnerRow } from '../data/learners.js';
 import { usePendingIngest, useClaimIngest } from '../data/ingest.js';
+import { ReleaseNotice } from '../settings/ReleaseNotice.js';
 import { RosterFilters, whyNothingMatched } from './RosterFilters.js';
 import { filterRoster, searchRoster, facetsOf, groupRoster, type RosterFilter }
   from '../../../packages/core/src/roster/filter.js';
@@ -319,6 +320,15 @@ export function LearnersScreen({ onOpen, onNew, onContinue }: {
         can change what another build wrote. What she needs is the fact and the reason her
         screen may differ from her colleague's.
       */}
+      {/*
+        Lo que encontró la comprobación al abrir, si encontró algo (`034` FR-3203).
+
+        Aquí por el mismo motivo que el aviso de debajo: es un hecho sobre su
+        **instalación** y no sobre un alumno, y ésta es la pantalla por la que pasa. Se
+        calla por versión en cuanto lo dice.
+      */}
+      <ReleaseNotice />
+
       {newer.state === 'ready' && newer.value ? (
         <Callout intent="info" title="Esta carpeta la ha tocado una versión más nueva">
           <p>

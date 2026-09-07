@@ -99,6 +99,20 @@ export interface AppSettings {
   checkAtLaunch?: boolean;
   /** When the last launch check ran, so «as much as weekly» is a fact and not a hope. */
   lastLaunchCheck?: string;
+  /**
+   * What the last launch check found, so a screen can show it without connecting.
+   *
+   * A launch check has **no screen** to answer on — her press in «Acerca de» replies
+   * where she pressed it, and a check at launch has to leave its finding somewhere she
+   * will pass later. Stored only when there is something newer: «estás al día» is not
+   * news and remembering it would put a notice on her screen saying nothing.
+   *
+   * Kept beside `dismissedRelease` on purpose: the pair is «what there is» and «what she
+   * said about it», and `updates:notice` answers with the second applied to the first so
+   * no screen has to combine them.
+   */
+  lastRelease?: { current: string; latest?: string; newer: boolean; page: string;
+                  summary?: string };
 }
 
 const settingsPath = (dir: string) => join(dir, 'settings.json');

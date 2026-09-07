@@ -27,8 +27,27 @@ import { loadSettings, saveSettings } from '../ipc/vault-settings.js';
  * leaves the machine before she turns it on.
  */
 export function registerNoticeIpc(settingsDir: () => string): void {
-  handle('updates:dismissed', async () =>
-    (await loadSettings(settingsDir())).dismissedRelease ?? null);
+  /*
+   * No `updates:dismissed`. It existed, nothing ever called it, and `updates:notice`
+   * below makes it redundant by design — it answers «is there a notice» with her
+   * dismissal already applied, so a screen never has to combine two reads.
+   */
+  /**
+   * What the last launch check found, if it found something (FR-3201/FR-3203).
+   *
+   * A read of a file and **not** a check: a screen that connected on mount would turn
+   * every visit into a phone-home, which is the thing the consent exists to prevent.
+   *
+   * `null` once she has dismissed that version, so the answer to «is there a notice»
+   * already carries her decision — a screen that had to fetch the notice and then fetch
+   * the dismissal separately is two reads that can disagree about the same question.
+   */
+  handle('updates:notice', async () => {
+    const s = await loadSettings(settingsDir());
+    const notice = s.lastRelease ?? null;
+    if (!notice) return null;
+    return s.dismissedRelease === notice.latest ? null : notice;
+  });
 
   handle('updates:dismiss', async (version: unknown) => {
     if (typeof version !== 'string' || version.trim() === '') return false;
@@ -113,7 +132,7 @@ export async function launchCheck(args: {
   check: () => Promise<unknown>;
   /** Is a rehearsal in progress? A check must not interrupt one (`035` FR-3302). */
   rehearsing?: () => Promise<boolean>;
-}): Promise<{ ran: boolean; because?: 'consent' | 'too-soon' | 'rehearsal' }> {
+}): Promise<{ ran: boolean; because?: 'consent' | 'too-soon' | 'rehearsal'; result?: unknown }> {
   const settings = await loadSettings(args.settingsDir);
   if (!mayCheckAtLaunch(settings, args.now)) {
     /*
@@ -123,7 +142,38 @@ export async function launchCheck(args: {
     return { ran: false, because: settings.checkAtLaunch === true ? 'too-soon' : 'consent' };
   }
   if (await args.rehearsing?.()) return { ran: false, because: 'rehearsal' };
-  try { await args.check(); } catch { /* silent, by requirement */ }
+  /*
+   * The answer comes back, because a launch check has **no screen** to answer on.
+   *
+   * Her press in «Acerca de» renders its reply where she pressed. A check at launch has
+   * to leave what it found somewhere she will pass later — otherwise it is a request that
+   * happens and tells nobody, which is the shape `launchCheck` already had for a day.
+   *
+   * `unknown`, and the caller decides what is worth remembering: this file knows what a
+   * *check* is and deliberately not what a release looks like.
+   */
+  let result: unknown;
+  try { result = await args.check(); } catch { /* silent, by requirement */ }
   await saveSettings(args.settingsDir, { ...settings, lastLaunchCheck: args.now });
-  return { ran: true };
+  return { ran: true, result };
+}
+
+/**
+ * Remember what a launch check found, if it is worth remembering (FR-3201/FR-3203).
+ *
+ * Here rather than at the call site because it needs a settings directory and nothing
+ * else, and the Electron-surface bound refused it in `corpus/links.ts` — **seventh time**
+ * that bound has produced the better shape by the same move: inject what the code needs
+ * and it stops being bridge.
+ *
+ * Only when there is something **newer**. «Estás al día» is not news, and storing it
+ * would put a notice on her screen that says nothing — which is how a notice becomes
+ * furniture and then gets dismissed without being read.
+ */
+export async function rememberRelease(settingsDir: string, found: unknown): Promise<boolean> {
+  const it = found as { newer?: boolean; latest?: string } | undefined;
+  if (!it?.newer) return false;
+  const settings = await loadSettings(settingsDir);
+  await saveSettings(settingsDir, { ...settings, lastRelease: it as never });
+  return true;
 }

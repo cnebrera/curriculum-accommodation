@@ -72,10 +72,23 @@ describe('and the screen renders that list rather than a copy of it', () => {
   });
 
   it('and the reacher reads it too, so neither can drift from the other', () => {
+    /*
+     * `updates/release.ts` since 2026-09-07, and the move is the point rather than a
+     * detail: this lived in `corpus/links.ts` until the Electron-surface bound refused
+     * it there, so the check now takes the version as an argument and imports no
+     * framework. What this guard is about did not change — whoever reaches the network
+     * reads the **declared** destination and never a host of its own.
+     */
+    const reacher = readFileSync(
+      join(repoRoot, 'app', 'packages', 'shell', 'src', 'updates', 'release.ts'), 'utf8')
+      .replace(/\/\*[\s\S]*?\*\//g, '').replace(/^[ \t]*\/\/.*$/gm, '');
+    expect(reacher).toContain("destination('release-check')");
+    expect(reacher).not.toContain('api.github.com');
+
+    // And the file it left behind does not grow its own copy.
     const links = readFileSync(
       join(repoRoot, 'app', 'packages', 'shell', 'src', 'corpus', 'links.ts'), 'utf8')
       .replace(/\/\*[\s\S]*?\*\//g, '').replace(/^[ \t]*\/\/.*$/gm, '');
-    expect(links).toContain("destination('release-check')");
     expect(links).not.toContain('api.github.com');
   });
 });

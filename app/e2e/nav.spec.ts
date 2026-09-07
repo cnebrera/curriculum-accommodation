@@ -1,5 +1,5 @@
 import { test, expect, _electron as electron, type Page, type ElectronApplication } from '@playwright/test';
-import { mkdtemp, mkdir } from 'node:fs/promises';
+import { mkdtemp, mkdir, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { intoLearner, intoNamedLearner, toCaseload, toTab, learnerRail, rail, TAB,
@@ -19,7 +19,9 @@ import { intoLearner, intoNamedLearner, toCaseload, toTab, learnerRail, rail, TA
  */
 const appRoot = process.cwd();
 
-async function launch(): Promise<{ app: ElectronApplication; page: Page; vault: string }> {
+async function launch(): Promise<{
+  app: ElectronApplication; page: Page; vault: string; userData: string;
+}> {
   const userData = await mkdtemp(join(tmpdir(), 'rampa-nav-'));
   const vault = join(await mkdtemp(join(tmpdir(), 'rampa-nav-v-')), 'Rampa');
   await mkdir(vault, { recursive: true });
@@ -30,7 +32,13 @@ async function launch(): Promise<{ app: ElectronApplication; page: Page; vault: 
   const page = await app.firstWindow();
   await page.waitForLoadState('domcontentloaded');
   await page.setViewportSize({ width: 1366, height: 900 });
-  return { app, page, vault };
+  /*
+   * `userData` comes back because `034`'s release notice lives in application settings
+   * rather than in her vault — deliberately, so a copied folder does not carry somebody
+   * else's dismissal, the same reasoning that keeps the pictogram licence acceptance out
+   * of a handover.
+   */
+  return { app, page, vault, userData };
 }
 
 /** Two learners, so «which one am I inside?» is a question with a wrong answer. */
@@ -232,6 +240,70 @@ test.describe('her caseload is where she starts', () => {
  * one claim this whole specification is about, and it is one careless addition away from
  * being false again.
  */
+/**
+ * The release notice, and the dismissal that had no reader (`034` FR-3201/FR-3203).
+ *
+ * Over the window because it **is** a screen: `034`'s scenario 3 is «given the notice,
+ * when she dismisses it, then it stays dismissed for that version», and until now there
+ * was no notice anywhere to dismiss — the two channels existed and the interface never
+ * called them.
+ *
+ * The finding is seeded into settings rather than produced by a real check: a launch
+ * check needs GitHub, and what is under test is the notice and its dismissal, which is
+ * navigation and a file.
+ */
+test.describe('lo que encontró la comprobación al abrir', () => {
+  test('el aviso aparece en la portada, y se calla cuando ella lo dice', async () => {
+    const { app, page, vault, userData } = await launch();
+    await seed(page, vault);
+
+    await writeFile(join(userData, 'settings.json'), JSON.stringify({
+      lastRelease: {
+        current: '0.9.0', latest: '1.0.0', newer: true,
+        page: 'https://example.invalid/descargas',
+        summary: 'Arreglada la regla de exámenes.',
+      },
+    }), 'utf8');
+    await page.reload();
+    await page.waitForLoadState('domcontentloaded');
+    await rail(page).waitFor({ timeout: 15000 });
+    await toCaseload(page);
+
+    // It names the version, says what changes, and links the download — «y nada más».
+    await expect(page.getByText(/Hay una versión más nueva \(1\.0\.0\)/)).toBeVisible();
+    await expect(page.getByText(/Arreglada la regla de exámenes/)).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Ver las descargas' })).toBeVisible();
+    /*
+     * `info` and not `decide`: there is nothing for her to decide here, and this
+     * application cannot download or install anything itself (FR-3201). The same
+     * correction `020` made on the caseload's newer-folder callout and `025` on the
+     * pictogram licence — third time, so it is a rule and not a preference.
+     */
+    await expect(page.getByText('Necesita tu decisión')).toHaveCount(0);
+
+    await page.getByRole('button', { name: 'No me lo recuerdes más' }).click();
+    await expect(page.getByText(/Hay una versión más nueva/)).toHaveCount(0);
+
+    // And it stays gone across a restart, because the answer is in her settings.
+    await page.reload();
+    await page.waitForLoadState('domcontentloaded');
+    await rail(page).waitFor({ timeout: 15000 });
+    await toCaseload(page);
+    await expect(page.getByText(/Hay una versión más nueva/)).toHaveCount(0);
+
+    await app.close();
+  });
+
+  /** Nothing found: no notice at all, rather than «estás al día» as furniture. */
+  test('y si no hay nada más nuevo no dice nada', async () => {
+    const { app, page, vault } = await launch();
+    await seed(page, vault);
+    await toCaseload(page);
+    await expect(page.getByText(/versión más nueva/)).toHaveCount(0);
+    await app.close();
+  });
+});
+
 /** Her code for a name she set. The names live only in memory (`003`). */
 async function codeFor(page: Page, name: string): Promise<string> {
   const names = await page.evaluate(() => window.rampa.names.all()) as Record<string, string>;
