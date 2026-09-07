@@ -557,11 +557,13 @@ verificadas por mutación.
 
 ### Lo que sigue abierto
 
-- **El orden de la lista con treinta alumnos.** No ordena por ningún eje —FR-1821 lo
-  prohíbe y hay un test que lo afirma cambiando todos los ejes y comprobando que el orden
-  no se mueve—, pero el orden que sale no encoda nada y con treinta cuesta encontrar a
-  uno. Ordenar por el nombre no compara a nadie y sería más fácil de barrer. Es una
-  decisión de producto y no la tomo yo: queda anotada.
+- ~~El orden de la lista con treinta alumnos.~~ **Decidido por Carlos el 2026-09-07: por
+  el nombre.** Alfabético sigue sin comparar a nadie —es el nombre, que es lo único con
+  lo que ella lo reconoce, y no una propiedad suya—, así que FR-1821 se cumple igual y el
+  test de invariancia sigue verde. Los sin nombre van al final. Y tiró dos casos que
+  afirmaban `boxes.nth(0)`: pasaban por la coincidencia de que la primera fila de la
+  portada y la primera de las casillas eran el mismo niño, cuando lo que FR-1411 promete
+  es que **el niño por el que entró** está en el lote.
 - **Un recorrido con clave de verdad** (`020` T040): tres hojas, una cifra de coste, una
   firma cada vez, y una corrección después nombrando las hojas caducadas por alumno.
   Necesita dinero y una persona.
