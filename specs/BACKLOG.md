@@ -571,7 +571,7 @@ segunda mitad del hallazgo, y es la mitad barata de cerrar.
 **Reproducir:** lanzar `out/main/main.js` con un vault temporal, pulsar «Probar con un
 ejemplo» y leer `getBoundingClientRect()` de `.ensayo-frame .page`.
 
-## G61 · Una clave guardada que deja de descifrarse se lee como «no has conectado»
+## G61 · Una credencial que no descifra se lee como «no has conectado» — *CAUSA: EL ARNÉS, NO EL PRODUCTO*
 
 **Anotado 2026-09-08**, intentando correr `cases/002-model-floor` con una clave de verdad.
 
@@ -602,19 +602,43 @@ Es la misma forma que el defecto del prefijo que `009` ya arregló: allí una cl
 rechazada echándole la culpa a su copiar-pegar; aquí una clave buena guardada y reportada
 como ausente.
 
-**Sin diagnosticar, y dicho a propósito:** *por qué* dejó de descifrarse. Electron se
-instaló el 2026-08-28 y la clave se guardó el 2026-08-29, así que el binario no ha
-cambiado; y una ida y vuelta de `safeStorage` en ese mismo modo de arranque funciona
-(guardar → 131 bytes → cerrar → relanzar → leer). Queda anotado como inexplicado en vez de
-adivinado. Sea cual sea la causa, a una maestra que no abre Rampa en un mes no se le puede
-decir que nunca conectó.
+### Corregido el mismo día: la causa era el arnés, y esta entrada estaba mal planteada
 
-**Dos cosas abiertas:**
+**No es un defecto del producto, y la hipótesis con la que se escribió esta entrada era
+falsa.** Se sospechaba que una clave «caducaba» en el llavero pasado un tiempo. Se cayó al
+probarlo: una clave **recién guardada**, con su `providers:validate` de 227 ms contra
+Google trece minutos antes, tampoco descifraba desde el proceso que la iba a usar.
 
-- **Una línea de log** cuando existe un fichero de credenciales y no descifra. El silencio
-  es lo que hizo que esto costara una tarde.
-- **Una frase con la que pueda hacer algo.** «Tu clave estaba guardada y ya no la puedo
-  leer; vuelve a pegarla» es distinta de «todavía no has conectado», y sólo una es verdad.
+Lo que pasaba es que la credencial se leía desde un **proceso de Electron distinto del que
+la escribió**, lanzado desde un script de pruebas. `safeStorage` en macOS cifra con una
+clave maestra que vive en una entrada del llavero, y sólo existe una: `rampa Safe Storage`,
+la que creó `npm run dev`. Un segundo proceso no la obtiene, así que `decryptString` lanza
+—`Error while decrypting the ciphertext provided to safeStorage.decryptString`— y `load()`
+lo traduce, correctamente, a «no hay claves».
+
+Por el camino se descartó una explicación intermedia que también parecía buena: lanzar
+`out/main/main.js` en vez del directorio de la app deja `app.getName()` en «Electron» en
+lugar de «rampa», que son dos entradas de llavero distintas. Corregirlo **no** arregló el
+descifrado, así que tampoco era eso. Anotado porque es una trampa real para cualquier
+script que hable con la app de verdad, y porque casi se cerró la investigación ahí.
+
+**Lo que el producto sí hace mal, y se queda abierto:** el silencio. Ni una línea de log
+cuando existe un fichero de credenciales y no descifra. Ese silencio es lo único que
+convirtió esto en horas: con una línea, la causa se veía en un minuto. Y en la interfaz,
+«no puedo leer tu clave» y «nunca has conectado» siguen siendo la misma frase, que es
+verdad sólo en un caso.
+
+**Lo que ya NO se afirma aquí:** que una maestra que no abre Rampa en un mes se quede
+fuera. No hay ninguna evidencia de eso, y esta entrada la daba por hecha.
+
+**Lo que queda abierto, ya sin la parte inventada:**
+
+- **Una línea de log** cuando existe un fichero de credenciales y no descifra.
+- **Una frase con la que pueda hacer algo**, distinta de «todavía no has conectado» — para
+  el caso de verdad, que es un fichero copiado de otro ordenador o de otra instalación.
+- **Y una nota para quien escriba pruebas contra la app real:** la clave sólo la puede usar
+  el proceso que la guardó. Un pase con clave de verdad se conduce en la misma ventana
+  donde se pega, no en una segunda.
 
 ## G60 · «Le digo que Gemini y me abre la pantalla de conectar Claude» — *ARREGLADO 2026-09-08*
 
