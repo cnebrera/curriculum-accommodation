@@ -48,16 +48,28 @@ await page.evaluate((c) => window.rampa.names.set(c, 'Lucía'), code);
 await page.reload();
 await page.waitForLoadState('domcontentloaded');
 await page.waitForTimeout(1200);
-await page.screenshot({ path: join(out, '2-adaptar.png') });
+/*
+ * The application opens on the caseload (FR-1801), and the rail holds exactly two
+ * top-level entries (`020` FR-1802): «Mis alumnos» and «Configuración». The five-entry
+ * walk this script used to take photographed a rail that no longer exists — the other
+ * three destinations moved inside the learner and inside Configuración, so the walk
+ * follows them there.
+ */
+await page.screenshot({ path: join(out, '2-mis-alumnos.png') });
 
+await page.getByRole('button', { name: 'Configuración' }).click();
+await page.waitForTimeout(700);
+await page.screenshot({ path: join(out, '3-configuracion.png') });
 for (const [file, label] of [
-  ['3-alumnos', 'Mis alumnos'], ['4-notas', 'Mis notas'],
-  ['5-servicio', 'Mi servicio de IA'], ['7-acerca', 'Acerca de'],
+  ['4-servicio', 'Mi servicio de IA'], ['5-acerca', 'Acerca de y licencias'],
 ]) {
-  await page.getByRole('button', { name: label }).click();
+  await page.getByRole('navigation', { name: 'Apartados de Configuración' })
+    .getByRole('button', { name: label, exact: true }).click();
   await page.waitForTimeout(700);
   await page.screenshot({ path: join(out, `${file}.png`) });
 }
+await page.getByRole('button', { name: '← Mis alumnos' }).click();
+await page.waitForTimeout(400);
 
 /*
  * Inside a learner (`020`), which is now most of the application.
@@ -66,8 +78,6 @@ for (const [file, label] of [
  * design died was that nobody looked at it until it was built: a learner menu
  * beside the rail put 501px of chrome in front of a worksheet.
  */
-await page.getByRole('button', { name: 'Mis alumnos' }).click();
-await page.waitForTimeout(400);
 await page.locator('.card-action').first().click();
 await page.waitForTimeout(900);
 await page.screenshot({ path: join(out, '6-alumno-quien-es.png'), fullPage: true });
@@ -117,9 +127,11 @@ await page.waitForTimeout(400);
  * 880 and 892 straddle 52em — 884px, because `--text-base` is 17px, not 16 —
  * so they are the last strip and the first column, which is where a shell breaks
  * if it is going to.
+ *
+ * The sweep runs over the caseload: «Preparar material» stopped being a top-level
+ * destination in `020` T028 — preparing happens inside the learner now, and the
+ * learner's own sweep above already covers that shell.
  */
-await page.getByRole('button', { name: 'Preparar material' }).click();
-await page.waitForTimeout(400);
 for (const width of [560, 700, 880, 892, 1024, 1280, 1920]) {
   await page.setViewportSize({ width, height: 800 });
   await page.waitForTimeout(400);
