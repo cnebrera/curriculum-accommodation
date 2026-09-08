@@ -41,7 +41,22 @@ type Verdict =
   | { ok: true; costCents: number }
   | { ok: false; text: string; switchTo?: Service };
 
-export function ConnectStep({ onDone }: { onDone: (providerId: string) => void }) {
+export function ConnectStep({ onDone, serviceId }: {
+  onDone: (providerId: string) => void;
+  /**
+   * The service she has already named, when there is one (`009` FR-719).
+   *
+   * Configuración's «Mi servicio de IA» lists the unconnected services as buttons
+   * carrying their own label, so pressing «Gemini (Google)» *is* her answer. It used
+   * to be dropped — `route.reconnecting` was read as a boolean — and she landed on the
+   * card question she had just answered by name, whose endorsed button recommends a
+   * different vendor. Backlog G60.
+   *
+   * Honoured through the same path as `connectServiceId`: the reasoning in the effect
+   * below was already written for exactly this, for the interrupted-setup case.
+   */
+  serviceId?: string;
+}) {
   const { t: es } = useStrings();
   const c = es.connect;
 
@@ -69,13 +84,13 @@ export function ConnectStep({ onDone }: { onDone: (providerId: string) => void }
        * and coming back to "¿puedes usar una tarjeta?" after she had already
        * answered it and opened Groq's console is how a setup gets abandoned.
        */
-      const saved = loadState().connectServiceId;
+      const saved = serviceId ?? loadState().connectServiceId;
       if (saved && list.some((s) => s.id === saved)) {
         setChosen(saved);
         setStage('walkthrough');
       }
     });
-  }, []);
+  }, [serviceId]);
 
   const answer = async (card: boolean, loc?: 'eu') => {
     setCanUseCard(card);
@@ -180,7 +195,16 @@ export function ConnectStep({ onDone }: { onDone: (providerId: string) => void }
           <legend><h3>{c.cardQuestion}</h3></legend>
           <p className="small">{c.cardWhy}</p>
           <div className="row gap2">
-            <button className="btn btn-primary btn-lg" onClick={() => void answer(true, location)}>
+            {/*
+              Neither answer is endorsed, and that is the point (backlog G60).
+
+              «Sí, puedo» used to be `btn-primary` — blue, the recommended action — with
+              a caption underneath promising the *free* service, which is what the other
+              answer produces. Pressing the endorsed button lands on a vendor with no
+              free tier. This is a question about her school's rules, not an action with
+              a better and a worse option.
+            */}
+            <button className="btn btn-lg" onClick={() => void answer(true, location)}>
               {c.cardYes}
             </button>
             <button className="btn btn-lg" onClick={() => void answer(false, location)}>

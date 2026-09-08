@@ -245,6 +245,40 @@ export function isAllowedEndpoint(raw: string): boolean {
  * "## Los pasos" still works. A heading we do not recognise leaves its section
  * out of the walkthrough rather than pushing prose into the wrong place.
  */
+/**
+ * One list item per marker, **continuation lines included**.
+ *
+ * This used to match every line against the marker and drop whatever did not match,
+ * so a wrapped item silently lost everything after its first line. In the six provider
+ * files that was 27 lines, and the damage landed on the only screen that exists to get
+ * a teacher her key: google's step 1 ended at «Si te pide», losing «entrar, entra con
+ * tu cuenta de Google», and step 3 lost where the button actually is (backlog G63).
+ *
+ * The markdown convention for a continuation is indentation under the marker, so that
+ * is what is folded in — joined with a space, because the line break is the source
+ * file's wrapping and not the author's. A blank line closes the item: an unindented
+ * paragraph after a list is prose about the list, not part of it.
+ *
+ * `intro` never had this defect, which is why it was invisible for so long: it splits
+ * on blank lines rather than on every newline, so its wrapped paragraph survived.
+ */
+function collectItems(content: string, marker: RegExp, out: string[]): void {
+  let open = false;
+  for (const line of content.split('\n')) {
+    const m = marker.exec(line);
+    if (m?.[1]?.trim()) {
+      out.push(m[1].trim());
+      open = true;
+      continue;
+    }
+    if (!line.trim()) { open = false; continue; }
+    // Indented under the marker, and something to attach it to.
+    if (open && /^\s/.test(line) && out.length) {
+      out[out.length - 1] = `${out[out.length - 1]} ${line.trim()}`;
+    }
+  }
+}
+
 function parseBody(body: string): { intro: string; steps: string[]; troubleshooting: string[] } {
   const sections = body.split(/^##\s+/m).slice(1);
   let intro = '';
@@ -257,15 +291,9 @@ function parseBody(body: string): { intro: string; steps: string[]; troubleshoot
     const content = nl === -1 ? '' : section.slice(nl + 1).trim();
 
     if (/paso/.test(heading)) {
-      for (const line of content.split('\n')) {
-        const m = /^\s*(?:\d+[.)]|[-*])\s+(.*)$/.exec(line);
-        if (m?.[1]?.trim()) steps.push(m[1].trim());
-      }
+      collectItems(content, /^\s*(?:\d+[.)]|[-*])\s+(.*)$/, steps);
     } else if (/no encuentro|problema|si algo/.test(heading)) {
-      for (const line of content.split('\n')) {
-        const m = /^\s*[-*]\s+(.*)$/.exec(line);
-        if (m?.[1]?.trim()) troubleshooting.push(m[1].trim());
-      }
+      collectItems(content, /^\s*[-*]\s+(.*)$/, troubleshooting);
     } else if (!intro) {
       intro = content.split(/\n\s*\n/)[0]?.trim() ?? '';
     }

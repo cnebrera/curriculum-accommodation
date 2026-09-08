@@ -439,6 +439,240 @@ every moment should have a spec. What it added beyond the seams pass:
    journey sentence → T094). Handover *import* (004 US2) recorded as deliberately
    deferred rather than silently missing.
 
+## G63 · Los pasos para conseguir la clave llegaban cortados — *EL PARSER ARREGLADO; EL CORPUS, DECISIÓN ABIERTA*
+
+**Anotado 2026-09-08**, visto en una captura mientras se arreglaba G60 — en la misma
+pantalla y en la misma sesión.
+
+`parseBody` en `packages/core/src/providers/catalogue.ts` partía el cuerpo por `\n` y
+exigía marcador de lista en cada línea; lo que no encajaba **se descartaba en silencio**.
+Una línea de continuación —la convención markdown para envolver un item— no encaja. Así
+que todo item envuelto acababa en su primera línea:
+
+| Fichero | Líneas perdidas |
+|---|---|
+| `google.md` | 9 |
+| `openai.md` | 5 |
+| `anthropic.md` | 4 |
+| `mistral.md` | 4 |
+| `groq.md` | 3 |
+| `deepseek.md` | 2 |
+| | **27** |
+
+Y el daño caía en **la única pantalla que existe para que una maestra consiga su clave**.
+El paso 1 de Google terminaba en «Si te pide» y perdía «entrar, entra con tu cuenta de
+Google»; el paso 3 perdía dónde está el botón, que es literalmente lo que el paso explica.
+
+**Por qué estuvo invisible tanto tiempo.** `intro` no tiene el defecto: parte por línea en
+blanco y no por cada `\n`, así que su párrafo envuelto sobrevivía. En pantalla el párrafo
+de presentación sale entero y los pasos salen mutilados, que es la combinación que hace
+que parezca un problema de maquetación.
+
+**Arreglado:** `collectItems` pliega las continuaciones indentadas en el item abierto,
+unidas por un espacio —el salto de línea es del fichero, no del autor— y una línea en
+blanco cierra el item. Los contadores no se mueven: las continuaciones hoy no se contaban,
+así que `catalogue.test.ts` («entre 3 y 6 pasos») sigue midiendo lo mismo con el texto ya
+completo.
+
+**El test, contra los ficheros de verdad** y no contra un fixture: reconstruye cada item
+del fichero y exige que llegue entero al parseado, incluida su última palabra. Comprobado
+que **falla sin el arreglo** — `anthropic · «Antes de poder usarlo hay que cargar sal…» is
+not in the parsed list` — porque un test escrito después de que algo funcione se escribe
+para encajar con las fugas que ese algo ya tiene.
+
+### Abierto, y es una decisión de contenido
+
+Quedan **44 negritas markdown** dentro de las secciones de pasos y de «no encuentro eso»
+(openai 10, anthropic 9, deepseek 8, google 6, mistral 6, groq 5), que se pintan literales:
+`**Google AI Studio**`.
+
+**Y el arreglo NO es renderizar markdown.** `Walkthrough.tsx` pinta texto a propósito, con
+el motivo escrito: «rendered as text and never as markup: Principle IX, content is never
+instruction». Convertirlo en markup es debilitar una defensa estructural para arreglar algo
+cosmético — la regla 5 de AGENTS.md.
+
+Así que el arreglo es del corpus, y lleva criterio dentro: algunas de esas negritas marcan
+lo que de verdad importa («**no lee fotos**», «**Create API key**»), así que quitarlas sin
+decidir qué pasa con ese énfasis empobrece el texto que ella lee justo cuando está
+perdida. Es una decisión de quien revisa el corpus, no del parser.
+
+## G62 · El ensayo no está centrado, y el guion de capturas no podía verlo
+
+**Anotado 2026-09-08**, en la primera sesión que corrió el ensayo y **lo miró**.
+
+El ensayo de `035` se pinta dentro de `EnsayoFrame` y no dentro del `.main` del shell.
+Medido en una ventana de 1366px:
+
+| Elemento | left…right |
+|---|---|
+| `.main` — todas las demás pantallas | 336…1016, centrado |
+| `.page` dentro del ensayo | **0…960** — pegado al borde, 391px muertos a la derecha |
+
+`.page` en `ui/src/styles/composition.css` lleva `max-width: 60rem` y **no** lleva
+`margin-inline: auto`: el centrado vive en `.main`, que el marco se salta. Y el comentario
+de esa misma regla dice «narrow enough that nothing strands at the left of a 1366px
+window» — que es exactamente lo que pasa en la única pantalla que no pasa por `.main`.
+
+El propio comentario de `EnsayoFrame` dice que está «built from the shell's own pieces: a
+frame that invents its own layout is a fact about the shell that the shell does not know
+(`013`)». Lo es, y el shell no lo sabe. Por la regla de `013`, el arreglo es del shell y no
+de la pantalla.
+
+**Por qué «mirarlo» no lo vio.** `scripts/screenshot.mjs` fotografía las pantallas del
+shell y **nunca entra en el ensayo**. Así que `013` T001 —la regla que existe porque una
+feature entera se publicó bien coloreada, bien etiquetada y fea— tiene un punto ciego
+justo sobre **la primera pantalla que ve alguien que abre Rampa**. Ese punto ciego es la
+segunda mitad del hallazgo, y es la mitad barata de cerrar.
+
+**Reproducir:** lanzar `out/main/main.js` con un vault temporal, pulsar «Probar con un
+ejemplo» y leer `getBoundingClientRect()` de `.ensayo-frame .page`.
+
+## G61 · Una clave guardada que deja de descifrarse se lee como «no has conectado»
+
+**Anotado 2026-09-08**, intentando correr `cases/002-model-floor` con una clave de verdad.
+
+`credentials.enc` tenía una clave de Google guardada el 2026-08-29, y el log conserva la
+secuencia completa y correcta: `providers:shapeCheck` → `providers:validate` (205 ms, una
+llamada real a Google, así que la clave era buena) → `providers:save`. Diez días después el
+mismo binario lee ese fichero y no encuentra nada: `providers:connections` devuelve
+`{active: null, connected: []}` y `job:adapt` lanza `key-missing` — «Todavía no has
+conectado Rampa con tu servicio de IA».
+
+El fichero no es un almacén vacío: son **131 bytes**, cuando un almacén vaciado son 19 y
+una clave recién guardada de 42 caracteres son también 131.
+
+`CredentialStore.load()` se traga cualquier fallo, a propósito:
+
+```ts
+try { text = this.crypto.decrypt(raw); } catch { return (this.cache = { ...EMPTY }); }
+```
+
+El comentario de encima defiende bien esa decisión —«an unreadable file reads as "no keys"
+rather than throwing, because the alternative is an application that cannot start»— y la
+decisión es correcta. **Lo que falta es cualquier señal.** Ni un `logger.warn`, ni nada en
+pantalla. El día del hallazgo el log registró **seis** lecturas del almacén y ni una línea
+diciendo que una credencial no se había podido leer, así que ni ella ni un desarrollador
+con su log delante pueden distinguir «nunca conecté» de «conecté y ya no se lee».
+
+Es la misma forma que el defecto del prefijo que `009` ya arregló: allí una clave buena
+rechazada echándole la culpa a su copiar-pegar; aquí una clave buena guardada y reportada
+como ausente.
+
+**Sin diagnosticar, y dicho a propósito:** *por qué* dejó de descifrarse. Electron se
+instaló el 2026-08-28 y la clave se guardó el 2026-08-29, así que el binario no ha
+cambiado; y una ida y vuelta de `safeStorage` en ese mismo modo de arranque funciona
+(guardar → 131 bytes → cerrar → relanzar → leer). Queda anotado como inexplicado en vez de
+adivinado. Sea cual sea la causa, a una maestra que no abre Rampa en un mes no se le puede
+decir que nunca conectó.
+
+**Dos cosas abiertas:**
+
+- **Una línea de log** cuando existe un fichero de credenciales y no descifra. El silencio
+  es lo que hizo que esto costara una tarde.
+- **Una frase con la que pueda hacer algo.** «Tu clave estaba guardada y ya no la puedo
+  leer; vuelve a pegarla» es distinta de «todavía no has conectado», y sólo una es verdad.
+
+## G60 · «Le digo que Gemini y me abre la pantalla de conectar Claude» — *ARREGLADO 2026-09-08*
+
+**Anotado 2026-09-08**, conectando una clave de verdad por primera vez — y otra vez
+después, ya sabiendo el atajo. Dos defectos en el mismo flujo. Cualquiera de los dos por
+separado produce el síntoma; juntos no dejan salida.
+
+### A · El servicio que ella elige se tira
+
+`Configuración → Mi servicio de IA` lista los servicios que no ha conectado como botones
+**etiquetados con el nombre del servicio** (`ui/src/settings/ConnectionScreen.tsx`, pinta
+`{s.label}` → «Gemini (Google)»). Pulsar uno llama a `onReconnect('google')`, y `App.tsx`
+mete el id en la ruta:
+
+```tsx
+onReconnect={(id) => go({ type: 'settings', pane: 'service', reconnecting: id })}
+```
+
+y luego, en la rama que lee la ruta:
+
+```tsx
+route.reconnecting ? ( … <ConnectStep onDone={…} /> ) : …
+```
+
+`reconnecting` se comprueba como booleano y **no se lee nunca**. `ConnectStep` acepta sólo
+`onDone` y arranca siempre en `stage: 'question'`. Un grep de todo el renderer encuentra
+`reconnecting` exactamente dos veces: donde se escribe, y donde se comprueba que existe.
+
+Así que pulsar un botón que dice «Gemini (Google)» —que **es** su respuesta— arranca un
+asistente que le vuelve a preguntar lo mismo. Y eso rompe `009` FR-707 por el lado
+contrario: el selector debe exigir exactamente una respuesta, y éste la pide *después* de
+que ella la haya dado por su nombre.
+
+### B · Y el botón destacado contradice el pie que lleva debajo
+
+```tsx
+<button className="btn btn-primary btn-lg" onClick={() => answer(true, location)}>{c.cardYes}</button>
+<button className="btn btn-lg"             onClick={() => answer(false, location)}>{c.cardNo}</button>
+<p className="small">{c.cardNoHint}</p>
+```
+
+«Sí, puedo» es el botón primario —azul, visualmente la acción recomendada— y debajo de
+**los dos**, incondicional, hay un pie cuyo propio nombre dice que pertenece a la otra
+rama: «Te recomendaré uno gratuito que además lea fotos». Eso es lo que hace responder
+*No*.
+
+Medido contra el recomendador real:
+
+| Respuesta | Recomienda |
+|---|---|
+| «Sí, puedo» — el azul | `anthropic` — Claude, que no tiene plan gratuito |
+| «No, o prefiero que no» | `google` — Gemini |
+
+Pulsas el botón destacado y aterrizas en «Cómo conseguir tu clave de Claude (Anthropic) ·
+No tiene plan gratuito: se carga saldo por adelantado». Que es lo que le pasó, dos veces, a
+quien escribió este repositorio.
+
+### Lo que dicen los tests
+
+`ui/test/route.test.ts` comprueba que la ruta **transporta** `reconnecting: 'anthropic'`
+bien, y pasa. Nada comprueba que alguien lo **lea**. Y `e2e/connect.spec.ts` pulsa «Cambiar
+la clave» y no afirma nunca a qué servicio apunta el asistente después.
+
+Cada unidad es correcta y falta la costura — la frase que el registro de validación de
+`006` ya usa sobre cuatro defectos anteriores, llegando otra vez por un sitio nuevo.
+
+### Por qué es peor que un fallo cosmético
+
+`006` SC-401 es «una maestra que nunca ha usado IA va del instalador a una ficha adaptada
+impresa, sin ayuda y sin documentación, en menos de 30 minutos». Este flujo mandó al autor
+del repositorio a la página de registro **de pago** del proveedor equivocado, dos veces, y
+el atajo consiste en pulsar el botón que *no* está destacado. Nada de eso es descubrible
+por alguien que no lo haya hecho antes, y el fallo cuesta dinero en vez de un minuto.
+
+Además invierte `009` FR-703 en la práctica: tiene que haber al menos un servicio usable
+sin tarjeta alcanzable desde el camino de la recomendación. Lo es — detrás del botón no
+destacado, bajo un pie que lo promete desde el otro.
+
+### Arreglado el mismo día
+
+**A** · `ConnectStep` acepta un `serviceId` y lo hace pasar por la vía que ya existía —
+`loadState().connectServiceId`, escrita para el caso «la interrumpen y vuelve», con el
+argumento ya redactado de por qué volver a la pregunta de la tarjeta hace que se abandone
+el setup (`009` FR-719). Una línea: `serviceId ?? loadState().connectServiceId`. `App.tsx`
+le pasa `route.reconnecting`, que era el id que se estaba tirando.
+
+**B** · «Sí, puedo» pierde `btn-primary`: la pregunta es sobre las normas de su centro y no
+tiene una respuesta mejor y otra peor. Y el pie dice a qué respuesta pertenece — «**Si
+dices que no**, te recomendaré uno gratuito…».
+
+**La costura, sujeta.** Dos tests en `e2e/connect.spec.ts`: que pulsar un servicio por su
+nombre lleva a ese servicio y no a la pregunta, y que ninguna de las dos respuestas está
+endosada. El primero camina la interfaz y no el reducer, porque `ui/test/route.test.ts` ya
+comprobaba que la ruta *transporta* el id y pasó todo el tiempo.
+
+**Un test existente cambió de referencia, y consta:** `a reconnection she thinks better of
+can be left` usaba el título «Conectar con tu servicio» como marca de «el asistente está
+abierto». Ese título es el de la pregunta de la tarjeta, que el arreglo salta — así que
+seguir afirmándolo sería afirmar que el defecto está ahí. La marca es ahora «← Dejarlo como
+está», que `App.tsx` pinta exactamente mientras `route.reconnecting` está puesto, con el
+motivo escrito en el test. Sus tres aserciones siguen intactas.
+
 ## G59 · La hoja que recibe el niño no dice qué es
 
 **Anotado 2026-09-07**, encontrado escribiendo `037-la-hoja-comprobada` y **dejado fuera

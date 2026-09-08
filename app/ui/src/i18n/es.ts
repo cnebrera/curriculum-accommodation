@@ -94,7 +94,7 @@ export const es = {
     cardWhy: 'Es lo único que necesito saber para recomendarte uno. Muchos centros no dejan, y hay opciones gratis.',
     cardYes: 'Sí, puedo',
     cardNo: 'No, o prefiero que no',
-    cardNoHint: 'Te recomendaré uno gratuito que además lea fotos.',
+    cardNoHint: 'Si dices que no, te recomendaré uno gratuito que además lea fotos.',
 
     locationQuestion: '¿Te ha dicho tu centro dónde pueden procesarse los datos?',
     locationWhy: 'Si no lo sabes, no pasa nada: no cambia lo que te recomiendo.',

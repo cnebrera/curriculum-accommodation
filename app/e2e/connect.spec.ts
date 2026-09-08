@@ -98,21 +98,102 @@ test.describe('the connection step', () => {
     await page.getByRole('button', { name: 'Configuración', exact: true }).click();
     await page.getByRole('button', { name: 'Mi servicio de IA', exact: true }).click();
     await page.getByRole('button', { name: 'Cambiar la clave' }).first().click();
-    await page.getByRole('heading', { name: /Conectar con tu servicio/i }).waitFor({ timeout: 10000 });
+
+    /*
+     * The landmark is «← Dejarlo como está» and no longer the «Conectar con tu servicio»
+     * heading (backlog G60).
+     *
+     * That heading belongs to the **card question**, and since the reconnect path now
+     * honours the service she named, «Cambiar la clave» lands on that service's
+     * walkthrough instead — which is the fix, so asserting on the heading would be
+     * asserting that the defect is still there. This button is rendered by `App.tsx`
+     * exactly while `route.reconnecting` is set, so it means «the wizard is on screen»
+     * at every stage, which is what this test is actually about.
+     */
+    const wizard = page.getByRole('button', { name: '← Dejarlo como está' });
+    await wizard.waitFor({ timeout: 10000 });
 
     /* One · she can leave on purpose. */
-    await page.getByRole('button', { name: '← Dejarlo como está' }).click();
-    await expect(page.getByRole('heading', { name: /Conectar con tu servicio/i })).toBeHidden();
+    await wizard.click();
+    await expect(wizard).toBeHidden();
 
     /* Two · and going somewhere else leaves it behind rather than arming it. */
     await page.getByRole('button', { name: 'Cambiar la clave' }).first().click();
-    await page.getByRole('heading', { name: /Conectar con tu servicio/i }).waitFor({ timeout: 10000 });
+    await wizard.waitFor({ timeout: 10000 });
     await page.getByRole('button', { name: 'Pictogramas', exact: true }).click();
-    await expect(page.getByRole('heading', { name: /Conectar con tu servicio/i })).toBeHidden();
+    await expect(wizard).toBeHidden();
 
     /* And coming back to «Mi servicio de IA» is the screen, not the wizard. */
     await page.getByRole('button', { name: 'Mi servicio de IA', exact: true }).click();
     await expect(page.getByRole('button', { name: 'Cambiar la clave' }).first()).toBeVisible();
+
+    await app.close();
+  });
+
+  /**
+   * The service she names is the service she gets (backlog G60).
+   *
+   * `Configuración → Mi servicio de IA` lists the unconnected services as buttons
+   * carrying their own label, so pressing «Gemini (Google)» is an answer, not a
+   * navigation. It was being discarded: `route.reconnecting` reached `App.tsx` and was
+   * read as a boolean, `ConnectStep` took no service, and she landed on the card
+   * question — whose endorsed button recommends Claude, which has no free tier. Two
+   * people in a row followed that to the wrong vendor's paid signup page.
+   *
+   * `ui/test/route.test.ts` already asserted that the route *carries* the id, and it
+   * passed the whole time. Nothing asserted that anybody read it. That is the seam this
+   * test is here to hold, and it is why it walks the interface rather than the reducer.
+   */
+  test('pressing a service by name goes to that service, not to the card question', async () => {
+    const { app, page } = await launch();
+
+    await page.evaluate(() => window.rampa.providers.save('anthropic', 'sk-ant-e2e-not-a-real-key'));
+    const code: string = await page.evaluate(() => window.rampa.learners.newCode());
+    await page.evaluate((c) => window.rampa.learners.save({
+      code: c, axes: { COG: 2 }, works: [], avoid: [], interests: [],
+      response: { default: 'short' }, language: { instruction: 'es' },
+    }), code);
+    await page.reload();
+    await page.waitForLoadState('domcontentloaded');
+    await page.getByRole('navigation', { name: /Secciones/ }).waitFor({ timeout: 15000 });
+
+    await page.getByRole('button', { name: 'Configuración', exact: true }).click();
+    await page.getByRole('button', { name: 'Mi servicio de IA', exact: true }).click();
+
+    // Anthropic is connected above, so Gemini is one of the «not connected yet» buttons.
+    await page.getByRole('button', { name: /^Gemini/ }).first().click();
+
+    // Her answer is honoured: the walkthrough for the service she named.
+    await page.getByRole('heading', { name: /Cómo conseguir tu clave de Gemini/i })
+      .waitFor({ timeout: 10000 });
+    // …and not the question she just answered by pressing that button.
+    await expect(page.getByRole('button', { name: 'Sí, puedo' })).toBeHidden();
+    // The paste box is there, which is the whole point of having pressed it.
+    await expect(page.locator('#key')).toBeVisible();
+
+    await app.close();
+  });
+
+  /**
+   * Neither answer to the card question is endorsed (backlog G60 B).
+   *
+   * «Sí, puedo» was the primary button, and the caption under both of them promised the
+   * free service — which is what answering *no* produces. A teacher pressing the blue
+   * button, as anyone does, was recommended a vendor that requires a card. The question
+   * is about her school's rules; it has no better and worse answer.
+   */
+  test('the card question endorses neither answer', async () => {
+    const { app, page } = await launch();
+
+    const cls = async (name: string | RegExp) =>
+      page.getByRole('button', { name }).first().getAttribute('class');
+
+    expect(await cls('Sí, puedo'), 'the free path is behind the un-endorsed button')
+      .not.toContain('btn-primary');
+    expect(await cls(/No, o prefiero/)).not.toContain('btn-primary');
+
+    // And the caption says which answer it describes.
+    await expect(page.getByText(/Si dices que no, te recomendaré uno gratuito/)).toBeVisible();
 
     await app.close();
   });

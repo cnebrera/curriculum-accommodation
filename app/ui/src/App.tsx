@@ -586,7 +586,8 @@ export function App() {
                         onClick={() => go({ type: 'settings', pane: 'service' })}>
                   ← Dejarlo como está
                 </button>
-                <ConnectStep onDone={() => go({ type: 'settings', pane: 'service' })} />
+                <ConnectStep serviceId={route.reconnecting}
+                             onDone={() => go({ type: 'settings', pane: 'service' })} />
               </div>
             )
             : (

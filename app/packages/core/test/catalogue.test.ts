@@ -62,6 +62,54 @@ describe('the shipped catalogue', () => {
     }
   });
 
+  /**
+   * No step and no «no encuentro eso» loses text on the way in (backlog G63).
+   *
+   * `parseBody` matched every line against the list marker and dropped whatever did
+   * not match, so a wrapped item ended at its first line. Twenty-seven lines were
+   * being lost across the six files, on the only screen that exists to get a teacher
+   * her key: google's step 1 stopped at «Si te pide» and step 3 never said where the
+   * button is.
+   *
+   * Asserted against the source files rather than against a fixture, because the
+   * defect was invisible precisely to a fixture somebody wrote to match the parser.
+   * The last word of each item in the file must survive into the parsed item.
+   */
+  it('keeps every wrapped step and every wrapped remedy whole', () => {
+    for (const s of catalogue) {
+      const body = readFileSync(join(dir, `${s.id}.md`), 'utf8');
+      for (const section of body.split(/^##\s+/m).slice(1)) {
+        const nl = section.indexOf('\n');
+        const heading = (nl === -1 ? section : section.slice(0, nl)).trim().toLowerCase();
+        const isSteps = /paso/.test(heading);
+        const isTrouble = /no encuentro|problema|si algo/.test(heading);
+        if (!isSteps && !isTrouble) continue;
+        const marker = isSteps ? /^\s*(?:\d+[.)]|[-*])\s+(.*)$/ : /^\s*[-*]\s+(.*)$/;
+        const parsed = isSteps ? s.steps : s.troubleshooting;
+
+        /* Rebuild each item from the file, folding its indented continuations. */
+        const expected: string[] = [];
+        let open = false;
+        for (const line of (nl === -1 ? '' : section.slice(nl + 1).trim()).split('\n')) {
+          const m = marker.exec(line);
+          if (m?.[1]?.trim()) { expected.push(m[1].trim()); open = true; continue; }
+          if (!line.trim()) { open = false; continue; }
+          if (open && /^\s/.test(line) && expected.length) {
+            expected[expected.length - 1] += ` ${line.trim()}`;
+          }
+        }
+
+        for (const item of expected) {
+          const last = item.split(/\s+/).pop() ?? '';
+          expect(parsed, `${s.id} · «${item.slice(0, 40)}…» is not in the parsed list`)
+            .toContain(item);
+          expect(parsed.some((p) => p.endsWith(last)),
+            `${s.id} · an item was cut before its last word «${last}»`).toBe(true);
+        }
+      }
+    }
+  });
+
   it('never puts a model name, a token count or a context size where she can see it', () => {
     // FR-702. `model` is a field she never sees; everything else in the entry is
     // read aloud on screen, so the jargon check runs over exactly that text.
