@@ -439,6 +439,50 @@ every moment should have a spec. What it added beyond the seams pass:
    journey sentence → T094). Handover *import* (004 US2) recorded as deliberately
    deferred rather than silently missing.
 
+## G64 · «Hay un ver todos y comparar, pero no me deja elegir» — *ARREGLADO 2026-09-08*
+
+**Anotado 2026-09-08**, por Carlos, en la misma sesión y en la pantalla de al lado de G60.
+Con la recomendación puesta en un servicio que no era el que quería, la tabla de
+comparación se podía **leer y no usar**.
+
+Nueve columnas de frases de verdad hacen la tabla de 1043px dentro de una caja de 616px,
+así que el botón «Usar este» quedaba así:
+
+| | px |
+|---|---|
+| Caja con scroll (`.table-scroll`) | 368…**984** |
+| Tabla | 369…**1411** |
+| Botón «Usar este» de Gemini | **1309…1395** |
+
+**325px más allá del borde derecho de su propia caja**, y 29 más allá del borde de una
+ventana de 1366 — la del portátil del carrito, que es la que `010` dimensiona. `overflow-x:
+auto` le daba una barra de scroll, y macOS la esconde hasta que algo se mueve, así que la
+única acción de la pantalla no tenía **ninguna** pista de existir.
+
+**Arreglado:** la última columna es `position: sticky; right: 0`. Pegada y no una tabla más
+estrecha: las columnas son los hechos que deciden, `009` FR-706 le pone fecha a cada uno, y
+quitar una para hacer sitio sería cambiar la razón por la que puede elegir por la capacidad
+de pulsar. La cabecera ya era sticky en el otro eje, así que es la misma técnica girada.
+`box-shadow` en vez de `border-left` porque un borde colapsado en una celda sticky no pinta
+fiable, y ese canto es lo que dice que la columna está fijada. Botón ahora en 880…967,
+dentro de la caja.
+
+### Y lo que este defecto dice de la suite
+
+**Todos los tests que pulsan ese botón pasaban.** Playwright hace scroll hasta el elemento
+antes de pulsarlo: el conductor hacía gratis justo lo que la persona no sabía que se podía
+hacer. Y `toBeVisible()` tiene el mismo punto ciego — habla del DOM y del CSS, no de dónde
+están los píxeles.
+
+Así que el test nuevo **afirma geometría**: el borde derecho del botón contra el borde
+visible de su caja. Comprobado rojo sin el arreglo — `«Usar este» ends at 1395, its box at
+984`.
+
+Es la tercera vez en esta sesión que aparece la misma familia: una capacidad que existe en
+el árbol y no llega a la persona (`013` T001 y G62, la costura de G60, y esto). El patrón
+no es «faltan tests»; es que **un test que conduce la interfaz no comprueba que la
+interfaz esté a la vista**.
+
 ## G63 · Los pasos para conseguir la clave llegaban cortados — *EL PARSER ARREGLADO; EL CORPUS, DECISIÓN ABIERTA*
 
 **Anotado 2026-09-08**, visto en una captura mientras se arreglaba G60 — en la misma

@@ -280,6 +280,56 @@ test.describe('the connection step', () => {
     await app.close();
   });
 
+  /**
+   * The button that chooses is *on screen*, not merely in the DOM (backlog G64).
+   *
+   * Nine columns of sentences make the table 1043px wide inside a 616px box, so «Usar
+   * este» sat 325px past the right edge of its own scroll box — and past the right edge
+   * of a 1366px window. `overflow-x: auto` gave it a scrollbar that macOS hides until
+   * something scrolls, so a teacher could read the comparison and not use it: «hay un
+   * ver todos y comparar, pero no me deja elegir».
+   *
+   * **Asserted as geometry, deliberately.** Every existing test presses this button and
+   * passes, because Playwright scrolls an element into view before clicking it — the
+   * driver does for free the thing a person did not know was possible. `toBeVisible()`
+   * has the same blind spot: it is about the DOM and CSS, not about where the pixels
+   * are. So this compares the button's box against the scroll box's visible edge, which
+   * is the question a person is actually asking.
+   */
+  test('the button that chooses is reachable without scrolling sideways', async () => {
+    const { app, page } = await launch();
+    // The laptop on the trolley, which is the window `010` sizes for.
+    await page.setViewportSize({ width: 1366, height: 768 });
+    await answerCard(page, true);
+    await page.getByRole('button', { name: /Ver todos y comparar/ }).click();
+    await page.getByRole('table').waitFor({ timeout: 10000 });
+
+    const geometry = await page.evaluate(() => {
+      const box = document.querySelector('.table-scroll');
+      const row = [...document.querySelectorAll('table.compare tbody tr')]
+        .find((r) => /Gemini/i.test(r.textContent ?? ''));
+      const btn = row?.querySelector('button');
+      if (!box || !btn) return null;
+      const b = box.getBoundingClientRect();
+      const t = btn.getBoundingClientRect();
+      return {
+        boxRight: Math.round(b.right),
+        btnLeft: Math.round(t.left),
+        btnRight: Math.round(t.right),
+        windowWidth: window.innerWidth,
+      };
+    });
+
+    expect(geometry, 'the comparison table or its choose button is gone').not.toBeNull();
+    const g = geometry!;
+    expect(g.btnRight, `«Usar este» ends at ${g.btnRight}, its box at ${g.boxRight}`)
+      .toBeLessThanOrEqual(g.boxRight + 1);
+    expect(g.btnRight, 'the button is outside the window').toBeLessThanOrEqual(g.windowWidth);
+    expect(g.btnLeft, 'the button starts outside its own box').toBeLessThan(g.boxRight);
+
+    await app.close();
+  });
+
   test('says nothing is approved or certified by us (FR-711)', async () => {
     const { app, page } = await launch();
     await answerCard(page, true);

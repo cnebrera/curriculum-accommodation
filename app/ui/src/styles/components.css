@@ -594,6 +594,31 @@ body { container: window / inline-size; }
 .compare tbody tr:last-child th, .compare tbody tr:last-child td { border-bottom: 0; }
 .compare tbody tr:hover td, .compare tbody tr:hover th { background: var(--surface-2); }
 .compare td { max-width: 230px; }
+
+/* The column that chooses stays reachable, however far the table scrolls
+   (backlog G64).
+
+   Nine columns of real sentences make the table 1043px wide inside a 616px box, so
+   «Usar este» sat 325px past the right edge — and past the right edge of a 1366px
+   window. `overflow-x: auto` gave it a scrollbar, which on macOS is invisible until
+   something scrolls, so the one action on the screen had no affordance at all: the
+   comparison could be read and not used.
+
+   Sticky rather than a narrower table: the columns are the facts that decide, `009`
+   FR-706 puts a date on each of them, and dropping one to make room would be trading
+   the reason she can choose for the ability to click. The header row is already sticky
+   the other way, so this is the same technique on the other axis.
+
+   `box-shadow` and not `border-left`: a collapsed border on a sticky cell does not
+   paint reliably, and the edge is what tells her the column is pinned rather than
+   part of «Para quién va bien». */
+.compare thead th:last-child,
+.compare tbody td:last-child {
+  position: sticky; right: 0; z-index: 1;
+  background: var(--paper); box-shadow: inset 1px 0 0 var(--line);
+}
+.compare thead th:last-child { background: var(--surface); z-index: 2; }
+.compare tbody tr:hover td:last-child { background: var(--surface-2); }
 .suits { color: var(--ink-soft); }
 
 .steps { display: flex; flex-direction: column; gap: var(--s4);
