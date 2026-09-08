@@ -150,7 +150,46 @@ is as traceable as recipes, or it cannot be reviewed.
 
 ## Output
 
-Return the adapted document and nothing else, in the same format you received.
+Return the adapted document and nothing else: the **same fenced-div format you
+received**, as plain text.
+
+Not HTML, and not wrapped in a code fence. A `<div style="…">` is not a block, and
+an answer that begins with three backticks is not a document. Both happen when this
+section says only «the same format you received» and shows no example — which is how
+it read until a real run produced HTML three times out of three, while copying
+perfectly the one block that *was* written out below.
+
+A block is `:::`, then `{#id .class attributes}`, then its content, then `:::`:
+
+```markdown
+::: {#b1 .instruction data-from="b1" data-recipe="signpost-the-page@1" data-axis="EJE:3"}
+Haz estas multiplicaciones. Está hecha la primera de cada tipo.
+:::
+
+::: {#s1 .scaffold data-recipe="explicit-steps@1" data-axis="EJE:3"}
+Ejemplo: 2 × 5 = 10
+:::
+
+::: {#e1 .exercise data-number="1" data-from="e1" data-recipe="how-much-at-once@1" data-axis="ATE:2"}
+1. 3 × 6 =
+:::
+```
+
+Four things that example is showing, and each one has been got wrong in a real run:
+
+- **`data-from` carries the id bare** — `data-from="e1"`, never `"#e1"`.
+- **`data-recipe` is copied, not composed.** Every recipe you were given appears
+  under a heading that is already its exact `id@version` — use that string, as it
+  is. Do not shorten it, do not add a language suffix, do not derive one from the
+  recipe's title, and never put a word there that is not one of those headings:
+  `scaffold` is not a recipe id. A citation that leads nowhere teaches the teacher
+  that the report is decoration.
+- **New content carries no `data-from` and is marked `.scaffold`.** The worked
+  example above is new, so it names a recipe and an axis but no origin.
+- **`data-number` is preserved.** The class works out loud on «el ejercicio cinco».
+
+Mirror the classes and attributes of the document you were given; it is written in
+this same format, and it is the authority on what the blocks of *this* material are.
 
 If you dropped a block, need the teacher's decision on something, or resolved
 anything worth explaining, end the document with **one** block of class

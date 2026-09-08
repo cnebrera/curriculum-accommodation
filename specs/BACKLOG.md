@@ -439,6 +439,38 @@ every moment should have a spec. What it added beyond the seams pass:
    journey sentence → T094). Handover *import* (004 US2) recorded as deliberately
    deferred rather than silently missing.
 
+## G70 · El informe pierde la versión de la última receta, y nadie valida `data-recipe`
+
+**Anotado 2026-09-08**, leyendo el primer informe bueno que produjo un modelo real.
+
+**Uno.** Las cabeceras del informe se quedan sin versión en la última receta del grupo:
+
+```
+## signpost-the-page · 4 bloques
+Receta: `signpost-the-page@1` · Barrera: `EJE:3`
+```
+
+La línea de abajo la lleva y el título no. En un proyecto cuya tesis es que «traceability
+to a moving target is not traceability», el documento que la maestra lee encabeza sus
+decisiones con ids sin versión.
+
+**Dos, y es el que lo causa.** `docs/ir.md` define `data-recipe` como **una** receta —«Recipe
+that produced the change, as `id@version`»— y `data-from` como «Id(s)», en plural, a
+propósito. El modelo escribe listas separadas por comas en `data-recipe`:
+
+```
+data-recipe="signpost-the-page@1, how-much-at-once@1, one-idea-per-sentence@1, lectura-facil-es@1, decoding-load@1"
+```
+
+Nada lo valida, y el generador de informes trata la cadena entera como el nombre de una
+receta, así que sale una cabecera de seis recetas y un «Bloques: b1-intro». La maestra
+revisa «unas quince decisiones» sólo si cada decisión tiene nombre.
+
+**Lo que hay que decidir:** o `data-recipe` admite lista y el informe agrupa por receta
+—que probablemente es lo que la maestra quiere, «qué hizo `signpost-the-page` en toda la
+hoja»— o es singular y el prompt tiene que decirlo y algo tiene que rechazarlo. Hoy es
+singular en la especificación, plural en la práctica, y el informe se come la diferencia.
+
 ## G69 · El informe le dijo dos cosas falsas, y la hoja pasó las tres puertas
 
 **Anotado 2026-09-08**, de la pasada 2 del caso 002 — la única de tres que pasó. Es el
@@ -476,6 +508,14 @@ marcada como claim: es una frase del informe. Y no hay sección de «lo que he c
 informe de esta pasada no lista ni una receta, así que lo único que ella lee sobre el cambio
 es la frase equivocada.
 
+**Sobrevive al arreglo del formato, y ahora es reproducible.** Tras enseñarle el formato
+(G68), las tres pasadas salen limpias y las tres siguen haciendo esto: no hay ningún
+`.exercise` con `data-number="1"` — el 1 vive dentro de un `.scaffold` como «1. 3 × 6 = 18»
+— mientras los ejercicios 2, 3 y 4 conservan el suyo. Y el informe sigue encabezando con
+«no he tocado: la exigencia curricular, la numeración original». O sea: **arreglar el
+formato hizo la hoja válida y no hizo el informe verdadero**, que es la distinción que este
+hallazgo existe para marcar.
+
 **Y el aviso que faltó.** El ejercicio 1 convertido en ejemplo resuelto es defendible: el
 perfil A3 dice literalmente «El primer ejercicio ya resuelto de ejemplo». El patrón de oro
 escrito a mano lee esa misma línea y **añade** un ejemplo nuevo («Ejemplo: 2 × 5 = 10»)
@@ -484,7 +524,7 @@ niño. Eso no lo puede resolver el modelo: la línea del perfil es ambigua y hay
 desambiguarla en el corpus. Pero mientras lo sea, **el informe tiene que decir qué lectura
 tomó**, y aquí dijo lo contrario.
 
-## G68 · El suelo del modelo, medido: `gemini-2.5-flash` no lo alcanza
+## G68 · El suelo del modelo, medido: era el prompt y no el modelo — *RESUELTO 2026-09-08*
 
 **Anotado 2026-09-08.** Primera medición real de [`cases/002-model-floor`](../cases/002-model-floor/README.md),
 que llevaba desde el 2026-08-28 escrito y sin correr. Columna `adapt`, perfil `A3` de
@@ -516,10 +556,18 @@ preguntan, qué operación, opera, escribe la respuesta— que es buena práctic
 Cantidades y operaciones intactas. O sea: **el suelo lo tumba la mecánica, no el criterio**,
 que es exactamente lo que un suelo duro debe medir y por eso el caso separa las dos mitades.
 
-**Dos manchas de citación**, las dos en las tres pasadas: cita `lectura-facil-es@1`, que **no
-existe** —la receta es `lectura-facil@1`, se inventó el sufijo— y usa `data-recipe="scaffold"`,
-que no es un `id@version`. Un informe que cita fantasmas enseña que los informes son
-decoración (`035` FR-3310), y aquí el fantasma lo pone el modelo.
+**Una mancha de citación, no dos.** Usa `data-recipe="scaffold"`, que no es un `id@version`
+y no lleva a ninguna receta.
+
+**Y una acusación retirada, porque era falsa.** Durante la sesión se anotó que el modelo se
+inventaba `lectura-facil-es@1` «porque la receta es `lectura-facil@1`». No: la receta
+**declara** `id: lectura-facil-es` en su front matter, y el fichero se llama
+`lectura-facil.md`. El error fue buscar la receta por el nombre del fichero. El prompt le
+entrega cada receta bajo un encabezado que ya es su `id@version` exacto (`recipeRef`), así
+que el modelo copió lo que se le dio. Queda anotado porque el mismo error casi entra en el
+corpus: la primera versión del arreglo del formato escribió «`lectura-facil-es@1` is not [a
+recipe]» dentro de `instructions/adapt.md`, o sea una falsedad en el propio prompt, y del
+tipo que el modelo iba a obedecer.
 
 **Lo que esta medición NO dice.** Nada sobre los peldaños de pago: falta Sonnet-class y
 Opus-class, que son los que decidirían si el suelo está en el tier o en el prompt. Si el
@@ -527,8 +575,46 @@ fallo es de formato, cabe que un modelo mejor lo sostenga — y cabe también qu
 `instructions/adapt.md` tenga que enseñar el formato con un ejemplo completo en vez de sólo
 el bloque de notas, que es la hipótesis más barata de probar y no cuesta una clave.
 
-La tabla fechada del caso sigue pendiente: esto es una columna de tres celdas de las doce
-que pide.
+### Y era el prompt. Medido el mismo día
+
+`instructions/adapt.md` §Output decía, entero: «Return the adapted document and nothing
+else, **in the same format you received**». Ninguna otra indicación de formato, y un solo
+bloque escrito literal — `.report-notes`, que es exactamente el único que el modelo acertó
+tres veces de tres. Copiaba lo que veía e inventaba lo que no.
+
+Se añadió al prompt el formato con un ejemplo de tres bloques (uno derivado, uno
+`.scaffold` nuevo, uno ejercicio con su `data-number`), tomado de `docs/ir.md`, más la
+prohibición explícita de HTML y de envolver la respuesta en un bloque de código.
+
+| | Antes | Después |
+|---|---|---|
+| Pasadas limpias | **1 de 3** | **3 de 3** |
+| Pasadas que necesitaron el retry | 2 | **0** |
+| Llamadas por pasada | 1–2 | 1 |
+| Segundos | 32–71 | 24–34 |
+
+Repetido dos veces (seis pasadas en total tras el cambio), 6 de 6 limpias. Y el informe
+que sale ahora es el de verdad: seis grupos de decisión con sus recetas, sus barreras y sus
+bloques, y notas propias del modelo declarando lo que omitió.
+
+**Así que el veredicto se invierte:** `gemini-2.5-flash` **sí** alcanza el suelo duro de la
+columna `adapt`. Lo que no lo alcanzaba era la instrucción. Y eso hace la promesa de `009`
+FR-703 —al menos un servicio sin tarjeta, alcanzable desde la recomendación— honesta
+también sobre funcionar, no sólo sobre conectar.
+
+**Lo que sigue sin medir**, y no ha cambiado: `ingest` (la otra columna), y los peldaños de
+pago. Con el prompt arreglado la pregunta interesante ya no es «¿aguanta flash?» sino
+«¿cuánto mejor es Sonnet en lo que sí es criterio?», que es el suelo blando y necesita a
+una persona leyendo hojas mezcladas.
+
+**Y una cosa que se aprendió del arreglo mismo:** la primera versión del ejemplo incluía un
+contraejemplo con el id equivocado escrito entero. El modelo siguió emitiendo ese id — que
+además resultó ser el correcto, ver arriba. Nombrar la cadena mala en negativo no la quita
+de encima; la regla quedó en positivo, «copia el `id@version` del encabezado que se te da».
+
+**Lo que este arreglo NO arregló:** la hoja sigue convirtiendo el ejercicio 1 en ejemplo
+resuelto, y el informe sigue diciendo que no tocó la numeración. Ver G69, que ahora es
+reproducible 3 de 3.
 
 ## G67 · Google se cobra siempre a cero, porque su adaptador miente sobre qué modelo corrió
 
