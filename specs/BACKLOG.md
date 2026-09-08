@@ -439,6 +439,206 @@ every moment should have a spec. What it added beyond the seams pass:
    journey sentence → T094). Handover *import* (004 US2) recorded as deliberately
    deferred rather than silently missing.
 
+## G69 · El informe le dijo dos cosas falsas, y la hoja pasó las tres puertas
+
+**Anotado 2026-09-08**, de la pasada 2 del caso 002 — la única de tres que pasó. Es el
+hallazgo más serio de la sesión, y no lo cazó ninguna de las capas.
+
+La hoja pasó, y su informe dice esto:
+
+> ## Lo que NO he hecho
+> - Quité el bloque «b1»: El bloque original b1 fue dividido en múltiples secciones y
+>   adaptado según las recetas…
+
+Y arriba: «Lo he tratado como: una ficha o unos ejercicios. Eso quiere decir que **no he
+tocado: la exigencia curricular, la numeración original**.»
+
+**Las dos frases son falsas.**
+
+`b1` no se quitó: era **el material entero** —el IR de un texto pegado es un solo bloque— y
+lo que el modelo hizo fue reestructurarlo. Escribió `[dropped:b1]` para decir «lo he
+partido», y esa declaración se le presenta a la maestra como «quité el bloque b1», que no
+es ni verdad ni accionable: no hay ningún «bloque b1» que ella pueda mirar.
+
+Y la numeración **sí** se tocó: el ejercicio 1 dejó de ser un ejercicio. La hoja pone «**1.
+Resuelto de ejemplo:** 3 × 6 = 18», así que el niño resuelve cinco cosas de seis, con la
+primera ya contestada — mientras el informe afirma que la exigencia curricular está intacta.
+
+**Lo que NO es este hallazgo.** No es que `[dropped:ID]` sea una puerta rota: el contrato
+de `report/notes.ts` es explícito y correcto —«everything here is *claims by the model*…
+they are not evidence that the drop was correct»— y la puerta de completitud sólo distingue
+declarado de silencioso, que es lo que dice hacer. La maestra decide, y por eso los drops
+encabezan el informe.
+
+**Lo que sí es.** Que una declaración mal usada se convierte en **prosa afirmativa y falsa**
+en el único documento que existe para ser honesto. «Quité el bloque b1» no es una claim
+marcada como claim: es una frase del informe. Y no hay sección de «lo que he cambiado» — el
+informe de esta pasada no lista ni una receta, así que lo único que ella lee sobre el cambio
+es la frase equivocada.
+
+**Y el aviso que faltó.** El ejercicio 1 convertido en ejemplo resuelto es defendible: el
+perfil A3 dice literalmente «El primer ejercicio ya resuelto de ejemplo». El patrón de oro
+escrito a mano lee esa misma línea y **añade** un ejemplo nuevo («Ejemplo: 2 × 5 = 10»)
+conservando los cuatro. Dos lecturas de la misma frase, y una de ellas quita trabajo al
+niño. Eso no lo puede resolver el modelo: la línea del perfil es ambigua y hay que
+desambiguarla en el corpus. Pero mientras lo sea, **el informe tiene que decir qué lectura
+tomó**, y aquí dijo lo contrario.
+
+## G68 · El suelo del modelo, medido: `gemini-2.5-flash` no lo alcanza
+
+**Anotado 2026-09-08.** Primera medición real de [`cases/002-model-floor`](../cases/002-model-floor/README.md),
+que llevaba desde el 2026-08-28 escrito y sin correr. Columna `adapt`, perfil `A3` de
+`profiles.example`, material inventado, tres pasadas, clave gratuita de Google.
+
+| Pasada | Segundos | Llamadas | ¿Retry? | Veredicto |
+|---|---|---|---|---|
+| 1 | 51,5 | 2 | **sí** | `output-incomplete` — rechazada |
+| 2 | 32,5 | 1 | no | **OK** |
+| 3 | 71,3 | 2 | **sí** | `output-incomplete` — rechazada |
+
+**Por debajo del suelo duro**, con el criterio que el propio caso fija: los verificadores
+deben pasar *sin necesitar el retry* en la **mayoría** de las pasadas, y «a tier that lives
+off its retry is below the floor». Una de tres. Y la varianza es, como el caso ya
+anticipaba, un hallazgo en sí misma: «a tier that is sometimes great and sometimes unusable
+is below the floor for a teacher who gets one first impression».
+
+**La causa no es la pedagogía, es el formato.** El IR se escribe con vallas pandoc —`:::
+{#b1 .exercise data-from=…}` … `:::`— y las tres pasadas devolvieron **`<div>` de HTML**,
+envueltos además en un bloque de código ```` ```html ````. Sólo acertó con
+`::: {#notes .report-notes}`, que es el único que `instructions/adapt.md` le enseña escrito
+literal. En las pasadas 1 y 3 eso hizo que la comprobación de completitud no encontrara el
+bloque de origen; en la 2 pasó por lo que cuenta G69.
+
+**Y lo que sorprende hacia el otro lado: el contenido era razonable.** Señalización de
+página, «☐ Ejercicio 3 de 6», una idea por línea, hueco para operar, líneas de respuesta, y
+en la pasada 2 un andamio de seis pasos para los problemas —lee, qué datos tienes, qué te
+preguntan, qué operación, opera, escribe la respuesta— que es buena práctica de verdad.
+Cantidades y operaciones intactas. O sea: **el suelo lo tumba la mecánica, no el criterio**,
+que es exactamente lo que un suelo duro debe medir y por eso el caso separa las dos mitades.
+
+**Dos manchas de citación**, las dos en las tres pasadas: cita `lectura-facil-es@1`, que **no
+existe** —la receta es `lectura-facil@1`, se inventó el sufijo— y usa `data-recipe="scaffold"`,
+que no es un `id@version`. Un informe que cita fantasmas enseña que los informes son
+decoración (`035` FR-3310), y aquí el fantasma lo pone el modelo.
+
+**Lo que esta medición NO dice.** Nada sobre los peldaños de pago: falta Sonnet-class y
+Opus-class, que son los que decidirían si el suelo está en el tier o en el prompt. Si el
+fallo es de formato, cabe que un modelo mejor lo sostenga — y cabe también que
+`instructions/adapt.md` tenga que enseñar el formato con un ejemplo completo en vez de sólo
+el bloque de notas, que es la hipótesis más barata de probar y no cuesta una clave.
+
+La tabla fechada del caso sigue pendiente: esto es una columna de tres celdas de las doce
+que pide.
+
+## G67 · Google se cobra siempre a cero, porque su adaptador miente sobre qué modelo corrió
+
+**Anotado 2026-09-08**, en el primer pase con una clave de verdad. Es **G29 otra vez**,
+entrando por el lado contrario: allí un precio inventado, aquí un cero inventado.
+
+`packages/providers/src/google.ts`:
+
+```ts
+yield { usage: { model: 'gemini-free', inputTokens: um['promptTokenCount'] ?? 0, … } };
+```
+
+El modelo del informe de uso va **escrito a mano** y no es el que se llamó. `PRICES`
+tiene `'gemini-free': { input: 0, output: 0 }`, así que **cualquier** llamada a Google se
+valora en cero exactamente, sea el modelo que sea y esté la cuenta en el plan gratuito o
+no. El libro de gastos del pase de hoy —dos llamadas reales a `gemini-2.5-flash`— dice:
+
+```json
+{ "job": "caso002", "cents": 0, "at": "2026-09-08T14:47:07.583Z" }
+```
+
+Y el badge dice «nada», cuando la verdad es «no lo sé».
+
+**Lo que hace esto especialmente escurridizo:** los dos canales de coste discrepan y
+ninguno avisa. `estimateCents` usa `active.provider.defaultModel`, que sí sale del
+catálogo (`gemini-2.5-flash`), no está en `PRICES` y por tanto devuelve `null` — o sea que
+el **preaviso** dice honestamente «no lo sé» mientras el **libro** apunta cero. Dos
+respuestas distintas a la misma pregunta sobre su dinero, en la misma pantalla.
+
+`corpus-model-reaches-provider.test.ts` comprueba que el modelo del corpus llega al
+proveedor, y pasa: llega, y se usa para la llamada. Lo que nadie comprueba es que llegue al
+**informe de uso**, que es el único sitio del que sale el coste. La costura otra vez.
+
+**Y una afirmación que había que retirar:** durante la sesión se dijo que `gemini-free` no
+lo emitía nadie y que por eso Google reportaría «no lo sé». Falso — lo emite este
+adaptador, en todas las llamadas. Es exactamente al contrario.
+
+**Lo que hay que decidir al arreglarlo**, porque no es sólo cambiar la cadena: el plan
+gratuito de Google **es** gratis mientras dure la cuota, así que cero no siempre es mentira.
+Pero el adaptador no sabe si la cuenta está dentro de la cuota, y lo que no se sabe no se
+escribe como cero. La regla de G29 ya está escrita: sin precio, no hay cifra.
+
+## G66 · La clave de la API viaja en la URL, y el diagnóstico de red la guarda entera
+
+**Anotado 2026-09-08.** Encontrado del modo más tonto posible: un script de pruebas volcó
+`diagnostics.network()` y la clave de Gemini de Carlos acabó impresa en una transcripción.
+
+`diagnostics:network` guarda la URL completa de cada petición, y la API de Google lleva la
+clave en el *query string* — `…/gemini-2.5-flash:generateContent?key=AQ.Ab8…`. Así que el
+canal de diagnóstico contiene la credencial en claro.
+
+Atenuantes reales, y hay que decirlos: el contador **sólo se instala bajo `RAMPA_TEST`**,
+no existe en una instalación de una maestra, y su motivo de ser es bueno — es la mitad
+runtime de SC-3302, la que cuenta que un ensayo no manda nada.
+
+Pero el patrón es el que preocupa: **una credencial en claro dentro de un canal pensado
+para leerse y pegarse en un informe.** El proyecto tiene una regla para esto en el otro
+lado —`009` FR-729, «la clave nunca cruza al renderer», con el comentario de que una
+pantalla que recibe una credencial para pintar cuatro asteriscos es una pantalla que tiene
+la credencial— y este canal es el mismo problema con otro destinatario.
+
+**Qué habría que hacer:** que el contador guarde origen y ruta y no la *query*, o que
+enmascare `key=…`. La cuenta de peticiones, que es lo único que SC-3302 necesita, no pierde
+nada. Y de paso conviene mirar si algún log escribe URLs de proveedor.
+
+## G65 · El portón de nombres bloquea el primer arranque con el texto que Rampa escribe ella misma
+
+**Anotado 2026-09-08**, y es el que impide llegar a una primera ficha. Con un vault recién
+creado, la primera adaptación no sale:
+
+> «Hay un posible nombre en tus notas: **Cómo, Escribe, Por, Esto**. No he enviado nada.
+> Dime si es un alumno y lo sustituyo por su código, o márcalo como que no es un nombre.»
+
+Las cuatro palabras salen de `memory/house.md`, **que lo crea Rampa**, y son las iniciales
+de sus propias frases de relleno:
+
+> «**Cómo** trabajo yo» · «**Escribe** aquí lo que quieras…» · «**Por** ejemplo: el tamaño
+> de letra…» · «**Esto** es una guía de estilo, no un diario»
+
+Rampa le pregunta a la maestra si su propio texto de ejemplo son alumnos suyos. Y hasta
+que no contesta por los cuatro, no hay ficha.
+
+**No es sólo el relleno, y esto es lo que lo agrava.** Se reescribió el fichero como una
+guía de estilo de verdad («letra grande, mínimo 14…») con su encabezado normal, y siguió
+bloqueando en «Cómo» — del título «Cómo trabajo yo», que es **el nombre que la propia
+aplicación le da a esa sección** en Configuración. Sólo pasó cuando se quitó toda mayúscula
+inicial del fichero, lo cual en español no es una guía de estilo: es un telegrama.
+
+**Por qué el detector es ciego aquí.** `unknownNamesIn` sólo mira texto escrito por ella
+—notas, overlay, house, diario, correcciones— y ésa es una decisión correcta, con su
+comentario puesto: pasarlo por el material «produce un falso positivo en cada mayúscula a
+mitad de frase». Lo que la lista olvidó es que **uno de «sus» ficheros nace con prosa de
+Rampa dentro**, y que en español una mayúscula inicial de frase es indistinguible de un
+nombre propio sin mirar la posición.
+
+Es la misma ceguera que el detector de inyección ya tuvo —defecto 3 de `validation.md`,
+«flagged a Language worksheet about the imperative»— y que allí se resolvió reconstruyéndolo
+en dos niveles. A este no lo reconstruyó nadie.
+
+**SC-401 es lo que está en juego**: «del instalador a una ficha impresa, sin ayuda y sin
+documentación, en menos de 30 minutos». Hoy, en un vault nuevo, el camino se corta con
+cuatro preguntas sobre palabras que escribió Rampa.
+
+**Lo que hay que decidir**, y por eso no se arregla de un parche: excluir `house.md` del
+barrido sería falso —ella escribe ahí, y ahí puede escribir el nombre de un compañero, que
+es justo lo que el portón existe para pillar. Las salidas plausibles son mirar la
+**posición** (inicial de frase o de línea no cuenta sola), una lista de palabras función
+del español, o sembrar `house.md` vacío en vez de con prosa. Las tres son criterio, y dos
+de ellas viven en el corpus.
+
 ## G64 · «Hay un ver todos y comparar, pero no me deja elegir» — *ARREGLADO 2026-09-08*
 
 **Anotado 2026-09-08**, por Carlos, en la misma sesión y en la pantalla de al lado de G60.
