@@ -44,8 +44,8 @@ import { join, resolve } from 'node:path';
 const out = resolve(process.argv[2] ?? 'build');
 mkdirSync(out, { recursive: true });
 
-/** `--teal-600`, the fill that carries white text at 5.7:1. */
-const TEAL = '#00736d';
+/** `--blue-600`, the fill that carries white text at 6.4:1. */
+const BLUE = '#1b5fad';
 const SIZE = 1024;
 
 /*
@@ -64,7 +64,7 @@ const SIZE = 1024;
  */
 const svg = `
 <svg xmlns="http://www.w3.org/2000/svg" width="${SIZE}" height="${SIZE}" viewBox="0 0 1024 1024">
-  <rect x="0" y="0" width="1024" height="1024" rx="228" fill="${TEAL}"/>
+  <rect x="0" y="0" width="1024" height="1024" rx="228" fill="${BLUE}"/>
   <g transform="translate(512 512) scale(19) translate(-18 -16)">
     <g fill="none" stroke="#ffffff" stroke-width="3.1" stroke-linecap="round" stroke-linejoin="round">
       <path d="M24 17 V11 Q24 6 29 6 Q34 6 34 11 V17"/>

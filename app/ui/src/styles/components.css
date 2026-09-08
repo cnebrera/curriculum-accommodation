@@ -75,18 +75,20 @@ code, kbd, samp, .meta, .tag {
 .btn:active:not(:disabled) { background: var(--surface-2); }
 .btn:disabled { opacity: 0.45; cursor: not-allowed; }
 
-/* Primary. A gradient that is one stop of the scale — light at the top, as
-   light falls — plus a hue-tinted shadow. v1 banned both, which is how a
-   button ends up looking like a rectangle with a colour in it. */
+/* Primary. A flat fill with a quiet tinted halo. v1 banned every shadow, v2
+   answered with a gradient and a gloss line, and the gloss is what dated it —
+   a filled control on the platforms this sits beside is one colour that
+   darkens on hover and presses on click. The halo (not the gradient) is what
+   keeps it from being a rectangle with a colour in it. */
 .btn-primary {
-  background: linear-gradient(180deg, var(--teal-500) 0%, var(--accent) 62%);
-  border-color: var(--accent-hover);
+  background: var(--accent);
+  border-color: transparent;
   color: var(--on-accent);
-  box-shadow: var(--inset-hi), var(--shadow-accent);
+  box-shadow: var(--shadow-accent);
 }
 .btn-primary:hover:not(:disabled) {
-  background: linear-gradient(180deg, var(--teal-400) 0%, var(--teal-500) 62%);
-  border-color: var(--accent);
+  background: var(--accent-hover);
+  border-color: transparent;
   transform: translateY(-1px);
   box-shadow: var(--shadow-accent-hi);
 }
@@ -152,7 +154,7 @@ code, kbd, samp, .meta, .tag {
 .select { appearance: none; padding-right: var(--s7); background-repeat: no-repeat;
   background-position: right var(--s3) center; background-size: 12px;
   /* chevron drawn in the ink colour, inline so no asset is fetched */
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%2345565a' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E"); }
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%2348484f' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E"); }
 .input:disabled, .textarea:disabled, .select:disabled { background: var(--surface); color: var(--ink-faint); cursor: not-allowed; }
 
 /* Error state carries a border, an icon and words — never colour alone. */
@@ -353,20 +355,28 @@ code, kbd, samp, .meta, .tag {
    height that made them comfortable on a trackpad. The row now fits any column
    the grid gives it, which is the property that was missing — the old value was
    correct for one width and nobody had checked which. */
-.levels { display: flex; gap: var(--s2); }
+/* One control, not four: each level used to be its own bordered, shadowed
+   button, and four raised keys in a row read as a keyboard, not a choice. A
+   segmented control says what this is — one question, four exclusive answers —
+   and the well it sits in is the same idiom every platform uses for it.
+   Width arithmetic still holds: 4 × 34px + 3 × 3px gaps + 8px chrome = 153px,
+   inside the 158px an axis-cell column guarantees. */
+.levels { display: flex; gap: 3px; padding: 3px;
+  background: var(--surface-2); border: 1px solid var(--line);
+  border-radius: var(--radius-control); box-shadow: var(--inset-well); }
 .levels button {
   font-variant-numeric: tabular-nums; cursor: pointer;
   /* Smaller than the body text: it is a digit, not a word. */
   font-family: inherit; font-size: var(--text-sm);
   flex: 1 1 0; min-width: 34px; min-height: 44px;
-  padding: 0; border-radius: var(--radius-control);
-  border: 1px solid var(--line-strong); background: var(--paper);
-  color: var(--ink); box-shadow: var(--shadow-sm);
+  padding: 0; border-radius: calc(var(--radius-control) - 3px);
+  border: 1px solid transparent; background: transparent;
+  color: var(--ink); box-shadow: none;
 }
-.levels button:hover { border-color: var(--accent-line); background: var(--surface-2); }
+.levels button:hover { background: var(--paper); }
 .levels button[aria-pressed="true"] {
-  background: var(--accent); border-color: var(--accent-ink);
-  color: var(--on-accent); font-weight: 700; box-shadow: var(--shadow-md);
+  background: var(--accent); border-color: transparent;
+  color: var(--on-accent); font-weight: 700; box-shadow: var(--shadow-sm);
 }
 /* The chosen level is not only darker: it is also the only one wearing a ring.
    FR-812 — colour is never the only carrier, including inside a control. */
@@ -384,9 +394,8 @@ code, kbd, samp, .meta, .tag {
 .axis .bars { display: flex; gap: 2px; justify-content: center; }
 .axis .b { width: 12px; height: 24px; border-radius: 2px;
   background: var(--surface-2); border: 1px solid var(--line-strong); }
-.axis .b[data-on] { border-color: var(--accent-hover);
-  background: linear-gradient(180deg, var(--teal-500), var(--accent));
-  box-shadow: var(--inset-hi); }
+.axis .b[data-on] { border-color: var(--accent);
+  background: var(--accent); }
 .axis .lv { display: block; font-family: var(--font-mono); font-size: 0.6875rem;
   color: var(--ink-faint); margin-top: 4px; }
 .axis[data-unobserved] .b { border-style: dashed; background: transparent; }
@@ -620,9 +629,12 @@ body { container: window / inline-size; }
 .decision:first-child { border-top: 0; padding-top: 0; }
 /* The teacher's own material, shown back for verification. Preformatted because
    line breaks in a worksheet are meaningful, but styled as paper rather than as
-   a terminal — she is checking a worksheet, not reading a log. */
+   a terminal — she is checking a worksheet, not reading a log.
+   In the LEGIBILITY face, deliberately, now that the UI body is the system face:
+   this block is the learner's reading material, which is the one place Atkinson
+   Hyperlegible was always doing its actual job. */
 .material {
-  white-space: pre-wrap; font-family: var(--font-sans); font-size: var(--text-base);
+  white-space: pre-wrap; font-family: var(--font-legible); font-size: var(--text-base);
   line-height: var(--leading-body); background: var(--paper);
   border: 1px solid var(--line); border-left: 4px solid var(--accent-line);
   border-radius: var(--radius-box); padding: var(--s4) var(--s5);

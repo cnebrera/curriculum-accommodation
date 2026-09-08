@@ -76,8 +76,9 @@ export function AboutScreen() {
         <h2>Licencias</h2>
         <p className="small">
           El programa es <strong>Apache-2.0</strong>. Las recetas, instrucciones y
-          plantillas son <strong>CC BY-SA 4.0</strong>. La tipografía es Atkinson
-          Hyperlegible, del Braille Institute, bajo <strong>SIL OFL 1.1</strong>.
+          plantillas son <strong>CC BY-SA 4.0</strong>. La tipografía del material
+          y del modo de alto contraste es Atkinson Hyperlegible, del Braille
+          Institute, bajo <strong>SIL OFL 1.1</strong>.
         </p>
         <p className="small">
           Código permisivo para que un centro pueda integrarlo sin revisión legal;

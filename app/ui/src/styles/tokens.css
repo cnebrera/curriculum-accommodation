@@ -42,17 +42,24 @@
 }
 
 :root {
-  /* ── Teal · brand and interaction. Now with chroma ────────────────────── */
-  --teal-50:  #e6faf8;
-  --teal-100: #c2f3ee;
-  --teal-200: #8ae8e0;
-  --teal-300: #4bd9ce;
-  --teal-400: #12c9bc;   /* BRIGHT. 9.1:1 on dark ground. Never small text on light */
-  --teal-500: #00a89f;
-  --teal-600: #00736d;   /* FILL. white text on it = 5.7:1 */
-  --teal-700: #065e59;   /* TEXT on light = 7.4:1 */
-  --teal-800: #05423f;
-  --teal-900: #032b29;
+  /* ── Blue · brand and interaction ─────────────────────────────────────────
+     Was teal. Two reasons it moved, one of them the good one: blue is the hue
+     both common dichromacies keep intact — protanopia and deuteranopia lose
+     the red–green axis and keep blue–yellow, so an accent that lives on blue
+     is one no common colour-blindness can lose. (The teal was never the brown
+     case — that is what happens to pure greens — but blue is the safer end of
+     the same argument.) The other reason is taste, and the owner's to make.
+     The BRIGHT/DEEP rule from the header still governs every step. */
+  --blue-50:  #e9f2fb;
+  --blue-100: #d6e8f7;
+  --blue-200: #a9cfef;
+  --blue-300: #6fd0f7;
+  --blue-400: #4bbcee;   /* BRIGHT. 8.7:1 on dark ground. Never small text on light */
+  --blue-500: #2a9fd6;
+  --blue-600: #1b5fad;   /* FILL. white text on it = 6.4:1 */
+  --blue-700: #134a8a;   /* TEXT on light = 8.7:1 */
+  --blue-800: #10305b;
+  --blue-900: #0a2344;
 
   /* ── Amber · energy, work in progress, highlight. The pencil-and-
      highlighter colour of the world this product lives in ───────────────── */
@@ -87,19 +94,24 @@
   --green-600: #0d7a4f;  /* FILL/TEXT. 5.2:1 */
   --green-800: #06512f;
 
-  /* ── Neutrals, cooled toward the brand hue ────────────────────────────── */
+  /* ── Neutrals · true greys, a hair cool ──────────────────────────────────
+     v2 tinted every neutral toward the brand teal, and that tint is most of
+     what read as "web del ministerio": ground, rail, borders and metadata all
+     faintly green. One accent over honest greys is the whole trick of the
+     platforms this app wants to sit beside. Lightness kept per step, so every
+     measured ratio below still holds. */
   --n-0:   #ffffff;
-  --n-25:  #fbfcfb;
-  --n-50:  #f2f6f5;
-  --n-100: #e6edeb;
-  --n-200: #d5dfdd;
-  --n-300: #7a8c89;   /* control borders. 3.4:1 on paper — SC 1.4.11 */
-  --n-400: #94a5a2;   /* hover border, lighter than line-strong on purpose */
-  --n-500: #5a6a67;   /* metadata. 5.5:1 on paper, 4.8:1 on surface-2 */
-  --n-600: #42534f;   /* 8.0:1 */
-  --n-700: #27352f;
-  --n-800: #18231f;
-  --n-900: #101a19;   /* 17.0:1 */
+  --n-25:  #fcfcfd;
+  --n-50:  #f5f5f7;
+  --n-100: #ebebed;
+  --n-200: #d9d9de;
+  --n-300: #85858c;   /* control borders. 3.6:1 on paper — SC 1.4.11 */
+  --n-400: #9d9da4;   /* hover border, lighter than line-strong on purpose */
+  --n-500: #626269;   /* metadata. 6.3:1 on paper, 5.3:1 on surface-2 */
+  --n-600: #48484f;   /* 9.4:1 */
+  --n-700: #2d2d33;
+  --n-800: #1d1d22;
+  --n-900: #121216;   /* 18.9:1 */
 
   /* ── Roles. Components use THESE ──────────────────────────────────────── */
   /* The window's ground. Content sits ON this rather than being it — which is
@@ -107,13 +119,14 @@
      and surface were #fbfcfb and #f2f6f5, near-identical whites, so a card, the
      rail and the page were the same colour and there was no depth to see.
 
-     Tinted with the brand hue rather than neutral grey. A cold grey chrome under
-     a warm content area reads as unfinished; the tint is what makes it read as
-     chosen. */
-  --ground:      #e4ebe9;
+     Neutral, cool. v2 tinted the chrome teal on the theory that grey reads as
+     unfinished; on screen it read as green. The chrome of the platforms this
+     sits beside — macOS, Windows 11 — is grey, and the accent is what carries
+     the identity. */
+  --ground:      #e8e9ec;
   /* The rail is chrome and reads a step further from the content than the ground
      does — two regions, not a gradient nobody can see. */
-  --rail-ground: #dde6e3;
+  --rail-ground: #e1e2e6;
   --paper:       var(--n-0);
   --surface:     var(--n-50);
   --surface-2:   var(--n-100);
@@ -123,12 +136,12 @@
   --line:        var(--n-200);
   --line-strong: var(--n-300);
 
-  --accent:        var(--teal-600);   /* fills that carry white text */
-  --accent-hover:  var(--teal-700);
-  --accent-bright: var(--teal-400);   /* glows, borders, icons, dark theme */
-  --accent-ink:    var(--teal-700);   /* accent text on light */
-  --accent-soft:   var(--teal-50);
-  --accent-line:   var(--teal-200);
+  --accent:        var(--blue-600);   /* fills that carry white text */
+  --accent-hover:  var(--blue-700);
+  --accent-bright: var(--blue-400);   /* glows, borders, icons, dark theme */
+  --accent-ink:    var(--blue-700);   /* accent text on light */
+  --accent-soft:   var(--blue-50);
+  --accent-line:   var(--blue-200);
   --on-accent:     #ffffff;
 
   --decide:        var(--mag-600);
@@ -151,23 +164,27 @@
   --work-soft:   var(--amber-50);
   --work-line:   var(--amber-100);
 
-  /* ── Type ─────────────────────────────────────────────────────────────── */
-  --font-sans: "Atkinson Hyperlegible", Verdana, Tahoma, ui-sans-serif, sans-serif;
+  /* ── Type ─────────────────────────────────────────────────────────────────
+     The legibility face, named for what it is. It still ships bundled and it
+     still matters — it is just no longer the interface's default. It carries:
+     the whole UI in high contrast mode (the mode mechanism doing its job), and
+     the learner's material (`.material`), which is *reading*, the thing this
+     face is superb at. */
+  --font-legible: "Atkinson Hyperlegible", Verdana, Tahoma, ui-sans-serif, sans-serif;
 
-  /* Headings in the platform's own interface face — SF Pro on macOS, Segoe UI on
+  /* The interface in the platform's own face — SF Pro on macOS, Segoe UI on
      Windows, the system stack on Linux.
-     
-     Atkinson Hyperlegible is a superb *reading* face and a plain *display* one,
-     and using it for everything is a large part of why this looked like a
-     utility rather than an application. A Mac user reading SF Pro headings sees
-     something native; the same text in Verdana-adjacent reads as a web page in a
-     wrapper.
-     
-     Costs nothing: no font to bundle, no request, no CSP problem. And it reverts
-     to Atkinson in accessibility mode, which is the mode mechanism finally being
-     used for what it is for — see below. */
+
+     v2 put SF Pro on the headings only, and the seam showed: native headings
+     over Verdana-adjacent body read as a web page in a wrapper, which is
+     exactly the "utility" look the headings were meant to fix. The body is
+     where the face is actually read, so the body is where native is won or
+     lost. Atkinson stays in the stack as the fallback, and takes the whole UI
+     back in accessibility mode — see data-contrast below. */
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI Variable Text",
+               "Segoe UI", system-ui, var(--font-legible);
   --font-display: ui-sans-serif, -apple-system, "SF Pro Display", "Segoe UI Variable Display",
-                  "Segoe UI", system-ui, var(--font-sans);
+                  "Segoe UI", system-ui, var(--font-legible);
   --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
 
   --text-xs:   0.8125rem;
@@ -186,39 +203,39 @@
   --s1: 4px;  --s2: 8px;  --s3: 12px; --s4: 16px;
   --s5: 24px; --s6: 32px; --s7: 48px; --s8: 64px;
 
-  --radius-control: 7px;
-  --radius-panel: 14px;
+  --radius-control: 9px;
+  --radius-panel: 16px;
   --radius-box: 12px;
   --radius-pill: 999px;
 
-  /* ── Depth · v1 banned shadows, which was over-correction. Real elevation,
-     TINTED with the brand hue rather than black — a black shadow on a warm
-     ground reads as dirt, a hue-matched one reads as light. This is most of
-     what separates expensive-looking UI from flat UI. ───────────────────── */
-  /* Doubled after looking at a screenshot: at 0.06–0.07 alpha these were
-     invisible, so "elevation" was a value in a file rather than something on the
-     screen. Still tinted with the brand hue — a black shadow on a warm ground
-     reads as dirt. */
-  --shadow-sm: 0 1px 2px rgba(6, 66, 63, 0.10), 0 1px 3px rgba(6, 66, 63, 0.07);
-  --shadow-md: 0 2px 6px rgba(6, 66, 63, 0.11), 0 8px 20px rgba(6, 66, 63, 0.10);
-  --shadow-lg: 0 6px 14px rgba(6, 66, 63, 0.13), 0 20px 48px rgba(6, 66, 63, 0.16);
-  --shadow-accent: 0 2px 6px rgba(0, 115, 109, 0.28), 0 8px 20px rgba(0, 115, 109, 0.16);
+  /* ── Depth · real elevation, in NEUTRAL ink. v2 tinted every shadow with the
+     brand teal; on the (then green) ground that read as light, on a neutral
+     grey ground it reads as mould. A shadow is the absence of light, and light
+     is not teal. Alphas kept where a screenshot proved they were visible. ── */
+  --shadow-sm: 0 1px 2px rgba(16, 18, 24, 0.08), 0 1px 3px rgba(16, 18, 24, 0.06);
+  --shadow-md: 0 2px 6px rgba(16, 18, 24, 0.09), 0 8px 20px rgba(16, 18, 24, 0.08);
+  --shadow-lg: 0 6px 14px rgba(16, 18, 24, 0.11), 0 20px 48px rgba(16, 18, 24, 0.14);
+  /* The accent keeps its tint: a glow under the one teal control is the accent
+     doing its job, not the chrome leaking. Softened — flat fill, quiet halo. */
+  --shadow-accent: 0 1px 3px rgba(27, 95, 173, 0.24), 0 6px 16px rgba(27, 95, 173, 0.16);
   --inset-hi: inset 0 1px 0 rgba(255, 255, 255, 0.22);
   /* Lifted out of components.css, where they were literals. Not tidying: high
      contrast sets every --shadow-* to none, and a literal in a component rule
      ignores that — so those four shadows survived a mode whose entire purpose
      is to remove them, and on dark they were dark teal on a dark ground. */
-  --shadow-accent-hi: var(--inset-hi), 0 4px 12px rgba(0, 115, 109, 0.34),
-                      0 12px 28px rgba(0, 115, 109, 0.2);
-  --inset-press: inset 0 2px 4px rgba(3, 43, 41, 0.35);
-  --inset-well: inset 0 1px 2px rgba(6, 66, 63, 0.06);
-  --inset-well-deep: inset 0 1px 2px rgba(6, 66, 63, 0.09);
+  /* No --inset-hi in the hover shadow any more: the primary button is a flat
+     fill now, and a gloss line on a flat fill is the old gradient sneaking back. */
+  --shadow-accent-hi: 0 3px 10px rgba(27, 95, 173, 0.26),
+                      0 10px 24px rgba(27, 95, 173, 0.15);
+  --inset-press: inset 0 2px 4px rgba(10, 12, 16, 0.30);
+  --inset-well: inset 0 1px 2px rgba(16, 18, 24, 0.06);
+  --inset-well-deep: inset 0 1px 2px rgba(16, 18, 24, 0.09);
   --sheen: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.45), transparent);
 
   /* Focus: a ring AND a soft glow. The ring is the accessibility requirement;
      the glow is what makes it feel like software from this decade. */
   --focus-ring: 3px solid var(--accent);
-  --focus-glow: 0 0 0 6px rgba(18, 201, 188, 0.22);
+  --focus-glow: 0 0 0 6px rgba(75, 188, 238, 0.22);
   --focus-offset: 2px;
 
   --ease: cubic-bezier(0.2, 0, 0.2, 1);
@@ -242,23 +259,23 @@
 
        Dark inverts the relationship rather than the colours: the panel is raised,
        so the ground goes below `--paper` instead of above it. */
-    --ground: #050b0a; --rail-ground: #0b1413;
-    --paper:       #0a1211;
-    --surface:     #101b19;
-    --surface-2:   #17251f;
-    --ink:         #eaf2f0;
-    --ink-soft:    #a5b8b5;
-    --ink-faint:   #879b98;   /* 6.0:1 on a dark card */
-    --line:        #1f2e2b;
-    --line-strong: #5b7269;   /* 3.7:1 — SC 1.4.11 */
+    --ground: #0a0a0d; --rail-ground: #131317;
+    --paper:       #101014;
+    --surface:     #1a1a1f;
+    --surface-2:   #232329;
+    --ink:         #f0f0f3;
+    --ink-soft:    #aaaab2;
+    --ink-faint:   #9b9ba3;   /* 6.1:1 on a dark card */
+    --line:        #2a2a30;
+    --line-strong: #71717b;   /* 3.7:1 — SC 1.4.11 */
 
-    --accent:        var(--teal-400);   /* bright fill on dark */
-    --accent-hover:  var(--teal-300);
-    --accent-bright: var(--teal-300);
-    --accent-ink:    var(--teal-300);
-    --accent-soft:   #08302d;
-    --accent-line:   #1c5b56;
-    --on-accent:     var(--teal-900);
+    --accent:        var(--blue-400);   /* bright fill on dark */
+    --accent-hover:  var(--blue-300);
+    --accent-bright: var(--blue-300);
+    --accent-ink:    var(--blue-300);
+    --accent-soft:   #0e2947;
+    --accent-line:   #1d4c80;
+    --on-accent:     var(--blue-900);
 
     --decide: var(--mag-400);        --decide-bright: var(--mag-300);
     --decide-soft: #2b0f22;          --decide-line: #5c214a;
@@ -273,15 +290,15 @@
     --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5);
     --shadow-md: 0 2px 6px rgba(0, 0, 0, 0.55), 0 8px 24px rgba(0, 0, 0, 0.35);
     --shadow-lg: 0 6px 14px rgba(0, 0, 0, 0.6), 0 18px 48px rgba(0, 0, 0, 0.45);
-    --shadow-accent: 0 2px 10px rgba(18, 201, 188, 0.32), 0 8px 28px rgba(18, 201, 188, 0.18);
+    --shadow-accent: 0 2px 10px rgba(75, 188, 238, 0.32), 0 8px 28px rgba(75, 188, 238, 0.18);
     --inset-hi: inset 0 1px 0 rgba(255, 255, 255, 0.12);
-    --shadow-accent-hi: var(--inset-hi), 0 4px 14px rgba(18, 201, 188, 0.34),
-                        0 12px 32px rgba(18, 201, 188, 0.18);
+    --shadow-accent-hi: var(--inset-hi), 0 4px 14px rgba(75, 188, 238, 0.34),
+                        0 12px 32px rgba(75, 188, 238, 0.18);
     --inset-press: inset 0 2px 5px rgba(0, 0, 0, 0.6);
     --inset-well: inset 0 1px 2px rgba(0, 0, 0, 0.45);
     --inset-well-deep: inset 0 1px 3px rgba(0, 0, 0, 0.55);
     --sheen: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.16), transparent);
-    --focus-glow: 0 0 0 6px rgba(75, 217, 206, 0.26);
+    --focus-glow: 0 0 0 6px rgba(111, 208, 247, 0.26);
   }
 }
 
@@ -294,13 +311,13 @@
 
      Dark inverts the relationship rather than the colours: the panel is raised,
      so the ground goes below `--paper` instead of above it. */
-  --ground: #050b0a; --rail-ground: #0b1413;
-  --paper: #0a1211; --surface: #101b19; --surface-2: #17251f;
-  --ink: #eaf2f0; --ink-soft: #a5b8b5; --ink-faint: #879b98;
-  --line: #1f2e2b; --line-strong: #5b7269;
-  --accent: var(--teal-400); --accent-hover: var(--teal-300);
-  --accent-bright: var(--teal-300); --accent-ink: var(--teal-300);
-  --accent-soft: #08302d; --accent-line: #1c5b56; --on-accent: var(--teal-900);
+  --ground: #0a0a0d; --rail-ground: #131317;
+  --paper: #101014; --surface: #1a1a1f; --surface-2: #232329;
+  --ink: #f0f0f3; --ink-soft: #aaaab2; --ink-faint: #9b9ba3;
+  --line: #2a2a30; --line-strong: #71717b;
+  --accent: var(--blue-400); --accent-hover: var(--blue-300);
+  --accent-bright: var(--blue-300); --accent-ink: var(--blue-300);
+  --accent-soft: #0e2947; --accent-line: #1d4c80; --on-accent: var(--blue-900);
   --decide: var(--mag-400); --decide-bright: var(--mag-300); --decide-soft: #2b0f22; --decide-line: #5c214a;
   --draft: var(--coral-400); --draft-bright: var(--coral-300); --draft-soft: #2d1310; --draft-line: #63251a;
   --ok: var(--green-400); --ok-bright: var(--green-300); --ok-soft: #082418; --ok-line: #14563a;
@@ -308,23 +325,23 @@
   --shadow-sm: 0 1px 2px rgba(0,0,0,.5);
   --shadow-md: 0 2px 6px rgba(0,0,0,.55), 0 8px 24px rgba(0,0,0,.35);
   --shadow-lg: 0 6px 14px rgba(0,0,0,.6), 0 18px 48px rgba(0,0,0,.45);
-  --shadow-accent: 0 2px 10px rgba(18,201,188,.32), 0 8px 28px rgba(18,201,188,.18);
+  --shadow-accent: 0 2px 10px rgba(75,188,238,.32), 0 8px 28px rgba(75,188,238,.18);
   --inset-hi: inset 0 1px 0 rgba(255,255,255,.12);
-  --shadow-accent-hi: var(--inset-hi), 0 4px 14px rgba(18, 201, 188, 0.34),
-                      0 12px 32px rgba(18, 201, 188, 0.18);
+  --shadow-accent-hi: var(--inset-hi), 0 4px 14px rgba(75, 188, 238, 0.34),
+                      0 12px 32px rgba(75, 188, 238, 0.18);
   --inset-press: inset 0 2px 5px rgba(0, 0, 0, 0.6);
   --inset-well: inset 0 1px 2px rgba(0, 0, 0, 0.45);
   --inset-well-deep: inset 0 1px 3px rgba(0, 0, 0, 0.55);
   --sheen: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.16), transparent);
-  --focus-glow: 0 0 0 6px rgba(75,217,206,.26);
+  --focus-glow: 0 0 0 6px rgba(111,208,247,.26);
 }
 :root[data-theme="light"] {
   --paper: var(--n-25); --surface: var(--n-50); --surface-2: var(--n-100);
   --ink: var(--n-900); --ink-soft: var(--n-600); --ink-faint: var(--n-500);
   --line: var(--n-200); --line-strong: var(--n-300);
-  --accent: var(--teal-600); --accent-hover: var(--teal-700);
-  --accent-bright: var(--teal-400); --accent-ink: var(--teal-700);
-  --accent-soft: var(--teal-50); --accent-line: var(--teal-200); --on-accent: #fff;
+  --accent: var(--blue-600); --accent-hover: var(--blue-700);
+  --accent-bright: var(--blue-400); --accent-ink: var(--blue-700);
+  --accent-soft: var(--blue-50); --accent-line: var(--blue-200); --on-accent: #fff;
   --decide: var(--mag-600); --decide-bright: var(--mag-400); --decide-soft: var(--mag-50); --decide-line: var(--mag-100);
   --draft: var(--coral-600); --draft-bright: var(--coral-400); --draft-soft: var(--coral-50); --draft-line: var(--coral-100);
   --ok: var(--green-600); --ok-bright: var(--green-400); --ok-soft: var(--green-50); --ok-line: var(--green-100);
@@ -344,13 +361,15 @@
    try". */
 :root[data-contrast="high"] {
   --ground: #fff;
-  --rail-ground: #f2f4f3;
-  /* Headings revert to the legibility face. This is the whole point of the mode. */
-  --font-display: var(--font-sans);
-  --paper: #fff; --surface: #f6f8f7; --surface-2: #e9edec;
-  --ink: #000; --ink-soft: #1d2926; --ink-faint: #35443f;
-  --line: #93a29e; --line-strong: #64756f;
-  --accent: var(--teal-800); --accent-ink: var(--teal-900);
+  --rail-ground: #f2f2f4;
+  /* The WHOLE interface reverts to the legibility face — body included, now that
+     the default body is the system face. This is the whole point of the mode. */
+  --font-sans: var(--font-legible);
+  --font-display: var(--font-legible);
+  --paper: #fff; --surface: #f6f6f8; --surface-2: #e9e9ec;
+  --ink: #000; --ink-soft: #212126; --ink-faint: #3a3a41;
+  --line: #98989f; --line-strong: #67676f;
+  --accent: var(--blue-800); --accent-ink: var(--blue-900);
   --shadow-sm: none; --shadow-md: none; --shadow-lg: none; --shadow-accent: none;
   --shadow-accent-hi: none; --inset-press: none;
   --inset-well: none; --inset-well-deep: none;
@@ -361,11 +380,11 @@
 :root[data-contrast="high"][data-theme="dark"] {
   /* Same again for the austere dark mode: black ground, black panel, and the
      border does the separating that depth does elsewhere. */
-  --ground: #000; --rail-ground: #0b1211;
-  --paper: #000; --surface: #0b1211; --surface-2: #141d1b;
-  --ink: #fff; --ink-soft: #d5e0dd; --ink-faint: #b2c0bc;
-  --line: #44544f; --line-strong: #687974;
-  --accent: var(--teal-200); --accent-ink: var(--teal-100);
+  --ground: #000; --rail-ground: #121215;
+  --paper: #000; --surface: #101013; --surface-2: #1a1a1e;
+  --ink: #fff; --ink-soft: #dcdce0; --ink-faint: #b9b9c0;
+  --line: #4b4b53; --line-strong: #70707a;
+  --accent: var(--blue-200); --accent-ink: var(--blue-100);
 }
 
 @media (prefers-reduced-motion: reduce) { :root { --dur: 0ms; --dur-slow: 0ms } }
@@ -396,5 +415,5 @@ a:hover { color: var(--accent); }
   box-shadow: var(--focus-glow);
   border-radius: var(--radius-control);
 }
-::selection { background: var(--accent-bright); color: var(--teal-900); }
+::selection { background: var(--accent-bright); color: var(--blue-900); }
 code, kbd, samp { font-family: var(--font-mono); font-size: 0.9em; }
