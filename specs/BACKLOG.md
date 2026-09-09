@@ -439,6 +439,71 @@ every moment should have a spec. What it added beyond the seams pass:
    journey sentence → T094). Handover *import* (004 US2) recorded as deliberately
    deferred rather than silently missing.
 
+## G71 · La columna `ingest`, medida por primera vez — y con una foto sintética, que es media medida
+
+**Anotado 2026-09-09.** `cases/002-model-floor` pide dos columnas y sólo se había medido
+`adapt` (G68). Ésta es la otra, con el aviso por delante: **no es SC-601.**
+
+**Por qué no lo es.** Los fixtures de `cases/003-ingest-fixtures` no tienen foto — les
+falta la parte que necesita impresora y móvil, y lo dicen ellos mismos en su `notes.md`;
+`fixtures.test.ts` no exige la imagen, exige que el fixture **declare** que le falta, así
+que la brecha estaba visible y no escondida. Se sustituyó por un render sintético de
+`source.md` siguiendo las instrucciones de encuadre que el propio fichero trae —8 grados,
+lámpara a la izquierda, margen derecho en penumbra, JPEG a calidad 62— y eso **no tiene
+óptica, ni textura de papel, ni el desenfoque ni los artefactos de un móvil**. Es una cota
+inferior de dificultad, no la vía común que SC-601 mide.
+
+Aun así es la **primera llamada de visión que se ha hecho nunca** en este proyecto.
+
+### Lo que salió bien
+
+Diez bloques de diez, en orden, con el texto idéntico a `ground-truth.md`. Una sola
+llamada, sin reintento. **Ningún contenido inventado.** Y la numeración sobrevive entera:
+los cuatro ejercicios, en orden, sin renumerar. Bien clasificados el encabezado, el
+párrafo, el «Recuerda» como `.note` y la instrucción.
+
+### Lo que salió mal, y es del modelo
+
+**El pie de página se convirtió en contenido.** `ground-truth.md` lo quiere
+`.reference`; salió `.explanation`. Y `caption` → `reference` existe en `CLASS_MAP`, así
+que el modelo tenía cómo decirlo y dijo `paragraph`.
+
+Es **exactamente** lo que el fixture se escribió para cazar. Su `notes.md`: «El pie de
+página es `reference`, no contenido. Si acaba en el material que se adapta, la hoja del
+alumno lleva metadatos del libro». El fixture funciona.
+
+### Lo que salió mal, y es del contrato
+
+**Los ids llevan el prefijo de página dos veces:** `p1-p1-b1`, y `data-source-id="p1-b1"`
+donde la verdad de referencia dice `b1`. `to-ir.ts` compone `p${page}-${b.id}` dando por
+hecho que el modelo devuelve `b1` pelado, e `instructions/ingest.md` sólo pide «`id` unique
+within the page» — que `p1-b1` cumple. Nadie le dijo que el prefijo lo pone la aplicación.
+Misma familia que G68: una expectativa de formato que no está escrita.
+
+### Y una crítica retirada antes de escribirla
+
+La extracción trae `data-number="1."` y la verdad de referencia dice `"1"`. Parecía un
+defecto del modelo y no lo es: `instructions/ingest.md` pide el número **«exactly as
+printed»** y pone `b)` entre sus ejemplos, o sea puntuación incluida — y el papel imprime
+«1.». Quien está fuera de contrato es `ground-truth.md`. Hay que decidir cuál manda, porque
+`data-number` es lo que la clase dice en voz alta.
+
+### Lo que esta medición no puede juzgar
+
+**La figura.** El render pintó el marcador `[Imagen: …]` como texto, porque así está en
+`source.md`, así que el modelo vio texto y lo transcribió — razonable para lo que se le
+puso delante. `ground-truth.md` espera `.figure` con `role`, `short` y `long`, y eso sólo
+se puede medir con una foto que tenga un búho dentro. **No cuenta como fallo.**
+
+**Los `[UNREADABLE]`.** Este fixture no tiene ninguno, así que la mitad de SC-601 que
+habla de no inventar donde una persona no puede leer sigue sin medir.
+
+### Para cerrarlo de verdad
+
+Imprimir `source.md` de los fixtures 01 y 02, fotografiarlas mal a propósito con un móvil
+—que es lo que dice `notes.md` que falta— y repetir esto. Entonces es SC-601 y no una
+aproximación.
+
 ## G70 · El informe pierde la versión de la última receta, y nadie valida `data-recipe`
 
 **Anotado 2026-09-08**, leyendo el primer informe bueno que produjo un modelo real.
@@ -758,6 +823,24 @@ nombre propio sin mirar la posición.
 Es la misma ceguera que el detector de inyección ya tuvo —defecto 3 de `validation.md`,
 «flagged a Language worksheet about the imperative»— y que allí se resolvió reconstruyéndolo
 en dos niveles. A este no lo reconstruyó nadie.
+
+### Y el mismo detector, disparando en la ingesta
+
+**Anotado 2026-09-09**, en la primera extracción real (G71). Una ficha de ecosistemas sin
+un solo nombre propio produjo **siete** avisos: «Recuerda, Lee, Escribe, Une, Imagen,
+Actividad, Naturaleza». Todas mayúsculas de inicio de frase o de corchete.
+
+Y aquí el barrido **tiene que existir**: FR-610 dice que el vault se queda sin nombres
+aunque la foto no lo estuviera, y el nombre de un niño escrito a mano en la hoja es
+precisamente lo que hay que pillar. `jobs/ingest.ts` recorre `text`, `short` y `long` de
+cada bloque, y hace bien.
+
+Lo incómodo es que el repositorio lleva dentro el diagnóstico **y** la contradicción:
+`adapt.ts` se niega a barrer el material con el motivo escrito —«produces a false positive
+on every mid-sentence capital»— y la ingesta lo barre porque no le queda otra. Nadie hizo
+el detector lo bastante bueno para el segundo trabajo. Así que la primera hoja que una
+maestra fotografía la recibe con siete preguntas sobre si «Lee» y «Escribe» son alumnos
+suyos.
 
 **SC-401 es lo que está en juego**: «del instalador a una ficha impresa, sin ayuda y sin
 documentación, en menos de 30 minutos». Hoy, en un vault nuevo, el camino se corta con
