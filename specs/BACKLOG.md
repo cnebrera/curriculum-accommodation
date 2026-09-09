@@ -471,7 +471,7 @@ revisa «unas quince decisiones» sólo si cada decisión tiene nombre.
 hoja»— o es singular y el prompt tiene que decirlo y algo tiene que rechazarlo. Hoy es
 singular en la especificación, plural en la práctica, y el informe se come la diferencia.
 
-## G69 · El informe le dijo dos cosas falsas, y la hoja pasó las tres puertas
+## G69 · El informe le dijo dos cosas falsas, y la hoja pasó las tres puertas — *LA FRASE FALSA, ARREGLADA; LA LECTURA DEL PERFIL, ABIERTA*
 
 **Anotado 2026-09-08**, de la pasada 2 del caso 002 — la única de tres que pasó. Es el
 hallazgo más serio de la sesión, y no lo cazó ninguna de las capas.
@@ -508,6 +508,33 @@ marcada como claim: es una frase del informe. Y no hay sección de «lo que he c
 informe de esta pasada no lista ni una receta, así que lo único que ella lee sobre el cambio
 es la frase equivocada.
 
+### Arreglada la mitad que era del código
+
+La frase «Eso quiere decir que **no he tocado**: …» se construía entera desde
+`kind.forbids`, o sea desde el corpus del tipo de material, y **nada la comprobaba**. El
+informe afirmaba en pasado, y sobre cada restricción del tipo, que se habían respetado
+todas.
+
+Es la misma clase de frase que `recommend.ts` publicó una vez —«hay más baratos, pero
+salieron peor en las pruebas», con los tests en verde porque nada se había medido— y la
+regla que salió de aquello es la de G29: **sin evidencia, no hay afirmación.** Y aquí no
+hay evidencia posible: `ReportInput` no recibe el documento original, así que no existe
+nada contra lo que comprobar la numeración.
+
+Ahora dice la regla, que es lo que ella firma, y dice de quién es comprobarla:
+
+> La regla de ese tipo de material es no tocar: la exigencia curricular, la numeración
+> original.
+>
+> Eso es la regla con la que he trabajado, no una comprobación de haberla cumplido: eso lo
+> ves tú en la hoja.
+
+Con un test en las dos direcciones, porque quitar la afirmación es media cosa: lo que la
+mantiene quitada es que el informe siga **nombrando** las restricciones, que es lo que ella
+está firmando (`012` FR-1006). Comprobado rojo sin el arreglo.
+
+### Lo que sigue abierto, y es lo que no es del código
+
 **Sobrevive al arreglo del formato, y ahora es reproducible.** Tras enseñarle el formato
 (G68), las tres pasadas salen limpias y las tres siguen haciendo esto: no hay ningún
 `.exercise` con `data-number="1"` — el 1 vive dentro de un `.scaffold` como «1. 3 × 6 = 18»
@@ -523,6 +550,17 @@ conservando los cuatro. Dos lecturas de la misma frase, y una de ellas quita tra
 niño. Eso no lo puede resolver el modelo: la línea del perfil es ambigua y hay que
 desambiguarla en el corpus. Pero mientras lo sea, **el informe tiene que decir qué lectura
 tomó**, y aquí dijo lo contrario.
+
+**Las dos cosas que quedan, entonces:**
+
+- **Desambiguar la línea del perfil.** «El primer ejercicio ya resuelto de ejemplo» admite
+  «resuelve el 1 delante de él» y «añade uno nuevo antes del 1», y sólo una de las dos le
+  quita trabajo al niño. Vive en `profiles.example/A3.yaml` y en la guía de los ejes, y es
+  criterio: no la decide esto.
+- **Darle al informe el documento original.** `ReportInput` sólo recibe el adaptado, así
+  que hoy ninguna comprobación de numeración es posible desde ahí. Con el original
+  delante, «todo `data-number` del origen sigue encabezando una tarea» es determinista, y
+  es la forma de que esto deje de depender de que el modelo lo cuente.
 
 ## G68 · El suelo del modelo, medido: era el prompt y no el modelo — *RESUELTO 2026-09-08*
 
@@ -593,9 +631,16 @@ prohibición explícita de HTML y de envolver la respuesta en un bloque de códi
 | Llamadas por pasada | 1–2 | 1 |
 | Segundos | 32–71 | 24–34 |
 
-Repetido dos veces (seis pasadas en total tras el cambio), 6 de 6 limpias. Y el informe
-que sale ahora es el de verdad: seis grupos de decisión con sus recetas, sus barreras y sus
-bloques, y notas propias del modelo declarando lo que omitió.
+Once pasadas en total tras el cambio: **10 limpias y una fallida**, y la fallida no fue de
+formato — `ir-no-provenance`, «2 bloque(s) cambiaron sin justificación registrada», o sea
+otra puerta haciendo su trabajo sobre bloques que el modelo cambió sin nombrar receta ni
+barrera. Se anota el denominador entero a propósito: a mitad de sesión se dijo «6 de 6» y
+la séptima pasada lo desmintió.
+
+Con 10 de 11 sin retry, el suelo duro se alcanza de sobra —el criterio es la mayoría— y
+queda registrada la varianza que sigue habiendo. El informe que sale ahora es el de verdad:
+seis grupos de decisión con sus recetas, sus barreras y sus bloques, y notas propias del
+modelo declarando lo que omitió.
 
 **Así que el veredicto se invierte:** `gemini-2.5-flash` **sí** alcanza el suelo duro de la
 columna `adapt`. Lo que no lo alcanzaba era la instrucción. Y eso hace la promesa de `009`

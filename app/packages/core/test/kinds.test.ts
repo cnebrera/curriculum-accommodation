@@ -145,6 +145,33 @@ describe('the report says under which rule it happened', () => {
     expect(report.markdown).toMatch(/cuántas preguntas se evalúan/);
   });
 
+  /**
+   * The rule, and never a claim of having kept it (backlog G69).
+   *
+   * The line is built entirely from `kind.forbids` — the corpus of the material kind —
+   * and nothing verifies it, so «no he tocado la numeración original» was printed over
+   * a real sheet in which exercise 1 had stopped being an exercise and came out already
+   * solved. `ReportInput` receives no source document, so there is nothing to check it
+   * against; the honest sentence is the one about which rule applied.
+   *
+   * Asserted in both directions on purpose. Dropping the past-tense claim is only half
+   * the fix: what makes it stay dropped is that the report has to keep *naming* the
+   * constraints, because that is the thing she signs for (`012` FR-1006).
+   */
+  it('names the rule it worked under, and does not claim to have kept it', () => {
+    const report = buildReport({
+      adapted: adapted('::: {#b1 .assessment data-recipe="exam-access-not-difficulty@1" data-axis="COG" data-from="b1"}\nx\n:::\n'),
+      kind: findKind(KINDS, 'exam'),
+    });
+    // The constraints are still named — they are what she is signing for.
+    expect(report.markdown).toMatch(/La regla de ese tipo de material es no tocar/);
+    expect(report.markdown).toMatch(/lo que pregunta cada pregunta/);
+    // And the report says whose job it is to check.
+    expect(report.markdown).toMatch(/no una comprobación de haberla cumplido/);
+    // The sentence that claimed compliance nobody measured.
+    expect(report.markdown).not.toMatch(/no he tocado/i);
+  });
+
   it('says nothing about the kind when there is none', () => {
     const report = buildReport({ adapted: adapted('::: {#b1 .exercise}\nx\n:::\n'), kind: null });
     expect(report.markdown).not.toMatch(/Lo he tratado como/);

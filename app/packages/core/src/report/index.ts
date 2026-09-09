@@ -257,8 +257,33 @@ export function buildReport(input: ReportInput): Report {
    */
   if (input.kind) {
     md.push(`## Lo he tratado como: ${input.kind.label.toLowerCase()}`, '');
+    /*
+     * La **regla**, y no una afirmación de haberla cumplido (backlog G69).
+     *
+     * Esta línea decía «Eso quiere decir que no he tocado: …» y se construye entera
+     * desde `kind.forbids`, o sea desde el corpus del tipo de material. Nada la
+     * comprueba. Así que el informe afirmaba, en pasado y sobre cada restricción del
+     * tipo, que se habían respetado todas — y en un pase real de verdad afirmó «no he
+     * tocado la numeración original» sobre una hoja en la que el ejercicio 1 había
+     * dejado de ser un ejercicio y salía ya resuelto.
+     *
+     * Es la misma clase de frase que `recommend.ts` publicó una vez —«hay más baratos,
+     * pero salieron peor en las pruebas», con los tests en verde porque nada se había
+     * medido— y la regla que salió de aquello es la de G29: sin evidencia, no hay
+     * afirmación. Aquí no hay evidencia posible: `ReportInput` no recibe el documento
+     * original, así que no hay nada contra lo que comprobar la numeración.
+     *
+     * Lo que sí es verdad, y es lo que ella necesita antes de firmar, es **bajo qué
+     * regla se ha trabajado**. Eso es lo que dice ahora, y dice también que
+     * comprobarlo es suyo.
+     */
     if (input.kind.forbids.length) {
-      md.push(`Eso quiere decir que no he tocado: ${FORBIDS_ES(input.kind.forbids)}.`, '');
+      md.push(
+        `La regla de ese tipo de material es no tocar: ${FORBIDS_ES(input.kind.forbids)}.`,
+        '',
+        'Eso es la regla con la que he trabajado, no una comprobación de haberla '
+        + 'cumplido: eso lo ves tú en la hoja.',
+        '');
     }
   }
 
