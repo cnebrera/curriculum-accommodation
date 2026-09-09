@@ -1,5 +1,5 @@
 import type { IRDocument, Block, Notice } from '../ir/types.js';
-import { parseRecipeRef } from '../ir/provenance.js';
+import { recipeIds } from '../ir/provenance.js';
 import { recipeRef, type Selection } from '../recipes/index.js';
 import { parseReportNotes } from './notes.js';
 import { phraseOf } from '../guide/corpus.js';
@@ -157,7 +157,7 @@ export function buildReport(input: ReportInput): Report {
   }
 
   const decisions = [...groups.values()].map((d) => ({
-    ...d, title: titleFor(parseRecipeRef(d.recipe).id, d.blocks.length),
+    ...d, title: titleFor(recipeIds(d.recipe).join(', '), d.blocks.length),
   }));
 
   // What was NOT done goes first: it is what the teacher needs to see.
@@ -371,7 +371,8 @@ export function buildReport(input: ReportInput): Report {
    * with its own name, because «he aplicado response-route» in a list of decisions
    * is invisible to the person who has to declare it.
    */
-  if (input.kind?.id === 'exam' && decisions.some((d) => parseRecipeRef(d.recipe).id === 'response-route')) {
+  if (input.kind?.id === 'exam'
+      && decisions.some((d) => recipeIds(d.recipe).includes('response-route'))) {
     md.push('## Adaptación de acceso', '');
     md.push('He cambiado **cómo contesta**, no lo que se pregunta. Eso es una'
       + ' adaptación de acceso, y en un examen se registra como tal — no es que la'

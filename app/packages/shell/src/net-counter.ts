@@ -22,9 +22,41 @@
 let requests = 0;
 const seen: string[] = [];
 
+/**
+ * A URL with no credential in it (backlog G66).
+ *
+ * Google's API takes the key in the query string —
+ * `…/gemini-2.5-flash:generateContent?key=AQ.Ab8…` — so this log held the credential in
+ * clear, in a channel built to be read and pasted into a report. It was found the stupidest
+ * way possible: a test script printed the log and a real key landed in a transcript.
+ *
+ * The project already has this rule on the other side. `009` FR-729 keeps the key out of
+ * the renderer, with the reasoning written down: a screen that receives a credential in
+ * order to draw four asterisks is a screen that has the credential. This channel is the
+ * same problem with a different reader.
+ *
+ * The origin and the path survive, because that is what tells you *where* something went;
+ * every query value goes. Not just `key`: a provider added tomorrow may call it `api_key`
+ * or `access_token`, and a list of parameter names to redact is a list that will be wrong
+ * exactly once. And what SC-3302 needs — «how many requests left this process, and to
+ * whom» — loses nothing.
+ */
+export function withoutSecrets(raw: string): string {
+  try {
+    const u = new URL(raw);
+    if (!u.search) return raw;
+    for (const name of [...u.searchParams.keys()]) u.searchParams.set(name, '…');
+    return u.toString();
+  } catch {
+    // Not a parseable URL: drop anything after `?` rather than guess at its shape.
+    const q = raw.indexOf('?');
+    return q === -1 ? raw : `${raw.slice(0, q)}?…`;
+  }
+}
+
 /** Every URL the process asked for, in order. Empty is the rehearsal's whole claim. */
 export const networkLog = (): { count: number; urls: string[] } =>
-  ({ count: requests, urls: [...seen] });
+  ({ count: requests, urls: seen.map(withoutSecrets) });
 
 export const resetNetworkLog = (): void => { requests = 0; seen.length = 0; };
 

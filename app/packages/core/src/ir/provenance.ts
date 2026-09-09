@@ -80,6 +80,27 @@ export function findUnaccountedBlocks(original: IRDocument, adapted: IRDocument)
   });
 }
 
+/**
+ * The recipe ids in a `data-recipe`, however many it carries (backlog G70).
+ *
+ * `parseRecipeRef` reads **one** `id@version`, which is what `docs/ir.md` defines. Real
+ * output puts several, comma-separated, and cutting at the last `@` then yields the
+ * silent garbage `"signpost-the-page@1, how-much-at-once@1, decoding-load"` — one id
+ * that is not an id.
+ *
+ * That was visible in a report heading and **invisible** in the thing that matters: the
+ * exam access line asks `parseRecipeRef(d.recipe).id === 'response-route'`, which a list
+ * can never satisfy, so a line a school records and an inspector asks about silently
+ * stopped appearing.
+ *
+ * This helper is deliberately not a judgement about whether a list is legal — that is
+ * open in G70, and `docs/ir.md` says singular while practice says plural. It is correct
+ * under both readings, which is what lets the callers stop being wrong today.
+ */
+export function recipeIds(value: string): string[] {
+  return value.split(',').map((r) => parseRecipeRef(r.trim()).id).filter(Boolean);
+}
+
 /** `id@version`, so provenance does not point at a moving target. */
 export function parseRecipeRef(ref: string): { id: string; version: number | null } {
   const at = ref.lastIndexOf('@');

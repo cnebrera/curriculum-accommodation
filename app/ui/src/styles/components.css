@@ -868,6 +868,24 @@ body { container: window / inline-size; }
    aquí menos que en ningún sitio — lo que está en juego es que no confunda una hoja
    de ejemplo con la de su alumno. */
 .ensayo-frame { display: flex; flex-direction: column; min-height: 100%; }
+
+/* El ensayo se centra, como cualquier otra pantalla (backlog G62).
+   El marco es una pieza del shell, así que es él quien pone el suelo: `.page` lleva
+   `max-width: 60rem` y el centrado vive en `.main`, que este marco no atraviesa. Medido
+   en una ventana de 1366: la tarjeta iba de 0 a 960, pegada al borde izquierdo, con 391px
+   muertos a la derecha — en la primera pantalla que ve alguien que abre Rampa.
+
+   `margin-inline: auto` sobre el hijo y no sobre `.page` en general: dentro de `.main` la
+   tarjeta lleva un año donde lleva, y centrarla en todas las pantallas es un cambio de
+   aspecto de la aplicación entera, no el arreglo de esto.
+
+   El comentario de esa regla decía «narrow enough that nothing strands at the left of a
+   1366px window», que es exactamente lo que pasaba aquí. */
+.ensayo-frame > *:not(.ensayo-mark) {
+  /* Sin `max-width` aquí: pisaría el `60rem` de `.page` y la tarjeta se iría a todo lo
+     ancho, que es el defecto contrario y también feo. Lo único que falta es el centrado. */
+  margin-inline: auto;
+}
 .ensayo-mark {
   position: sticky; top: 0; z-index: 20;
   display: flex; flex-wrap: wrap; align-items: center; gap: .6rem;

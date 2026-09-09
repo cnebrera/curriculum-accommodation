@@ -190,6 +190,45 @@ test.describe('the rehearsal, with nothing connected', () => {
     await app.close();
   });
 
+  /**
+   * The rehearsal is centred, like every other screen (backlog G62).
+   *
+   * `.page` carries `max-width: 60rem` and the centring lives in `.main`, which
+   * `EnsayoFrame` does not go through — so the card sat flush against the left edge with
+   * 391px of dead ground on the right, on **the first screen anyone who opens Rampa
+   * sees**. `013`'s rule names the fix: a screen escaping the shell is a fact about the
+   * shell, so the frame provides the ground.
+   *
+   * Geometry and not a screenshot, for the reason G64 taught: the layout tests here
+   * assert properties, and «is it in the middle» is a property. And it is asserted as a
+   * *balance* rather than a pixel, so a change to the card's width does not fail it.
+   */
+  test('and it is centred in the window, not stranded at the left', async () => {
+    const { app, page } = await launch();
+    await page.setViewportSize({ width: 1366, height: 900 });
+    await page.reload();
+    await page.waitForLoadState('domcontentloaded');
+    await page.getByRole('button', { name: 'Probar con un ejemplo' }).click();
+    await page.getByRole('heading', { name: /Un ejemplo, de principio a fin/ }).waitFor();
+
+    const box = await page.evaluate(() => {
+      const el = document.querySelector('.ensayo-frame .page');
+      if (!el) return null;
+      const r = el.getBoundingClientRect();
+      return { left: Math.round(r.left), right: Math.round(r.right), window: window.innerWidth };
+    });
+    expect(box, 'the rehearsal renders no page at all').not.toBeNull();
+
+    const left = box!.left;
+    const right = box!.window - box!.right;
+    expect(left, 'the card is flush against the left edge').toBeGreaterThan(8);
+    // Balanced, so this survives the card getting wider or the window narrower.
+    expect(Math.abs(left - right),
+      `${left}px of ground on the left and ${right}px on the right`).toBeLessThanOrEqual(24);
+
+    await app.close();
+  });
+
   test('and her real vault does not change by a byte (SC-3303)', async () => {
     const { app, page, vault, userData } = await launch();
 

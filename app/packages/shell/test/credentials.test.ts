@@ -3,6 +3,7 @@ import { mkdtemp, readFile, writeFile, mkdir } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { CredentialStore, type Crypto } from '../src/credentials.js';
+import { logger, type LogRecord } from '@rampa/core';
 
 /**
  * The credential store (009 T038).
@@ -30,6 +31,63 @@ let dir: string;
 beforeEach(async () => { dir = await mkdtemp(join(tmpdir(), 'rampa-cred-')); });
 
 const file = () => join(dir, 'credentials.enc');
+
+/**
+ * A credential that cannot be read leaves a trace (backlog G61).
+ *
+ * Reading an unreadable file as «no keys» is the right call, and the comment in the
+ * source argues it: the alternative is an application that will not start. But it left
+ * **nothing** behind, so «never connected» and «connected, and now unreadable» were the
+ * same state — for her, and for anyone holding her log. Six reads of the store were
+ * recorded in one day with no line saying a file had failed to decrypt, and finding out
+ * why cost an afternoon.
+ *
+ * The real case is a `credentials.enc` copied from another machine or another install:
+ * `safeStorage`'s master key lives in this machine's keychain and does not travel with
+ * the file.
+ */
+describe('an unreadable credential file says so', () => {
+  const broken: Crypto = {
+    ...reversible,
+    decrypt: () => { throw new Error('Error while decrypting the ciphertext'); },
+  };
+
+  /** Collect what the store logs, for the length of one call. */
+  const recorded = async (crypto: Crypto): Promise<LogRecord[]> => {
+    const lines: LogRecord[] = [];
+    logger.addSink((r) => lines.push(r));
+    await new CredentialStore(dir, crypto).current();
+    return lines;
+  };
+
+  it('logs that it could not be decrypted, and still reads as no keys', async () => {
+    await writeFile(file(), Buffer.from('whatever-a-foreign-keychain-wrote'));
+    const store = new CredentialStore(dir, broken);
+    expect(await store.current(), 'a broken file must not throw').toBeNull();
+    expect((await store.summary()).connected).toEqual([]);
+
+    const lines = await recorded(broken);
+    expect(lines.map((l) => l.event), 'nothing was recorded at all')
+      .toContain('credentials.undecryptable');
+  });
+
+  it('records that it failed and never what the file held', async () => {
+    await writeFile(file(), Buffer.from('sk-ant-a-real-looking-secret-value'));
+    const lines = await recorded(broken);
+    expect(JSON.stringify(lines)).not.toContain('sk-ant-a-real-looking-secret-value');
+    // The size is the useful part: an empty store is 19 bytes and a real one is not.
+    expect(lines.find((l) => l.event === 'credentials.undecryptable')?.data)
+      .toHaveProperty('bytes');
+  });
+
+  it('tells the causes apart, because they need different answers', async () => {
+    // Decrypts fine and is not JSON: a truncated or half-written file, not a foreign key.
+    await writeFile(file(), Buffer.from('not json at all', 'utf8').reverse());
+    const lines = await recorded(reversible);
+    expect(lines.map((l) => l.event)).toContain('credentials.not-json');
+    expect(lines.map((l) => l.event)).not.toContain('credentials.undecryptable');
+  });
+});
 
 describe('migration from the single-key shape', () => {
   it('moves the old key under its service and keeps it active', async () => {

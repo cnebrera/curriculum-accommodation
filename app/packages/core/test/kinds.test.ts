@@ -132,6 +132,54 @@ describe('the same document, as a worksheet and as an exam', () => {
   });
 });
 
+/**
+ * A `data-recipe` carrying several recipes does not swallow a line (backlog G70).
+ *
+ * `docs/ir.md` defines `data-recipe` as one `id@version`; a real model writes lists,
+ * comma-separated. Cutting at the last `@` turned a list into one id that is not an id
+ * — visible as a report heading titled with six recipes, and **invisible** where it
+ * mattered: the exam access line tested `parseRecipeRef(...).id === 'response-route'`,
+ * which no list can satisfy. A line a school records and an inspector asks about had
+ * simply stopped appearing.
+ *
+ * Whether a list is legal at all is still open. These assertions are true either way.
+ */
+describe('a decision naming several recipes is still that decision', () => {
+  const exam = (body: string) => parseIR(`---\nkind: "exam"\n---\n\n${body}`);
+
+  it('finds the access recipe inside a list, and says so', () => {
+    const report = buildReport({
+      adapted: exam('::: {#b1 .assessment data-from="b1" data-axis="MOT:2" '
+        + 'data-recipe="response-route@1, exam-access-not-difficulty@1"}\nx\n:::\n'),
+      kind: findKind(KINDS, 'exam'),
+    });
+    expect(report.markdown, 'the access line vanished behind a comma')
+      .toMatch(/## Adaptación de acceso/);
+    expect(report.markdown).toMatch(/He cambiado \*\*cómo contesta\*\*/);
+  });
+
+  it('titles the decision with every recipe in it, and none of them mangled', () => {
+    const report = buildReport({
+      adapted: exam('::: {#b1 .assessment data-from="b1" data-axis="MOT:2" '
+        + 'data-recipe="response-route@1, exam-access-not-difficulty@1"}\nx\n:::\n'),
+      kind: findKind(KINDS, 'exam'),
+    });
+    // The mangled id the old parser produced: the last one lost its version.
+    expect(report.markdown).not.toMatch(/response-route@1, exam-access-not-difficulty ·/);
+    expect(report.markdown).toMatch(/## response-route, exam-access-not-difficulty ·/);
+  });
+
+  it('still handles the single recipe the format actually defines', () => {
+    const report = buildReport({
+      adapted: exam('::: {#b1 .assessment data-from="b1" data-axis="MOT:2" '
+        + 'data-recipe="response-route@1"}\nx\n:::\n'),
+      kind: findKind(KINDS, 'exam'),
+    });
+    expect(report.markdown).toMatch(/## Adaptación de acceso/);
+    expect(report.markdown).toMatch(/## response-route · un bloque/);
+  });
+});
+
 describe('the report says under which rule it happened', () => {
   const adapted = (body: string) => parseIR(`---\nkind: "exam"\n---\n\n${body}`);
 

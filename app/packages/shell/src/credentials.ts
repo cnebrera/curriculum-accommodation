@@ -13,6 +13,7 @@
  */
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { join, dirname } from 'node:path';
+import { logger } from '@rampa/core';
 
 export interface StoredKey { key: string; verifiedAt: string }
 
@@ -53,12 +54,35 @@ export class CredentialStore {
     let raw: Buffer;
     try { raw = await readFile(this.file); } catch { return (this.cache = { ...EMPTY }); }
 
+    /*
+     * Un fallo silencioso ya costó una tarde (backlog G61).
+     *
+     * Leerlo como «no hay claves» sigue siendo lo correcto —el comentario de arriba
+     * explica por qué, y la alternativa es una aplicación que no arranca— pero no dejaba
+     * **ningún** rastro. Así que «nunca conectó» y «conectó y ya no se puede leer» eran el
+     * mismo estado para ella y para quien mirara su log: se contaron seis lecturas del
+     * almacén en un día y ni una línea diciendo que había un fichero que no descifraba.
+     *
+     * Nunca el contenido, ni un fragmento: sólo qué pasó y de qué tamaño era. El caso real
+     * es un `credentials.enc` copiado de otro ordenador o de otra instalación, porque la
+     * clave maestra de `safeStorage` vive en el llavero de esta máquina y no viaja con el
+     * fichero.
+     */
     let text: string;
-    try { text = this.crypto.decrypt(raw); } catch { return (this.cache = { ...EMPTY }); }
+    try { text = this.crypto.decrypt(raw); } catch {
+      logger.warn('credentials.undecryptable', { bytes: raw.length });
+      return (this.cache = { ...EMPTY });
+    }
 
     let parsed: unknown;
-    try { parsed = JSON.parse(text); } catch { return (this.cache = { ...EMPTY }); }
-    if (!parsed || typeof parsed !== 'object') return (this.cache = { ...EMPTY });
+    try { parsed = JSON.parse(text); } catch {
+      logger.warn('credentials.not-json', { bytes: raw.length });
+      return (this.cache = { ...EMPTY });
+    }
+    if (!parsed || typeof parsed !== 'object') {
+      logger.warn('credentials.unexpected-shape', { bytes: raw.length });
+      return (this.cache = { ...EMPTY });
+    }
 
     const obj = parsed as Credentials & LegacyCredentials;
 

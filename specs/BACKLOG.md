@@ -578,7 +578,7 @@ Imprimir `source.md` de los fixtures 01 y 02, fotografiarlas mal a propósito co
 —que es lo que dice `notes.md` que falta— y repetir esto. Entonces es SC-601 y no una
 aproximación.
 
-## G70 · El informe pierde la versión de la última receta, y nadie valida `data-recipe`
+## G70 · El informe pierde la versión de la última receta — *LA MUTILACIÓN, ARREGLADA; EL FORMATO, ABIERTO*
 
 **Anotado 2026-09-08**, leyendo el primer informe bueno que produjo un modelo real.
 
@@ -605,10 +605,32 @@ Nada lo valida, y el generador de informes trata la cadena entera como el nombre
 receta, así que sale una cabecera de seis recetas y un «Bloques: b1-intro». La maestra
 revisa «unas quince decisiones» sólo si cada decisión tiene nombre.
 
-**Lo que hay que decidir:** o `data-recipe` admite lista y el informe agrupa por receta
-—que probablemente es lo que la maestra quiere, «qué hizo `signpost-the-page` en toda la
-hoja»— o es singular y el prompt tiene que decirlo y algo tiene que rechazarlo. Hoy es
-singular en la especificación, plural en la práctica, y el informe se come la diferencia.
+### Arreglada la mutilación, que era lo grave y no lo visible
+
+`parseRecipeRef` corta en el último `@`, así que sobre una lista devolvía
+`"signpost-the-page@1, how-much-at-once@1, decoding-load"` — **un id que no es un id**. Eso
+se veía en una cabecera; y donde no se veía es donde importaba:
+
+```ts
+if (input.kind?.id === 'exam' && decisions.some((d) => parseRecipeRef(d.recipe).id === 'response-route'))
+```
+
+Ninguna lista puede satisfacer eso. O sea que **la línea «Adaptación de acceso» dejaba de
+salir en silencio** en cuanto el modelo citaba dos recetas en el mismo bloque — y es la
+línea que un centro registra y que un inspector pregunta, con su propio comentario en el
+código explicando por qué tiene que tener nombre propio.
+
+Ahora hay `recipeIds(value)`, que parte por comas y devuelve los ids. Es correcto bajo las
+dos lecturas —singular y lista—, que es justo lo que permite dejar de estar equivocado hoy
+sin decidir nada. Tres tests, dos de ellos rojos sin el arreglo.
+
+### Lo que sigue siendo decisión
+
+O `data-recipe` admite lista y el informe **agrupa por receta** —que probablemente es lo que
+la maestra quiere: «qué hizo `signpost-the-page` en toda la hoja», en vez de una decisión
+titulada con seis— o es singular, el prompt tiene que decirlo y algo tiene que rechazarlo.
+Hoy es singular en `docs/ir.md`, plural en la práctica, y el informe ya no se rompe pero
+sigue titulando con la lista entera.
 
 ## G69 · El informe le dijo dos cosas falsas, y la hoja pasó las tres puertas — *LA FRASE FALSA, ARREGLADA; LA LECTURA DEL PERFIL, ABIERTA*
 
@@ -862,7 +884,7 @@ el modelo del corpus llega a la **petición**, y pasó todo el tiempo. Ahora com
 que llega al **informe de uso**, que es el único campo del que sale el coste. Comprobado
 rojo sin el arreglo: `expected [ 'gemini-free' ] to include 'gemini-2.5-flash'`.
 
-## G66 · La clave de la API viaja en la URL, y el diagnóstico de red la guarda entera
+## G66 · La clave de la API viaja en la URL, y el diagnóstico de red la guarda entera — *ARREGLADO 2026-09-09*
 
 **Anotado 2026-09-08.** Encontrado del modo más tonto posible: un script de pruebas volcó
 `diagnostics.network()` y la clave de Gemini de Carlos acabó impresa en una transcripción.
@@ -881,9 +903,16 @@ lado —`009` FR-729, «la clave nunca cruza al renderer», con el comentario de
 pantalla que recibe una credencial para pintar cuatro asteriscos es una pantalla que tiene
 la credencial— y este canal es el mismo problema con otro destinatario.
 
-**Qué habría que hacer:** que el contador guarde origen y ruta y no la *query*, o que
-enmascare `key=…`. La cuenta de peticiones, que es lo único que SC-3302 necesita, no pierde
-nada. Y de paso conviene mirar si algún log escribe URLs de proveedor.
+**Arreglado:** `networkLog()` pasa cada URL por `withoutSecrets`, que **vacía todos los
+valores de la query** y no una lista de nombres. Deliberadamente no sólo `key=`: un
+proveedor añadido mañana puede llamarlo `api_key` o `access_token`, y una lista de
+parámetros a tapar es una lista que se equivocará exactamente una vez. Origen y ruta
+sobreviven —que es lo que dice *a dónde* fue algo— y la cuenta, lo único que SC-3302
+necesita, no pierde nada.
+
+Cinco casos en el test, y el quinto es el que importa: que **el log lo aplique**, no que la
+función exista. Una función exportada y nunca alcanzada es el defecto más repetido de este
+repositorio, así que la aserción conduce el contador de verdad.
 
 ## G65 · El portón de nombres bloquea el primer arranque con el texto que Rampa escribe ella misma — *ARREGLADO 2026-09-09*
 
@@ -1093,7 +1122,7 @@ lo que de verdad importa («**no lee fotos**», «**Create API key**»), así qu
 decidir qué pasa con ese énfasis empobrece el texto que ella lee justo cuando está
 perdida. Es una decisión de quien revisa el corpus, no del parser.
 
-## G62 · El ensayo no está centrado, y el guion de capturas no podía verlo
+## G62 · El ensayo no está centrado — *ARREGLADO 2026-09-09; EL PUNTO CIEGO DE `shots`, ABIERTO*
 
 **Anotado 2026-09-08**, en la primera sesión que corrió el ensayo y **lo miró**.
 
@@ -1121,8 +1150,27 @@ feature entera se publicó bien coloreada, bien etiquetada y fea— tiene un pun
 justo sobre **la primera pantalla que ve alguien que abre Rampa**. Ese punto ciego es la
 segunda mitad del hallazgo, y es la mitad barata de cerrar.
 
-**Reproducir:** lanzar `out/main/main.js` con un vault temporal, pulsar «Probar con un
-ejemplo» y leer `getBoundingClientRect()` de `.ensayo-frame .page`.
+### Arreglado el centrado
+
+El marco pone el suelo, que es lo que `013` dice que le toca. Medido después, en 1366: la
+tarjeta va de 196 a 1156 — 196px de suelo a la izquierda y 195 a la derecha.
+
+`margin-inline: auto` sobre el hijo del marco y **no** sobre `.page` en general: dentro de
+`.main` la tarjeta lleva un año donde lleva, y centrarla en todas las pantallas es un
+cambio de aspecto de la aplicación entera, no el arreglo de esto. Y sin `max-width` en esa
+regla — el primer intento puso `max-width: 100%`, pisó el `60rem` de `.page` y la tarjeta se
+fue a todo lo ancho, que es el defecto contrario y también feo.
+
+La guarda es geométrica y afirma **equilibrio** y no píxeles, así que sobrevive a que la
+tarjeta cambie de ancho.
+
+**Y de paso apareció otra fuga de la misma regla, sin arreglar:** el onboarding se centra
+con un estilo inline en `App.tsx` —`style={{ maxWidth: 680, margin: '0 auto' }}`— que es
+exactamente «una pantalla eligiendo su propio ancho». Funciona, así que no urge; pero es lo
+que `013` prohíbe, tapado a mano en vez de resuelto en el shell.
+
+**Sigue abierto el punto ciego de `shots`**, que es la mitad barata: mientras el guion no
+entre en el ensayo, «mirarlo» no cubre la primera pantalla que ve nadie.
 
 ## G61 · Una credencial que no descifra se lee como «no has conectado» — *CAUSA: EL ARNÉS, NO EL PRODUCTO*
 
@@ -1186,7 +1234,11 @@ fuera. No hay ninguna evidencia de eso, y esta entrada la daba por hecha.
 
 **Lo que queda abierto, ya sin la parte inventada:**
 
-- **Una línea de log** cuando existe un fichero de credenciales y no descifra.
+- ~~**Una línea de log** cuando existe un fichero de credenciales y no descifra.~~
+  **Hecho 2026-09-09.** `load()` distingue tres causas —no descifra, descifra y no es
+  JSON, forma inesperada— porque necesitan respuestas distintas, y registra el tamaño del
+  fichero y nunca su contenido. Con un test que comprueba que el secreto no aparece en lo
+  registrado.
 - **Una frase con la que pueda hacer algo**, distinta de «todavía no has conectado» — para
   el caso de verdad, que es un fichero copiado de otro ordenador o de otra instalación.
 - **Y una nota para quien escriba pruebas contra la app real:** la clave sólo la puede usar
