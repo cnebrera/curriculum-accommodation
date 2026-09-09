@@ -103,7 +103,26 @@ export const google: Provider = {
     if (json['candidates']?.[0]?.['finishReason'] === 'MAX_TOKENS') yield { truncated: true };
 
     const um = json['usageMetadata'] ?? {};
-    yield { usage: { model: 'gemini-free', inputTokens: um['promptTokenCount'] ?? 0, outputTokens: um['candidatesTokenCount'] ?? 0 } };
+    /*
+     * El modelo que se llamó, y no una constante (backlog G67).
+     *
+     * Esto decía `model: 'gemini-free'`, escrito a mano, y ese id está en `PRICES` a
+     * 0,00. O sea que **toda** llamada a Google se valoraba en cero exactamente, fuera
+     * el modelo que fuera y estuviera la cuenta dentro de la cuota gratuita o no. El
+     * libro de gastos del primer pase real —dos llamadas a `gemini-2.5-flash`— apuntó
+     * «cents: 0» y el badge dijo «nada», cuando la verdad era «no lo sé».
+     *
+     * Es G29 otra vez por el otro lado: allí un precio inventado, aquí un cero
+     * inventado. La regla que salió de G29 es la que aplica — sin precio, no hay cifra
+     * — y quien decide si hay precio es `costCents`, que necesita saber qué modelo
+     * corrió. `gemini-2.5-flash` no está en `PRICES`, así que ahora el trabajo se
+     * cuenta como desconocido en vez de como gratis.
+     *
+     * Y no se añade a `PRICES` con la tarifa de pago: eso le cobraría a quien está
+     * dentro de la cuota gratuita un dinero que no ha gastado, que es exactamente el
+     * defecto original.
+     */
+    yield { usage: { model, inputTokens: um['promptTokenCount'] ?? 0, outputTokens: um['candidatesTokenCount'] ?? 0 } };
   },
 
   price(usage: Usage) { return costCents(usage); },

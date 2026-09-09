@@ -84,5 +84,38 @@ describe('the corpus decides which model is called', () => {
     }
   });
 
+  /**
+   * And it reaches the **usage report**, which is where the cost comes from (backlog G67).
+   *
+   * `google.ts` wrote `model: 'gemini-free'` by hand there — a string no catalogue entry
+   * names — and `PRICES` had that id at 0.00, so every Google call was priced at exactly
+   * zero whatever model ran and whether or not the account was inside the free quota. The
+   * ledger of the first real pass recorded «cents: 0» for two calls to `gemini-2.5-flash`
+   * and the badge said «nada», when the truth was «no lo sé».
+   *
+   * The test above passed the whole time, because the model did reach the *request*.
+   * Nothing checked that it reached the only field the cost is computed from — the seam,
+   * one field wide.
+   */
+  it('reports the model it called in the usage, so the cost can be honest', async () => {
+    vi.stubGlobal('fetch', vi.fn(() => Promise.resolve(new Response(JSON.stringify({
+      candidates: [{ content: { parts: [{ text: 'ok' }] } }],
+      usageMetadata: { promptTokenCount: 100, candidatesTokenCount: 20 },
+    }), { status: 200 }))));
+
+    const google = catalogue.find((s) => s.adapter === 'google')!;
+    const provider = providerFor(google, catalogue)!;
+    const models: string[] = [];
+    for await (const chunk of provider.send(
+      { system: 's', messages: [{ role: 'user', content: 'hola' }] }, 'k')) {
+      if (chunk.usage) models.push(chunk.usage.model);
+    }
+
+    expect(models, 'no usage was reported at all').not.toHaveLength(0);
+    expect(models).toContain(google.model);
+    // The hand-written id that made every call free.
+    expect(models).not.toContain('gemini-free');
+  });
+
   afterEach(() => vi.unstubAllGlobals());
 });

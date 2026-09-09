@@ -439,6 +439,80 @@ every moment should have a spec. What it added beyond the seams pass:
    journey sentence → T094). Handover *import* (004 US2) recorded as deliberately
    deferred rather than silently missing.
 
+## G73 · La puerta de procedencia no tiene reintento, y la de completitud sí
+
+**Anotado 2026-09-09**, después de dieciséis pasadas reales. Trece limpias y **tres**
+falladas con lo mismo: `ir-no-provenance`, «2 bloque(s) cambiaron sin justificación
+registrada». Un 19%, estable, y no lo movió ni enseñar el formato (G68) ni quitar la frase
+duplicada (G72).
+
+**Qué lo dispara, exactamente.** `checkProvenance` falla un bloque que lleva **algunos** de
+los tres atributos y no todos. Los tres fallos son el mismo caso: el modelo añade un bloque
+nuevo con `data-recipe` y `data-axis`, sin `data-from` —correcto para contenido nuevo— y
+**se olvida de marcarlo `.scaffold`**, que es la clase que lo exime. La regla está escrita
+en `instructions/adapt.md` §Output y aun así se le escapa una de cada cinco veces.
+
+**Y aquí está lo que de verdad merece una decisión.** Hay dos puertas deterministas y sólo
+una tiene reparación:
+
+| Puerta | Qué hace al fallar |
+|---|---|
+| completitud (`checkStructurallyComplete` + `checkCompleteness`) | **un reintento acotado**, con los problemas traducidos a correcciones y devueltos al modelo |
+| procedencia (`assertProvenance`, `findUnaccountedBlocks`) | **lanza**, sin reparación |
+
+`retryCorrections` sólo acepta `CompletenessIssue[]`, y `assertProvenance` se llama después
+del bloque del reintento. No hay motivo escrito para la asimetría, y «el bloque X cambió
+pero no dice de dónde viene» es tan accionable como cualquier problema de completitud —
+más, incluso: la reparación es añadir una clase.
+
+**Por qué no se arregla aquí.** Porque cambia **cuándo se gasta el dinero de la maestra**:
+hoy un fallo de procedencia no cuesta una segunda llamada, y darle reintento sí. El bound
+está declarado a propósito —«bounded — one retry, decided here, never by the model»— y
+ampliarlo a otra familia de fallos es una decisión de producto, no una simetría obvia. Es
+de las que van por `/speckit-clarify`.
+
+**La alternativa más barata, mientras tanto:** que §Output diga que la clase es lo que
+distingue un bloque nuevo, no una etiqueta más. Cuesta cero llamadas y probarlo son tres
+pasadas.
+
+## G72 · La instrucción de formato tenía dos copias, y la de `app/` iba última — *ARREGLADO 2026-09-09*
+
+**Anotado 2026-09-09**, buscando la causa de G73 y encontrando otra cosa.
+
+`jobs/adapt.ts` llevaba una constante que se pegaba al final del prompt, después del
+corpus:
+
+```ts
+const OUTPUT_FORMAT =
+  '\n\n---\n\nDevuelve únicamente el documento adaptado, en el mismo formato que recibes.';
+```
+
+Tres cosas mal a la vez:
+
+1. **Prosa en `app/` diciéndole al modelo qué hacer** — el resto exacto del defecto que
+   `app/README.md` narra: «the entire adaptation prompt used to be a string in
+   `packages/shell/src/jobs/adapt.ts` while the real instructions sat unread in the
+   bundle… **Do not add prose to the prompt here**». El prompt se reconstruyó para
+   ensamblarse desde `instructions/` y **esta frase se quedó**.
+2. **Segunda copia de una regla del corpus**, que es la deriva que AGENTS.md nombra: «the
+   drift between two copies of the same rule is how this repository has produced defects
+   before».
+3. **Iba última**, así que la versión vaga tenía la última palabra sobre la detallada.
+
+**Y la deriva ya había ocurrido.** Al escribir el formato en el corpus (G68), esta frase se
+quedó diciendo «en el mismo formato que recibes» — que es *literalmente* la instrucción
+insuficiente que causó G68. Un año superviviendo sin coste, y en cuanto el corpus mejoró,
+empezó a contradecirlo.
+
+**Arreglado** quitándola: el corpus ya lo dice, y mejor. Con la guarda estructural que
+Principio I no tenía para este prompt — `adapt-prompt-is-corpus.test.ts` afirma que el
+system prompt ensamblado **es** los dos ficheros del corpus unidos y nada más, y una
+tercera aserción comprueba que ese corpus sigue explicando cómo devolver el documento, para
+que recortar §Output falle aquí en vez de volver a producir HTML en silencio.
+
+**Medido después:** tres pasadas, sin regresión de formato. La varianza de G73 sigue igual,
+así que esta frase no era su causa.
+
 ## G71 · La columna `ingest`, medida por primera vez — y con una foto sintética, que es media medida
 
 **Anotado 2026-09-09.** `cases/002-model-floor` pide dos columnas y sólo se había medido
@@ -726,7 +800,7 @@ de encima; la regla quedó en positivo, «copia el `id@version` del encabezado q
 resuelto, y el informe sigue diciendo que no tocó la numeración. Ver G69, que ahora es
 reproducible 3 de 3.
 
-## G67 · Google se cobra siempre a cero, porque su adaptador miente sobre qué modelo corrió
+## G67 · Google se cobra siempre a cero, porque su adaptador miente sobre qué modelo corrió — *ARREGLADO 2026-09-09*
 
 **Anotado 2026-09-08**, en el primer pase con una clave de verdad. Es **G29 otra vez**,
 entrando por el lado contrario: allí un precio inventado, aquí un cero inventado.
@@ -762,10 +836,31 @@ proveedor, y pasa: llega, y se usa para la llamada. Lo que nadie comprueba es qu
 lo emitía nadie y que por eso Google reportaría «no lo sé». Falso — lo emite este
 adaptador, en todas las llamadas. Es exactamente al contrario.
 
-**Lo que hay que decidir al arreglarlo**, porque no es sólo cambiar la cadena: el plan
-gratuito de Google **es** gratis mientras dure la cuota, así que cero no siempre es mentira.
-Pero el adaptador no sabe si la cuenta está dentro de la cuota, y lo que no se sabe no se
-escribe como cero. La regla de G29 ya está escrita: sin precio, no hay cifra.
+**Arreglado:** el adaptador reporta el modelo que corrió, y `gemini-free` se retira de
+`PRICES`. Ningún adaptador emite ya ese id, y una entrada de precio para un modelo que
+nadie llama es un cero esperando a que alguien lo vuelva a apuntar. De paso el invariante
+«every priced model declares both cache rates» se queda sin excepción: la que saltaba era
+justo ésta.
+
+**Y no se añade `gemini-2.5-flash` a `PRICES` con la tarifa de pago**, aunque sería fácil:
+eso le cobraría a quien está dentro de la cuota gratuita un dinero que no ha gastado, que
+es el defecto original con el signo cambiado. El plan gratuito **es** gratis mientras dure
+la cuota, y el adaptador no sabe si la cuenta sigue dentro. Lo que no se sabe no se escribe
+como cero. La regla de G29: sin precio, no hay cifra.
+
+**Medido después.** Un pase real, y el libro de gastos:
+
+```json
+{ "job": "caso002", "cents": null, "at": "2026-09-09T08:25:50.014Z" }
+```
+
+`null` y no `0`, o sea que `monthTotal` lo cuenta en `unknown` y la maestra lee «no lo sé»
+en vez de «nada».
+
+**El test es el de la costura.** `corpus-model-reaches-provider.test.ts` ya comprobaba que
+el modelo del corpus llega a la **petición**, y pasó todo el tiempo. Ahora comprueba también
+que llega al **informe de uso**, que es el único campo del que sale el coste. Comprobado
+rojo sin el arreglo: `expected [ 'gemini-free' ] to include 'gemini-2.5-flash'`.
 
 ## G66 · La clave de la API viaja en la URL, y el diagnóstico de red la guarda entera
 

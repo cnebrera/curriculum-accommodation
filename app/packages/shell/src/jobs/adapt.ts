@@ -36,15 +36,34 @@ import { recordCost } from '../ipc/cost.js';
  * model owns the content, the verifiers in the loop are code, and iteration is
  * bounded — one retry, decided here, never by the model.
  */
-const OUTPUT_FORMAT =
-  '\n\n---\n\nDevuelve únicamente el documento adaptado, en el mismo formato que recibes.';
-
-async function systemPrompt(): Promise<string> {
+/**
+ * El prompt es el corpus, y **nada más** (Principio I, backlog G72).
+ *
+ * Aquí había una constante `OUTPUT_FORMAT` que se pegaba al final:
+ *
+ *     «Devuelve únicamente el documento adaptado, en el mismo formato que recibes.»
+ *
+ * Tres cosas mal a la vez. Es **prosa en `app/` diciéndole al modelo qué hacer**, que es
+ * el resto exacto del defecto que `app/README.md` cuenta —«the entire adaptation prompt
+ * used to be a string in `packages/shell/src/jobs/adapt.ts`… **Do not add prose to the
+ * prompt here**»—. Es una **segunda copia** de una regla que ya vive en
+ * `instructions/adapt.md` §Output, y AGENTS.md dice por qué eso duele: «the drift between
+ * two copies of the same rule is how this repository has produced defects before». Y era
+ * **lo último que el modelo leía**, así que la versión vaga tenía la última palabra sobre
+ * la detallada.
+ *
+ * La drift ya había ocurrido: al enseñarle el formato en el corpus (G68), esta frase se
+ * quedó diciendo «en el mismo formato que recibes» — que es literalmente la instrucción
+ * insuficiente que causó G68.
+ *
+ * Exportado para que un test pueda comprobar que sigue siendo sólo el corpus.
+ */
+export async function systemPrompt(): Promise<string> {
   const [rules, adapt] = await Promise.all([
     loadInstruction('hard-rules'),
     loadInstruction('adapt'),
   ]);
-  return `${rules}\n\n---\n\n${adapt}${OUTPUT_FORMAT}`;
+  return `${rules}\n\n---\n\n${adapt}`;
 }
 
 export interface AdaptProgress { stage: string; detail?: string; }

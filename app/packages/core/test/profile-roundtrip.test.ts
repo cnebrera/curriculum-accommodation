@@ -116,8 +116,9 @@ describe('cached prefixes are what make it cents (T092)', () => {
   });
 
   it('every priced model declares both cache rates, or the estimate lies', () => {
+    // Sin excepciones desde que `gemini-free` se retiró (backlog G67): la entrada que
+    // saltaba este invariante era la que valoraba Google a cero.
     for (const [model, p] of Object.entries(PRICES)) {
-      if (model === 'gemini-free') continue;
       expect(p.cachedInput, `${model} cachedInput`).toBeDefined();
       expect(p.cacheWrite, `${model} cacheWrite`).toBeDefined();
       expect(p.cachedInput!).toBeLessThan(p.input);

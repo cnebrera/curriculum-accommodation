@@ -25,7 +25,13 @@ export const PRICES: Record<string, Price> = {
   'claude-opus-5':      { input: 5.00, output: 25.00, cachedInput: 0.50, cacheWrite: 6.25 },
   'claude-sonnet-5':    { input: 2.00, output: 10.00, cachedInput: 0.20, cacheWrite: 2.50 },
   'claude-haiku-4-5':   { input: 1.00, output:  5.00, cachedInput: 0.10, cacheWrite: 1.25 },
-  'gemini-free':        { input: 0.00, output:  0.00 },
+  /*
+   * `gemini-free` se retira (backlog G67). Era el id que el adaptador de Google
+   * escribía a mano en su informe de uso, así que estaba aquí valorando a cero
+   * cualquier llamada a Google. Ahora el adaptador reporta el modelo que corrió, y
+   * ningún adaptador emite este id: una entrada de precio para un modelo que nadie
+   * llama es un cero esperando a que alguien lo vuelva a apuntar.
+   */
 };
 
 export interface Usage {
