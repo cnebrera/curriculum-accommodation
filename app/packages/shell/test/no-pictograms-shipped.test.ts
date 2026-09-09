@@ -39,7 +39,33 @@ describe('no release artefact carries a pictogram (023 FR-2101)', () => {
      * so a third entry added here without a thought would be shipped unexamined.
      */
     expect(config.files).toEqual(['out/**/*', 'package.json']);
-    expect(config.extraResources).toEqual([{ from: 'corpus', to: 'corpus' }]);
+    /*
+     * A second resource, and the thought that this list demands (backlog G76).
+     *
+     * `fonts` is the application's own typeface — Atkinson Hyperlegible, the face `010`
+     * chose and the interface already bundles — shipped by name so the main process can
+     * find it and embed it in the sheet. Vite copies it into `out/renderer` under a hashed
+     * name that the PDF path cannot predict. It is not content and not a pictogram, and
+     * the test below holds it to exactly two `.woff2` files so it cannot become a side
+     * door for anything else.
+     */
+    expect(config.extraResources).toEqual([
+      { from: 'corpus', to: 'corpus' },
+      { from: 'ui/src/assets/fonts', to: 'fonts' },
+    ]);
+  });
+
+  it('the fonts resource is the two faces and their licence, nothing else', async () => {
+    /*
+     * `OFL.txt` travels with them, and that is the point rather than an oversight:
+     * shipping a typeface without its licence is the same non-compliance the corpus gate
+     * already fails the build over. Two faces and one licence — anything else appearing
+     * in this directory reaches a release, so it fails here first.
+     */
+    const entries = await readdir(join(app, 'ui', 'src', 'assets', 'fonts'));
+    expect(entries.sort()).toEqual([
+      'AtkinsonHyperlegible-Bold.woff2', 'AtkinsonHyperlegible-Regular.woff2', 'OFL.txt',
+    ]);
   });
 
   it('has no image files in what gets bundled into the corpus', async () => {

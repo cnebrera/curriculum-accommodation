@@ -1,3 +1,5 @@
+import { fontsRoot } from '../corpus/bundle.js';
+import { sheetFontFaces } from '../sheet-fonts.js';
 import { BrowserWindow, shell } from 'electron';
 import { renderHTML, renderODT, parseIR, checkOutput, checkPhotocopy, checkEssentialFigures,
          presentationFor, outputDir, loadLearner, RampaError, AXES, axisLevelOf, isSignedOff,
@@ -107,6 +109,8 @@ export async function renderJob(jobId: string, learnerCode: string, vault: Vault
 
   const html = renderHTML(doc, {
     presentation: presentationFor(levels), signedOff,
+    // La fuente accesible viaja dentro de la hoja, o el PDF sale en Verdana (G76).
+    fontFaces: await sheetFontFaces(fontsRoot()),
     ...(pictogramImages ? { pictogramImages } : {}),
     ...(pictogramCredits ? { pictogramCredits } : {}),
   });

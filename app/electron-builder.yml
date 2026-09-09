@@ -15,6 +15,10 @@ extraResources:
   # the app is Apache-2.0 and this content is CC BY-SA 4.0.
   - from: corpus
     to: corpus
+  # La fuente de las hojas (backlog G76). Vite la copia a out/renderer con un nombre con
+  # hash, que el proceso principal no puede predecir; aquí va con su nombre.
+  - from: ui/src/assets/fonts
+    to: fonts
 
 # Code signing is deliberately unconfigured (research R14): no certificate is
 # bought before the first validation, which runs on a locally built application

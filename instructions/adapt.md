@@ -191,6 +191,22 @@ Four things that example is showing, and each one has been got wrong in a real r
 Mirror the classes and attributes of the document you were given; it is written in
 this same format, and it is the authority on what the blocks of *this* material are.
 
+Two more things about the **text inside** a block, both found on the first printed
+sheet a real model produced:
+
+- **Do not indent lines, and do not number them yourself.** Inside a block, write
+  plain lines: one idea per line, a blank line between paragraphs. A line indented four
+  spaces is a code block in the format you are writing, and it reached the paper as
+  monospace text with your emphasis marks printed raw. The exercise number lives in
+  `data-number`, once; a line that begins «2.» under `data-number="2"` prints the number
+  twice.
+- **Never say which page anything is on.** «Hoja 1 de 4», «pasa a la página siguiente»,
+  «los problemas están en la otra hoja» — you cannot know that. Whether one task or
+  six land on a page is decided after you finish, from the learner's profile, by the
+  application that lays the sheet out. A page count you write will be wrong for most
+  learners and printed anyway. Count **tasks**, which you do know: «Son 6 ejercicios»,
+  «Ejercicio 3 de 6».
+
 If you dropped a block, need the teacher's decision on something, or resolved
 anything worth explaining, end the document with **one** block of class
 `.report-notes`. It never reaches the learner; it feeds the report:

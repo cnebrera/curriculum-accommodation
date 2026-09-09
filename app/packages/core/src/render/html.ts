@@ -37,6 +37,19 @@ import { parseFrontMatter } from '../vault/parse.js';
 export interface RenderOptions {
   /** Presentation knobs derived from the profile by the caller, never the profile itself. */
   presentation?: Presentation;
+  /**
+   * La fuente accesible, incrustada (backlog G76).
+   *
+   * La hoja declara `"Atkinson Hyperlegible"` y no traía ninguna `@font-face`, así que la
+   * cara sólo se usaba si estaba instalada en el ordenador. En la ventana sin pantalla que
+   * genera el PDF no lo está, y el primer PDF real salió en **Verdana**: la fuente elegida
+   * por legibilidad en `010`, la que la aplicación lleva dentro para su propia interfaz,
+   * no llegaba nunca al papel — que es el único sitio que le importa a un niño.
+   *
+   * `data:` URIs y no rutas, por la misma razón que los pictogramas: `core` no lee
+   * ficheros. Quien sabe dónde está la fuente es la aplicación.
+   */
+  fontFaces?: ReadonlyArray<{ family: string; weight: number; dataUri: string }>;
   /** Cleared only by the review step (007 FR-509). */
   signedOff?: boolean;
   title?: string;
@@ -84,9 +97,15 @@ const DEFAULTS: Required<Omit<Presentation, 'font' | 'oneTaskPerPage'>> = {
   ink: '#111', paper: '#fff', accent: '#0b5f5b',
 };
 
-function styles(p: Presentation, watermark: string | null): string {
+const fontFaceCss = (faces: RenderOptions['fontFaces']): string =>
+  (faces ?? []).map((f) =>
+    `@font-face{font-family:"${esc(f.family)}";src:url(${f.dataUri}) format("woff2");`
+    + `font-weight:${f.weight};font-style:normal;font-display:block}`).join('\n');
+
+function styles(p: Presentation, watermark: string | null, faces?: RenderOptions['fontFaces']): string {
   const v = { ...DEFAULTS, ...p };
   return `
+${fontFaceCss(faces)}
 :root{
   --font-size:${v.fontSize}; --line-height:${v.lineHeight}; --measure:${v.measure};
   --letter-spacing:${v.letterSpacing}; --word-spacing:${v.wordSpacing};
@@ -233,6 +252,24 @@ export function renderBlock(
     .map(([k, v]) => ` ${k}="${esc(v)}"`).join('');
   const number = b.attrs['data-number'];
   const label = number ? `<span class="n">${esc(number)}.</span> ` : '';
+  /*
+   * El número va una vez (backlog G74).
+   *
+   * `docs/ir.md` lo pone en el atributo y **no** en el texto: su propio ejemplo es
+   * `data-number="4"` con el contenido «Escribe dos ejemplos…». Un modelo real lo pone
+   * en los dos sitios, así que la hoja impresa salía «1.» y debajo «1. 3 × 6 = 18» — dos
+   * numeraciones para un ejercicio, en la única cosa que un niño tiene delante.
+   *
+   * Se quita aquí y no se le pide al modelo, porque es determinista y porque `data-number`
+   * ya es la autoridad sobre cuál es el número: si el texto empieza por ese mismo número,
+   * es la misma etiqueta escrita dos veces. Sólo ese caso — un «3.» al principio de un
+   * ejercicio numerado 5 no se toca, que sería tapar un error de extracción.
+   */
+  const dedupe = (text: string): string => {
+    if (!number) return text;
+    const re = new RegExp(`^\\s*${number.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*[.)ºª]?\\s+`);
+    return text.replace(re, '');
+  };
   const pictos = renderPictos(b, images);
   /*
    * A heading on the original worksheet is a heading on the adapted one (`037` FR-3501).
@@ -278,7 +315,7 @@ export function renderBlock(
    */
   const inner = b.attrs['data-heading'] === 'true'
     ? `<h2>${esc(b.content.trim())}</h2>`
-    : md.render(b.content);
+    : md.render(dedupe(b.content));
   return `<section id="${esc(b.id)}" class="${esc(cls)}"${data}>${label}`
     + `${inner}${pictos}${answerSpace(b)}</section>`;
 }
@@ -436,7 +473,7 @@ export function renderHTML(doc: IRDocument, opts: RenderOptions = {}): string {
 <html lang="${esc(lang)}">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${esc(opts.title ?? 'Material adaptado')}</title>
-<style>${styles(presentation, mark?.watermark ?? null)}</style></head>
+<style>${styles(presentation, mark?.watermark ?? null, opts.fontFaces)}</style></head>
 <body>
 ${banner}
 <main>

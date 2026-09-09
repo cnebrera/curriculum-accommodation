@@ -439,6 +439,158 @@ every moment should have a spec. What it added beyond the seams pass:
    journey sentence → T094). Handover *import* (004 US2) recorded as deliberately
    deferred rather than silently missing.
 
+## G77 · Nadie ha especificado qué debe *parecerle* la hoja a un niño de ocho años
+
+**Anotado 2026-09-09.** Carlos, viendo el primer PDF impreso de verdad: «¿en serio eso es
+material para un niño? Le doy eso a un niño de 8 años y lo mato».
+
+Tiene razón, y lo que hace este hallazgo distinto de G74–G76 es que **no hay ningún
+defecto que arreglar**. Todo lo que la hoja hace, lo hace como está especificado:
+
+- **Seis páginas para seis ejercicios** es `oneTaskPerPage`, que se enciende con
+  `COG≥2 || ATE≥2`. El perfil `A3` pide literalmente «One task per page, with blank space
+  around it». Es la adaptación, no derroche — y por eso las páginas casi vacías son
+  correctas para *este* alumno y absurdas para cualquier otro.
+- **Sin color, sin dibujos, sin nada más que texto en cajas** es `010`: contraste,
+  fotocopiabilidad, una medida de línea legible. Se cumple.
+- La cara accesible ya llega al papel (G76) y el número ya no sale dos veces (G74).
+
+Y aun así, la hoja que sale **no se parece a material escolar**. Lo que falta no es CSS: es
+una decisión que nadie ha tomado.
+
+### Lo que hay hoy, y hasta dónde llega
+
+El renderizador **sí** tiene lo que hace falta para ir mucho más allá de esto:
+
+| Ya existe | Dónde |
+|---|---|
+| Figuras con `role` decorative/informative/essential y descripción larga | `docs/ir.md`, `render/html.ts` |
+| SVG en línea para diagramas | la rama `figure` de `renderBlock` |
+| Pictogramas por palabra, como `data:` URIs | `018`, `023`, `025` |
+| Presentación por eje: cuerpo, interlínea, medida, tinta, papel | `presentationFor` |
+| Espacio de respuesta por tipo de respuesta | `answerSpace` |
+
+Nada de eso se ha ejercitado con un modelo real. La hoja medida no llevaba ni una figura
+porque el material de prueba no tenía ninguna, y los pictogramas no se piden solos:
+`018` FR-1605 prohíbe que un eje los active, a propósito.
+
+### Lo que hay que decidir, y es de Carlos
+
+1. **¿Qué es «una hoja bonita» para cada edad?** El registro va por la edad y la exigencia
+   por el curso (`instructions/adapt.md` lo dice ya), pero eso gobierna las **palabras**.
+   Nadie ha escrito qué gobierna el **aspecto**: si un niño de 8 lleva una tipografía más
+   grande y redonda, títulos con color, un icono por bloque, márgenes anchos, o cuadros de
+   colores por tipo de tarea — y a los 14 nada de eso.
+2. **¿Quién decide que una hoja lleve dibujos?** Hoy: nadie. Un diagrama sólo aparece si el
+   material original lo tenía. Que la IA **añada** un apoyo visual donde no había ninguno
+   es una capacidad que el proyecto no tiene y que cambia `docs/ir.md`, el prompt y la
+   revisión — porque una imagen inventada es contenido inventado, y eso choca de frente con
+   `assertProvenance`.
+3. **¿Cuánto de esto es del corpus y cuánto del render?** Por Principio I, «cómo se le
+   habla a un niño de ocho años» es juicio y va en `instructions/`; «qué CSS produce eso»
+   es mecánica y va en `render/html.ts`. La línea no está trazada para el aspecto, y
+   trazarla mal mete pedagogía en el código otra vez.
+
+Es una feature, probablemente dos, y va por `/speckit-specify`. **No se toca nada del
+render hasta que exista**, porque afinar tipografías a ojo es exactamente lo que `010`
+prohíbe: «there is deliberately no pixel-diff suite… it would end up asserting whatever the
+last commit produced».
+
+## G76 · La hoja nombraba la fuente accesible y no la llevaba dentro — *ARREGLADO 2026-09-09*
+
+**Anotado 2026-09-09**, al inspeccionar el primer PDF de verdad. Sus fuentes incrustadas:
+
+```
+/BaseFont /AAAAAA+Verdana
+/BaseFont /BAAAAA+Verdana-Bold
+/BaseFont /DAAAAA+Menlo-Regular
+```
+
+`render/html.ts` declara `font-family:"Atkinson Hyperlegible","Verdana",…` y **no emitía
+ninguna `@font-face`**, así que la cara sólo se usaba donde estuviera instalada. El PDF se
+hace en una ventana sin pantalla donde no lo está — de modo que la tipografía que `010`
+eligió por legibilidad, la que la aplicación lleva dentro para su propia interfaz y declara
+en `tokens.css`, **no llegaba nunca al papel**. Al único sitio que le importa a un niño.
+
+Y el `Menlo-Regular` de la lista es el rastro de G75: la monoespaciada de un `<pre>`.
+
+**Arreglado** con la misma forma que los pictogramas: `core` no lee ficheros, así que
+`renderHTML` recibe `fontFaces` como `data:` URIs y emite una `@font-face` por cara, con
+`font-display:block` — la misma decisión que `tokens.css` razona, «a brief blank beats a
+flash of Verdana and then a reflow». Comprobado en los `/BaseFont` del PDF: ahora
+`AtkinsonHyperlegible-Regular` y `-Bold`.
+
+**Tres cosas que el arreglo movió, y las tres son la guarda funcionando:**
+
+- `boundary.test.ts` subió a 1068 sobre un bound de 1046. La solución fue la que ese test
+  lleva **siete veces** enseñando: leer la fuente no necesita Electron, así que
+  `sheet-fonts.ts` toma la ruta como argumento y en `corpus/bundle.ts` se queda sólo
+  `fontsRoot()`, que es la única parte que pregunta a Electron dónde está la aplicación. El
+  número volvió por debajo sin subir el bound. Octava de ocho.
+- `no-pictograms-shipped.test.ts` falló porque `extraResources` ganó una entrada, que es
+  exactamente su motivo de existir: una lista de lo que viaja en la release no debe crecer
+  sin que alguien lo piense. Ahora nombra `fonts` con la razón escrita, y un test nuevo la
+  sujeta a las dos caras y su licencia.
+- **`OFL.txt` viaja con ellas**, y eso no es un descuido: enviar una tipografía sin su
+  licencia es la misma no-conformidad que el build ya impide con el corpus. Lo encontró la
+  aserción que había escrito mal.
+
+## G75 · Una hoja para un niño no tiene bloques de código — *ARREGLADO 2026-09-09*
+
+**Anotado 2026-09-09**, en el primer PDF firmado. Tres defectos visibles, una causa.
+
+En el IR que escribió el modelo, las líneas de continuación de un ejercicio van sangradas:
+
+```
+1.  3 × 6 = 18
+
+    *(Este ya está hecho como ejemplo. Mira cómo se resuelve.)*
+```
+
+Cuatro espacios son, en markdown, **un bloque de código**. Así que eso llegó al papel como
+`<pre><code>`: en monoespaciada, con los asteriscos del énfasis impresos en crudo —
+`*(Este ya está hecho…)*` — y la línea **saliéndose de la tarjeta** por el borde derecho,
+porque `<pre>` no parte líneas. Un niño recibía una frase cortada a mitad de palabra.
+
+Y una cuarta cosa de la misma familia: «Hoja 1 de 4» y «Son 2 partes y 6 ejercicios» iban
+en dos líneas del IR y salieron pegadas en una, porque en markdown estándar un salto de
+línea suelto es un espacio. En una hoja construida por `one-idea-per-sentence`, el salto de
+línea **es** el contenido.
+
+**Arreglado en `createRenderer`:** `md.disable(['code', 'fence', 'backticks'])` y
+`breaks: true`. Determinista y no una petición al modelo, porque no existe material escolar
+en el que una sangría deba convertirse en código — ni sangrado, ni vallado, ni en línea. Se
+apagó también `backticks` porque con `fence` apagado unos acentos sueltos se emparejan como
+`<code>` en línea, que es el mismo defecto con otra etiqueta.
+
+Cuatro tests, los cuatro rojos sin el arreglo.
+
+## G74 · El número del ejercicio salía dos veces — *ARREGLADO 2026-09-09*
+
+**Anotado 2026-09-09.** La hoja impresa ponía «1.» y debajo «1. 3 × 6 = 18». Dos
+numeraciones para un ejercicio, en la única cosa que un niño tiene delante.
+
+`docs/ir.md` pone el número en el atributo y **no** en el texto: su propio ejemplo es
+`data-number="4"` con el contenido «Escribe dos ejemplos…». Un modelo real lo pone en los
+dos sitios, y `renderBlock` antepone su etiqueta al contenido tal cual.
+
+**Arreglado en el render** y no pidiéndoselo al modelo: `data-number` ya es la autoridad
+sobre cuál es el número, así que si el texto empieza por ese mismo número es la misma
+etiqueta escrita dos veces. Sólo ese caso — un «3.» al principio de un ejercicio numerado 5
+se queda, que sería tapar un error de extracción.
+
+Y en el prompt, por el otro lado (§Output): que el número vive en `data-number` una vez, y
+que **no numere páginas**, que es lo de abajo.
+
+### La página que el modelo no puede saber
+
+«Hoja 1 de 4» en un PDF de **seis** páginas, y el modelo no tenía forma de acertar: la
+paginación la decide `oneTaskPerPage` desde el perfil, en el renderizador, después de que
+el modelo haya terminado. `signpost-the-page` pide contar **tareas** —«Son cuatro
+preguntas»— y nunca páginas; el modelo extendió eso a hojas por su cuenta.
+
+Ahora §Output lo prohíbe con el motivo dentro. Medido en tres pasadas después: **cero**
+menciones a páginas en las tres.
 ## G73 · La puerta de procedencia no tiene reintento, y la de completitud sí
 
 **Anotado 2026-09-09**, después de dieciséis pasadas reales. Trece limpias y **tres**

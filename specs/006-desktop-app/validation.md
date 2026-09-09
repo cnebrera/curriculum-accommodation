@@ -1000,3 +1000,40 @@ Each needs the same thing everything else in this project needs and has not had.
   a substitute for the plan pass that would confirm it.
 - **No teacher has seen any of it.** Unchanged, and still the only line that
   decides anything.
+
+
+---
+
+# Con clave de verdad · 2026-09-08 y 09
+
+Dos afirmaciones de arriba dejaron de ser ciertas en estos dos días, y las dos lo eran en
+la dirección pesimista, que es la que menos se revisa.
+
+**Sí se ha llamado a un proveedor.** Google, con la clave gratuita de Carlos, sin
+tarjeta: una veintena de adaptaciones, dos extracciones con visión y dos validaciones de
+clave. Es la primera vez que la aplicación habla con un modelo. Lo que encontró está en el
+BACKLOG como G60 a G77 — la mayoría no lo habría visto ningún test, porque vivía en la
+costura entre unidades correctas.
+
+**Sí se ha producido un PDF.** `job:pdf` → `renderPdf` → `printToPDF`, sobre una hoja
+adaptada real: `%PDF-1.4`, A4, seis páginas por `oneTaskPerPage` (COG:3, ATE:2), 46–72 KB.
+El primero salió en **Verdana**, porque la hoja nombraba la fuente y no la incrustaba;
+desde G76 incrusta `AtkinsonHyperlegible-Regular` y `-Bold`, comprobado en los `/BaseFont`
+del fichero.
+
+**El suelo del modelo está medido**, columna `adapt`: `gemini-2.5-flash` pasa 13 de 16
+sin reintento **después** de enseñarle el formato en el prompt, y 1 de 3 antes. Era el
+prompt (G68). Columna `ingest`: una extracción sobre una foto sintética, 10 bloques de 10
+y numeración intacta, con las salvedades de G71 — no es SC-601 hasta que haya una foto de
+un móvil.
+
+## Sigue sin verificar
+
+- **Ninguna maestra ha visto nada.** Sin cambios, y sigue siendo la línea que importa.
+- **SC-601 con una fotografía real.** Los fixtures tienen la hoja y la verdad de
+  referencia; les falta la foto, que necesita una impresora y un móvil.
+- **Los peldaños de pago** del caso 002. Sólo está medido el gratuito.
+- **El aspecto para un niño.** La hoja es legible, contrastada y fotocopiable, que es lo
+  que `010` pidió; nadie ha especificado cómo debe *parecer* para un alumno de ocho años,
+  y la primera reacción de quien la vio impresa fue que no se la daría. Eso es una
+  especificación que falta, no un defecto del render.

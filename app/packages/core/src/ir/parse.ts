@@ -18,7 +18,32 @@ const KNOWN: BlockClass[] = [
 ];
 
 export function createRenderer(): MarkdownIt {
-  const md = new MarkdownIt({ html: false, linkify: false, typographer: false });
+  /*
+   * `breaks: true` — una línea nueva es una línea nueva (backlog G75).
+   *
+   * `one-idea-per-sentence` y `chunk-the-prose` existen para poner una idea por línea, y
+   * en markdown estándar un salto de línea suelto es un espacio: dos frases que el modelo
+   * escribió en dos líneas salían pegadas — «Hoja 1 de 4 Son 2 partes y 6 ejercicios».
+   * En una hoja para un niño el salto de línea es contenido, no formato.
+   */
+  const md = new MarkdownIt({ html: false, linkify: false, typographer: false, breaks: true });
+  /*
+   * Una hoja no tiene código (backlog G75).
+   *
+   * Cuatro espacios de sangría son, en markdown, un bloque de código. Un modelo real
+   * sangra las líneas de continuación bajo un ejercicio —`····*(Este ya está hecho como
+   * ejemplo)*`— y eso llegaba al papel como `<pre><code>`: monoespaciada, los asteriscos
+   * sin renderizar y la línea saliéndose de la tarjeta porque `<pre>` no parte. Tres
+   * defectos visibles en el PDF firmado, una causa.
+   *
+   * Se quita la regla y no se le pide al modelo que no sangre: es determinista, y no hay
+   * ningún material escolar en el que una sangría deba convertirse en código. Lo mismo
+   * para las vallas de tres acentos, y para el código en línea: con `fence` apagado, unos
+   * acentos abiertos en una línea y cerrados dos más abajo se emparejan como `<code>` en
+   * línea, que es el mismo defecto con otra etiqueta. En este dominio no hay código:
+   * ni sangrado, ni vallado, ni en línea.
+   */
+  md.disable(['code', 'fence', 'backticks']);
   // Loosely typed on purpose; see types/markdown-it-plugins.d.ts.
   const use = md.use.bind(md) as (plugin: unknown, ...args: unknown[]) => MarkdownIt;
   use(attrs, { allowedAttributes: [/^data-.*$/, 'id', 'class'] });
