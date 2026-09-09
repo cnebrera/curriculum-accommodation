@@ -790,7 +790,7 @@ la credencial— y este canal es el mismo problema con otro destinatario.
 enmascare `key=…`. La cuenta de peticiones, que es lo único que SC-3302 necesita, no pierde
 nada. Y de paso conviene mirar si algún log escribe URLs de proveedor.
 
-## G65 · El portón de nombres bloquea el primer arranque con el texto que Rampa escribe ella misma
+## G65 · El portón de nombres bloquea el primer arranque con el texto que Rampa escribe ella misma — *ARREGLADO 2026-09-09*
 
 **Anotado 2026-09-08**, y es el que impide llegar a una primera ficha. Con un vault recién
 creado, la primera adaptación no sale:
@@ -846,12 +846,56 @@ suyos.
 documentación, en menos de 30 minutos». Hoy, en un vault nuevo, el camino se corta con
 cuatro preguntas sobre palabras que escribió Rampa.
 
-**Lo que hay que decidir**, y por eso no se arregla de un parche: excluir `house.md` del
-barrido sería falso —ella escribe ahí, y ahí puede escribir el nombre de un compañero, que
-es justo lo que el portón existe para pillar. Las salidas plausibles son mirar la
-**posición** (inicial de frase o de línea no cuenta sola), una lista de palabras función
-del español, o sembrar `house.md` vacío en vez de con prosa. Las tres son criterio, y dos
-de ellas viven en el corpus.
+### Reencuadrado, porque estaba mal planteado
+
+Esta entrada decía «el detector es ciego» y trataba el fallo como una heurística mala. No
+lo es: `findProbableNames` hace **exactamente** lo que decidió P17, con el razonamiento
+escrito al lado. El primer token de cada línea se marca sea cual sea su posición porque una
+nota empieza por el niño —«Fátima no arranca sin el primer paso hecho»— y los nombres más
+probablemente ausentes de una lista de sesenta son los migrantes. Y `COMMON_NAMES` se
+consulta antes que `NOT_A_NAME` a propósito, con la frase de Carlos dentro del fichero: «se
+acepta el coste en falsos positivos: es RGPD de menores».
+
+Así que no había nada que arreglar en la heurística, y tocarla habría sido debilitar una
+defensa (regla 5 de AGENTS.md).
+
+### El arreglo, que es el único que no debilita nada
+
+**Crecer `NOT_A_NAME`.** Es seguro precisamente por ese orden: una palabra que además sea
+nombre —«Rosa», «Abril», «Luna»— sigue marcándose, porque el nombre gana. Comprobado: la
+única colisión con `COMMON_NAMES` es `abril`, que ya estaba en la lista como mes y cuyo
+caso el propio fichero documenta.
+
+Tres familias, y las tres salieron de una medición y no de imaginar:
+
+- **Imperativos** — «Lee», «Escribe», «Une», «Recuerda», «Resuelve»… Son el modo verbal de
+  todo enunciado, y como el primer token de cada línea es candidato, **cada enunciado de
+  cada ficha** caía aquí.
+- **Interrogativos y conectores** que abren línea — «Cómo», «Por», «Esto», «Cuando»…
+- **Sustantivos de hoja** — «Imagen», «Actividad», «Naturaleza», «Ejercicio»…
+
+Y el matiz que hace legítimo el cambio: el coste en falsos positivos que P17 acepta a
+propósito es el de una palabra **desconocida** en posición de nombre. Nunca incluyó
+preguntarle si «Escribe» es un alumno.
+
+### Medido después
+
+| | Antes | Después |
+|---|---|---|
+| Primera adaptación en un vault nuevo, con el `house.md` que siembra Rampa | **bloqueada** con «Cómo, Escribe, Por, Esto» | **pasa** — llega al modelo, una llamada |
+| Extracción de la ficha de ecosistemas | **7 avisos** | **0** |
+
+Con dos tests, y el segundo es el que importa: que la puerta no queda ni una palabra más
+débil. Seis nombres en posición de inicio de línea —incluidos `Aissatou` y `Chinedu`, que
+son el caso para el que existe P17— siguen marcándose, «Mateo» sigue saliendo de una frase
+llena de palabras de la lista, y «Abril» sigue ganando como nombre.
+
+### Lo que queda, y ya no bloquea a nadie
+
+La lista vive en `packages/core/src/redact/names.ts`, o sea en código, y es **conocimiento
+del español**. Por Principio I eso pide corpus, y por idioma: un aula en catalán o en
+gallego necesita la suya y hoy no hay dónde ponerla. No es urgente —el arreglo ya
+desbloquea— pero es la forma correcta, y encaja con `recipes/lang/<code>/`.
 
 ## G64 · «Hay un ver todos y comparar, pero no me deja elegir» — *ARREGLADO 2026-09-08*
 

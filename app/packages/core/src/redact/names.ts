@@ -100,6 +100,53 @@ const NOT_A_NAME = new Set([
   'lunes','martes','miercoles','miércoles','jueves','viernes','sabado','sábado','domingo',
   'enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre',
   'noviembre','diciembre','rampa','claude','google','anthropic','pdf','html','word',
+
+  /*
+   * Lo que una ficha dice, y lo que Rampa escribe ella misma (backlog G65).
+   *
+   * Ampliar **esta** lista es seguro y no toca la decisión P17: `COMMON_NAMES` se
+   * consulta antes, así que una palabra que además sea nombre —«Rosa», «Abril»,
+   * «Luna»— sigue marcándose igual. El coste en falsos positivos que P17 acepta
+   * a propósito es el de una palabra **desconocida** en posición de nombre; no
+   * incluye preguntarle si «Escribe» es un alumno.
+   *
+   * Por qué hacían falta las tres familias de abajo, medido:
+   *
+   * - Un vault recién creado bloqueaba la primera adaptación con «Cómo, Escribe,
+   *   Por, Esto» — las cuatro iniciales de las frases del `house.md` **que siembra
+   *   Rampa**. La maestra tenía que declarar que el texto de relleno de Rampa no
+   *   eran alumnos suyos antes de conseguir una ficha.
+   * - La primera extracción real de una ficha de ecosistemas **sin un solo nombre
+   *   propio** devolvió siete: «Recuerda, Lee, Escribe, Une, Imagen, Actividad,
+   *   Naturaleza». Ahí el barrido tiene que existir (FR-610 protege el vault del
+   *   nombre escrito a mano en la hoja), así que la lista es la única salida.
+   *
+   * Imperativos: son el modo verbal de todo enunciado, y el primer token de cada
+   * línea se marca a propósito, así que cada enunciado de cada ficha caía aquí.
+   */
+  'lee','escribe','une','recuerda','resuelve','completa','calcula','observa','rodea',
+  'subraya','copia','dibuja','relaciona','contesta','responde','senala','señala',
+  'marca','ordena','clasifica','elige','busca','indica','explica','compara','piensa',
+  'comprueba','repasa','corrige','coloca','anota','apunta','tacha','colorea','recorta',
+  'pega','traza','mide','suma','resta','multiplica','divide','lee-y-responde',
+
+  // Interrogativos y conectores que abren línea en cualquier hoja.
+  'como','cómo','cuando','cuándo','donde','dónde','cuanto','cuánto','cuanta','cuánta',
+  'cuantos','cuántos','cuantas','cuántas','cual','cuál','cuales','cuáles','quien','quién',
+  'quienes','quiénes','porque','porqué','para','pero','ahora','luego','despues','después',
+  'por','que','qué','con','sin','uno','dos','tres','cuatro','cinco','seis','siete','ocho',
+  'nueve','diez','hay','son','ser','sea','muy','mas','más','tan','asi','así','aqui','aquí',
+  'alli','allí','ademas','además','solo','sólo','tras','ante','bajo','contra','durante',
+  'antes','tambien','también','entonces','esto','eso','aquello','todos','todas','cada',
+  'otro','otra','otros','otras','mismo','misma','sobre','desde','hasta','entre','segun','según',
+
+  // Sustantivos de hoja: lo que una ficha nombra de sí misma.
+  'imagen','imagenes','imágenes','actividad','actividades','naturaleza','ejercicio',
+  'ejercicios','problema','problemas','pregunta','preguntas','respuesta','respuestas',
+  'texto','textos','pagina','página','paginas','páginas','tarea','tareas','ejemplo',
+  'ejemplos','fecha','curso','nota','notas','apartado','apartados','solucion','solución',
+  'soluciones','material','materiales','esquema','tabla','figura','dibujo','lectura',
+  'operacion','operación','operaciones','resultado','resultados','total','datos',
 ]);
 
 const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');

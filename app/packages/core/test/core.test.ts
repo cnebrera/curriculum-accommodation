@@ -52,6 +52,59 @@ describe('redaction — the promise the harness could not keep', () => {
   });
 
   /**
+   * What a worksheet says, and what Rampa writes itself (backlog G65).
+   *
+   * Measured, not imagined. A brand-new vault blocked the first adaptation with «Cómo,
+   * Escribe, Por, Esto» — the four line-initial words of the `house.md` **Rampa seeds** —
+   * so a teacher had to declare that Rampa's own placeholder was not her pupils before
+   * she could get a sheet. And the first real extraction of an ecosystems worksheet with
+   * **no proper name on it at all** came back with seven: «Recuerda, Lee, Escribe, Une,
+   * Imagen, Actividad, Naturaleza».
+   *
+   * Fixed by growing `NOT_A_NAME`, which is the one change that cannot weaken the gate:
+   * `COMMON_NAMES` is consulted first, so a word that is also a name still fires. The
+   * false-positive cost P17 accepts on purpose is an **unknown** word in a name's
+   * position — it was never «ask her whether "Escribe" is a pupil».
+   */
+  it('does not ask whether a worksheet\'s own instructions are pupils', () => {
+    // The four that blocked a first run, from the placeholder Rampa seeds.
+    expect(findProbableNames(
+      '# Cómo trabajo yo\n\nEscribe aquí lo que quieras que Rampa haga siempre igual.\n'
+      + 'Por ejemplo: el tamaño de letra.\n\nEsto es una guía de estilo, no un diario.',
+    )).toEqual([]);
+
+    // The seven from the first real extraction, in the shape a sheet prints them.
+    expect(findProbableNames(
+      'Recuerda: los seres vivos dependen unos de otros.\n'
+      + 'Lee el texto y responde a las preguntas.\n'
+      + 'Escribe dos seres vivos que puedas encontrar en un bosque.\n'
+      + 'Une con flechas cada animal con lo que come.\n'
+      + '[Imagen: un búho posado en una rama seca.]\n'
+      + 'Actividad de repaso — Ciencias de la Naturaleza, 5.º de Primaria.',
+    )).toEqual([]);
+  });
+
+  /**
+   * And the gate is not one word weaker for it (backlog G65).
+   *
+   * Asserted right beside the list, because a stop-list is the easiest thing in this
+   * file to grow carelessly. Every name below is line-initial — the position P17 made
+   * a candidate whatever its context — and two of them are the case that decision
+   * exists for: a name the sixty-name list never had.
+   */
+  it('still flags a name in the position a note puts it in', () => {
+    for (const name of ['Fátima', 'Mateo', 'Aissatou', 'Mohamed', 'Ainhoa', 'Chinedu']) {
+      expect(findProbableNames(`${name} no arranca sin el primer paso hecho.`),
+        `${name} stopped being flagged`).toContain(name);
+    }
+    // A pupil's name inside a sentence that also carries stop-listed words.
+    expect(findProbableNames('Lee el texto con Mateo, y recuerda la Actividad 3.'))
+      .toEqual(['Mateo']);
+    // «Abril» is a month in the list and a girl in a classroom; the name wins (P17).
+    expect(findProbableNames('Se distrae si se sienta al lado de Abril.')).toContain('Abril');
+  });
+
+  /**
    * AGE-01, decision P17 — the most serious leak the review found in the pipeline.
    *
    * A teacher's note starts with the child: «Fátima no arranca sin el primer paso
