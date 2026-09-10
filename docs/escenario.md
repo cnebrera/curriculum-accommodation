@@ -156,6 +156,25 @@ el correo está registrado como pendiente — adoption-risks §4.10 — no olvid
 móvil— y SC-603 necesita cronometrar el recorrido con una clave real. Ninguna
 está medida.
 
+**Ampliado 2026-09-10, cuando se imprimió la primera hoja de verdad.** Este momento
+daba por hecho lo único que nadie había comprobado: que la hoja que sale **se pueda
+usar**. Con una clave real y un modelo de verdad salió legible, contrastada y
+fotocopiable —que es lo que `010` pidió— y con el aspecto de un documento técnico. La
+reacción de quien la vio impresa fue que no se la daría a un niño de ocho años.
+
+No había ningún defecto que arreglar: la hoja hacía lo que estaba especificado. Lo que
+faltaba eran dos cosas, y la primera es la que impedía ver la segunda:
+
+- **Nadie miraba la hoja.** `npm run shots` fotografiaba veinte pantallas de la
+  aplicación y ninguna hoja, así que la regla que ADR 0009 dejó en lugar de un
+  pixel-diff —«look at it»— no cubría el único artefacto que un niño toca.
+- **El aspecto no lo decidía nadie.** `presentationFor` derivaba cuerpo y espaciado de
+  los ejes y **de nada más**, así que la misma hoja salía para un niño de seis años y
+  para uno de diecisiete.
+
+*Cubierto por:* 038 (mirar la hoja) · 040 (el aspecto lo decide la edad, con anulación
+suya) · *medido por:* SC-3801, que es un juicio de una PT y no un test — como SC-805.
+
 ### 2 · La misma ficha para Vega
 
 Vega está en el mismo grupo y no ve la pizarra ni la letra pequeña. La ficha ya
@@ -203,6 +222,26 @@ contesta, y nada de lo que se pregunta. Si sale más fácil, es otro examen.»
 
 *Cubierto por:* 012 FR-1001…1006 · 016 FR-1403/1405.
 
+**Ampliado 2026-09-10, con material de una PT en ejercicio.** Una orientadora pasó el
+catálogo de lo que hace a mano al adaptar un examen: catorce medidas metodológicas
+—leer en voz alta, más tiempo, más espacio, otra tipografía, secuenciar, segmentar el
+enunciado en renglones, resaltar la palabra clave, un recordatorio, palabras más
+fáciles— y tres que **afectan al contenido**: verdadero/falso, unir definiciones,
+banco de palabras.
+
+Las catorce entran. Las tres se escalan, y ahora se escalan **con la propuesta
+redactada**: Rampa dice qué haría y no lo hace, para que ella lo lleve al equipo
+docente sin escribirlo de cero. La regla dura 4 no se toca: proponer sí, decidir no.
+
+Y cuatro de las catorce resultaron chocar con la guarda `exam-access-not-difficulty`
+**cuando el material es un examen** —el ejemplo resuelto, segmentar las tareas de una
+pregunta, y reducir los ejercicios repetitivos— porque «andamiar un examen es
+contestarlo». Las cuatro son legítimas en una ficha. Esa frontera se decide en el
+`clarify` de `039` y no la decide una herramienta.
+
+*Cubierto por:* 039 · *medido por:* SC-37xx, y la mitad que importa la juzga la PT que
+trajo el catálogo.
+
 ### 5 · Miércoles: no tiene nada, y sabe qué le hace falta
 
 Sara tiene que aprender a multiplicar con llevadas y no hay ficha que adaptar. No
@@ -235,6 +274,30 @@ Cuando hay dos dibujos posibles para una palabra, **no pone ninguno** y se lo di
 *Cubierto por:* 018 · *pendiente:* SC-1605 (una fotocopia real) y SC-1606, que es
 la mitad negativa: una PT que **no** usa pictogramas dice que Rampa nunca la
 empujó hacia ellos.
+
+**Enmendado 2026-09-10, y aquí porque es donde vive la regla.** El aspecto de la hoja
+lo decide ahora la **edad** (`040`), y hay que decir cómo convive eso con el párrafo de
+arriba — o quedan dos autoridades sobre la misma cosa, que es como este repositorio
+produce defectos.
+
+Convive, y en la dirección contraria a la que parece:
+
+- **Lo que `018` prohíbe es que un *eje* decida cómo se ve un niño**, y la edad no es
+  un eje. Derivar el aspecto de la edad lo hace depender de lo único que comparte con
+  treinta compañeros, y **no** de sus barreras: lleva *menos* información sobre él que
+  el estado anterior.
+- **El caso que `018` describe estaba sin proteger.** «Un chico de quince con dislexia
+  no quiere una ficha que parece de un niño de cinco» — y hasta `040`, `presentationFor`
+  no sabía la edad de nadie: la misma hoja para un niño de seis y para uno de
+  diecisiete. El principio se incumplía por la **ausencia** de la feature.
+- **La edad, nunca el curso.** Un chaval de quince repitiendo quinto recibe el aspecto
+  de quince, no de diez. Con el curso se reproduciría el estigma; con la edad se quita.
+
+Y los límites, que son los de `018` extendidos y no relajados: una banda de edad
+**sube** el registro y nunca lo baja por debajo de lo que los ejes exigen por su
+cuenta —el acceso vence a la optimización, regla 3 del orden de conflictos—; una banda
+**no enciende nada que añada** a la página; y **ninguna edad activa pictogramas
+tampoco**. Eso último es una enmienda a FR-1605, no una regla nueva al lado.
 
 ### 7 · Vega, que no ve la hoja
 
@@ -355,6 +418,11 @@ herramienta, dicho explícitamente.
 | Vía de respuesta (MOT) | **v1** | 019 US4 · `response-route` · declarada como adaptación de acceso en un examen (FR-1718) |
 | Acceso auditivo (PER-A), REG directo | dif. | G19 — primera contribución natural |
 | Salidas: HTML + PDF fotocopiable | **v1** | 006 FR-425/427 |
+| **Mirar la hoja que sale, no sólo comprobarla** | **v1** | 038 (2026-09-10) — `npm run shots` dibuja hojas de verdad. Cierra el punto ciego que ADR 0009 dejó abierto: la regla «look at it» no cubría lo que un niño tiene en la mano |
+| **Que la hoja se parezca a la de su clase, por edad** | **v1** | 040 (2026-09-10) — el aspecto lo decide la edad desde el corpus, con anulación por alumno. Antes de esto la misma hoja salía para un niño de seis y para uno de diecisiete |
+| **Las medidas de examen que una PT hace a mano** | **v1** | 039 (2026-09-10) — las 14 metodológicas triadas por el Principio I; lo que afecta al contenido se escala **con la propuesta redactada** |
+| **Repertorio visual: resaltar, recordar, banco de palabras, lecturas segmentadas** | **v1** | 041 (2026-09-10) — primitivas de estructura, no ilustraciones. Ninguna imagen generada por IA |
+| Una foto del original en la hoja adaptada | dif. | 041+ · diferido con motivo: es un camino de egreso nuevo para bytes de una foto a la página de un niño (regla 3 del repositorio, Marrakesh), no un cambio de CSS |
 | ODT editable | **v1** | 019 US1 |
 | Audio-ready, braille-ready | **v1** (sin validar) | 019 US2/US3 (2026-08-31) — el IR no necesitó ni un campo nuevo (SC-1707). SC-1706 necesita transcriptor |
 | Compartir con el tutor / la familia | **v1** (PDF firmado) | camino mejor: 4.10, registrado |
