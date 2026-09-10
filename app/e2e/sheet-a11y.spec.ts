@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import { mkdtemp, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { parseIR, renderHTML } from '@rampa/core';
+import { parseIR, renderHTML, presentationFor, SHEET_PRESENTATIONS } from '@rampa/core';
 
 /**
  * La hoja que recibe el niño, contra WCAG 2.2 A y AA (037 US2, FR-3506…FR-3508).
@@ -49,22 +49,39 @@ const fixture = () => parseIR(readFileSync(
   'utf8'));
 
 /**
- * Las tres formas que toma una hoja **en papel**.
+ * Las formas que toma una hoja **en papel**, derivadas y no escritas a mano (`038` T005).
  *
- * Tres y no treinta: son un documento renderizado de tres maneras, y las demás perillas
- * son números dentro del mismo marcado. La marca de borrador es la única diferencia
- * estructural entre ellas.
+ * ## Lo que había aquí, y por qué era más débil de lo que parecía
+ *
+ * Había tres literales, con un comentario que argumentaba «tres y no treinta». El mayor
+ * era `{ fontSize: '24pt', lineHeight: '2', measure: '44ch' }`, y esos tres valores son
+ * alcanzables —24pt y 44ch de `PER-V:2`, la interlínea de `DEC:1`— así que leía como
+ * correcto. Lo que recibe de verdad un alumno con esos dos ejes son **cuatro propiedades
+ * más**: `ink: '#000'`, `paper: '#fff'`, y el espaciado de letra y de palabra que es el
+ * sentido entero de `DEC`.
+ *
+ * O sea que este barrido corría sobre una hoja **menos adaptada que la de cualquier
+ * alumno real** —a `#111` sobre blanco en vez del `#000` que produce ese eje— y nada lo
+ * decía. El valor no estaba mal: estaba **rancio**, y era lo bastante plausible para que
+ * nadie lo releyera.
+ *
+ * Ahora las presentaciones salen de `SHEET_PRESENTATIONS` y de `presentationFor`, que es
+ * la única cosa que decide tipografía a partir de barreras. No hay ningún sitio donde
+ * escribir un valor por segunda vez.
+ *
+ * Siguen siendo pocas por el motivo que el comentario anterior daba bien: sólo cuatro de
+ * los diez ejes tocan la presentación. Lo que cambia es que ahora son **las que existen**
+ * en vez de las que alguien escribió una vez.
  */
 const PRESENTATIONS = [
-  { name: 'borrador', opts: {} },
   { name: 'firmada', opts: { signedOff: true } },
-  {
-    name: 'texto más grande',
-    opts: { presentation: { fontSize: '24pt', lineHeight: '2', measure: '44ch' } },
-  },
+  ...SHEET_PRESENTATIONS.map((p) => ({
+    name: p.id,
+    opts: { presentation: presentationFor(p.levels) },
+  })),
 ] as const;
 
-test('la hoja no tiene ni una violación de WCAG 2.2 A/AA, en sus tres presentaciones', async () => {
+test('la hoja no tiene ni una violación de WCAG 2.2 A/AA, en todas sus presentaciones', async () => {
   const dir = await mkdtemp(join(tmpdir(), 'rampa-sheet-'));
   const userData = await mkdtemp(join(tmpdir(), 'rampa-sheet-u-'));
 

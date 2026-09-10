@@ -107,6 +107,7 @@ export * from './render/attribution.js';
 export * from './render/linear.js';
 export * from './render/audio-corpus.js';
 export * from './render/html.js';
+export * from './render/presentations.js';
 export * from './render/check.js';
 export * from './render/photocopy.js';
 

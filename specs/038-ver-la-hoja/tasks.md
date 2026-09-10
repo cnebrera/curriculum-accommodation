@@ -38,28 +38,52 @@ which is why its Constitution Check passed without a Complexity entry for toolin
 The enumeration, which both user stories read. Nothing in Phase 3 or 4 can be written
 against a hand-listed presentation set without recreating the drift research R2 measured.
 
-- [ ] T001 [P] Write `app/packages/core/test/presentations.test.ts` **first and red**:
-      every axis `presentationFor` reads appears in some member's `levels`; every member
-      yields a `Presentation` distinct from every other; every `id` is unique and
-      filename-safe. A test written after the enumeration is a test shaped to whatever
-      the enumeration happened to contain. (FR-3603)
-- [ ] T002 Add `SHEET_PRESENTATIONS` and `SheetPresentation` to
+- [x] T001 [P] Write `app/packages/core/test/presentations.test.ts` **first and red**:
+      no presentation the renderer can produce is missing a picture; every member yields
+      a `Presentation` distinct from every other; every `id` is unique and filename-safe.
+      A test written after the enumeration is a test shaped to whatever the enumeration
+      happened to contain. (FR-3603)
+
+      **And writing it red earned its keep immediately.** The first draft asserted the
+      wrong invariant — «every axis `presentationFor` reads appears in some member's
+      `levels`» — and went red on `ATE`, which the renderer does read and which is
+      deliberately absent because `ATE: 2` produces exactly the same page break as
+      `COG: 2`. Satisfying that assertion would have forced a seventh picture identical
+      to the fifth.
+      The invariant that matters is about **presentations, not axes**: an axis may be
+      absent, but only if setting it yields something a member already yields. That is
+      strictly stronger — it permits the duplicate and catches the novel — and it was
+      found by the test failing rather than by review.
+- [x] T002 Add `SHEET_PRESENTATIONS` and `SheetPresentation` to
       `app/packages/core/src/render/presentations.ts`, listing **axis levels only** — the
       type must have no field able to hold a `Presentation` value, which is what makes
       FR-3603 structural rather than remembered. Six members per `data-model.md`.
       (FR-3603)
-- [ ] T003 Export it from `app/packages/core/src/index.ts` so the shell and the e2e can
+- [x] T003 Export it from `app/packages/core/src/index.ts` so the shell and the e2e can
       read it. (FR-3603)
-- [ ] T004 Add to `presentations.test.ts` the equality that keeps the set honest:
+- [x] T004 Add to `presentations.test.ts` the equality that keeps the set honest:
       `ATE: 2` produces the same presentation as `COG: 2`, asserted rather than assumed,
       so a seventh identical picture added later reads as waste and not as coverage.
       (FR-3603)
-- [ ] T005 Derive `PRESENTATIONS` in `app/e2e/sheet-a11y.spec.ts` from
+- [x] T005 Derive `PRESENTATIONS` in `app/e2e/sheet-a11y.spec.ts` from
       `SHEET_PRESENTATIONS` instead of the three hand-written literals, and delete the
       literals. **Expect this to find something**: the sweep will run for the first time
       over `#000` on white and over the letter and word spacing `DEC` sets, which
       research R2 measured as missing from the literal. If it fails, the failure predates
       this feature and is recorded here, not worked around. (FR-3603)
+
+      **Measured: it did not fail.** The sweep now covers **seven** presentations (the
+      signed state plus the six enumerated) instead of three approximate ones, including
+      `#000` on white and `DEC`'s letter and word spacing, and finds zero WCAG 2.2 A/AA
+      violations. So the drift was real and its consequence was not — the sheet was
+      already conformant at presentations nobody had ever swept. Worth recording as a
+      **negative** result: the risk this task was ordered first to contain did not
+      materialise, and the reason to keep the derivation is now solely that the literal
+      was stale rather than that it was hiding a failure.
+
+      The test's own title had to change with it: it said «en sus tres presentaciones»,
+      which stopped being true. It now says «en todas sus presentaciones» and names no
+      number, so it cannot go stale the same way twice.
 
 **Checkpoint**: `npx vitest run packages/core/test/presentations.test.ts` green, and
 `RAMPA_HIDDEN=1 npx playwright test e2e/sheet-a11y.spec.ts` green over six real
