@@ -226,7 +226,7 @@ const sample = readFileSync(
  */
 const kinds = [
   { kind: 'ficha', body: sample, presentations: true },
-  ...['examen', 'pictogramas', 'agenda'].map((k) => ({
+  ...['examen', 'pictogramas', 'agenda', 'como-lo-escribe-el-modelo'].map((k) => ({
     kind: k,
     body: readFileSync(join(process.cwd(), 'scripts', 'hojas', `${k}.md`), 'utf8'),
     presentations: false,

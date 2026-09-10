@@ -1027,6 +1027,55 @@ prompt (G68). Columna `ingest`: una extracción sobre una foto sintética, 10 bl
 y numeración intacta, con las salvedades de G71 — no es SC-601 hasta que haya una foto de
 un móvil.
 
+## Spec 038 — lo que ahora se mira, y lo que sigue sin mirarse (T022)
+
+`npm run shots` escribía veinte pantallas de la aplicación y **ninguna hoja**, así que la
+única regla de este repositorio que no es un test —«look at it», la que ADR 0009 y `013`
+FR-1114 dejaron en lugar de un pixel-diff— no cubría el único artefacto que sale del
+edificio. Desde el 2026-09-10 escribe también dieciséis hojas.
+
+### Lo que se mira
+
+| | |
+|---|---|
+| **Página y primera página como imagen**, por hoja | `docs/screenshots/latest/hoja--*.pdf` y `.png` |
+| **La ficha en sus seis presentaciones** | las que `presentationFor` puede producir: `PER-V` 1 y 2, `DEC`, `COG`, `REG`, y la base |
+| **En borrador y firmada** | la firma se obtiene por `job:signOff`, nunca por una opción del guion (Principio VII) |
+| **Cuatro clases de material** | ficha, examen, hoja con pictogramas **sin ningún set instalado**, tira de agenda |
+| **Y una escrita para reproducir lo que emite un modelo** | `scripts/hojas/como-lo-escribe-el-modelo.md`, que es la que hace visibles los defectos de *interpretación* y no sólo los de *pintado* |
+
+Nueve aserciones en `e2e/shots-record.spec.ts` sujetan el conjunto, el cero de red, los
+dos estados, el hueco nombrado, el determinismo y que ninguna hoja lleve un dato de nadie.
+Ninguna compara imágenes: eso está prohibido y sigue prohibido.
+
+### Lo que este registro ya ha encontrado, que es su justificación
+
+Cinco cosas en tres días, cuatro invisibles para los 2.534 tests unitarios:
+
+1. La imagen **en blanco** por la fuente incrustada — **dos veces**, porque el primer
+   arreglo (`document.fonts.ready`) parecía funcionar y fallaba 4 de cada 15. Sólo
+   comparar dos pasadas lo vio.
+2. `data-picto` mal partido **imprimiéndose como palabra** en la hoja de un niño (G79).
+3. El `sheet.html` que se pisa entre borrador y firmada, que ninguna imagen podía delatar.
+4. Que las páginas **no eran deterministas** — `/CreationDate` de Chromium — y que
+   research R4 tenía razón sobre el renderizador y no sobre el contenedor.
+5. Y, retrospectivamente, que el registro cubría **1 de los 3 defectos** que lo motivaron
+   hasta que se le dio una fixture con la forma de un output real.
+
+### NOT verificado, y nombrado
+
+- **El documento editable no tiene presentación en absoluto.** `OdtOptions` no tiene campo
+  `presentation` y `render/odt.ts` fija `fo:font-size="12pt"`, así que un alumno `PER-V: 2`
+  recibe 24pt en PDF y 12pt en ODT. Eso **no es estética, es un fallo de accesibilidad**, y
+  el registro **no lo cubre**: FR-3617 dejó el ODT fuera de alcance a propósito, así que la
+  paridad que `040` tiene que arreglar no tiene aquí superficie de revisión. Es el hueco
+  más importante de esta sección.
+- **Las modalidades lineales** (`renderLinear`) tampoco se fotografían: no son una página.
+- **La apariencia por edad no existe todavía**, así que no hay bandas que recorrer. Cuando
+  `040` las traiga entran en la misma matriz o no estarán comprobadas.
+- **Y el registro no dice si una hoja es buena.** Dice que existe, que es la que produce
+  `job:pdf`, y que no lleva datos. El juicio es de una PT y sigue siendo SC-3602.
+
 ## Sigue sin verificar
 
 - **Ninguna maestra ha visto nada.** Sin cambios, y sigue siendo la línea que importa.
@@ -1036,4 +1085,8 @@ un móvil.
 - **El aspecto para un niño.** La hoja es legible, contrastada y fotocopiable, que es lo
   que `010` pidió; nadie ha especificado cómo debe *parecer* para un alumno de ocho años,
   y la primera reacción de quien la vio impresa fue que no se la daría. Eso es una
-  especificación que falta, no un defecto del render.
+  especificación que falta, no un defecto del render. **Desde `038` hay dieciséis hojas
+  que mirar**, así que la pregunta se puede mirar en vez de discutir — pero seguir sin
+  respuesta es lo que sigue.
+- **La paridad del ODT.** Un `PER-V: 2` recibe 24pt en PDF y 12pt en ODT, y el registro no
+  lo cubre porque FR-3617 dejó el editable fuera. Es `040`.

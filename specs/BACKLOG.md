@@ -439,6 +439,41 @@ every moment should have a spec. What it added beyond the seams pass:
    journey sentence → T094). Handover *import* (004 US2) recorded as deliberately
    deferred rather than silently missing.
 
+## G80 · El barrido de accesibilidad de la hoja corría sobre una hoja menos adaptada que la de cualquier alumno — *ARREGLADO 2026-09-10*
+
+**Anotado y arreglado 2026-09-10** en `038` T005, y va al BACKLOG aunque no falló nada
+porque el defecto es de una clase que este repositorio produce una y otra vez.
+
+`e2e/sheet-a11y.spec.ts` tenía **tres presentaciones escritas a mano**, y la mayor era:
+
+```ts
+{ fontSize: '24pt', lineHeight: '2', measure: '44ch' }
+```
+
+Valores alcanzables —24pt y 44ch salen de `PER-V: 2`, la interlínea de `DEC: 1`—, así que
+se leía como correcto. Lo que recibe de verdad un alumno con esos dos ejes es:
+
+```ts
+{ fontSize: '24pt', measure: '44ch', ink: '#000', paper: '#fff',
+  lineHeight: '2', letterSpacing: '0.05em', wordSpacing: '0.16em' }
+```
+
+**Cuatro propiedades más**: la tinta y el papel de máximo contraste, y el espaciado de
+letra y de palabra que es el sentido entero de `DEC`. Así que axe barría una hoja a `#111`
+sobre blanco en vez de a `#000`, y **el barrido nunca había corrido sobre una hoja de
+contraste máximo**.
+
+Nada estaba mal en el valor: estaba **rancio**, y lo bastante plausible para que nadie lo
+releyera. Es el argumento de ADR 0009 sobre las líneas base llegando a un sitio que nadie
+consideraba una línea base — y es el tercer sitio de este proyecto donde una copia escrita
+a mano de algo derivado se queda atrás sin avisar.
+
+Arreglado derivándolas de `SHEET_PRESENTATIONS`, así que el barrido corre sobre **seis**
+presentaciones reales en vez de tres aproximadas. Y la forma del arreglo es la parte
+reutilizable: `render/presentations.ts` **no tiene ningún campo capaz de guardar un
+`Presentation`**, y `presentations.test.ts` lo comprueba sobre el propio código fuente del
+módulo. La garantía es lo que el tipo no tiene.
+
 ## G79 · `data-picto` no está en el contrato de la IR, y un valor mal formado se imprime como palabra
 
 **Anotado 2026-09-10**, en la primera hoja con pictogramas que el registro dibujó (`038`
@@ -540,7 +575,7 @@ decenas de miles de caracteres de base64 sin una palabra dentro— y dejar el re
 hoja de estilo bajo el escáner. Desaparecen las cuatro filas de la tabla y no se pierde
 ni un canal.
 
-## G77 · Nadie ha especificado qué debe *parecerle* la hoja a un niño de ocho años
+## G77 · Nadie ha especificado qué debe *parecerle* la hoja a un niño de ocho años — *LA MITAD BARATA HECHA 2026-09-10*
 
 **Anotado 2026-09-09.** Carlos, viendo el primer PDF impreso de verdad: «¿en serio eso es
 material para un niño? Le doy eso a un niño de 8 años y lo mato».
@@ -596,6 +631,23 @@ Es una feature, probablemente dos, y va por `/speckit-specify`. **No se toca nad
 render hasta que exista**, porque afinar tipografías a ojo es exactamente lo que `010`
 prohíbe: «there is deliberately no pixel-diff suite… it would end up asserting whatever the
 last commit produced».
+
+**La mitad barata, hecha 2026-09-10 por `038`.** Ya hay hojas que mirar: dieciséis, en
+`docs/screenshots/latest/hoja--*`. Eso no decide nada de lo que esta entrada pregunta —
+sigue sin haber nadie que haya dicho qué aspecto debe tener la hoja de un niño de ocho
+años— pero convierte las tres preguntas de arriba en preguntas que se pueden mirar en vez
+de discutir, y es la condición para que `040` sea revisable.
+
+Las dos hojas que hay que abrir antes de decidir nada, y que son la línea base contra la
+que se juzgará `040`:
+
+- `hoja--ficha--una-tarea-por-pagina--borrador.pdf` — **seis páginas para seis
+  ejercicios**. Es `oneTaskPerPage` funcionando como está especificado y el perfil `A3`
+  pidiéndolo literalmente, y es también lo que parece absurdo. Las dos cosas son verdad.
+- `hoja--ficha--ve-muy-poco--borrador.pdf` a 24pt — **la misma hoja para un niño de seis y
+  para uno de diecisiete**, idéntica, porque `presentationFor` no sabe la edad de nadie. O
+  sea que el principio que `018` dejó escrito se está incumpliendo hoy **por la ausencia
+  de la feature**, no por añadirla.
 
 ## G76 · La hoja nombraba la fuente accesible y no la llevaba dentro — *ARREGLADO 2026-09-09*
 
@@ -1375,7 +1427,7 @@ lo que de verdad importa («**no lee fotos**», «**Create API key**»), así qu
 decidir qué pasa con ese énfasis empobrece el texto que ella lee justo cuando está
 perdida. Es una decisión de quien revisa el corpus, no del parser.
 
-## G62 · El ensayo no está centrado — *ARREGLADO 2026-09-09; EL PUNTO CIEGO DE `shots`, ABIERTO*
+## G62 · El ensayo no está centrado — *ARREGLADO 2026-09-09; EL PUNTO CIEGO DE `shots`, CERRADO 2026-09-10*
 
 **Anotado 2026-09-08**, en la primera sesión que corrió el ensayo y **lo miró**.
 
@@ -1424,6 +1476,19 @@ que `013` prohíbe, tapado a mano en vez de resuelto en el shell.
 
 **Sigue abierto el punto ciego de `shots`**, que es la mitad barata: mientras el guion no
 entre en el ensayo, «mirarlo» no cubre la primera pantalla que ve nadie.
+
+**El punto ciego, cerrado 2026-09-10 por `038`.** `npm run shots` dibuja ahora dieciséis
+hojas —la ficha en sus seis presentaciones y en los dos estados, más un examen, una hoja
+con pictogramas, una tira de agenda y una escrita para reproducir lo que emite un modelo—
+y `e2e/shots-record.spec.ts` sujeta el conjunto, el cero de red, los dos estados y que no
+lleven ni un dato de nadie.
+
+Y la mitad de esto que importa: **el registro encontró cinco cosas en tres días**, cuatro
+de ellas invisibles para los 2.534 tests unitarios. La imagen en blanco por la fuente (dos
+veces, porque el primer arreglo no bastaba y sólo comparar dos pasadas lo vio), el
+`data-picto` mal partido imprimiéndose como palabra (G79), el `sheet.html` que se pisa
+entre estados, y que el determinismo de las páginas no existía. Ninguna la podía ver un
+test que no mire el papel, que es literalmente el argumento de ADR 0009.
 
 ## G61 · Una credencial que no descifra se lee como «no has conectado» — *CAUSA: EL ARNÉS, NO EL PRODUCTO*
 

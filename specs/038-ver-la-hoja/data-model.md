@@ -103,12 +103,25 @@ presentation.
 |---|---|
 | `ficha` × 6 presentations × 2 states | 12 |
 | `examen`, `pictogramas`, `agenda` at `sin-barreras`, unsigned | 3 |
-| | **15 pages, 15 images** |
+| `como-lo-escribe-el-modelo` at `sin-barreras`, unsigned | 1 |
+| | **16 pages, 16 images** |
 
-Fifteen rather than the "around ten" the spec assumed. Recorded rather than smoothed
+Sixteen rather than the "around ten" the spec assumed. Recorded rather than smoothed
 over: the spec's number was an estimate made before the presentations were enumerated,
 and the honest figure follows from the enumeration. Still a set a person opens; forty
 was the number that made it not one.
+
+**The sixteenth arrived from T019 and is the one that earns its place by measurement.**
+The first three kinds are hand-written *clean* corpus, and the retrospective test found
+that a clean fixture makes the record blind to a whole class of defect: of the three
+defects that motivated this feature, only G76 was visible — G74 needs `data-number` **and**
+the number repeated in the text, G75 needs four-space continuation indents, and neither
+appears in a reviewed sheet. Both are defects in **parsing what a model writes**, not in
+rendering.
+
+So `como-lo-escribe-el-modelo.md` is hand-written to *reproduce* model output rather than
+to read well, and with it the measurement is 3 of 3. It is the fixture that makes the
+record cover the reason it exists.
 
 ### Lifecycle
 

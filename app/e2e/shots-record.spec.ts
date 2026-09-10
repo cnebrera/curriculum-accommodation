@@ -44,7 +44,8 @@ const BASE = SHEET_PRESENTATIONS[0]!.id;
 const expectedSheets = [
   ...SHEET_PRESENTATIONS.flatMap((p) =>
     ['borrador', 'firmada'].map((state) => `hoja--ficha--${p.id}--${state}`)),
-  ...['examen', 'pictogramas', 'agenda'].map((k) => `hoja--${k}--${BASE}--borrador`),
+  ...['examen', 'pictogramas', 'agenda', 'como-lo-escribe-el-modelo']
+    .map((k) => `hoja--${k}--${BASE}--borrador`),
 ];
 const expected = expectedSheets.flatMap((stem) => ['pdf', 'png'].map((e) => `${stem}.${e}`));
 

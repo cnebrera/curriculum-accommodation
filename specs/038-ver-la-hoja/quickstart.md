@@ -56,7 +56,7 @@ ls -la ../docs/screenshots/latest/hoja--*
 
 | Check | Expected |
 |---|---|
-| Count | 15 pages and 15 images |
+| Count | 16 pages and 16 images |
 | Names | `hoja--<kind>--<presentation>--<state>` · legible without opening the script |
 | The command's own output | says how many and where (FR-3613) |
 | Exit code | `0`, whatever the sheets look like |
@@ -88,19 +88,41 @@ git stash list   # or a worktree at the commit before each fix
 For each of the three defects the first printed PDF revealed, check out the parent of its
 fix, run `npm run shots`, and open `hoja--ficha--sin-barreras--borrador.png`:
 
-| Defect | Fixed in | What the image should show |
-|---|---|---|
-| **G74** the number twice | `0878008` | «1.» and under it «1. 3 × 6 = 18» |
-| **G75** the code block | `0878008` | Monospace, raw `*asterisks*`, a line running off the card |
-| **G76** Verdana | `0878008` | The wrong typeface — compare against the same capture at `HEAD` |
+Reintroducing the three defects into today's code is cheaper and cleaner than checking
+out the parent, because at `0878008^` the record drew no sheets at all — there would be
+nothing to look at. The patch applies without conflict and isolates exactly those three
+changes:
 
-**If any of the three is invisible in the record, the record is the wrong shape** and
-this feature has not done its job. That is a real possible outcome and it is why the
-criterion is written this way rather than as «the record is useful».
+```bash
+git diff 0878008 0878008^ -- app/packages/core/src/ir/parse.ts \
+  app/packages/core/src/render/html.ts app/packages/shell/src/jobs/print.ts \
+  app/packages/shell/src/sheet-fonts.ts | git apply
+npm run shots -- "$(mktemp -d)"
+```
+
+Then look at `hoja--como-lo-escribe-el-modelo--sin-barreras--borrador.png`:
+
+| Defect | What the image shows |
+|---|---|
+| **G74** the number twice | «1.» and under it «1. Escribe dos ejemplos…», on all three exercises |
+| **G75** the code block | Monospace, raw `*asterisks*`, a line running off the card |
+| **G76** Verdana | The wrong typeface — and `/BaseFont` in the PDF says `Verdana` against `AtkinsonHyperlegible` at `HEAD` |
+
+**It has to be that sheet and not the ficha, and that is the finding this step
+produced.** Run the same experiment against `hoja--ficha--sin-barreras--borrador.png` and
+the answer is **1 of 3**: only G76 shows. G74 and G75 are defects in parsing what a model
+writes, and `sample/ensayo` is hand-written and reviewed — it is clean, so it cannot
+exhibit either. The record covered rendering defects and was blind to interpretation
+defects, because its input never contained what a model actually produces.
+
+`como-lo-escribe-el-modelo.md` exists for that reason, and with it the measurement is 3
+of 3. **If any of the three is invisible, the record is the wrong shape** — which is
+exactly what happened the first time, and why this step is written as a measurement
+rather than as «the record is useful».
 
 ## §6 · The verdict only a person can give
 
-Open the fifteen pages and say what is wrong with them.
+Open the sixteen pages and say what is wrong with them.
 
 That is not a formality: it is SC-3602, and the protocol is `010` SC-805's — **recorded
 verbatim, including when it is unflattering**. The sentence that produced this whole

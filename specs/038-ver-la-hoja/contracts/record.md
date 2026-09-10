@@ -30,7 +30,7 @@ arguments.
 ### Postconditions
 
 1. The twenty-odd application screens are written, exactly as they are today.
-2. Fifteen sheet pages and fifteen first-page images are written beside them, named as
+2. Sixteen sheet pages and sixteen first-page images are written beside them, named as
    `data-model.md` describes.
 3. The command prints how many sheets it wrote and where (FR-3613).
 4. The process exits `0`.
@@ -59,21 +59,35 @@ contract and renames files in git.
 teacher — same renderer, same options, same margins, same A4. Not a likeness of it
 (FR-3609).
 
-**The output is deterministic.** Two runs over unchanged inputs produce sheets that
-differ only where the sheet differs. Research R4 measured this: nothing in the renderer
-interpolates a clock, a path or a random value, and a signed sheet has no banner and no
-watermark at all, so even the sign-off date does not reach the page.
+**The output is deterministic, with one measured exception.** Two runs over unchanged
+inputs produce **byte-identical images**, and pages identical **except for
+`/CreationDate` and `/ModDate`** — two timestamps written by Chromium's PDF writer, which
+Rampa does not control.
+
+Research R4 claimed nothing interpolates a clock. That is true of the **renderer** and
+false of the **container**, and measuring it is what found the difference: first run of
+`038` T018 gave 15 of 15 pages differing at byte 262, at identical file size. A signed
+sheet really has no banner, no watermark and no date on the page, so the sign-off date
+does not reach it — R4's actual subject was right.
+
+The same measurement found something worth more than the scoping: 4 of 15 **images**
+differed, and not because of a clock. They were **blank** — 19 KB against 136 KB, with
+banner, borders, boxes and bullets drawn and not one word — because waiting on
+`document.fonts.ready` does not wait: a font set nobody has requested anything from is
+already settled. Comparing two runs was the only thing that could see it.
 
 ## What a caller must not rely on
 
-- **The count.** Fifteen is what the enumeration currently produces. A rule added to
-  `presentationFor` adds sheets, by design.
+- **The count.** Sixteen is what the enumeration and the kinds currently produce. A rule
+  added to `presentationFor` adds sheets, by design — and so does a kind, which is how the
+  sixteenth arrived: T019 measured that a clean fixture left the record blind to the two
+  defects that live in parsing model output, so `como-lo-escribe-el-modelo` was added.
 - **Byte-identity across machines.** Font rasterisation and Chromium's PDF writer are
   not promised to agree between platforms. The record is for a person to look at; a test
   that diffed bytes across machines would be the pixel-diff suite this feature is
   forbidden from becoming.
-- **The absence of a sheet type.** `data-model.md` lists four kinds because four render
-  differently today. That set grows with `041`.
+- **The absence of a sheet type.** `data-model.md` lists five kinds because five render
+  or parse differently today. That set grows with `041`.
 
 ---
 

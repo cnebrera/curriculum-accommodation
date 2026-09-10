@@ -183,7 +183,7 @@ every presentation has a picture, and the count is not maintained by hand.
       added to `presentationFor` produces a picture or a failing count, never a silent
       gap. (FR-3603, SC-3603)
 
-**Checkpoint**: fifteen pages and fifteen images, and adding a presentation rule adds
+**Checkpoint**: sixteen pages and sixteen images, and adding a presentation rule adds
 pictures without anyone editing a list.
 
 ---
@@ -243,19 +243,74 @@ on paper, for the first time.
         parecía funcionar fallaba 4 de cada 15, y **lo único capaz de verlo era comparar
         dos pasadas**. El test de determinismo no sujeta el determinismo: sujeta la
         imagen.
-- [ ] T019 **The retrospective measurement, and the task that decides whether this
+- [x] T019 **The retrospective measurement, and the task that decides whether this
       feature worked.** For each of G74, G75 and G76, check out the parent of its fix in
       a worktree, run the record, and record here whether the defect is **visible** in
       `hoja--ficha--sin-barreras--borrador.png`. Write the answer into this file next to
       the task, including a «no». If any of the three is invisible, the record has the
       wrong shape and that is the finding. (SC-3604)
-- [ ] T020 Regenerate the record and commit it, per the decision `.gitignore` already
+
+      **Método.** El literal de la tarea —«el padre del arreglo en un worktree»— no se
+      puede correr: en `0878008^` el registro no dibujaba hojas, así que no hay nada que
+      mirar. Lo equivalente y más limpio es al revés: **reintroducir los tres defectos en
+      el código de hoy**, con `git diff 0878008 0878008^ -- <los cuatro ficheros de
+      fuente> | git apply`, que aplica sin conflicto y aísla exactamente esos tres
+      cambios. Así el registro es el de hoy y lo único viejo es el defecto.
+
+      **Primera medición: 1 de 3. Un «no», y de los grandes.**
+
+      | | ¿Visible en la imagen? |
+      |---|---|
+      | **G76** la fuente equivocada | **Sí.** Y comprobable sin ojo: `/BaseFont` del PDF da `Verdana`, `Verdana-Bold`, `Verdana-Italic` frente a `AtkinsonHyperlegible-Regular/-Bold` en el arreglado |
+      | **G74** el número dos veces | **No** |
+      | **G75** el bloque de código | **No** |
+
+      **Y el diagnóstico es lo valioso, porque no es la forma del registro: es su
+      entrada.** Los dos invisibles no son defectos del renderizador, son defectos de
+      **cómo se parsea lo que escribe un modelo** — la numeración duplicada necesita
+      `data-number` *y* el número repetido en el texto, y el bloque de código necesita
+      líneas sangradas cuatro espacios. La hoja de `sample/ensayo` está **escrita a mano y
+      revisada**, o sea limpia: no tiene ni una de las dos condiciones y no puede tenerlas.
+
+      El registro cubría los defectos de *pintar* y no los de *interpretar*, porque su
+      entrada nunca contenía lo que un modelo produce de verdad. Eso es la mitad de por
+      qué el PDF del 9-sep sorprendió a todo el mundo.
+
+      **El arreglo: una fixture más, `como-lo-escribe-el-modelo.md`.** Escrita a mano pero
+      *escrita para reproducir* lo que un modelo emite — el número en el atributo y en el
+      texto, la continuación sangrada, el énfasis con asteriscos, dos frases en dos
+      líneas. No es un output real guardado porque no queda ninguno: `cases/002-model-floor`
+      es sólo un README.
+
+      Dos cosas que costaron una iteración cada una y merecen quedar escritas, porque el
+      siguiente que escriba una fixture de regresión se las va a encontrar:
+
+      - **Una línea sangrada dentro de un `1.` es continuación de lista, no código.** El
+        primer intento puso la sangría dentro del ítem y G75 siguió invisible. Hace falta
+        una **línea en blanco** antes de la línea sangrada.
+      - **Y tiene que caer en la página uno**, porque el criterio es la imagen. Con el
+        bloque detrás de tres ejercicios se iba a la página dos: visible en el PDF e
+        invisible en el PNG. Movido delante.
+
+      **Segunda medición, con la fixture: 3 de 3.**
+
+      | | ¿Visible en `hoja--como-lo-escribe-el-modelo--sin-barreras--borrador.png`? |
+      |---|---|
+      | **G74** | **Sí.** «1.» y debajo «1. Escribe dos ejemplos…», en los tres ejercicios |
+      | **G75** | **Sí.** Monoespaciada, los asteriscos en crudo y la línea saliéndose de la tarjeta — con barra de desplazamiento horizontal en la página |
+      | **G76** | **Sí.** Verdana, confirmado en `/BaseFont`. Y `Menlo-Regular` aparece incrustada, que es el rastro del `<pre>` de G75 |
+
+      **Veredicto.** El instrumento funciona; lo que estaba mal era la fixture, y ahora
+      son dieciséis hojas en vez de quince. Sin esta tarea el registro habría quedado
+      cubriendo el tercio de los defectos que motivaron la feature, y pareciendo que
+      cubría los tres.
+- [x] T020 Regenerate the record and commit it, per the decision `.gitignore` already
       states. (FR-3616)
-- [ ] T021 [P] Note in `specs/BACKLOG.md` that G62's blind spot is closed and that G77's
+- [x] T021 [P] Note in `specs/BACKLOG.md` that G62's blind spot is closed and that G77's
       cheap half is done, and record the drift T005 found in `sheet-a11y.spec.ts` as its
       own line — a test that swept a less-adapted sheet than any learner's is worth a
       backlog entry whether or not it failed.
-- [ ] T022 Add the record to the honest half of
+- [x] T022 Add the record to the honest half of
       `specs/006-desktop-app/validation.md`: what is now looked at, and what still is
       not — the editable document has no presentation at all, so `040`'s parity work has
       no review surface here (FR-3617).
