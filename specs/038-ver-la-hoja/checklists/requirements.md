@@ -70,3 +70,23 @@ Whether the record runs in CI looked like a question and is not one: ADR 0009 al
 answered it. A record that fails a build becomes a baseline somebody updates without
 looking, which is the precise failure mode that document rejected pixel diffing over.
 Recorded in Assumptions with the reasoning rather than asked.
+
+---
+
+## Re-validated after `/speckit-clarify` · 2026-09-10
+
+**16/16 → 16/16 items passing.** No state changed, and that is the expected outcome: the
+clarify scan found three ambiguities and all three were resolved from decisions already
+recorded in the repository, so nothing that had passed stopped passing.
+
+Two requirements were added rather than rewritten (FR-3616 the record's home and its
+being committed, FR-3617 the modality boundary) and one was rewritten (FR-3611, which now
+names both captured forms instead of one). That kept «requirements are testable and
+unambiguous» passing rather than restoring it.
+
+**Worth carrying into `/speckit-plan`:** the third clarification names a consequence
+this feature does not fix. The editable document carries no presentation at all
+(`render/odt.ts` hardcodes 12pt), so a learner at the largest visual presentation gets a
+24pt page and a 12pt document — and because this record is deliberately paper-only,
+`040`'s parity work will have **no review surface here**. That is a real gap, recorded
+where the next spec will read it rather than discovered later.

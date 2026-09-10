@@ -65,6 +65,33 @@ temporary file and loads it in a hidden `BrowserWindow` to run axe over it. From
 to a captured page is one call. `037` FR-3512 (no new dependency) and FR-3511 (the
 viewer's sandbox is not touched) already govern that path and continue to.
 
+## Clarifications
+
+### Session 2026-09-10
+
+Three ambiguities were found by the scan. All three were resolved from decisions this
+repository has already recorded, so none was put to a person — which is the right
+outcome when the answer is in the repo and the wrong one when it is not.
+
+- Q: In what form is a sheet captured, given that a scrolling screenshot cannot show
+  pagination? → A: **A printable page is the artefact of record; a first-page image is
+  captured beside it for scanning.** What fooled everybody was six pages for six
+  exercises, and that is invisible in a screenshot. But all three defects the first
+  printed PDF revealed (G74, G75, G76) were visible on **page one**, so the cheap image
+  catches that whole class and the page is what settles pagination.
+- Q: Where does the record live, and is it committed? → A: **Beside the existing record,
+  and committed.** Already decided: `.gitignore` carries the sentence «the record is
+  `docs/screenshots/`, which is committed on purpose», and 44 files are tracked there.
+  This feature follows that rather than inventing a second convention.
+- Q: Does the record cover the other output modalities — the editable document, and the
+  braille-ready and audio-ready text? → A: **No, and the reason is a boundary rather
+  than laziness.** This record is what a child receives **on paper**. The editable
+  document needs a converter that may not be installed, and the linear modalities are
+  read rather than looked at, so a picture of them proves nothing. Both belong to `019`
+  and are reviewed where those renderers are. **Consequence worth naming:** the
+  editable document carries no presentation at all today, so `040`'s parity work has no
+  review surface in this record and will need its own.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Somebody looks at the sheet before it reaches a child (Priority: P1)
@@ -190,9 +217,17 @@ openable without running the application.
   of its own that produces a sheet nobody can receive.
 - **FR-3610**: Both the unsigned and the signed state MUST be captured (`010`
   FR-821/822/823).
-- **FR-3611**: The captured form MUST show pagination as a printed page would. Where a
-  presentation breaks pages (`one-task-per-page`), the record MUST make the resulting
-  page count visible.
+- **FR-3611**: The record MUST capture each sheet as a **printable page**, so that where
+  a presentation breaks pages (`one-task-per-page`) the resulting page count is visible.
+  A first-page image MUST be captured beside it, because the defects that motivated this
+  feature were all visible on page one and an image is faster to scan than a document.
+- **FR-3616**: The record MUST be written to the directory the project already treats as
+  its record, and MUST be committed there. `.gitignore` already states that decision and
+  its reason; this feature does not introduce a second convention.
+- **FR-3617**: The record covers what a child receives **on paper**. The editable
+  document and the braille-ready and audio-ready texts are out of scope: the first needs
+  a converter that may be absent, and the last two are read rather than looked at.
+  Reviewing those belongs to `019`.
 - **FR-3612**: The record MUST be producible offline, with no provider key and no
   network access.
 - **FR-3613**: The command MUST report how many sheets it wrote and where, so a person
