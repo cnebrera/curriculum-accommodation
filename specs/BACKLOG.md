@@ -439,6 +439,71 @@ every moment should have a spec. What it added beyond the seams pass:
    journey sentence → T094). Handover *import* (004 US2) recorded as deliberately
    deferred rather than silently missing.
 
+## G78 · `checkOutput` documenta una edad que nunca recibe, y no puede recibirla tal cual
+
+**Anotado 2026-09-10**, escribiendo la puerta de `038` T012 sobre las hojas del registro.
+
+El comentario de `checkOutput` (`render/check.ts:19-33`) nombra cuatro campos que no deben
+llegar a la hoja de un niño —«an age, a course, a stage, a school»— y avisa, con razón, de
+que **«adding a field without extending this check is how the next one reaches a sheet»**.
+
+Las dos tuberías le pasan tres:
+
+| | |
+|---|---|
+| `jobs/print.ts:126` | `school`, `year`, `stage` |
+| `jobs/export.ts:196` | `school`, `year`, `stage` |
+
+Falta la edad. Y **no se arregla añadiéndola**, que es lo que parecía: la aguja sería
+`"14"`, y dos cifras son subcadena de casi cualquier hoja de multiplicaciones. Es el fallo
+del código vacío otra vez, el que `print.ts:130-137` ya tiene documentado: *«una guarda que
+salta con todo es una guarda que se acaba apagando»*. `check.ts:60` ya salta las agujas de
+menos de 4 caracteres justamente por eso.
+
+Así que el hueco es real y la solución no es obvia. Tres salidas, ninguna elegida:
+
+1. **Que la edad no sea una aguja de subcadena** sino de contexto: «14 años», «14 años de
+   edad», la edad junto a una palabra que la cualifique. Cubre lo que de verdad
+   identificaría a un niño en una hoja y no salta con `7 × 2 = 14`.
+2. **Aceptar que la edad no es comprobable así** y decirlo en el comentario, que hoy
+   promete cuatro campos y entrega tres. Es la opción honesta y la barata.
+3. **Que el modelo no reciba la edad**, lo cual es falso hoy y `040` va a hacer más falso.
+
+Y un límite medido del propio `checkOutput`, que sale del mismo sitio y conviene tener
+escrito antes de que `040` añada campos cortos:
+
+**La hoja incrusta la fuente, y `checkOutput` escanea el `<style>`.** Quita las etiquetas
+(`html.replace(/<[^>]+>/g, ' ')`) pero **no el contenido** de `<style>`, así que los
+62.632 caracteres de base64 de los dos `@font-face` entran en el texto que busca. Medido
+sobre una hoja real del registro:
+
+| Aguja | Colisión con el base64 |
+|---|---|
+| Código de alumno (1 letra + 2 cifras), subcadena | **566 de 2.600 · 21,8%** |
+| Código con la frontera de letra/cifra que usa `checkOutput` | **0 de 2.600** |
+| Dato de 4 letras, subcadena (como hace `learnerFacts`) | **6,5%** |
+| Dato de 5 letras | 0,4% |
+
+Dos lecturas. La primera: la frontera de `check.ts:38` no es un detalle de estilo, es lo
+único que hace funcionar la comprobación del código en una hoja con fuente incrustada —
+sin ella la puerta daría un falso positivo una vez de cada cinco. La segunda: el umbral de
+`< 4` está **un carácter por debajo** de donde debería, porque un dato de exactamente 4
+caracteres colisiona el 6,5% de las veces. Hoy no muerde porque los tres campos que se
+pasan son largos (`Primaria`, `es:primaria-5`, un nombre de centro). `040` mete ids de
+banda, que son cortos por naturaleza.
+
+Lo obvio sería **quitar el contenido de `<style>` antes de escanear** —ningún niño lee una
+hoja de estilo— y **es la salida equivocada**, aunque sea la que se escribe sola. El
+`<style>` es precisamente el canal por el que hoy viaja la presentación: `renderHTML` mete
+la tipografía derivada de los ejes ahí y **nunca en el marcado**. Ciegar el escaneo a ese
+bloque es ciegarlo al único sitio donde un valor derivado del perfil aparece hoy, justo
+cuando `040` va a empezar a meter ids de banda de apariencia por el mismo sitio.
+
+Lo correcto es más estrecho: **quitar sólo las cargas `url(data:…)`**, que son el ruido —
+decenas de miles de caracteres de base64 sin una palabra dentro— y dejar el resto de la
+hoja de estilo bajo el escáner. Desaparecen las cuatro filas de la tabla y no se pierde
+ni un canal.
+
 ## G77 · Nadie ha especificado qué debe *parecerle* la hoja a un niño de ocho años
 
 **Anotado 2026-09-09.** Carlos, viendo el primer PDF impreso de verdad: «¿en serio eso es

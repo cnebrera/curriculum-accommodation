@@ -99,29 +99,58 @@ presentations instead of three approximate ones.
 `npm run shots` and open what it wrote. Nothing else in the repository has to change for
 that to be worth having.
 
-- [ ] T006 [US1] In `app/scripts/screenshot.mjs`, seed the temporary vault with the
+- [x] T006 [US1] In `app/scripts/screenshot.mjs`, seed the temporary vault with the
       sample's **adapted** document (`sample/ensayo/material/ensayo-1/E00/adapted.md`)
       as a job, reading it from the bundled corpus rather than copying it. No model is
       called. (FR-3606, FR-3612)
-- [ ] T007 [US1] Capture one sheet per member of `SHEET_PRESENTATIONS` by seeding a
+- [x] T007 [US1] Capture one sheet per member of `SHEET_PRESENTATIONS` by seeding a
       learner with those axis levels and calling `window.rampa.job.render` and
       `window.rampa.job.pdf` over IPC — the application's own path, so what is captured
       is what `job:pdf` produces for a teacher. (FR-3601, FR-3605, FR-3609)
-- [ ] T008 [US1] Capture the first-page image beside each page, from a window the record
+- [x] T008 [US1] Capture the first-page image beside each page, from a window the record
       owns in the main process, leaving the viewer's `sandbox` untouched. (FR-3611,
       `037` FR-3511)
-- [ ] T009 [US1] Name every file `hoja--<kind>--<presentation>--<state>` per
+      - **Medido, y es el primer hallazgo del registro mirándose a sí mismo**: la primera
+        tanda de PNG salió **sin una sola letra**. La hoja incrusta Atkinson con
+        `font-display: block` —decisión buena y tomada: «a brief blank beats a flash of
+        Verdana and then a reflow»— y `capturePage()` disparaba dentro de ese blanco. Se
+        veían el banner, los bordes y las cajas de los ejercicios, y ni una palabra.
+        Cerrado esperando a `document.fonts.ready`. Ningún test de este repositorio podía
+        ver ese defecto, que es exactamente el argumento de la feature.
+- [x] T009 [US1] Name every file `hoja--<kind>--<presentation>--<state>` per
       `data-model.md`, written into the same directory the record already uses.
       (FR-3608, FR-3616)
-- [ ] T010 [US1] Print how many sheets were written and where, so a person knows what to
+- [x] T010 [US1] Print how many sheets were written and where, so a person knows what to
       open. (FR-3613)
-- [ ] T011 [P] [US1] Write `app/e2e/shots-record.spec.ts`: driving the command writes the
+- [x] T011 [P] [US1] Write `app/e2e/shots-record.spec.ts`: driving the command writes the
       expected set, exits `0`, and makes **zero network requests** — counted in both
       stacks the way `035`'s rehearsal counts them. (FR-3604, FR-3612)
-- [ ] T012 [US1] In the same spec, run `checkOutput` over each captured **document**
-      with the fictional learner's code, name, age, year, stage and school as needles.
+- [x] T012 [US1] In the same spec, run `checkOutput` over each captured **document**
+      with the fictional learner's code, name, year, stage and school as needles.
       This is the gate that matters, because the output of this feature is committed.
       (FR-3607, SC-3606)
+      - **La fixture tuvo que crecer para que esta puerta pudiera fallar.** Los alumnos
+        de las hojas se creaban con ejes y nada más, así que un `checkOutput` con su
+        nombre y su centro como agujas no tenía nada que encontrar: verde por vacío. Ahora
+        el registro tiene **una sola niña inventada** —`age: 14` en `es:primaria-5`, con
+        centro— compartida por las veinte pantallas y por las doce hojas, y la lista de
+        agujas *es* la fixture.
+      - **La edad se queda fuera, y no es un olvido.** `checkOutput` documenta cuatro
+        campos que no deben llegar a la hoja —«an age, a course, a stage, a school»— y
+        las dos tuberías (`jobs/print.ts:126`, `jobs/export.ts:196`) le pasan tres. La
+        aguja sería `"14"`, y dos cifras son subcadena de media aritmética de primaria:
+        es el fallo del código vacío otra vez, la guarda que salta con todo y se acaba
+        apagando. Anotado en el BACKLOG como G78 en vez de cerrado con falsos positivos.
+      - **Y una medición que salió de que mi primera aserción estaba mal.** Añadí un
+        `expect(html).not.toContain(code)` para cubrir el canal de atributos, que
+        `checkOutput` no mira porque quita las etiquetas antes de buscar. Falló. La causa
+        no es un fuga: la hoja lleva dos `@font-face` en `data:` URI, **62.632 caracteres
+        de base64**, y un código es una letra y dos cifras (`vault/codes.ts:17`) —
+        **566 de los 2.600 códigos posibles, el 21,8%, aparecen como subcadena dentro de
+        ese base64**. Con la frontera de letra/cifra que usa `checkOutput`: **0 de
+        2.600**. Esa frontera no es un detalle de estilo: es lo único que hace que la
+        comprobación del código funcione en una hoja que incrusta una fuente. La aserción
+        del canal de atributos ahora quita el `<style>` y usa la misma frontera.
 
 **Checkpoint**: US1 alone is the MVP. It delivers the instrument `039`, `040` and `041`
 are reviewed with.

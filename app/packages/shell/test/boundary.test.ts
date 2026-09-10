@@ -365,8 +365,24 @@ describe('inside packages/shell, the surface is small and named', () => {
      * *first* thing tried rather than the third — which is the bound having taught the
      * habit it exists to teach.
      *
+     * **Raised to 1049 on 2026-09-10, by three lines**, for `038`'s record: the
+     * `diagnostics:sheetPresentations` channel and its preload line.
+     *
+     * This one is a raise **without** an eighth refusal, and the reason it is not the
+     * habit failing is that there is nothing to inject. The handler's whole body is
+     * `SHEET_PRESENTATIONS` — a constant in `render/presentations.ts`, which imports no
+     * Electron and is already reachable by every test without a window. The seven moves
+     * above all pushed *reasoning* off this surface; here the reasoning is in `core` to
+     * begin with and what is left is the crossing itself.
+     *
+     * And the crossing is the thing that cannot be avoided: `screenshot.mjs` is ESM run
+     * by node and `@rampa/core`'s entry point is TypeScript (`038` research R1), so the
+     * record cannot import the enumeration and has to ask the application for it. Three
+     * lines of pure bridge, which is what the second paragraph of this comment says the
+     * bound exists to permit.
+     *
      * 25, not 100. A bound raised to a round number stops being a measurement.
      */
-    expect(lines).toBeLessThan(1046);
+    expect(lines).toBeLessThan(1049);
   });
 });

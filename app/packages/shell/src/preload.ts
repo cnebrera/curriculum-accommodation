@@ -509,6 +509,13 @@ const api = {
   diagnostics: {
     /** Under `RAMPA_TEST` only: every request this process made. `null` otherwise. */
     network: () => invoke('diagnostics:network'),
+    /**
+     * Under `RAMPA_TEST` only: the presentations a sheet can take (`038` FR-3603).
+     *
+     * The bridge `npm run shots` needs, because the record script is plain ESM and
+     * cannot import TypeScript from `packages/core` (research R1). Axis levels only.
+     */
+    sheetPresentations: () => invoke('diagnostics:sheetPresentations'),
     path: () => invoke('diagnostics:path'),
     reveal: () => invoke('diagnostics:reveal'),
     tail: (lines?: number) => invoke('diagnostics:tail', lines),

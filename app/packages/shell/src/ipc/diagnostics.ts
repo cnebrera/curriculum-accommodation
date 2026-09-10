@@ -1,7 +1,7 @@
 import { app, shell } from 'electron';
 import { appendFile, mkdir, readFile } from 'node:fs/promises';
 import { dirname } from 'node:path';
-import { logger, formatLine, type LogRecord } from '@rampa/core';
+import { logger, formatLine, type LogRecord , SHEET_PRESENTATIONS } from '@rampa/core';
 import { handle } from './wrap.js';
 import { networkLog } from '../net-counter.js';
 import { logFileIn, rotateIfLarge } from '../log-file.js';
@@ -72,6 +72,22 @@ export function registerDiagnosticsIpc(): void {
    */
   handle('diagnostics:network', () =>
     (process.env['RAMPA_TEST'] === '1' ? networkLog() : null));
+
+  /**
+   * Las presentaciones que puede tomar una hoja (`038` FR-3603).
+   *
+   * Aquí y no en `corpus:` porque no es corpus: es una enumeración de entradas al
+   * renderizador, y su único consumidor es el registro de `npm run shots`. Bajo
+   * `RAMPA_TEST` por el mismo motivo que el contador de red — es una afordancia de
+   * desarrollo, y una compilación que llega a una maestra no la necesita.
+   *
+   * El registro no puede leer `SHEET_PRESENTATIONS` directamente: `screenshot.mjs` es
+   * ESM corrido por node y el punto de entrada de `@rampa/core` es TypeScript
+   * (research R1). Este canal es el puente, y devuelve los **niveles de eje** — nunca
+   * valores de presentación, que es la garantía que da forma a todo el módulo.
+   */
+  handle('diagnostics:sheetPresentations', () =>
+    (process.env['RAMPA_TEST'] === '1' ? SHEET_PRESENTATIONS : null));
 
   /** So she can attach it to a message without hunting through folders. */
   handle('diagnostics:reveal', () => { shell.showItemInFolder(logPath()); return true; });
