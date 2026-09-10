@@ -439,6 +439,42 @@ every moment should have a spec. What it added beyond the seams pass:
    journey sentence → T094). Handover *import* (004 US2) recorded as deliberately
    deferred rather than silently missing.
 
+## G79 · `data-picto` no está en el contrato de la IR, y un valor mal formado se imprime como palabra
+
+**Anotado 2026-09-10**, en la primera hoja con pictogramas que el registro dibujó (`038`
+T014). Lo encontró mirándola, que es para lo que está.
+
+Escribí la fixture con punto y coma —`data-picto="leer=leer;lápiz=lápiz"`—, que es lo que
+supone cualquiera que no haya leído `parsePicto`. El separador es el **espacio**. Y no
+falla: `apply.ts:184` busca el **último** `=`, así que el valor entero se convierte en una
+sola palabra llamada `leer=leer;lápiz`, y `html.ts:427` la imprime en un `.picto-word`
+debajo del hueco. En la hoja de un niño, en negrita.
+
+Tres hechos, y el tercero es el que importa:
+
+1. **`data-picto` no aparece en `docs/ir.md`.** El contrato documenta `data-number`,
+   `data-response`, `data-criterion`, `data-points`, `data-role`, `data-longdesc`… y no
+   éste. Lo escriben `pictograms/apply.ts` y `structure/build.ts`, y lo leen cuatro
+   renderizadores (`html`, `odt`, `linear`, `attribution`).
+2. **Nadie valida su forma.** Ni la ingesta, ni `parseIR`, ni la puerta de procedencia. Un
+   valor mal formado no da error: da una palabra.
+3. **`lastIndexOf('=')` convierte cualquier error de sintaxis en contenido.** El
+   comentario de `apply.ts:188` explica bien por qué el separador de `@` es seguro, pero
+   el `=` no tiene esa defensa: no hay forma de que el parser distinga «palabra con un
+   `=` dentro» de «el autor usó otro separador».
+
+Hoy el riesgo de producción es bajo y hay que decirlo: el atributo lo escribe código, no
+el modelo, precisamente porque no está documentado — insertar un pictograma es
+`palabra → id → fichero` y `018` FR-1608 prohíbe que un modelo elija la imagen. Pero
+`031` escribe los pares **en el markdown crudo**, y ese markdown vuelve a pasar por el
+modelo en `iterate`. Un modelo que reordena un bloque y «arregla» el separador produce
+esto sin que nada se queje.
+
+Lo barato: que `parsePicto` descarte un par cuya palabra contenga `=` o `;`, en vez de
+aceptarla. Un hueco nombrado es la respuesta correcta a un valor que no entiende — el
+patrón que `028` FR-2606 ya eligió para la celda sin dibujo. Y documentar el atributo en
+`docs/ir.md`, que es donde el resto de su familia vive.
+
 ## G78 · `checkOutput` documenta una edad que nunca recibe, y no puede recibirla tal cual
 
 **Anotado 2026-09-10**, escribiendo la puerta de `038` T012 sobre las hojas del registro.

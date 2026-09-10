@@ -9,7 +9,7 @@
  *   node scripts/screenshot.mjs ../docs/screenshots/013-after
  */
 import { _electron as electron } from 'playwright';
-import { mkdtempSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { copyFileSync, mkdtempSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 
@@ -211,80 +211,151 @@ const sample = readFileSync(
   join(process.cwd(), 'corpus', 'sample', 'ensayo', 'material', 'ensayo-1', 'E00', 'adapted.md'),
   'utf8');
 
+/**
+ * Las otras tres clases de material, que **renderizan distinto** (FR-3602).
+ *
+ * Un examen tiene `.assessment` con puntos y vías de respuesta; una hoja con pictogramas
+ * tiene `data-picto`, y sale con los huecos nombrados porque Rampa no trae ningún set
+ * (`023` FR-2101, `018` FR-1616); una tira de agenda tiene `.agenda-moment`, con su
+ * rejilla y celdas de 35 mm. Tres caminos del renderizador que la ficha no toca.
+ *
+ * Sólo en la presentación base y sólo en borrador: lo que estas tres añaden al registro es
+ * *que ese camino se dibuja*, y cruzarlas con las seis presentaciones daría treinta y seis
+ * hojas para decir seis veces lo mismo. Las presentaciones se recorren enteras sobre la
+ * ficha, que es donde la tipografía es lo único que cambia.
+ */
+const kinds = [
+  { kind: 'ficha', body: sample, presentations: true },
+  ...['examen', 'pictogramas', 'agenda'].map((k) => ({
+    kind: k,
+    body: readFileSync(join(process.cwd(), 'scripts', 'hojas', `${k}.md`), 'utf8'),
+    presentations: false,
+  })),
+];
+
 const sheets = [];
+/** Copias de los documentos, para quien compruebe el registro. Nunca dentro de él. */
+const docs = mkdtempSync(join(tmpdir(), 'rampa-shot-d-'));
 
-for (const p of presentations) {
-  /*
-   * Un alumno por presentación, con **los ejes** y nada más. La presentación sale de
-   * `presentationFor` dentro de `jobs/print.ts`, que es el único sitio que decide
-   * tipografía a partir de barreras — aquí no se escribe ni un valor.
-   */
-  const code = await page.evaluate(() => window.rampa.learners.newCode());
-  /*
-   * **La misma niña seis veces**, no seis alumnos: mismo nombre, misma edad, mismo curso
-   * y mismo centro, y sólo cambian los ejes. Es lo que el registro quiere mostrar —una
-   * hoja y sus presentaciones— y además es lo que hace que la puerta de `038` T012 pueda
-   * fallar: `checkOutput` busca su nombre, su edad, su curso, su etapa y su centro en el
-   * documento capturado, y un alumno sin nada de eso no da ningún hallazgo posible.
-   */
-  await page.evaluate(([c, levels, n]) => window.rampa.learners.save({
-    code: c, axes: levels, works: [], avoid: [], interests: [],
-    response: {}, language: { instruction: 'es' },
-    age: n.age, year: n.year, stage: n.stage, school: n.school,
-  }), [code, p.levels, NINA]);
-  await page.evaluate(([c, n]) => window.rampa.names.set(c, n.name), [code, NINA]);
+for (const { kind, body, presentations: all } of kinds) {
+  for (const p of all ? presentations : presentations.slice(0, 1)) {
+    /*
+     * Un alumno por presentación, con **los ejes** y nada más. La presentación sale de
+     * `presentationFor` dentro de `jobs/print.ts`, que es el único sitio que decide
+     * tipografía a partir de barreras — aquí no se escribe ni un valor.
+     */
+    const code = await page.evaluate(() => window.rampa.learners.newCode());
+    /*
+     * **La misma niña seis veces**, no seis alumnos: mismo nombre, misma edad, mismo curso
+     * y mismo centro, y sólo cambian los ejes. Es lo que el registro quiere mostrar —una
+     * hoja y sus presentaciones— y además es lo que hace que la puerta de `038` T012 pueda
+     * fallar: `checkOutput` busca su nombre, su edad, su curso, su etapa y su centro en el
+     * documento capturado, y un alumno sin nada de eso no da ningún hallazgo posible.
+     */
+    await page.evaluate(([c, levels, n]) => window.rampa.learners.save({
+      code: c, axes: levels, works: [], avoid: [], interests: [],
+      response: {}, language: { instruction: 'es' },
+      age: n.age, year: n.year, stage: n.stage, school: n.school,
+    }), [code, p.levels, NINA]);
+    await page.evaluate(([c, n]) => window.rampa.names.set(c, n.name), [code, NINA]);
 
-  const job = `hoja-${p.id}`;
-  await page.evaluate(([j, c, body]) =>
-    window.rampa.vault.write(`material/${j}/${c}/adapted.md`, body), [job, code, sample]);
-
-  for (const state of ['borrador', 'firmada']) {
-    if (state === 'firmada') {
-      await page.evaluate(([j, c]) => window.rampa.job.signOff(j, c, 'PT'), [job, code]);
-    }
-    const pdf = await page.evaluate(([j, c]) =>
-      window.rampa.job.pdf(j, c), [job, code]);
-    const { htmlPath } = await page.evaluate(([j, c]) =>
-      window.rampa.job.render(j, c), [job, code]);
-    const stem = `hoja--ficha--${p.id}--${state}`;
-    writeFileSync(join(out, `${stem}.pdf`), readFileSync(pdf));
+    const job = `hoja-${kind}-${p.id}`;
+    await page.evaluate(([j, c, doc]) =>
+      window.rampa.vault.write(`material/${j}/${c}/adapted.md`, doc), [job, code, body]);
 
     /*
-     * Y la primera página como imagen, que no es redundante: los tres defectos que
-     * motivaron esta feature —el número dos veces, el bloque de código y la fuente
-     * equivocada— se veían **en la página uno**, así que una imagen los caza a todos
-     * desde un listado de directorio. La página es lo que zanja la paginación, que la
-     * imagen no puede mostrar y que es lo que engañó a todo el mundo.
+     * Los dos estados sobre la ficha, y sólo el borrador en las otras tres.
      *
-     * Ventana propia, sin scripts y sin tocar el `sandbox` del visor (`037` FR-3511):
-     * aquí no hace falta ejecutar nada dentro, así que puede ser más estricta que el
-     * arnés de axe.
+     * La diferencia entre firmada y sin firmar es del **marco** —el banner y la marca de
+     * agua— y no del contenido, así que se ve igual en cualquier clase de material. Lo que
+     * no se veía nunca en ninguna parte es la firmada, que es lo que `010` SC-807 pide que
+     * juzgue una maestra mirando un papel.
      */
-    const png = await app.evaluate(async ({ BrowserWindow }, file) => {
-      // 794×1123 es A4 a 96 ppp: la proporción del papel, no la de un monitor.
-      const w = new BrowserWindow({ show: false, width: 794, height: 1123 });
-      try {
-        await w.loadFile(file);
-        /*
-         * Esperar a las fuentes, y no es una precaución: sin esto la imagen sale
-         * **sin una letra**.
-         *
-         * La hoja incrusta Atkinson Hyperlegible como `data:` URI con
-         * `font-display: block`, que es una decisión tomada y buena — «a brief blank
-         * beats a flash of Verdana and then a reflow, on a face chosen for
-         * legibility». El precio es que existe una ventana en la que la hoja está en
-         * blanco, y `capturePage()` disparaba dentro de ella: se veían el banner, los
-         * bordes y las cajas, y ni una palabra.
-         *
-         * Lo encontró el registro mirándose a sí mismo, que es exactamente para lo que
-         * está.
-         */
-        await w.webContents.executeJavaScript('document.fonts.ready.then(() => true)');
-        return (await w.webContents.capturePage()).toPNG().toString('base64');
-      } finally { w.destroy(); }
-    }, htmlPath);
-    writeFileSync(join(out, `${stem}.png`), Buffer.from(png, 'base64'));
-    sheets.push({ stem, code, html: htmlPath });
+    for (const state of all ? ['borrador', 'firmada'] : ['borrador']) {
+      if (state === 'firmada') {
+        await page.evaluate(([j, c]) => window.rampa.job.signOff(j, c, 'PT'), [job, code]);
+      }
+      const pdf = await page.evaluate(([j, c]) =>
+        window.rampa.job.pdf(j, c), [job, code]);
+      const { htmlPath } = await page.evaluate(([j, c]) =>
+        window.rampa.job.render(j, c), [job, code]);
+      const stem = `hoja--${kind}--${p.id}--${state}`;
+      writeFileSync(join(out, `${stem}.pdf`), readFileSync(pdf));
+
+      /*
+       * Y la primera página como imagen, que no es redundante: los tres defectos que
+       * motivaron esta feature —el número dos veces, el bloque de código y la fuente
+       * equivocada— se veían **en la página uno**, así que una imagen los caza a todos
+       * desde un listado de directorio. La página es lo que zanja la paginación, que la
+       * imagen no puede mostrar y que es lo que engañó a todo el mundo.
+       *
+       * Ventana propia, sin scripts y sin tocar el `sandbox` del visor (`037` FR-3511):
+       * aquí no hace falta ejecutar nada dentro, así que puede ser más estricta que el
+       * arnés de axe.
+       */
+      const png = await app.evaluate(async ({ BrowserWindow }, file) => {
+        // 794×1123 es A4 a 96 ppp: la proporción del papel, no la de un monitor.
+        const w = new BrowserWindow({ show: false, width: 794, height: 1123 });
+        try {
+          await w.loadFile(file);
+          /*
+           * Esperar a las fuentes, y no es una precaución: sin esto la imagen sale
+           * **sin una letra**.
+           *
+           * La hoja incrusta Atkinson Hyperlegible como `data:` URI con
+           * `font-display: block`, que es una decisión tomada y buena — «a brief blank
+           * beats a flash of Verdana and then a reflow, on a face chosen for
+           * legibility». El precio es que existe una ventana en la que la hoja está en
+           * blanco, y `capturePage()` disparaba dentro de ella: se veían el banner, los
+           * bordes y las cajas, y ni una palabra.
+           *
+           * Lo encontró el registro mirándose a sí mismo, que es exactamente para lo que
+           * está.
+           *
+           * ## Y `document.fonts.ready` **no bastaba**, que es el segundo hallazgo
+           *
+           * El primer arreglo esperaba a esa promesa y pareció funcionar. No funcionaba:
+           * midiéndolo con dos pasadas seguidas, **4 de 15 imágenes salían en blanco**.
+           * `fonts.ready` promete que el conjunto de fuentes está *asentado*, y un
+           * conjunto al que todavía nadie ha pedido nada está asentado — así que resolvía
+           * antes de que el maquetado pidiera la cara, y la carga empezaba después de la
+           * foto. Verde por vacío, y la foto en blanco.
+           *
+           * Así que se piden **todas las caras declaradas, explícitamente**, y sólo
+           * después se espera. Genérico y no por nombre, porque `Presentation.font` puede
+           * cambiar la familia y una lista de nombres aquí sería una segunda copia de esa
+           * decisión. Y dos `requestAnimationFrame` al final: cargada no es pintada.
+           */
+          await w.webContents.executeJavaScript(`(async () => {
+            const faces = [...document.fonts];
+            await Promise.all(faces.map((f) => f.load().catch(() => {})));
+            await document.fonts.ready;
+            await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+            return faces.map((f) => f.status).join(',');
+          })()`);
+          return (await w.webContents.capturePage()).toPNG().toString('base64');
+        } finally { w.destroy(); }
+      }, htmlPath);
+      writeFileSync(join(out, `${stem}.png`), Buffer.from(png, 'base64'));
+
+      /*
+       * Y una copia del documento, fuera del registro, porque `job.render` escribe
+       * **siempre en el mismo `sheet.html`**: un fichero por trabajo y alumno, no por
+       * estado. El borrador y la firmada comparten ruta, así que la segunda pisa a la
+       * primera y quien lea la ruta después ve sólo la última.
+       *
+       * Lo encontró la aserción de FR-3610 de `e2e/shots-record.spec.ts`, que leyó el
+       * documento del borrador y no encontró el banner: estaba leyendo la firmada. La
+       * página y la imagen no tenían el problema —se capturan en el momento— y por eso
+       * nadie lo habría visto mirando el registro.
+       *
+       * No va en `out`: el registro se comita, y quince HTML con la fuente incrustada
+       * dentro son megas de ruido sobre unos artefactos que ya son el PDF y el PNG.
+       */
+      const htmlCopy = join(docs, `${stem}.html`);
+      copyFileSync(htmlPath, htmlCopy);
+      sheets.push({ stem, kind, presentation: p.id, state, code, html: htmlCopy });
+    }
   }
 }
 

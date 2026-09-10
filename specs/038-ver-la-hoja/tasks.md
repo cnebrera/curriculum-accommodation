@@ -165,13 +165,20 @@ still in it.
 **Independent Test**: count the files against the presentations the renderer declares;
 every presentation has a picture, and the count is not maintained by hand.
 
-- [ ] T013 [US2] Capture the other three material kinds that render differently — an
+- [x] T013 [US2] Capture the other three material kinds that render differently — an
       assessment, a sheet carrying pictograms, and a `028` structure strip — at the
       baseline presentation. (FR-3602)
-- [ ] T014 [US2] Capture the pictogram sheet with **no set installed**, which is the
+- [x] T014 [US2] Capture the pictogram sheet with **no set installed**, which is the
       normal state since Rampa ships none (`023` FR-2101), and assert the named gap
       renders rather than a failure (`018` FR-1616). (FR-3602)
-- [ ] T015 [P] [US2] Assert in `shots-record.spec.ts` that the number of captured
+      - **Y esta hoja encontró algo en su primera pasada.** Escribí la fixture con punto
+        y coma —`data-picto="leer=leer;lápiz=lápiz"`— porque es lo que supone cualquiera.
+        El separador es el espacio, y `parsePicto` busca el **último** `=`, así que el
+        valor entero se convirtió en una sola *palabra* llamada `leer=leer;lápiz` y se
+        imprimió en negrita debajo del hueco. En la hoja de un niño. `data-picto` no está
+        en `docs/ir.md` y nadie valida su forma: es **G79**. La fixture está arreglada y
+        la aserción comprueba que ninguna `.picto-word` contenga `=` ni `;`.
+- [x] T015 [P] [US2] Assert in `shots-record.spec.ts` that the number of captured
       presentations equals the number of members in `SHEET_PRESENTATIONS` — so a rule
       added to `presentationFor` produces a picture or a failing count, never a silent
       gap. (FR-3603, SC-3603)
@@ -189,14 +196,21 @@ looking at a page. Until now there was no page to show her.
 **Independent Test**: two files, one with the banner and per-page watermark and one
 without, both openable without running the application.
 
-- [ ] T016 [US3] Capture each representative sheet in both states, obtaining the signed
+- [x] T016 [US3] Capture each representative sheet in both states, obtaining the signed
       one through `window.rampa.job.signOff` — the application's own sign-off, never a
       flag of the record's. Principle VII forbids a convenience that produces material
       looking finished without sign-off, and that includes this script. (FR-3610)
-- [ ] T017 [P] [US3] Assert in `shots-record.spec.ts` that the unsigned document carries
+- [x] T017 [P] [US3] Assert in `shots-record.spec.ts` that the unsigned document carries
       the banner and the watermark and the signed one carries neither — which is also
       what makes the determinism claim safe, since a signed sheet has no date on it
       (research R4). (FR-3610, FR-3614)
+      - **Falló al escribirla, y por un defecto del registro y no de la hoja.**
+        `job.render` escribe siempre el mismo `sheet.html` —uno por trabajo y alumno, no
+        por estado—, así que la firmada pisaba al borrador y esta aserción leía el
+        documento equivocado: buscaba el banner en lo que ya era la hoja firmada. La
+        página y la imagen nunca tuvieron el problema, porque se capturan en el momento,
+        **así que nadie lo habría visto mirando el registro**. El guion copia ahora cada
+        documento a un temporal por `stem`, fuera del registro.
 
 **Checkpoint**: the difference between reviewed and unreviewed is visible at a glance,
 on paper, for the first time.
@@ -205,9 +219,30 @@ on paper, for the first time.
 
 ## Phase 6: Polish & Cross-Cutting Concerns
 
-- [ ] T018 [P] Assert determinism in `shots-record.spec.ts`: two runs over unchanged
+- [x] T018 [P] Assert determinism in `shots-record.spec.ts`: two runs over unchanged
       inputs produce pages that agree. Research R4 measured that nothing interpolates a
       clock, a path or a random value; this keeps it true. (FR-3614)
+      - **R4 se equivocaba, y medirlo destapó el defecto más grande de la feature.**
+        Primera medición, dos pasadas seguidas: **imágenes 11 de 15 iguales, páginas 0 de
+        15**.
+      - Las páginas, resuelto y acotado: mismo tamaño exacto, difieren en el byte 262 —
+        `/CreationDate` y `/ModDate`, que las pone el escritor de PDF de Chromium y que
+        Rampa no controla. R4 tenía razón sobre el *renderizador* y no sobre el
+        *contenedor*. La promesa de FR-3614 se acota a «idénticas salvo esos dos sellos»,
+        que es lo que se puede cumplir.
+      - **Las cuatro imágenes no era un reloj: salían en blanco.** 19 KB en vez de 136 KB,
+        con el banner, los bordes, las cajas y los topos dibujados y ni una palabra. Es el
+        defecto de T008 otra vez, el que ya se había «arreglado» esperando a
+        `document.fonts.ready` — y esa espera **no bastaba**: un conjunto de fuentes al
+        que nadie ha pedido nada todavía ya está asentado, así que la promesa resolvía
+        antes de que empezara la carga. Verde por vacío.
+      - Arreglado pidiendo **todas las caras declaradas explícitamente** antes de esperar,
+        más dos `requestAnimationFrame` porque cargada no es pintada. Vuelto a medir:
+        **15 de 15 imágenes idénticas y ninguna por debajo de 84 KB**.
+      - Y la lección de método, que es la que vale más que el arreglo: un arreglo que
+        parecía funcionar fallaba 4 de cada 15, y **lo único capaz de verlo era comparar
+        dos pasadas**. El test de determinismo no sujeta el determinismo: sujeta la
+        imagen.
 - [ ] T019 **The retrospective measurement, and the task that decides whether this
       feature worked.** For each of G74, G75 and G76, check out the parent of its fix in
       a worktree, run the record, and record here whether the defect is **visible** in

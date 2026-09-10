@@ -33,15 +33,26 @@ import { checkOutput, SHEET_PRESENTATIONS } from '@rampa/core';
  */
 const run = promisify(execFile);
 
-/** What the command must produce, derived from the enumeration and never listed. */
-const expected = SHEET_PRESENTATIONS.flatMap((p) =>
-  ['borrador', 'firmada'].flatMap((state) =>
-    ['pdf', 'png'].map((ext) => `hoja--ficha--${p.id}--${state}.${ext}`)));
+/**
+ * What the command must produce, derived and never listed.
+ *
+ * La ficha recorre las seis presentaciones en los dos estados; las otras tres clases de
+ * material van en la presentación base y en borrador, porque lo que añaden es *que su
+ * camino del renderizador se dibuja* y no una tipografía distinta. Quince.
+ */
+const BASE = SHEET_PRESENTATIONS[0]!.id;
+const expectedSheets = [
+  ...SHEET_PRESENTATIONS.flatMap((p) =>
+    ['borrador', 'firmada'].map((state) => `hoja--ficha--${p.id}--${state}`)),
+  ...['examen', 'pictogramas', 'agenda'].map((k) => `hoja--${k}--${BASE}--borrador`),
+];
+const expected = expectedSheets.flatMap((stem) => ['pdf', 'png'].map((e) => `${stem}.${e}`));
 
 interface Manifest {
   out: string;
   vault: string;
-  sheets: { stem: string; code: string; html: string }[];
+  sheets: { stem: string; kind: string; presentation: string; state: string;
+    code: string; html: string }[];
   net: { count: number; urls: string[] } | null;
   nina: { name: string; age: number; year: string; stage: string; school: string };
   facts: string[];
@@ -92,9 +103,9 @@ test.describe('el registro de hojas', () => {
    * is a promise of the contract and not an accident of the harness.
    */
   test('escribe el conjunto que la enumeración pide, y sale con 0', async () => {
-    expect(manifest.sheets.map((s) => s.stem).length,
-      'una presentación nueva sin captura, o una captura de más')
-      .toBe(SHEET_PRESENTATIONS.length * 2);
+    expect(manifest.sheets.map((s) => s.stem).sort(),
+      'el conjunto capturado no es el que la enumeración pide')
+      .toEqual([...expectedSheets].sort());
 
     for (const name of expected) {
       const s = await stat(join(out, name)).catch(() => null);
@@ -125,7 +136,7 @@ test.describe('el registro de hojas', () => {
 
   /** FR-3613: el comando dice cuántas y dónde, sin que haya que abrir el guion. */
   test('dice cuántas hojas escribió y dónde', () => {
-    expect(stdout).toContain(`Hojas: ${SHEET_PRESENTATIONS.length * 2} · ${out}`);
+    expect(stdout).toContain(`Hojas: ${expectedSheets.length} · ${out}`);
     expect(stdout).toContain(`Capturas en ${out}`);
   });
 
@@ -144,6 +155,160 @@ test.describe('el registro de hojas', () => {
     expect(manifest.net, 'el contador sólo existe bajo RAMPA_TEST').not.toBeNull();
     expect(manifest.net!.urls, 'algo salió de la máquina tomando el registro').toEqual([]);
     expect(manifest.net!.count).toBe(0);
+  });
+
+  /**
+   * FR-3603 / SC-3603: **una regla nueva en `presentationFor` produce una imagen o un
+   * fallo, nunca un hueco silencioso.**
+   *
+   * Es la aserción anti-deriva del registro, y la que cierra lo que research R2 midió: la
+   * lista de presentaciones ya se había escrito a mano una vez, en `sheet-a11y.spec.ts`, y
+   * ya se había quedado obsoleta sin que nadie lo notara. Aquí no hay lista: el número de
+   * presentaciones capturadas de la ficha **es** el número de miembros de la enumeración.
+   */
+  test('captura tantas presentaciones como la enumeración declara', () => {
+    const fichas = manifest.sheets.filter((x) => x.kind === 'ficha');
+    expect(new Set(fichas.map((x) => x.presentation)).size,
+      'una regla de presentationFor sin foto, o una foto sin regla')
+      .toBe(SHEET_PRESENTATIONS.length);
+    for (const p of SHEET_PRESENTATIONS) {
+      expect(fichas.map((x) => x.presentation), `"${p.id}" no tiene foto`).toContain(p.id);
+    }
+  });
+
+  /**
+   * FR-3602: la hoja con pictogramas **sin ningún set instalado**, que es el estado
+   * normal — Rampa no trae ninguno (`023` FR-2101).
+   *
+   * Lo que se comprueba es que sale el **hueco nombrado** y no un fallo ni una imagen
+   * rota (`018` FR-1616): un `role="img"` con su `aria-label`, que es lo que un lector de
+   * pantalla dice y lo que una maestra ve como «aquí falta el dibujo» en vez de como
+   * «esto se ha roto».
+   *
+   * Y esta hoja es la que más ha dado de sí del registro entero: en su primera pasada
+   * imprimió `leer=leer;lápiz` en negrita debajo del hueco, porque el separador de
+   * `data-picto` es el espacio y no el punto y coma, y `parsePicto` convierte cualquier
+   * error de sintaxis en una *palabra* en vez de en un error. La fixture está arreglada;
+   * el hueco del contrato es G79.
+   */
+  test('dibuja el hueco con nombre cuando no hay ningún set de pictogramas', async () => {
+    const picto = manifest.sheets.find((x) => x.kind === 'pictogramas');
+    expect(picto, 'no se capturó la hoja de pictogramas').toBeTruthy();
+    const html = await readFile(picto!.html, 'utf8');
+    expect(html, 'no hay hueco nombrado').toContain('picto-missing');
+    expect(html, 'el hueco no se anuncia como imagen que falta').toContain('(falta la imagen)');
+    // Y ninguna imagen: no hay set, así que un <img> aquí sería una ruta inventada.
+    expect(html, 'una imagen de pictograma sin set instalado').not.toMatch(/<img[^>]+picto/);
+    /*
+     * Y ningún resto de sintaxis impreso como palabra (G79). La palabra de un par no
+     * puede contener `=` ni `;`: si los contiene, es el valor entero mal partido.
+     */
+    for (const w of html.matchAll(/<span class="picto-word">([^<]*)<\/span>/g)) {
+      expect(w[1], `«${w[1]}» no es una palabra, es un data-picto mal partido`)
+        .not.toMatch(/[=;]/);
+    }
+  });
+
+  /**
+   * FR-3610: el borrador lleva su banner y su marca de agua, y la firmada ninguna cosa.
+   *
+   * Principio VII por los dos lados. El registro obtiene la firmada por
+   * `window.rampa.job.signOff` —la firma de la aplicación, nunca una opción suya— así que
+   * lo que se fotografía es la diferencia real y no una maqueta de ella. Y es la primera
+   * vez que existe un papel donde mirarla, que es lo que `010` SC-807 pedía.
+   *
+   * De paso es lo que hace segura la promesa de determinismo: una hoja firmada **no lleva
+   * fecha en la página** (research R4), así que dos ejecuciones coinciden.
+   */
+  test('el borrador se anuncia y la firmada no lleva ninguna marca', async () => {
+    const pairs = manifest.sheets.filter((x) => x.kind === 'ficha');
+    const borradores = pairs.filter((x) => x.state === 'borrador');
+    const firmadas = pairs.filter((x) => x.state === 'firmada');
+    expect(borradores.length).toBe(SHEET_PRESENTATIONS.length);
+    expect(firmadas.length).toBe(SHEET_PRESENTATIONS.length);
+
+    for (const b of borradores) {
+      const html = await readFile(b.html, 'utf8');
+      expect(html, `${b.stem} no lleva banner`).toContain('class="draft-banner"');
+      expect(html, `${b.stem} no lleva marca de agua por página`).toContain('main::before');
+      expect(html, `${b.stem} no dice BORRADOR`).toContain('BORRADOR');
+    }
+    for (const f of firmadas) {
+      const html = await readFile(f.html, 'utf8');
+      expect(html, `${f.stem} lleva banner estando firmada`).not.toContain('class="draft-banner"');
+      expect(html, `${f.stem} lleva marca de agua estando firmada`).not.toContain('main::before');
+    }
+  });
+
+  /**
+   * FR-3614: **dos pasadas sobre las mismas entradas coinciden.**
+   *
+   * Cuesta un minuto más de Electron y hay que pagarlo, porque esta es la aserción que
+   * corrigió research R4 y arregló un defecto que llevaba dos intentos abierto.
+   *
+   * ## Lo que se midió, y en qué se equivocaba R4
+   *
+   * R4 decía que nada en el renderizador interpola un reloj, una ruta ni un valor
+   * aleatorio. Sobre el renderizador es verdad. Sobre lo que sale al disco, no:
+   *
+   * - **Las imágenes coinciden byte a byte, 15 de 15.** Ahí sí.
+   * - **Las páginas no, 15 de 15.** Mismo tamaño exacto y difieren en el byte 262:
+   *   `/CreationDate` y `/ModDate`, que las pone el escritor de PDF de Chromium y que
+   *   Rampa no controla. Así que la promesa se acota aquí: idénticas **salvo esos dos
+   *   sellos**, y el contrato lo dice en vez de prometer una igualdad que no se cumple.
+   *
+   * ## Y el defecto que esta comparación destapó, que es la razón de escribirla
+   *
+   * La primera medición dio **4 imágenes de 15 distintas**, y no por un reloj: salían
+   * **en blanco**, 19 KB en vez de 136 KB, con el banner, los bordes, las cajas y los
+   * topos dibujados y ni una palabra. Es el defecto de la fuente otra vez, el que ya se
+   * había «arreglado» esperando a `document.fonts.ready` — y esa espera no bastaba,
+   * porque un conjunto de fuentes al que nadie ha pedido nada todavía ya está asentado y
+   * la promesa resolvía antes de que empezara la carga.
+   *
+   * Un arreglo que parecía funcionar, midiéndolo fallaba 4 de cada 15, y **lo único que
+   * podía verlo era comparar dos pasadas**. Por eso este test no es una formalidad sobre
+   * el determinismo: es el que sujeta la imagen.
+   */
+  test('dos pasadas producen el mismo registro', async () => {
+    test.setTimeout(300_000);
+    const out2 = await mkdtemp(join(tmpdir(), 'rampa-rec2-'));
+    await run('node', [join('scripts', 'screenshot.mjs'), out2], {
+      cwd: process.cwd(),
+      maxBuffer: 32 * 1024 * 1024,
+      env: {
+        ...process.env, RAMPA_TEST: '1', RAMPA_HIDDEN: '1',
+        ANTHROPIC_API_KEY: '', GOOGLE_API_KEY: '', OPENAI_API_KEY: '',
+      },
+    });
+
+    /** Los dos sellos que pone Chromium, fuera. Todo lo demás tiene que coincidir. */
+    const withoutStamps = (b: Buffer): string =>
+      b.toString('latin1').replace(/\/(?:Creation|Mod)Date \(D:[^)]*\)/g, '/Fecha ()');
+
+    for (const stem of expectedSheets) {
+      const [a, b] = await Promise.all([
+        readFile(join(out, `${stem}.png`)), readFile(join(out2, `${stem}.png`))]);
+      expect(b.equals(a), `${stem}.png cambia entre pasadas`).toBe(true);
+
+      /*
+       * Y un suelo de tamaño, que es un cable trampa calibrado sobre el fallo medido y
+       * no un umbral de calidad. Las quince imágenes buenas van de 84.834 a 136.557
+       * bytes; las cuatro en blanco iban de 15.858 a 19.718. 50.000 está 2,5 veces por
+       * encima de la peor en blanco y 1,7 por debajo de la más pequeña de verdad.
+       *
+       * Hace falta *además* de la comparación porque una hoja en blanco de forma
+       * consistente coincidiría consigo misma: dos pasadas iguales y las dos vacías.
+       */
+      expect(a.length, `${stem}.png son ${a.length} bytes — ¿está en blanco?`)
+        .toBeGreaterThan(50_000);
+
+      const [pa, pb] = await Promise.all([
+        readFile(join(out, `${stem}.pdf`)), readFile(join(out2, `${stem}.pdf`))]);
+      expect(pa.length, `${stem}.pdf cambia de tamaño entre pasadas`).toBe(pb.length);
+      expect(withoutStamps(pb), `${stem}.pdf cambia en algo que no es su fecha`)
+        .toBe(withoutStamps(pa));
+    }
   });
 
   /**
