@@ -23,6 +23,25 @@ Por eso las medidas del PDF que son **tipografía** (la letra escolar enlazada) 
 escriben aquí: son knobs de `040` y estructura de `041`, y escribirlas como corpus hoy
 repetiría el defecto a sabiendas.
 
+## Clarifications
+
+### Session 2026-09-11
+
+- Q: ¿Se resuelven D1, D2 y D3 antes de planificar? → A: **No. Se aplazan a propósito y se
+  sigue con lo que no dependa de ellas.** Decisión de Carlos, que las quiere ver juntas al
+  final. Las tres son criterio pedagógico y ninguna es del autor.
+- Q: ¿Qué se puede construir entonces? → A: **US1 entera y US2 salvo su disparador.** US1 no
+  toca la guarda del examen en ningún punto — es la vía de respuesta, que es acceso y no
+  dificultad, y la guarda la lista como permitida *siempre*. De US2 se construye el
+  mecanismo —el canal, la propuesta de varias líneas, el apartado propio— y se deja sin
+  cablear **qué** dispara una escalada, que es D1.
+- Q: ¿Y US3? → A: **Sólo el fantasma.** `one-task-per-item@1` es un defecto del contrato y
+  no depende de nada. Las recetas de las medidas en disputa esperan a D1.
+
+**Lo que esto significa para el plan.** Las fases se ordenan para que la parte bloqueada
+quede aislada al final y no atraviese a las demás: si D1 se responde en un sentido u otro,
+lo que cambia es una receta y una tabla del corpus, nunca el mecanismo.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Contesta como puede contestar (Priority: P1)
