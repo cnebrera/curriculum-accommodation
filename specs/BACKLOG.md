@@ -474,7 +474,7 @@ reutilizable: `render/presentations.ts` **no tiene ningún campo capaz de guarda
 `Presentation`**, y `presentations.test.ts` lo comprueba sobre el propio código fuente del
 módulo. La garantía es lo que el tipo no tiene.
 
-## G79 · `data-picto` no está en el contrato de la IR, y un valor mal formado se imprime como palabra
+## G79 · `data-picto` no está en el contrato de la IR, y un valor mal formado se imprime como palabra — *ARREGLADO 2026-09-11*
 
 **Anotado 2026-09-10**, en la primera hoja con pictogramas que el registro dibujó (`038`
 T014). Lo encontró mirándola, que es para lo que está.
@@ -510,7 +510,22 @@ aceptarla. Un hueco nombrado es la respuesta correcta a un valor que no entiende
 patrón que `028` FR-2606 ya eligió para la celda sin dibujo. Y documentar el atributo en
 `docs/ir.md`, que es donde el resto de su familia vive.
 
-## G78 · `checkOutput` documenta una edad que nunca recibe, y no puede recibirla tal cual
+**Arreglado 2026-09-11.** Las dos mitades:
+
+- `parsePicto` **descarta** un par cuya palabra lleve `=` o `;`. No lanza: esta función
+  corre sobre documentos que vuelven de un modelo y sobre ficheros del vault escritos hace
+  meses, y una excepción se negaría a imprimir una hoja entera por un atributo mal escrito.
+  Descartar el par hace que la celda salga como **hueco nombrado**, que es la respuesta que
+  `028` FR-2606 ya eligió para una celda sin dibujo: dice «aquí no hay dibujo», que es
+  verdad, y se ve mirando la página.
+- `docs/ir.md` documenta el atributo en la tabla donde vive el resto de su familia, con el
+  separador dicho en negrita y con quién lo escribe — Rampa y no un modelo, porque elegir
+  la imagen de una palabra es una búsqueda y `018` FR-1608 prohíbe que la haga un modelo.
+
+Tres tests en `pictograms.test.ts`, y el del registro comprueba además que ninguna
+`.picto-word` de una hoja capturada contenga `=` ni `;`.
+
+## G78 · `checkOutput` documenta una edad que nunca recibe, y no puede recibirla tal cual — *DECIDIDO 2026-09-11: opción 2*
 
 **Anotado 2026-09-10**, escribiendo la puerta de `038` T012 sobre las hojas del registro.
 
@@ -574,6 +589,17 @@ Lo correcto es más estrecho: **quitar sólo las cargas `url(data:…)`**, que s
 decenas de miles de caracteres de base64 sin una palabra dentro— y dejar el resto de la
 hoja de estilo bajo el escáner. Desaparecen las cuatro filas de la tabla y no se pierde
 ni un canal.
+
+**Decidido 2026-09-11: la opción 2**, que era la honesta y la barata. El comentario de
+`check.ts` decía cuatro campos y la función recibe tres; ahora lo dice, con el motivo —
+la aguja sería `"14"` y dos cifras son subcadena de media aritmética de primaria, que es
+el fallo del código vacío otra vez.
+
+La opción 1 —aguja con contexto alrededor, «14 años»— sigue siendo la buena y sigue
+abierta. Es otra forma de comprobación, no una línea más en la lista de agujas, y hacerla
+a medias aquí habría dado falsos positivos en la única puerta que protege la hoja de un
+niño. La opción 3 se descarta: el modelo sí recibe la edad, y `040` va a hacer que la
+reciba más.
 
 ## G77 · Nadie ha especificado qué debe *parecerle* la hoja a un niño de ocho años — *LA MITAD BARATA HECHA 2026-09-10*
 
@@ -744,7 +770,7 @@ preguntas»— y nunca páginas; el modelo extendió eso a hojas por su cuenta.
 
 Ahora §Output lo prohíbe con el motivo dentro. Medido en tres pasadas después: **cero**
 menciones a páginas en las tres.
-## G73 · La puerta de procedencia no tiene reintento, y la de completitud sí
+## G73 · La puerta de procedencia no tiene reintento, y la de completitud sí — *LA ALTERNATIVA BARATA, HECHA 2026-09-11; EL REINTENTO, SIGUE SIENDO DECISIÓN*
 
 **Anotado 2026-09-09**, después de dieciséis pasadas reales. Trece limpias y **tres**
 falladas con lo mismo: `ir-no-provenance`, «2 bloque(s) cambiaron sin justificación
@@ -779,6 +805,26 @@ de las que van por `/speckit-clarify`.
 **La alternativa más barata, mientras tanto:** que §Output diga que la clase es lo que
 distingue un bloque nuevo, no una etiqueta más. Cuesta cero llamadas y probarlo son tres
 pasadas.
+
+**2026-09-11 · hecha la alternativa barata, y el reintento se queda donde estaba.**
+
+Se me pidió decidir esto y la decisión es **no darle el reintento todavía**, por el motivo
+que esta misma entrada ya tenía escrito: ampliar el bound cambia **cuándo se gasta el
+dinero de una maestra**, y el bound está declarado a propósito. Ampliarlo antes de probar
+lo que cuesta cero llamadas sería gastar su dinero para ahorrarme pensar.
+
+Lo que sí se ha hecho es lo que la entrada proponía. La regla estaba en `§Output` como
+**uno de cuatro atributos** —«New content carries no `data-from` and is marked
+`.scaffold`»— y el fallo medido es que el modelo acierta la primera mitad y se deja la
+clase. Reescrita como lo que es: **la clase es lo que hace nuevo a un bloque**, con la
+consecuencia dicha (sin ella el bloque se rechaza y a la maestra no le llega nada), con la
+tasa medida dentro, y cerrando con «o viene de uno que te dieron y lo dice con
+`data-from`, o es tuyo y lo dice con `.scaffold`; no hay una tercera clase».
+
+**Sin medir todavía.** Probarlo son tres pasadas reales contra la clave de Carlos, y
+gastar su clave sin preguntar no entra en «decide tú». Si tras esas tres pasadas el 19%
+no se mueve, entonces el reintento deja de ser una simetría discutible y pasa a ser la
+respuesta — y ahí sí es una decisión de producto con un dato detrás.
 
 ## G72 · La instrucción de formato tenía dos copias, y la de `app/` iba última — *ARREGLADO 2026-09-09*
 
@@ -883,7 +929,7 @@ Imprimir `source.md` de los fixtures 01 y 02, fotografiarlas mal a propósito co
 —que es lo que dice `notes.md` que falta— y repetir esto. Entonces es SC-601 y no una
 aproximación.
 
-## G70 · El informe pierde la versión de la última receta — *LA MUTILACIÓN, ARREGLADA; EL FORMATO, ABIERTO*
+## G70 · El informe pierde la versión de la última receta — *LA MUTILACIÓN, ARREGLADA; EL FORMATO, DECIDIDO 2026-09-11*
 
 **Anotado 2026-09-08**, leyendo el primer informe bueno que produjo un modelo real.
 
@@ -936,6 +982,17 @@ la maestra quiere: «qué hizo `signpost-the-page` en toda la hoja», en vez de 
 titulada con seis— o es singular, el prompt tiene que decirlo y algo tiene que rechazarlo.
 Hoy es singular en `docs/ir.md`, plural en la práctica, y el informe ya no se rompe pero
 sigue titulando con la lista entera.
+
+**Decidido 2026-09-11 · lista, separada por comas.** No había mucho que decidir en
+realidad, y eso es lo que lo hacía peligroso: `report/index.ts:160` ya hace
+`recipeIds(d.recipe).join(', ')` y `ir/provenance.ts:101` ya parte por comas, o sea que
+**el código lleva tiempo asumiendo lista mientras `docs/ir.md` decía singular**. El
+contrato que se le enseña a un modelo iba por detrás de lo que el parser acepta, que es la
+forma exacta en que este repositorio genera defectos.
+
+Documentado en la tabla de procedencia, con el motivo: un bloque lleva a menudo dos
+recetas, y una tanda de recetas nuevas —las que trae `039`— convierte el bloque
+multi-receta en la norma.
 
 ## G69 · El informe le dijo dos cosas falsas, y la hoja pasó las tres puertas — *LA FRASE FALSA, ARREGLADA; LA LECTURA DEL PERFIL, ABIERTA*
 

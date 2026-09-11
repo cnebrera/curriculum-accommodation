@@ -26,6 +26,20 @@ export function checkOutput(
    * field is the case that makes it concrete: a school plus a course plus a set of
    * barriers identifies a child far more sharply than a code does.
    *
+   * ## Three of those four, and the fourth is not an oversight (backlog G78)
+   *
+   * Both callers — `jobs/print.ts` and `jobs/export.ts` — pass `school`, `year` and
+   * `stage`. **Not the age**, and it stays out on purpose: the needle would be `"14"`,
+   * and two digits are a substring of most primary arithmetic. That is the empty-code
+   * failure again, the one `print.ts` documents — a guard that fires on everything is a
+   * guard that gets switched off — and it is the same reason the `< 4` skip below
+   * exists.
+   *
+   * The age is therefore **not checked here**, and saying so is better than a promise
+   * this function does not keep. What would check it is a needle with context around it
+   * («14 años»), which is a different shape of check and is written up in G78 rather
+   * than half-done here.
+   *
    * Passed in rather than derived from a profile, because this function must never
    * be handed a profile: what it takes is the list of strings that would be a
    * finding, and the caller is the one place that knows the profile.

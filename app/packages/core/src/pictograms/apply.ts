@@ -171,10 +171,28 @@ export function applyPictograms(
 /**
  * What `data-picto` holds, parsed back.
  *
- * `word=id` or `word=id@publisher`. The publisher is optional and its absence is
- * the state of every sheet made before it was recorded — read as «the set she has
- * configured», never as a particular publisher, which is the whole point of
- * recording it (P40).
+ * `word=id` or `word=id@publisher`, **pairs separated by spaces**. The publisher is
+ * optional and its absence is the state of every sheet made before it was recorded —
+ * read as «the set she has configured», never as a particular publisher, which is the
+ * whole point of recording it (P40).
+ *
+ * ## A pair it cannot read is dropped, and that is a fix (backlog G79)
+ *
+ * The separator is a space, and the obvious guess is a semicolon. Written
+ * `leer=leer;lápiz=lápiz`, this is one token, `lastIndexOf('=')` splits it at the last
+ * `=`, and the **word** becomes `leer=leer;lápiz` — which `html.ts` then printed under
+ * the drawing, in bold, on a child's sheet. Found by looking at the first pictogram
+ * sheet the record drew (`038` T014).
+ *
+ * So a word carrying `=` or `;` is not a word: it is a value this function failed to
+ * split, and the honest response is the one `028` FR-2606 already chose for a cell with
+ * no drawing — **a named gap**. Dropping the pair yields exactly that, because a block
+ * whose pairs all drop renders `picto-missing`.
+ *
+ * Deliberately not an exception. This runs over documents that come back from a model
+ * and over vault files written months ago, and a throw here would refuse to print a
+ * whole sheet over one malformed attribute. A gap says «no drawing here», which is true,
+ * and it is visible to whoever looks at the page.
  */
 export function parsePicto(
   value: string | undefined,
@@ -191,7 +209,7 @@ export function parsePicto(
     return sep < 0
       ? { word, id: rest }
       : { word, id: rest.slice(0, sep), from: rest.slice(sep + 1) };
-  }).filter((p) => p.id !== '');
+  }).filter((p) => p.id !== '' && !/[=;]/.test(p.word));
 }
 
 /**

@@ -77,6 +77,7 @@ Attributes:
 | `data-response` | exercise, assessment | `short`, `long`, `choice`, `match`, `fill`, `oral`, `manipulative`, `draw` |
 | `data-criterion` | exercise, assessment | Assessment criterion, when known |
 | `data-points` | assessment | Marks allocated |
+| `data-picto` | any block | Which pictogram for which word, as `word=id` or `word=id@publisher`, **pairs separated by spaces** (`018` FR-1611). Written by Rampa and not by a model: choosing the picture for a word is a lookup, and `018` FR-1608 forbids a model doing it. A pair this cannot be split is **dropped**, so the cell renders as a named gap rather than printing the raw value as a word (backlog G79) |
 
 ## Figures
 
@@ -123,7 +124,7 @@ Escribe **un** ejemplo de ser vivo autótrofo.
 | Attribute | Meaning |
 |---|---|
 | `data-from` | Id(s) in the original IR this block derives from |
-| `data-recipe` | Recipe that produced the change, as `id@version`. The version matters: a recipe changes over time, and provenance to a moving target is not provenance |
+| `data-recipe` | Recipe(s) that produced the change, as `id@version`. The version matters: a recipe changes over time, and provenance to a moving target is not provenance. **Several are allowed, separated by commas** — one block often carries two, and the report already reads it as a list (backlog G70) |
 | `data-axis` | Axis and level that justified it |
 
 Rules:

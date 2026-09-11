@@ -430,3 +430,35 @@ describe('the candidates she is shown are ordered', () => {
     expect(ids).toEqual(['2002', '1001']);
   });
 });
+
+describe('a `data-picto` it cannot read becomes a gap, not a word (backlog G79)', () => {
+  /**
+   * Found by looking at the first pictogram sheet the record drew (`038` T014).
+   *
+   * The separator is a space and the obvious guess is a semicolon. Written with one,
+   * the whole value is a single token, `lastIndexOf('=')` splits it at the last `=`,
+   * and the **word** became `leer=leer;lápiz` — printed in bold under the drawing, on
+   * a child's sheet, by a renderer doing exactly what it was told.
+   *
+   * The rule is now the one `028` FR-2606 already chose for a cell with no drawing: a
+   * pair this cannot split is dropped, the block renders `picto-missing`, and what a
+   * person sees is «no drawing here» rather than a fragment of markup.
+   */
+  it('drops a pair whose word carries the syntax that failed to split', () => {
+    expect(parsePicto('leer=leer;lápiz=lápiz')).toEqual([]);
+    expect(parsePicto('agua=agua;beber=beber')).toEqual([]);
+  });
+
+  it('keeps the pairs around it, because one bad pair is not a bad sheet', () => {
+    expect(parsePicto('casa=casa leer=leer;lápiz=lápiz agua=agua'))
+      .toEqual([{ word: 'casa', id: 'casa' }, { word: 'agua', id: 'agua' }]);
+  });
+
+  it('still reads what Rampa itself writes, which is the only writer', () => {
+    expect(parsePicto('casa=casa')).toEqual([{ word: 'casa', id: 'casa' }]);
+    expect(parsePicto('casa=casa recreo=recreo'))
+      .toEqual([{ word: 'casa', id: 'casa' }, { word: 'recreo', id: 'recreo' }]);
+    expect(parsePicto('casa=2503@arasaac'))
+      .toEqual([{ word: 'casa', id: '2503', from: 'arasaac' }]);
+  });
+});
