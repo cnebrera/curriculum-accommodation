@@ -10,7 +10,24 @@ Lo mueve la Fundación VASS.
 |---|---|
 | [`deck.html`](deck.html) | El deck. Un solo fichero autocontenido: se abre en cualquier navegador, se navega con teclado y con scroll, y se imprime a PDF con una lámina por página |
 | [`guion-deck.md`](guion-deck.md) | El contenido lámina a lámina, con notas de ponente, los supuestos que hay que validar y lo que falta para que el deck esté completo |
+| [`deck.pdf`](deck.pdf) | El mismo deck en PDF, 26 páginas 16:9, para adjuntar en un correo. **Derivado de `deck.html`**: si cambias el deck, regenéralo |
 | `PROMPT-DECK-FUNDACION*.md` | El encargo con el que se generó, conservado para poder regenerarlo o discutirlo |
+
+## Regenerar el PDF
+
+El PDF no se construye solo. Sale de la hoja de impresión del propio deck, donde
+cada página es exactamente una lámina 16:9 sin márgenes:
+
+```bash
+cd outreach/fundacion
+"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" \
+  --headless=new --disable-gpu --no-pdf-header-footer \
+  --virtual-time-budget=20000 \
+  --print-to-pdf=deck.pdf "file://$PWD/deck.html"
+```
+
+Comprueba que salen 26 páginas y que el logotipo aparece en su versión positiva
+(negro y azul, no blanco), que es lo que la hoja de impresión cambia.
 
 ## Por qué está aquí y no fuera
 

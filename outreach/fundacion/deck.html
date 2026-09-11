@@ -110,7 +110,7 @@ ol.plain li::before{content:counter(n, decimal-leading-zero);position:absolute;l
 .smaller{font-size:.82em}
 .muted{color:var(--muted)}
 .note{border-left:2px solid var(--blue);padding:.15em 0 .15em .9em;color:var(--fg-2)}
-.badge{display:inline-block;font:700 .6em/1 var(--font-title);letter-spacing:.12em;text-transform:uppercase;color:var(--bg);background:var(--ig-2);padding:.7em 1.1em;border-radius:1em 0 0 0;margin:0 0 .9em}
+.badge{display:inline-block;align-self:flex-start;font:700 .6em/1 var(--font-title);letter-spacing:.12em;text-transform:uppercase;color:var(--bg);background:var(--ig-2);padding:.7em 1.1em;border-radius:1em 0 0 0;margin:0 0 .9em}
 .pending{font:400 .88em var(--font-body);color:var(--ig-2);border:1px dashed rgba(252,201,54,.55);padding:.05em .4em;border-radius:.25em}
 .tablewrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
 table{width:100%;border-collapse:collapse;font-size:.84em}
@@ -226,12 +226,14 @@ dl.plain{margin:0}dl.plain dd{margin:0 0 .4em}
     --blue:#067DB9; --blue-soft:rgba(6,125,185,.10); --line:rgba(20,20,20,.22);
     /* versión positiva para papel; pendiente de confirmar contra el manual */
     --logo-fg:#141414; --logo-accent:#067DB9;
-    --sw:277mm;
+    /* la página ES la lámina: 16:9 al ancho de un A4 apaisado, sin márgenes,
+       para que no quede una franja en blanco debajo de cada una */
+    --sw:297mm;
   }
-  @page{size:A4 landscape;margin:10mm}
+  @page{size:297mm 167.06mm;margin:0}
   html{scroll-snap-type:none;background:#fff}
   body{background:#fff;color:#141414;padding:0}
-  .slide,.slide.dense,.slide.xdense{margin:0 auto;break-after:page;page-break-after:always;box-shadow:none;border:1px solid rgba(20,20,20,.15)}
+  .slide,.slide.dense,.slide.xdense{margin:0 auto;break-after:page;page-break-after:always;box-shadow:none;border:0}
   .slide + .slide{margin-top:0}
   .slide:last-of-type{break-after:auto;page-break-after:auto}
   .nav,.skip,.texture,.arc,.wave{display:none!important}
