@@ -826,6 +826,16 @@ gastar su clave sin preguntar no entra en «decide tú». Si tras esas tres pasa
 no se mueve, entonces el reintento deja de ser una simetría discutible y pasa a ser la
 respuesta — y ahí sí es una decisión de producto con un dato detrás.
 
+**Corrección, 2026-09-11.** El párrafo de arriba se escribió el mismo día diciendo que la
+reescritura estaba hecha, **y no lo estaba**: se escribió en `app/corpus/instructions/`,
+que es un directorio **generado por `bundle:corpus` y fuera de git**, así que la siguiente
+compilación la borró. La fuente es `instructions/adapt.md`, en la raíz.
+
+Rehecha allí el 2026-09-11 y comprobado que el bundle la recoge. Merece quedar escrito
+porque el modo de fallo es silencioso y repetible: editar el corpus generado **parece**
+funcionar —la aplicación lo lee, los tests pasan— y desaparece en la siguiente
+compilación sin que nada avise.
+
 ## G72 · La instrucción de formato tenía dos copias, y la de `app/` iba última — *ARREGLADO 2026-09-09*
 
 **Anotado 2026-09-09**, buscando la causa de G73 y encontrando otra cosa.
@@ -1080,10 +1090,20 @@ tomó**, y aquí dijo lo contrario.
   «resuelve el 1 delante de él» y «añade uno nuevo antes del 1», y sólo una de las dos le
   quita trabajo al niño. Vive en `profiles.example/A3.yaml` y en la guía de los ejes, y es
   criterio: no la decide esto.
-- **Darle al informe el documento original.** `ReportInput` sólo recibe el adaptado, así
-  que hoy ninguna comprobación de numeración es posible desde ahí. Con el original
-  delante, «todo `data-number` del origen sigue encabezando una tarea» es determinista, y
-  es la forma de que esto deje de depender de que el modelo lo cuente.
+- ~~**Darle al informe el documento original.**~~ **Hecho 2026-09-11 por `039` T015.**
+  `jobs/adapt.ts:155` ya tenía `doc` —el material leído— al lado de la llamada, y el
+  informe no lo recibía: cablearlo fue una línea y lo que faltaba era la comprobación.
+
+  La comprobación es **«encabeza una tarea», no «aparece»**, y ésa es la diferencia
+  entera: en este mismo pase el número 1 seguía en la hoja, dentro de un `.scaffold` como
+  ejemplo resuelto, así que buscarlo lo habría encontrado — lo que había dejado de ser es
+  un ejercicio. Se compara por prefijo para que un `4` extendido en `4a`/`4b` no dé aviso,
+  que es lo que la regla dura 7 prescribe.
+
+  Y **avisa, no afirma**: «puede estar bien —un ejercicio convertido en ejemplo resuelto
+  es una decisión legítima y a veces la buena— pero cambia lo que el alumno tiene que
+  hacer, así que lo miras tú». Que es exactamente lo que le faltó decir en el pase que
+  produjo este hallazgo.
 
 ## G68 · El suelo del modelo, medido: era el prompt y no el modelo — *RESUELTO 2026-09-08*
 

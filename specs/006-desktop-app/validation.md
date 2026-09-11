@@ -1076,6 +1076,41 @@ Cinco cosas en tres días, cuatro invisibles para los 2.534 tests unitarios:
 - **Y el registro no dice si una hoja es buena.** Dice que existe, que es la que produce
   `job:pdf`, y que no lleva datos. El juicio es de una PT y sigue siendo SC-3602.
 
+## Spec 039 — la vía de respuesta y el canal de escalada (T022)
+
+### Lo que se comprueba
+
+| | |
+|---|---|
+| **La vía de respuesta llega al papel** | 14 aserciones. Cada valor de `data-response` produce una forma, y **el caso ausente sale idéntico a hoy** — que es lo que protege todo el material que ya está en el vault de alguien |
+| **Y a las tres salidas** | Impresa y editable con su forma; en las lineales **declarado que no aplica**, con el motivo escrito en `linear.ts`: cuánto papel no tiene equivalente donde no hay página |
+| **El renderizador sigue sin ver el perfil** | `untrusted.test.ts` FR-506, verde **sin tocarlo** — la vía llega por el documento, así que no hubo nada que añadirle al renderizador |
+| **La escalada llega entera** | 6 aserciones, incluida una propuesta de tres líneas que llega con sus tres líneas, medido sobre el informe escrito |
+| **Y nunca dentro de «Lo que NO he hecho»** | Asertado, porque un texto perfecto en esa sección se lee como hecho |
+| **La numeración se comprueba** | 5 aserciones. «Encabeza una tarea», no «aparece» |
+| **Toda receta citada existe** | `validate-recipes`, en cada commit |
+| **Y se mira** | La hoja de examen del registro de `038`: la 1 lleva una raya, la 2 ninguna, la 3 más sitio. Antes las cuatro salían idénticas |
+
+### NOT verificado, y nombrado
+
+- **Que un modelo escriba `data-response` en un material que no lo traía.** Es el eslabón
+  del que depende todo lo demás y **no se puede comprobar offline**: la receta existe, el
+  perfil llega al prompt y el renderizador ya sabe qué hacer, pero que el modelo una las
+  tres cosas sólo lo dice una pasada real. Ninguna se ha hecho todavía para esto.
+- **Qué dispara una escalada.** El canal está entero y **nadie lo rellena**, a propósito:
+  es D1 de `039` y es criterio pedagógico. Así que la cobertura real de la escalada hoy es
+  «sabe llevarla», no «la produce».
+- **Que una PT lea una escalada y sepa qué decidir.** Es SC-3704, se recoge literal
+  —también si es desfavorable— y no lo dice ningún test.
+- **El renderizador es monolingüe.** «Respuesta:», «Contesta en voz alta.» y «Contestado»
+  están en castellano en duro. Un alumno cuyo idioma de instrucción no sea el castellano
+  recibe la hoja adaptada y **esas tres cadenas en castellano**. No es de `039` y está
+  nombrado aquí para que no se dé por hecho.
+- **Las medidas del PDF que dependen de tipografía o de primitivas visuales.** Nombradas y
+  no escritas: son knobs de `040` y estructura de `041`, y escribirlas como corpus hoy
+  repetiría a sabiendas el defecto de `037` — una receta prometiendo un renderizado que no
+  existe.
+
 ## Sigue sin verificar
 
 - **Ninguna maestra ha visto nada.** Sin cambios, y sigue siendo la línea que importa.

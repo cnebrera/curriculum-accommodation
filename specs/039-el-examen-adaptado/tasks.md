@@ -160,11 +160,20 @@ escribió `response-route.md`.
 
 ## Phase 6: Polish
 
-- [ ] T020 [P] Regenerar el registro de `038` y mirar la hoja de examen. Es SC-3701 y es la
+- [x] T020 [P] Regenerar el registro de `038` y mirar la hoja de examen. Es SC-3701 y es la
       única forma de juzgar si el espacio de respuesta sirve.
-- [ ] T021 [P] Anotar en `specs/BACKLOG.md` que G69 queda cerrado por T015, y que la lectura
+- [x] T021 [P] Anotar en `specs/BACKLOG.md` que G69 queda cerrado por T015, y que la lectura
       de la línea del perfil A3 sigue abierta como D2.
-- [ ] T022 Añadir a `specs/006-desktop-app/validation.md` lo que ahora se comprueba y lo que
+      - **Y corregir G73, donde había escrito algo falso.** El 2026-09-11 anoté que la
+        reescritura de `§Output` estaba hecha. No lo estaba: la escribí en
+        `app/corpus/instructions/`, que es **generado por `bundle:corpus` y está fuera de
+        git**, así que la siguiente compilación la borró. La fuente es
+        `instructions/adapt.md`, en la raíz. Rehecha allí y comprobado que el bundle la
+        recoge.
+      - El modo de fallo merece quedar escrito porque es silencioso y repetible: editar el
+        corpus generado **parece** funcionar —la aplicación lo lee, los tests pasan— y
+        desaparece en la siguiente compilación sin que nada avise.
+- [x] T022 Añadir a `specs/006-desktop-app/validation.md` lo que ahora se comprueba y lo que
       no: que un modelo escriba `data-response` en un material que no lo traía **no se puede
       verificar offline**, y que SC-3704 —una PT leyendo una escalada— no lo dice ningún test.
 
