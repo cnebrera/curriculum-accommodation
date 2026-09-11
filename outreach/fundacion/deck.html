@@ -1,0 +1,1247 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>Rampa · propuesta de piloto</title>
+<meta name="description" content="Rampa: material de aula adaptado al alumnado con discapacidad. Propuesta de piloto movida por la Fundación VASS. Borrador con estimaciones pendientes de validar.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Titillium+Web:wght@200;600;700&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+/* ==========================================================================
+   Rampa · deck para fundaciones · identidad visual VASS (manual 2025)
+   Formato de lámina fijo 16:9, escalado a la ventana (como una presentación).
+   Un solo fichero. Sin frameworks, sin librerías. Imágenes: CSS y SVG en línea.
+   ========================================================================== */
+:root{
+  --bg:#141414; --bg-2:#1C1C1E; --fg:#FFFFFF; --fg-2:#E9E9E9; --muted:#8A8691;
+  --blue:#4BBCEE; --blue-soft:rgba(75,188,238,.16); --line:rgba(255,255,255,.14);
+  /* logotipo oficial: versión negativa, la única que publica la marca */
+  --logo-fg:#FFFFFF; --logo-accent:#4BBCEE;
+  /* paleta de infografías, solo para gráficos */
+  --ig-1:#4BBCEE; --ig-2:#FCC936; --ig-3:#007DA4; --ig-4:#DCD7AA; --ig-5:#B4B5B4;
+  --ig-6:#006D70; --ig-7:#CCCD41; --ig-8:#DC6200; --ig-9:#2F426B; --ig-10:#005896;
+  --font-title:"Titillium Web","Segoe UI","Helvetica Neue",Arial,sans-serif;
+  --font-body:Roboto,system-ui,-apple-system,"Segoe UI","Helvetica Neue",Arial,sans-serif;
+  /* la lámina: el mayor 16:9 que cabe en la ventana */
+  --sw:min(100vw, calc(100vh * 16 / 9));
+  --sh:calc(var(--sw) * 9 / 16);
+}
+*{box-sizing:border-box}
+html{background:var(--bg);scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--fg-2);font-family:var(--font-body);font-weight:300;line-height:1.5;-webkit-font-smoothing:antialiased}
+h1,h2,h3,h4{font-family:var(--font-title);color:var(--fg);margin:0;font-weight:600;letter-spacing:-0.005em}
+h1{font-size:3.6em;line-height:1.05}
+h2{font-size:2.35em;line-height:1.1}
+h3{font-size:1.12em;font-weight:700;line-height:1.3}
+p{margin:0 0 .9em}
+p:last-child{margin-bottom:0}
+strong{color:var(--fg);font-weight:500}
+a{color:var(--blue)}
+:focus-visible{outline:3px solid var(--blue);outline-offset:3px;border-radius:4px}
+.visually-hidden{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap}
+
+/* --- enlace para saltar y navegación (no escalan con la lámina) ------------- */
+.skip{position:absolute;left:1em;top:-4em;background:var(--blue);color:var(--bg);padding:.6em 1em;border-radius:0 0 16px 0;font:700 .9em var(--font-title);z-index:50;text-decoration:none}
+.skip:focus{top:0}
+.nav{position:fixed;right:1em;bottom:1em;z-index:40;display:flex;align-items:center;gap:.35em;background:rgba(20,20,20,.88);border:1px solid var(--line);border-radius:999px;padding:.3em .45em;backdrop-filter:blur(6px);font-size:16px}
+.nav button{appearance:none;border:0;background:transparent;color:var(--fg);width:2.75em;height:2.75em;border-radius:50%;cursor:pointer;display:grid;place-items:center}
+.nav button:hover{background:var(--blue-soft)}
+.nav button:disabled{opacity:.35;cursor:default}
+.nav button svg{width:1.1em;height:1.1em;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.nav .counter{font:400 .8em/1 var(--font-body);color:var(--muted);min-width:4.5ch;text-align:center;letter-spacing:.04em}
+
+/* --- la lámina: 16:9 fijo en pantalla ancha ---------------------------------- */
+.slide{
+  position:relative;width:var(--sw);height:var(--sh);margin:0 auto;
+  font-size:calc(var(--sw) * .0128);            /* todo lo de dentro va en em */
+  display:flex;flex-direction:column;
+  padding:2.2em 3.6em 1.5em;
+  overflow:hidden;isolation:isolate;
+  box-shadow:0 0 0 1px rgba(255,255,255,.07);
+}
+.slide.dense{font-size:calc(var(--sw) * .0114)}
+.slide.xdense{font-size:calc(var(--sw) * .0104)}
+.slide > *{position:relative;z-index:2}
+@media (min-width:700px){
+  html{scroll-snap-type:y mandatory}
+  body{padding:calc((100vh - var(--sh)) / 2) 0}
+  .slide{scroll-snap-align:center;scroll-snap-stop:always}
+  .slide + .slide{margin-top:2vh}
+}
+/* --- móvil: la lámina se apila y crece; el texto no baja de 16px ------------ */
+@media (max-width:699px){
+  .slide,.slide.dense,.slide.xdense{width:100%;height:auto;min-height:100svh;font-size:16px;padding:1.4em 1.25em 5.5em;box-shadow:none;border-bottom:1px solid rgba(255,255,255,.06)}
+  .nav{right:.6em;bottom:.6em}
+}
+.chrome{display:flex;justify-content:space-between;align-items:flex-start;gap:1em}
+.kicker{font:700 .68em/1.2 var(--font-title);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);padding-top:.4em}
+.logo{display:inline-flex;align-items:center;justify-content:flex-end;
+  /* margen de seguridad del manual: el ancho de la «S» del logotipo alrededor */
+  padding:.6em;margin:0}
+.logo svg{display:block;width:8.6em;height:1.29em}
+.slide h2{margin:1em 0 .55em;max-width:24ch}
+.lead{color:var(--fg-2);max-width:62ch}
+.cols{display:grid;grid-template-columns:minmax(0,40fr) minmax(0,55fr);column-gap:5%;row-gap:1.2em;flex:1;align-items:start;min-height:0}
+.cols--even{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+.cols--3{grid-template-columns:repeat(3,minmax(0,1fr));column-gap:3%}
+@media (max-width:699px){.cols,.cols--even,.cols--3{grid-template-columns:minmax(0,1fr)}}
+.slidefoot{display:flex;justify-content:space-between;gap:1em;margin-top:auto;padding-top:1em;font:400 .62em/1.3 var(--font-body);color:var(--muted);letter-spacing:.03em}
+.inner{transition:opacity .55s ease, transform .55s ease;display:flex;flex-direction:column;flex:1;min-height:0}
+.js .slide:not(.is-visible) .inner{opacity:0;transform:translateY(14px)}
+
+/* --- componentes ----------------------------------------------------------- */
+.card{background:var(--bg-2);border:1px solid var(--line);border-radius:3.2em 0 0 0;padding:1.1em 1.3em}
+.card--br{border-radius:0 0 3.2em 0}
+.card--tr{border-radius:0 3.2em 0 0}
+.card--bl{border-radius:0 0 0 3.2em}
+.card h3{margin-bottom:.5em}
+.card + .card{margin-top:.8em}
+ul.plain,ol.plain{list-style:none;padding:0;margin:0}
+ul.plain li,ol.plain li{position:relative;padding-left:1.25em;margin:0 0 .55em}
+ul.plain li::before{content:"";position:absolute;left:0;top:.6em;width:.45em;height:.45em;border-radius:50%;background:var(--blue)}
+ol.plain{counter-reset:n}
+ol.plain li{padding-left:2.1em;counter-increment:n}
+ol.plain li::before{content:counter(n, decimal-leading-zero);position:absolute;left:0;top:.05em;font:200 1.25em/1 var(--font-title);color:var(--blue)}
+.tight li{margin-bottom:.4em}
+.small{font-size:.9em}
+.smaller{font-size:.82em}
+.muted{color:var(--muted)}
+.note{border-left:2px solid var(--blue);padding:.15em 0 .15em .9em;color:var(--fg-2)}
+.badge{display:inline-block;font:700 .6em/1 var(--font-title);letter-spacing:.12em;text-transform:uppercase;color:var(--bg);background:var(--ig-2);padding:.7em 1.1em;border-radius:1em 0 0 0;margin:0 0 .9em}
+.pending{font:400 .88em var(--font-body);color:var(--ig-2);border:1px dashed rgba(252,201,54,.55);padding:.05em .4em;border-radius:.25em}
+.tablewrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{width:100%;border-collapse:collapse;font-size:.84em}
+caption{text-align:left;font:700 .68em/1.2 var(--font-title);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);padding:0 0 .7em}
+th,td{padding:.45em .6em .45em 0;text-align:left;vertical-align:top;border-bottom:1px solid var(--line)}
+th{font:700 .66em/1.3 var(--font-title);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+tbody th{font:500 .95em/1.4 var(--font-body);letter-spacing:0;text-transform:none;color:var(--fg)}
+td strong{color:var(--fg)}
+dl.plain{margin:0}dl.plain dd{margin:0 0 .4em}
+.big{font:200 3.1em/1 var(--font-title);color:var(--blue);letter-spacing:-.01em}
+.big-num{font:200 9.5em/1 var(--font-title);color:var(--blue)}
+.stat{margin-bottom:.85em}
+.stat .label{display:block;margin-top:.25em;color:var(--fg-2)}
+.stat .base{display:block;color:var(--muted);font-size:.84em}
+
+/* --- elementos icónicos de la marca (decorativos) -------------------------- */
+.texture{position:absolute;inset:-10%;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(55% 45% at 78% 28%, rgba(75,188,238,.38), transparent 70%),
+    radial-gradient(45% 40% at 18% 82%, rgba(122,62,196,.30), transparent 70%),
+    radial-gradient(40% 40% at 62% 92%, rgba(47,66,107,.42), transparent 70%),
+    radial-gradient(30% 30% at 40% 20%, rgba(220,98,0,.10), transparent 70%);
+  filter:blur(42px);opacity:.75}
+.arc{position:absolute;z-index:1;pointer-events:none;width:160em;height:160em;border:1px solid rgba(255,255,255,.55);border-radius:50%;left:-52em;top:38%}
+.slide:last-of-type .arc{top:74%}
+.dots{position:absolute;left:3.6em;bottom:3.4em;z-index:1;pointer-events:none;width:2.7em;height:2.7em}
+.dots circle{fill:var(--blue)}
+.arrow{position:absolute;right:3.6em;bottom:3.2em;z-index:1;pointer-events:none;width:7.5em;height:auto}
+.arrow path{stroke:var(--blue);stroke-width:14;stroke-linecap:round;stroke-linejoin:round;fill:none}
+.wave{position:absolute;right:-6%;top:-8%;width:70%;height:120%;z-index:0;pointer-events:none;opacity:.9}
+.wave path{fill:var(--blue);opacity:.14}
+.wave path.w2{opacity:.08}
+.sep .inner{justify-content:center;gap:.5em;max-width:40ch}
+.sep p{color:var(--fg-2);font-size:1.1em}
+.cover .inner{justify-content:flex-start;padding:1.2em 0 4.6em;max-width:50ch}
+.cover h1{font-size:2.9em}
+.cover .sub{font-size:1.15em;color:var(--fg-2);margin:.9em 0 1.1em;max-width:40ch}
+.cover .mission{color:var(--fg);font-weight:400;max-width:46ch;font-size:.95em}
+.cover .meta{color:var(--muted);font-size:.78em}
+.cover .dots{bottom:3em}
+.cover .meta p{margin-bottom:.3em}
+
+/* --- figuras en HTML --------------------------------------------------------- */
+.pipe{list-style:none;padding:0;margin:0;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:.55em}
+.pipe li{position:relative;background:var(--bg-2);border:1px solid var(--line);border-radius:0 0 1.4em 0;padding:.75em .8em;font-size:.76em;line-height:1.35}
+.pipe li b{display:block;font:700 .95em var(--font-title);color:var(--fg);margin-bottom:.25em}
+.pipe li small{display:block;color:var(--muted);margin-top:.3em;font-size:.9em}
+.pipe li::after{content:"";position:absolute;right:-.5em;top:50%;width:.45em;height:.45em;border-top:2px solid var(--blue);border-right:2px solid var(--blue);transform:translateY(-50%) rotate(45deg)}
+.pipe li:last-child::after{display:none}
+.pipe-return{display:flex;align-items:center;gap:.5em;margin-top:.7em;color:var(--blue);font:400 .82em var(--font-body)}
+.pipe-return svg{width:2.2em;height:1.4em;flex:none}
+.pipe-return svg path{stroke:var(--blue);stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+@media (max-width:699px){.pipe{grid-template-columns:1fr 1fr}.pipe li::after{display:none}}
+
+.loop{position:relative;display:grid;grid-template-columns:1fr 1fr;gap:.8em;max-width:30em;margin:0 auto}
+.loop .ring{position:absolute;inset:0;width:100%;height:100%;z-index:0;pointer-events:none}
+.loop .ring path{stroke:var(--blue);stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round;opacity:.7}
+.loop .node{position:relative;z-index:1;background:var(--bg-2);border:1px solid var(--line);padding:.8em 1em;min-height:5.6em}
+.loop .node:nth-child(2){border-radius:1.4em 0 0 0}
+.loop .node:nth-child(3){border-radius:0 1.4em 0 0}
+.loop .node:nth-child(4){border-radius:0 0 0 1.4em}
+.loop .node:nth-child(5){border-radius:0 0 1.4em 0}
+.loop .node b{display:block;font:700 1.05em var(--font-title);color:var(--fg)}
+.loop .node span{display:block;font-size:.84em;color:var(--fg-2);margin-top:.2em}
+.loop .node i{font:200 1.5em/1 var(--font-title);color:var(--blue);font-style:normal}
+
+.cards3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.7em}
+.cards3 .card{padding:.9em 1em;font-size:.88em}
+.cards3 .card b{display:block;font:700 .68em var(--font-title);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:.35em}
+@media (max-width:699px){.cards3{grid-template-columns:1fr}}
+
+.funcs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:.7em;margin-bottom:1em}
+.funcs div{border-top:3px solid var(--c, var(--blue));padding-top:.5em;font-size:.82em}
+.funcs b{display:block;font:700 1em var(--font-title);color:var(--fg);margin-bottom:.2em}
+@media (max-width:699px){.funcs{grid-template-columns:1fr 1fr}}
+
+.timeline{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(19,1fr);gap:.4em .1em}
+.timeline .weeks{grid-column:1 / -1;display:grid;grid-template-columns:repeat(19,1fr);font:400 .6em var(--font-body);color:var(--muted);text-align:center;margin-bottom:.15em}
+.timeline li.bar{grid-column:var(--from) / var(--to);background:var(--c);color:#141414;border-radius:0 .8em 0 0;padding:.45em .55em;font:500 .78em/1.25 var(--font-body);min-height:3.2em}
+.timeline li.bar small{display:block;font-weight:400;font-size:.9em;opacity:.9}
+@media (max-width:699px){.timeline{display:block}.timeline .weeks{display:none}.timeline li.bar{display:block;margin-bottom:.4em}}
+
+.lic{display:grid;grid-template-columns:1fr 1fr;gap:.8em}
+.lic .card .big{font-size:1.9em}
+@media (max-width:699px){.lic{grid-template-columns:1fr}}
+
+.ask{display:grid;grid-template-columns:1fr 1fr;gap:.8em;counter-reset:a}
+.ask .card{counter-increment:a;padding-top:.9em}
+.ask .card::before{content:counter(a, decimal-leading-zero);display:block;font:200 2em/1 var(--font-title);color:var(--blue);margin-bottom:.2em}
+@media (max-width:699px){.ask{grid-template-columns:1fr}}
+
+.arch{width:100%;height:auto;display:block}
+.arch text{font-family:var(--font-body);fill:var(--fg-2);font-size:13px}
+.arch text.t{font-family:var(--font-title);font-weight:700;fill:var(--fg);font-size:14px}
+.arch text.m{fill:var(--muted);font-size:12px}
+.arch text.b{fill:var(--blue)}
+.arch .box{fill:var(--bg-2);stroke:rgba(255,255,255,.28);stroke-width:1.2;stroke-linejoin:round}
+.arch .outer{fill:none;stroke:var(--blue);stroke-width:1.6;stroke-linejoin:round}
+.arch .flow{stroke:var(--blue);stroke-width:2.2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.arch .gate{fill:rgba(75,188,238,.18);stroke:var(--blue);stroke-width:1.6;stroke-linejoin:round}
+
+/* --- movimiento comedido ---------------------------------------------------- */
+@media (prefers-reduced-motion: reduce){
+  html{scroll-behavior:auto}
+  .inner{transition:none}
+  .js .slide:not(.is-visible) .inner{opacity:1;transform:none}
+}
+
+/* --- impresión: una lámina 16:9 por página A4 horizontal, paleta clara -------- */
+@media print{
+  :root{
+    --bg:#FFFFFF; --bg-2:#F4F4F6; --fg:#141414; --fg-2:#141414; --muted:#6B6771;
+    --blue:#067DB9; --blue-soft:rgba(6,125,185,.10); --line:rgba(20,20,20,.22);
+    /* versión positiva para papel; pendiente de confirmar contra el manual */
+    --logo-fg:#141414; --logo-accent:#067DB9;
+    --sw:277mm;
+  }
+  @page{size:A4 landscape;margin:10mm}
+  html{scroll-snap-type:none;background:#fff}
+  body{background:#fff;color:#141414;padding:0}
+  .slide,.slide.dense,.slide.xdense{margin:0 auto;break-after:page;page-break-after:always;box-shadow:none;border:1px solid rgba(20,20,20,.15)}
+  .slide + .slide{margin-top:0}
+  .slide:last-of-type{break-after:auto;page-break-after:auto}
+  .nav,.skip,.texture,.arc,.wave{display:none!important}
+  .inner{opacity:1!important;transform:none!important}
+  .badge,.timeline li.bar,.funcs div,.dots circle,.arrow path{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .badge{background:#FCC936;color:#141414}
+  .pending{color:#7a5a00;border-color:#7a5a00}
+  .timeline li.bar{border:1px solid rgba(20,20,20,.25)}
+  .logo{border-color:rgba(20,20,20,.4)}
+  .card{border-color:rgba(20,20,20,.18)}
+  .arch text{fill:#141414}.arch text.m{fill:#6B6771}.arch text.b{fill:#067DB9}
+  .arch .box{fill:#F4F4F6;stroke:rgba(20,20,20,.35)}
+  .arch .gate{fill:rgba(6,125,185,.12)}
+  a{color:#067DB9}
+}
+</style>
+</head>
+<body>
+<svg aria-hidden="true" focusable="false" style="position:absolute;width:0;height:0;overflow:hidden"><symbol id="logo-fundacion-vass" viewBox="0 0 1000 150"><g><path d="M685.89 39.93 705.54 92.66 724.93 40.57C727.64 33.2 731.78 32.56 734.36 32.56 739.66 32.56 744.31 36.7 744.31 41.87 744.31 43.55 744.05 44.97 743.4 46.52L715.48 117.61C712.63 124.98 709.67 126.14 705.53 126.14 702.17 126.14 698.68 125.63 695.45 117.35L668.44 48.72C667.41 46.14 666.76 44.58 666.76 41.87 666.76 36.7 671.41 32.56 676.71 32.56 681.23 32.56 684.34 35.79 685.88 39.93L685.88 39.93Z" fill="var(--logo-accent)"/><path d="M741.08 117.09C741.08 115.93 741.21 115.02 742.11 112.44L767.7 43.16C770.28 36.18 775.58 31.78 781.79 31.78 788 31.78 793.17 35.66 795.49 42.25L820.95 112.95C821.6 114.76 821.98 116.44 821.98 117.6 821.98 122.51 817.84 126.13 813.06 126.13 807.5 126.13 804.79 123.03 803.49 119.02L799.74 107.26 763.81 107.26 759.93 119.28C758.64 123.16 756.05 126.13 750.5 126.13 745.46 126.13 741.06 122.25 741.06 117.08L741.06 117.08ZM769.39 89.43 793.95 89.43 781.93 51.95 781.67 51.95 769.39 89.43 769.39 89.43Z" fill="var(--logo-accent)"/><path d="M889.08 44.71C889.08 50.01 885.46 54.28 880.42 54.28 875.77 54.28 870.08 50.4 863.36 50.4 856.64 50.4 852.63 54.02 852.63 58.8 852.63 63.07 857.54 65.65 866.46 67.98 890.89 74.19 895.8 84.52 895.8 96.93 895.8 114.51 881.45 126.91 862.71 126.91 845.91 126.91 831.3 122.12 831.3 112.44 831.3 107.14 834.92 103.26 839.96 103.26 845.52 103.26 853.66 108.3 861.67 108.3 869.68 108.3 874.85 103.91 874.85 97.19 874.85 91.89 869.68 89.04 859.21 86.46 837.88 81.16 831.68 73.28 831.68 61.13 831.68 43.29 846.28 31.79 863.74 31.79 874.6 31.79 889.07 35.93 889.07 44.72L889.07 44.72Z" fill="var(--logo-accent)"/><path d="M965.08 44.71C965.08 50.01 961.46 54.28 956.42 54.28 951.77 54.28 946.08 50.4 939.36 50.4 932.64 50.4 928.63 54.02 928.63 58.8 928.63 63.07 933.54 65.65 942.46 67.98 966.89 74.19 971.8 84.52 971.8 96.93 971.8 114.51 957.45 126.91 938.71 126.91 921.91 126.91 907.3 122.12 907.3 112.44 907.3 107.14 910.92 103.26 915.96 103.26 921.52 103.26 929.66 108.3 937.67 108.3 945.68 108.3 950.85 103.91 950.85 97.19 950.85 91.89 945.68 89.04 935.21 86.46 913.88 81.16 907.68 73.28 907.68 61.13 907.68 43.29 922.28 31.79 939.74 31.79 950.6 31.79 965.07 35.93 965.07 44.72L965.07 44.72Z" fill="var(--logo-accent)"/><path d="M685.89 39.93 705.54 92.66 724.93 40.57C727.64 33.2 731.78 32.56 734.36 32.56 739.66 32.56 744.31 36.7 744.31 41.87 744.31 43.55 744.05 44.97 743.4 46.52L715.48 117.61C712.63 124.98 709.67 126.14 705.53 126.14 702.17 126.14 698.68 125.63 695.45 117.35L668.44 48.72C667.41 46.14 666.76 44.58 666.76 41.87 666.76 36.7 671.41 32.56 676.71 32.56 681.23 32.56 684.34 35.79 685.88 39.93L685.88 39.93Z" fill="var(--logo-accent)"/><path d="M741.08 117.09C741.08 115.93 741.21 115.02 742.11 112.44L767.7 43.16C770.28 36.18 775.58 31.78 781.79 31.78 788 31.78 793.17 35.66 795.49 42.25L820.95 112.95C821.6 114.76 821.98 116.44 821.98 117.6 821.98 122.51 817.84 126.13 813.06 126.13 807.5 126.13 804.79 123.03 803.49 119.02L799.74 107.26 763.81 107.26 759.93 119.28C758.64 123.16 756.05 126.13 750.5 126.13 745.46 126.13 741.06 122.25 741.06 117.08L741.06 117.08ZM769.39 89.43 793.95 89.43 781.93 51.95 781.67 51.95 769.39 89.43 769.39 89.43Z" fill="var(--logo-accent)"/><path d="M889.08 44.71C889.08 50.01 885.46 54.28 880.42 54.28 875.77 54.28 870.08 50.4 863.36 50.4 856.64 50.4 852.63 54.02 852.63 58.8 852.63 63.07 857.54 65.65 866.46 67.98 890.89 74.19 895.8 84.52 895.8 96.93 895.8 114.51 881.45 126.91 862.71 126.91 845.91 126.91 831.3 122.12 831.3 112.44 831.3 107.14 834.92 103.26 839.96 103.26 845.52 103.26 853.66 108.3 861.67 108.3 869.68 108.3 874.85 103.91 874.85 97.19 874.85 91.89 869.68 89.04 859.21 86.46 837.88 81.16 831.68 73.28 831.68 61.13 831.68 43.29 846.28 31.79 863.74 31.79 874.6 31.79 889.07 35.93 889.07 44.72L889.07 44.72Z" fill="var(--logo-accent)"/><path d="M965.08 44.71C965.08 50.01 961.46 54.28 956.42 54.28 951.77 54.28 946.08 50.4 939.36 50.4 932.64 50.4 928.63 54.02 928.63 58.8 928.63 63.07 933.54 65.65 942.46 67.98 966.89 74.19 971.8 84.52 971.8 96.93 971.8 114.51 957.45 126.91 938.71 126.91 921.91 126.91 907.3 122.12 907.3 112.44 907.3 107.14 910.92 103.26 915.96 103.26 921.52 103.26 929.66 108.3 937.67 108.3 945.68 108.3 950.85 103.91 950.85 97.19 950.85 91.89 945.68 89.04 935.21 86.46 913.88 81.16 907.68 73.28 907.68 61.13 907.68 43.29 922.28 31.79 939.74 31.79 950.6 31.79 965.07 35.93 965.07 44.72L965.07 44.72Z" fill="var(--logo-accent)"/></g><g><path d="M32.52 125.17 32.5 125.17C30.13 125.17 28.2 123.24 28.2 120.87L28.2 27.39C28.2 25.02 30.13 23.09 32.5 23.09L84.12 23.09C86.49 23.09 88.42 25.02 88.42 27.39L88.42 27.41C88.42 29.78 86.49 31.71 84.12 31.71L36.82 31.71 36.82 120.87C36.82 123.24 34.89 125.17 32.52 125.17Z" fill="var(--logo-fg)"/><path d="M77.14 81.45 33.11 81.45 33.11 72.83 77.14 72.83C79.51 72.83 81.44 74.76 81.44 77.13L81.44 77.15C81.44 79.52 79.51 81.45 77.14 81.45Z" fill="var(--logo-fg)"/><path d="M125.66 125.81C109.68 126.08 96.61 112.47 96.61 96.49L96.61 61.02C96.61 58.65 98.54 56.72 100.91 56.72L100.93 56.72C103.3 56.72 105.23 58.65 105.23 61.02L105.23 96.66C105.23 107.04 112.92 116.13 123.26 117.1 135.12 118.22 145.13 108.88 145.13 97.24L145.13 61.01C145.13 58.64 147.06 56.71 149.43 56.71L149.45 56.71C151.82 56.71 153.75 58.64 153.75 61.01L153.75 97.24C153.75 112.83 141.19 125.55 125.66 125.8Z" fill="var(--logo-fg)"/><path d="M224.33 125.83 224.31 125.83C221.94 125.83 220.01 123.9 220.01 121.53L220.01 86.02C220.01 75.64 212.32 66.55 201.98 65.58 190.12 64.46 180.11 73.8 180.11 85.44L180.11 121.53C180.11 123.9 178.18 125.83 175.81 125.83L175.79 125.83C173.42 125.83 171.49 123.9 171.49 121.53L171.49 86.2C171.49 70.22 184.57 56.61 200.54 56.88 216.07 57.14 228.63 69.85 228.63 85.45L228.63 121.54C228.63 123.91 226.7 125.84 224.33 125.84Z" fill="var(--logo-fg)"/><path d="M621.79 125.91 621.77 125.91C619.4 125.91 617.47 123.98 617.47 121.61L617.47 86.03C617.47 75.65 609.78 66.56 599.44 65.59 587.58 64.47 577.57 73.81 577.57 85.45L577.57 121.61C577.57 123.98 575.64 125.91 573.27 125.91L573.25 125.91C570.88 125.91 568.95 123.98 568.95 121.61L568.95 86.2C568.95 70.22 582.03 56.61 598 56.88 613.53 57.14 626.08 69.85 626.08 85.45L626.08 121.61C626.08 123.98 624.15 125.91 621.78 125.91Z" fill="var(--logo-fg)"/><path d="M430.77 125.74C412.16 125.74 397.02 110.26 397.02 91.24 397.02 72.22 412.16 56.74 430.77 56.74 436.87 56.74 442.87 58.45 448.07 61.63 450.3 62.99 450.79 66.04 449.12 68.05L449.12 68.05C447.78 69.66 445.45 70.12 443.67 69.01 439.79 66.6 435.39 65.34 430.77 65.34 416.91 65.34 405.63 76.96 405.63 91.24 405.63 105.52 416.91 117.14 430.77 117.14 435.39 117.14 439.79 115.88 443.67 113.47 445.45 112.37 447.78 112.83 449.12 114.43L449.12 114.43C450.8 116.44 450.31 119.49 448.07 120.85 442.87 124.03 436.87 125.74 430.77 125.74Z" fill="var(--logo-fg)"/><path d="M302.41 31.84 302.39 31.84C300.02 31.84 298.09 33.77 298.09 36.14L298.09 67.94C292.18 61.05 283.69 56.72 274.27 56.72 256.44 56.72 241.94 72.23 241.94 91.29 241.94 110.35 256.44 125.85 274.27 125.85 283.69 125.85 292.18 121.52 298.09 114.63L298.09 120.17C298.09 122.54 300.02 124.47 302.39 124.47L302.41 124.47C304.78 124.47 306.71 122.54 306.71 120.17L306.71 36.14C306.71 33.77 304.78 31.84 302.41 31.84ZM274.27 117.23C261.2 117.23 250.56 105.59 250.56 91.29 250.56 76.99 261.2 65.34 274.27 65.34 287.34 65.34 297.98 76.98 297.98 91.29 297.98 105.6 287.34 117.23 274.27 117.23Z" fill="var(--logo-fg)"/><path d="M380.65 59.08 380.63 59.08C378.25 59.08 376.33 61.01 376.33 63.38L376.33 67.71C370.42 60.89 361.98 56.61 352.62 56.61 334.79 56.61 320.29 72.12 320.29 91.18 320.29 110.24 334.79 125.74 352.62 125.74 361.98 125.74 370.42 121.46 376.33 114.64L376.33 120.31C376.33 122.68 378.26 124.61 380.63 124.61L380.65 124.61C383.03 124.61 384.95 122.68 384.95 120.31L384.95 63.38C384.95 61 383.02 59.08 380.65 59.08ZM352.62 117.12C339.55 117.12 328.91 105.48 328.91 91.18 328.91 76.88 339.55 65.23 352.62 65.23 365.69 65.23 376.33 76.87 376.33 91.18 376.33 105.49 365.69 117.12 352.62 117.12Z" fill="var(--logo-fg)"/><g><path d="M521.19 125.74C502.55 125.74 487.38 110.23 487.38 91.18 487.38 72.13 502.55 56.61 521.19 56.61 539.83 56.61 555 72.12 555 91.18 555 110.24 539.83 125.74 521.19 125.74ZM521.19 65.23C507.3 65.23 496 76.87 496 91.18 496 105.49 507.3 117.12 521.19 117.12 535.08 117.12 546.38 105.48 546.38 91.18 546.38 76.88 535.08 65.23 521.19 65.23Z" fill="var(--logo-fg)"/><rect x="516.57" y="39.95" rx="4.3" ry="4.3" width="23.81" height="8.62" fill="var(--logo-fg)" transform="matrix(0.89971 -0.436488 0.436488 0.89971 33.69 235.15)"/></g><g><path d="M469.61 125.83 469.59 125.83C467.22 125.83 465.29 123.9 465.29 121.53L465.21 61.11C465.21 58.74 467.14 56.81 469.51 56.81L469.53 56.81C471.9 56.81 473.83 58.74 473.83 61.11L473.91 121.53C473.91 123.9 471.98 125.83 469.61 125.83Z" fill="var(--logo-fg)"/><circle cx="469.56" cy="40.88" r="5.31" fill="var(--logo-fg)"/></g></g></symbol></svg>
+<a class="skip" href="#s01">Saltar a la primera lámina</a>
+
+<nav class="nav" aria-label="Navegación entre láminas">
+  <button type="button" id="prev" aria-label="Lámina anterior"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg></button>
+  <span class="counter" id="counter" aria-hidden="true">1 / 26</span>
+  <button type="button" id="next" aria-label="Lámina siguiente"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button>
+</nav>
+
+<main id="deck">
+
+<!-- ================================================================ 1 · PORTADA -->
+<section class="slide cover" id="s01" aria-labelledby="t01">
+  <div class="texture" aria-hidden="true"></div>
+  <div class="arc" aria-hidden="true"></div>
+  <svg class="dots" viewBox="0 0 60 60" aria-hidden="true">
+    <circle cx="6" cy="6" r="4"/><circle cx="22" cy="6" r="4"/><circle cx="38" cy="6" r="4"/><circle cx="54" cy="6" r="4"/>
+    <circle cx="6" cy="22" r="4"/><circle cx="22" cy="22" r="4"/><circle cx="38" cy="22" r="4"/><circle cx="54" cy="22" r="4"/>
+    <circle cx="6" cy="38" r="4"/><circle cx="22" cy="38" r="4"/><circle cx="38" cy="38" r="4"/><circle cx="54" cy="38" r="4"/>
+    <circle cx="6" cy="54" r="4"/><circle cx="22" cy="54" r="4"/><circle cx="38" cy="54" r="4"/><circle cx="54" cy="54" r="4"/>
+  </svg>
+  <div class="chrome">
+    <span class="kicker">Fundación VASS · Propuesta de piloto</span>
+    <span class="logo"><svg role="img" aria-label="Fundación VASS"><use href="#logo-fundacion-vass"/></svg></span>
+  </div>
+  <div class="inner">
+    <h1 id="t01">Rampa: material de aula adaptado al alumnado con discapacidad</h1>
+    <p class="sub">Una propuesta para financiar la primera comprobación con maestras de pedagogía terapéutica.</p>
+    <p class="mission">La Fundación VASS tiene como misión fomentar la inclusión social y la accesibilidad a través del talento digital.</p>
+    <div class="meta">
+      <p>Nombre de trabajo provisional · Septiembre de 2026 · Borrador con estimaciones pendientes de validar.</p>
+      <p>Este documento comunica una intención y una propuesta. No compromete jurídicamente a ninguna de las entidades ni personas que aparecen en él.</p>
+    </div>
+  </div>
+  <footer class="slidefoot"><span>Rampa · propuesta de piloto · borrador</span><span>1 / 26</span></footer>
+</section>
+
+<!-- ================================================================ 2 · SEPARADOR 01 -->
+<section class="slide sep" id="s02" aria-labelledby="t02">
+  <div class="texture" aria-hidden="true"></div>
+  <svg class="wave" viewBox="0 0 800 600" preserveAspectRatio="none" aria-hidden="true">
+    <path d="M800,0 C560,40 520,260 640,380 C740,480 760,560 800,600 L800,0 Z"/>
+    <path class="w2" d="M800,80 C620,120 560,300 680,420 C760,500 780,560 800,600 L800,80 Z"/>
+  </svg>
+  <svg class="dots" viewBox="0 0 60 60" aria-hidden="true">
+    <circle cx="6" cy="6" r="4"/><circle cx="22" cy="6" r="4"/><circle cx="38" cy="6" r="4"/><circle cx="54" cy="6" r="4"/>
+    <circle cx="6" cy="22" r="4"/><circle cx="22" cy="22" r="4"/><circle cx="38" cy="22" r="4"/><circle cx="54" cy="22" r="4"/>
+    <circle cx="6" cy="38" r="4"/><circle cx="22" cy="38" r="4"/><circle cx="38" cy="38" r="4"/><circle cx="54" cy="38" r="4"/>
+    <circle cx="6" cy="54" r="4"/><circle cx="22" cy="54" r="4"/><circle cx="38" cy="54" r="4"/><circle cx="54" cy="54" r="4"/>
+  </svg>
+  <svg class="arrow" viewBox="0 0 140 60" aria-hidden="true"><path d="M10,30 H120 M96,10 L120,30 L96,50"/></svg>
+  <div class="chrome">
+    <span class="kicker">Sección</span>
+    <span class="logo"><svg role="img" aria-label="Fundación VASS"><use href="#logo-fundacion-vass"/></svg></span>
+  </div>
+  <div class="inner">
+    <div class="big-num" aria-hidden="true">01</div>
+    <h2 id="t02">El problema</h2>
+    <p>Una maestra, una ficha, tres alumnos, cada semana desde cero.</p>
+  </div>
+  <footer class="slidefoot"><span>Rampa · propuesta de piloto · borrador</span><span>2 / 26</span></footer>
+</section>
+
+<!-- ================================================================ 3 · EL PROBLEMA -->
+<section class="slide dense" id="s03" aria-labelledby="t03">
+  <div class="chrome">
+    <span class="kicker">01 · El problema</span>
+    <span class="logo"><svg role="img" aria-label="Fundación VASS"><use href="#logo-fundacion-vass"/></svg></span>
+  </div>
+  <div class="inner">
+    <h2 id="t03">El trabajo se repite y no acumula</h2>
+    <div class="cols">
+      <div>
+        <p>Marta es maestra de pedagogía terapéutica en un colegio público. Atiende a veinticuatro alumnos repartidos en varios grupos y trabaja en huecos de cuarenta y cinco minutos entre clases. El portátil es del centro. Imprime en blanco y negro en la fotocopiadora del pasillo.</p>
+        <p>Este martes tiene una ficha de Naturales y tres alumnos que la necesitan de tres formas distintas: uno no arranca si la página está llena, otra no ve la letra pequeña y el tercero lee con pictogramas. Hoy eso son tres versiones a mano, de cuarenta minutos a una hora cada una. La semana que viene, otra ficha y otra vez desde el principio.</p>
+        <p>Lo que corrigió la vez anterior no vuelve: cada adaptación empieza en blanco. Y hay una segunda pérdida, más lenta. Lo que Marta sabe de cada alumno no está escrito en ningún sitio que le sirva al docente siguiente. Cada septiembre se reconstruye.</p>
+        <p class="smaller muted">Marta es un personaje ficticio, compuesto a partir del análisis de adopción del proyecto. Ningún caso real.</p>
+      </div>
+      <div>
+        <div class="cards3" role="group" aria-label="Tres alumnos ficticios, tres barreras distintas">
+          <div class="card"><b>Alumno ficticio 1</b>No arranca si la página está llena.</div>
+          <div class="card card--tr"><b>Alumna ficticia 2</b>No ve la letra pequeña.</div>
+          <div class="card card--br"><b>Alumno ficticio 3</b>Lee con pictogramas.</div>
+        </div>
+        <p style="margin-top:1em"><span class="big" style="font-size:1.7em">Tres versiones a mano · cada semana · desde cero</span></p>
+        <p class="note small"><span class="pending">[PENDIENTE: cita de una PT real sobre cuánto tiempo le lleva adaptar una ficha]</span></p>
+      </div>
+    </div>
+  </div>
+  <footer class="slidefoot"><span>Rampa · propuesta de piloto · borrador</span><span>3 / 26</span></footer>
+</section>
+
+<!-- ================================================================ 4 · POR QUÉ NO ESTÁ RESUELTO -->
+<section class="slide dense" id="s04" aria-labelledby="t04">
+  <div class="chrome">
+    <span class="kicker">01 · El problema</span>
+    <span class="logo"><svg role="img" aria-label="Fundación VASS"><use href="#logo-fundacion-vass"/></svg></span>
+  </div>
+  <div class="inner">
+    <h2 id="t04">Por qué no está resuelto ya</h2>
+    <div class="cols">
+      <div>
+        <p class="lead">Existen herramientas, pero cada una cubre un trozo. Ninguna adapta la ficha concreta de un alumno concreto, y ninguna aprende de la corrección de la docente.</p>
+        <h3 style="margin:1.2em 0 .6em">Cuatro huecos</h3>
+        <ol class="plain tight small">
+          <li>Nadie toma esta ficha, para este alumno, con la adaptación que tiene en vigor.</li>
+          <li>Casi todo asume dificultad lectora o de atención. Acceso visual, auditivo, motor y discapacidad múltiple quedan en gran parte fuera.</li>
+          <li>Nadie cierra el bucle: adaptar, revisar, corregir y volver a adaptar mejor.</li>
+          <li>La privacidad es una barrera de entrada. Son datos de salud de menores y la mayoría de herramientas no son desplegables sin más en un centro español.</li>
+        </ol>
+      </div>
+      <div>
+        <h3 style="margin-bottom:.8em">Lo que existe hoy, por funciones</h3>
+        <div class="funcs">
+          <div style="--c:var(--ig-1)"><b>Generar el documento oficial</b>Producen el papeleo (objetivos, medidas, seguimiento), no el material que el alumno tiene en la mano. Las más maduras siguen el marco legal de Estados Unidos.</div>
+          <div style="--c:var(--ig-2)"><b>Reescribir a un nivel de lectura</b>Lo más cercano a adaptar material, pero en un solo eje: el lector.</div>
+          <div style="--c:var(--ig-4)"><b>Piezas sueltas de accesibilidad</b>Pictogramas, lectura fácil, texto a voz, subtitulado. Nadie las combina según el perfil del alumno.</div>
+          <div style="--c:var(--ig-8)"><b>Gestión escolar con IA</b>Automatizan evaluación, comunicación y registro. Gestión, no pedagogía.</div>
+        </div>
+        <p class="smaller muted">Base: revisión de escritorio de agosto de 2026, a partir de material de los fabricantes y prensa del sector. No se probó ninguna herramienta. Que nadie cubra el marco español de extremo a extremo es ausencia de evidencia, no prueba.</p>
+      </div>
+    </div>
+  </div>
+  <footer class="slidefoot"><span>Rampa · propuesta de piloto · borrador</span><span>4 / 26</span></footer>
+</section>
+
+<!-- ================================================================ 5 · SEPARADOR 02 -->
+<section class="slide sep" id="s05" aria-labelledby="t05">
+  <div class="texture" aria-hidden="true"></div>
+  <svg class="wave" viewBox="0 0 800 600" preserveAspectRatio="none" aria-hidden="true">
+    <path d="M800,0 C560,40 520,260 640,380 C740,480 760,560 800,600 L800,0 Z"/>
+    <path class="w2" d="M800,80 C620,120 560,300 680,420 C760,500 780,560 800,600 L800,80 Z"/>
+  </svg>
+  <svg class="dots" viewBox="0 0 60 60" aria-hidden="true">
+    <circle cx="6" cy="6" r="4"/><circle cx="22" cy="6" r="4"/><circle cx="38" cy="6" r="4"/><circle cx="54" cy="6" r="4"/>
+    <circle cx="6" cy="22" r="4"/><circle cx="22" cy="22" r="4"/><circle cx="38" cy="22" r="4"/><circle cx="54" cy="22" r="4"/>
+    <circle cx="6" cy="38" r="4"/><circle cx="22" cy="38" r="4"/><circle cx="38" cy="38" r="4"/><circle cx="54" cy="38" r="4"/>
+    <circle cx="6" cy="54" r="4"/><circle cx="22" cy="54" r="4"/><circle cx="38" cy="54" r="4"/><circle cx="54" cy="54" r="4"/>
+  </svg>
+  <svg class="arrow" viewBox="0 0 140 60" aria-hidden="true"><path d="M10,30 H120 M96,10 L120,30 L96,50"/></svg>
+  <div class="chrome">
+    <span class="kicker">Sección</span>
+    <span class="logo"><svg role="img" aria-label="Fundación VASS"><use href="#logo-fundacion-vass"/></svg></span>
+  </div>
+  <div class="inner">
+    <div class="big-num" aria-hidden="true">02</div>
+    <h2 id="t05">El proyecto</h2>
+    <p>Qué es, qué lo diferencia, qué no hace y cómo trata los datos.</p>
+  </div>
+  <footer class="slidefoot"><span>Rampa · propuesta de piloto · borrador</span><span>5 / 26</span></footer>
+</section>
+
+<!-- ================================================================ 6 · QUÉ ES RAMPA -->
+<section class="slide dense" id="s06" aria-labelledby="t06">
+  <div class="chrome">
+    <span class="kicker">02 · El proyecto</span>
+    <span class="logo"><svg role="img" aria-label="Fundación VASS"><use href="#logo-fundacion-vass"/></svg></span>
+  </div>
+  <div class="inner">
+    <h2 id="t06">Qué es Rampa, en una cara</h2>
+    <div class="cols">
+      <div>
+        <p>Rampa es una aplicación que se instala en el ordenador de la docente. Ella aporta el material (una foto del libro, un PDF), describe al alumno por lo que ve en clase y obtiene las hojas adaptadas más un informe de qué se cambió y por qué. Lee el informe, corrige lo que haga falta y firma. Hasta que firma, todo sale marcado como borrador.</p>
+        <p class="small muted">El nombre: una rampa no lleva a otro sitio. Lleva a la misma puerta por una vía que la persona sí puede recorrer. Es provisional; la idea pesa más que la marca.</p>
+      </div>
+      <div>
+        <figure style="margin:0 0 1.4em">
+          <ol class="pipe" aria-label="Cómo funciona, en cinco pasos">
+            <li><b>Tu material</b>Una foto o un PDF.</li>
+            <li><b>Leer</b>La aplicación lo lee.<small>Tú verificas lo leído.</small></li>
+            <li><b>Adaptar</b>Según el alumno.<small>Perfil de barreras + recetas.</small></li>
+            <li><b>Hojas adaptadas</b>HTML y PDF hoy.<small>Braille y audio más adelante.</small></li>
+            <li><b>Revisas y firmas</b>Hasta entonces, borrador.</li>
+          </ol>
+          <p class="pipe-return"><svg viewBox="0 0 44 28" aria-hidden="true"><path d="M40,6 H12 A6,6 0 0 0 6,12 V22 M2,18 L6,22 L10,18"/></svg>Lo que corriges al revisar vuelve a «Adaptar» la próxima vez.</p>
+          <figcaption class="visually-hidden">Flujo en cinco pasos: el material de la docente se lee y ella verifica lo leído; se adapta según el perfil de barreras y las recetas; salen hojas adaptadas en HTML y PDF, y más adelante braille y audio; la docente revisa y firma. Una flecha de retorno indica que lo corregido al revisar vuelve al paso de adaptar la próxima vez.</figcaption>
+        </figure>
+        <h3>Tres decisiones de diseño que importan a quien financia</h3>
+        <ol class="plain small">
+          <li><strong>El material se normaliza una sola vez</strong> a un documento intermedio. De ahí salen todas las salidas: HTML accesible y PDF imprimible hoy; texto para braille y audio más adelante. Por eso es abordable cubrir discapacidades muy distintas sin construir cinco proyectos separados.</li>
+          <li><strong>Los perfiles describen barreras, no diagnósticos.</strong> Diez ejes (decodificación, carga cognitiva, función ejecutiva, acceso visual y otros), sin nombre y sin etiqueta clínica. Dos niños con el mismo diagnóstico necesitan cosas distintas, y las barreras son la única representación que se puede seudonimizar sin perder utilidad.</li>
+          <li><strong>Las decisiones pedagógicas están en texto legible, no en código.</strong> Cada criterio de adaptación vive en una «receta» que una maestra de PT puede leer y corregir sin programar, con ejemplos antes y después y con antipatrones: lo que hace mal quien adapta con buena intención.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  <footer class="slidefoot"><span>Rampa · propuesta de piloto · borrador</span><span>6 / 26</span></footer>
+</section>
+
+<!-- ================================================================ 7 · EL BUCLE -->
+<section class="slide dense" id="s07" aria-labelledby="t07">
+  <div class="chrome">
+    <span class="kicker">02 · El proyecto</span>
+    <span class="logo"><svg role="img" aria-label="Fundación VASS"><use href="#logo-fundacion-vass"/></svg></span>
+  </div>
+  <div class="inner">
+    <h2 id="t07">Lo que lo diferencia: la corrección que no se repite</h2>
+    <div class="cols">
+      <div>
+        <p>En la hoja de un alumno, las casillas de verificación no funcionaron: él las cuenta como tareas. Marta lo escribe con sus palabras. La aplicación le pregunta lo único que ella sabe y nadie más: ¿esto es de este alumno, de cómo trabajas tú, o de la regla general? Ella decide dónde se guarda. Rehace la ficha ahora con la corrección, y la semana que viene sale bien a la primera.</p>
+        <p>Ese bucle (adaptar, revisar, recordar, adaptar mejor) es la tesis del proyecto y lo que no hace ninguna de las herramientas revisadas. Tiene una consecuencia que se puede medir: si funciona, el tiempo que Marta dedica a cada ficha baja entre la primera semana y la cuarta. Si no baja, la tesis está mal, y eso también es un resultado.</p>
+        <p>Hay una segunda consecuencia. Lo que Marta sabe de cada alumno queda escrito, con fecha y con cómo lo sabe. En junio puede viajar al siguiente docente como hipótesis para confirmar, no como sentencia.</p>
+        <p class="note small"><strong>¿Cómo lo sabemos?</strong> El mecanismo está construido y cubierto por pruebas automáticas. Que produzca la bajada de tiempo no se ha medido con ninguna maestra: es lo que el piloto mide.</p>
+      </div>
+      <div>
+        <figure style="margin:0">
+          <div class="loop" role="group" aria-label="El bucle: adaptar, revisar, recordar, adaptar mejor">
+            <svg class="ring" viewBox="0 0 400 300" preserveAspectRatio="none" aria-hidden="true">
+              <path d="M200,22 C300,22 340,80 350,150"/>
+              <path d="M350,150 C340,220 300,278 200,278"/>
+              <path d="M200,278 C100,278 60,220 50,150"/>
+              <path d="M50,150 C60,80 100,22 200,22"/>
+              <path d="M338,138 L350,150 L362,138"/>
+              <path d="M212,266 L200,278 L212,290"/>
+              <path d="M62,162 L50,150 L38,162"/>
+              <path d="M188,34 L200,22 L188,10"/>
+            </svg>
+            <div class="node"><i>1</i><b>Adaptar</b><span>Según el perfil y las recetas.</span></div>
+            <div class="node"><i>2</i><b>Revisar</b><span>La docente lee el informe, corrige y firma.</span></div>
+            <div class="node"><i>4</i><b>Adaptar mejor</b><span>La siguiente ficha sale con la corrección aplicada.</span></div>
+            <div class="node"><i>3</i><b>Recordar</b><span>La corrección se guarda donde ella decide: alumno, su forma de trabajar o la regla.</span></div>
+          </div>
+          <figcaption class="small muted" style="margin-top:.9em">Lo que se mide: tiempo por ficha, semana 1 frente a semana 4.</figcaption>
+        </figure>
+      </div>
+    </div>
+  </div>
+  <footer class="slidefoot"><span>Rampa · propuesta de piloto · borrador</span><span>7 / 26</span></footer>
+</section>
+
+<!-- ================================================================ 8 · QUÉ NO HACE -->
+<section class="slide dense" id="s08" aria-labelledby="t08">
+  <div class="chrome">
+    <span class="kicker">02 · El proyecto</span>
+    <span class="logo"><svg role="img" aria-label="Fundación VASS"><use href="#logo-fundacion-vass"/></svg></span>
+  </div>
+  <div class="inner">
+    <h2 id="t08">Qué no hace</h2>
+    <div class="cols">
+      <div>
+        <p class="lead">En este proyecto, lo que no hace genera más confianza que cualquier lista de funcionalidades. Estas reglas están construidas, no prometidas.</p>
+        <p class="note small" style="margin-top:1.4em">Las dos reglas centrales, no cambiar lo que se enseña y no facilitar exámenes, no las hace cumplir el código: las hace cumplir la revisión de la docente. El código hace visible cada cambio, con la receta que lo produjo y el motivo, para que su firma signifique algo.</p>
+      </div>
+      <div class="card card--br">
+        <ul class="plain small">
+          <li><strong>No decide nada definitivo.</strong> Todo sale marcado como borrador hasta que una docente firma. Hay una sola acción que quita esa marca.</li>
+          <li><strong>No cambia el contenido.</strong> No inventa datos, no sustituye términos curriculares por sinónimos fáciles, no elimina nada en silencio. Lo que no pudo hacer aparece primero en el informe.</li>
+          <li><strong>No decide adaptaciones significativas.</strong> Cambiar objetivos o criterios de evaluación es del equipo docente y del expediente del alumno. La aplicación se para, dice qué habría que cambiar y no lo hace.</li>
+          <li><strong>No hace exámenes más fáciles.</strong> Un examen adaptado que además es más fácil es otro examen. Las recetas de examen cambian cómo se lee y cómo se contesta, nunca qué se evalúa.</li>
+          <li><strong>No obedece al material.</strong> Una ficha con texto dirigido al programa se adapta como contenido y no se ejecuta.</li>
+          <li><strong>No diagnostica ni trata.</strong> No hay nada clínico en el sistema: ni etiquetas, ni tablas por condición.</li>
+          <li><strong>No promete resultados de aprendizaje.</strong> Ahorra trabajo mecánico a una profesional. No hay evidencia de que mejore resultados del alumnado, y no se afirma.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <footer class="slidefoot"><span>Rampa · propuesta de piloto · borrador</span><span>8 / 26</span></footer>
+</section>
+
+<!-- ================================================================ 9 · DATOS -->
+<section class="slide dense" id="s09" aria-labelledby="t09">
+  <div class="chrome">
+    <span class="kicker">02 · El proyecto</span>
+    <span class="logo"><svg role="img" aria-label="Fundación VASS"><use href="#logo-fundacion-vass"/></svg></span>
+  </div>
+  <div class="inner">
+    <h2 id="t09">Datos de menores con discapacidad</h2>
+    <div class="cols">
+      <div>
+        <p>Es la primera pregunta que hace cualquier fundación, y la respuesta corta es que el proyecto no tiene servidor, ni cuenta, ni base de datos en ningún sitio. El único destino de red es el proveedor de IA que la docente ya tiene contratado, con su propia cuenta.</p>
+        <p>El renderizador no tiene acceso al perfil: por construcción, nada sobre el alumno puede acabar impreso en su propia ficha.</p>
+        <p class="small">Cada afirmación de esta lámina tiene una comprobación automática pública que se ejecuta con cada cambio del código.</p>
+      </div>
+      <div>
+        <div class="tablewrap">
+          <table>
+            <caption>Qué dato existe, dónde vive y si sale del ordenador</caption>
+            <thead><tr><th scope="col">Dato</th><th scope="col">Dónde vive</th><th scope="col">¿Sale del ordenador?</th></tr></thead>
+            <tbody>
+              <tr><th scope="row">Nombre del alumno</th><td>Cifrado, en el ordenador de la docente</td><td><strong>Nunca.</strong> En cada envío se sustituye por un código.</td></tr>
+              <tr><th scope="row">Perfil de barreras (diez ejes, sin diagnóstico)</th><td>Carpeta local de la docente, en texto plano</td><td>Solo hacia su proveedor de IA, con código y sin identidad.</td></tr>
+              <tr><th scope="row">Material de clase y adaptaciones</th><td>Carpeta local, en texto plano</td><td>Sí, hacia su proveedor, para leerlo y adaptarlo.</td></tr>
+              <tr><th scope="row">Correspondencia código y nombre, grupo, centro</th><td>Local</td><td><strong>Nunca.</strong></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <ul class="plain small" style="margin-top:1.1em">
+          <li><strong>Residuo honesto.</strong> Si la foto de una ficha lleva el nombre del alumno escrito a mano, ese nombre viaja dentro de la imagen. La aplicación avisa antes de enviar y sugiere taparlo; no puede borrarlo de una foto.</li>
+          <li><strong>Seudonimizado no es anónimo.</strong> Siguen siendo datos personales de categoría especial (art. 9 RGPD). La decisión sobre el tratamiento es del centro y de su delegado de protección de datos. El proyecto entrega un documento de una página para esa revisión, pendiente de que lo revise un DPO en ejercicio.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <footer class="slidefoot"><span>Rampa · propuesta de piloto · borrador</span><span>9 / 26</span></footer>
+</section>
+
+<!-- ================================================================ 10 · ABIERTO -->
+<section class="slide dense" id="s10" aria-labelledby="t10">
+  <div class="chrome">
+    <span class="kicker">02 · El proyecto</span>
+    <span class="logo"><svg role="img" aria-label="Fundación VASS"><use href="#logo-fundacion-vass"/></svg></span>
+  </div>
+  <div class="inner">
+    <h2 id="t10">Qué significa que sea abierto</h2>
+    <div class="cols">
+      <div>
+        <div class="lic">
+          <div class="card"><span class="big">Apache-2.0</span><p class="small" style="margin-top:.5em"><strong>Código.</strong> Licencia permisiva. Un centro, una consejería o una editorial pueden integrarlo sin revisión legal ni pagar licencias.</p></div>
+          <div class="card card--br"><span class="big">CC BY-SA 4.0</span><p class="small" style="margin-top:.5em"><strong>Contenido pedagógico.</strong> Recetas, instrucciones y documentación. Quien las mejore tiene que compartir la mejora con la misma licencia. El común pedagógico sigue siendo común.</p></div>
+        </div>
+        <p class="small muted" style="margin-top:1em">Es una decisión ya tomada y forma parte de la propuesta.</p>
+      </div>
+      <div>
+        <h3 style="margin-bottom:.7em">Para quien pone el dinero</h3>
+        <ul class="plain">
+          <li>Lo financiado no se pierde si el proyecto se para: código y recetas quedan publicados y usables por cualquiera.</li>
+          <li>Sin dependencia de nadie: los ficheros de la docente son texto plano suyo y la cuenta de IA es suya. Si Rampa desapareciera mañana, se quedaría con todo.</li>
+          <li>El valor que se acumula es el corpus de recetas. Cada corrección general que una maestra aporta mejora la herramienta de todas. Es la parte que puede crecer como bien común profesional.</li>
+          <li>El material fuente (libros, fichas de editorial) no entra nunca en el proyecto público. Adaptar una obra para una persona con discapacidad está amparado por el Tratado de Marrakech y el art. 31 bis TRLPI; redistribuirla, no.</li>
+        </ul>
+        <p class="note small" style="margin-top:1em">La figura jurídica que sostenga el proyecto y la gobernanza del corpus están por decidir. Este documento no las presupone; el piloto tiene que ayudar a decidirlas.</p>
+      </div>
+    </div>
+  </div>
+  <footer class="slidefoot"><span>Rampa · propuesta de piloto · borrador</span><span>10 / 26</span></footer>
+</section>
+
+<!-- ================================================================ 11 · DÓNDE ESTÁ HOY -->
+<section class="slide dense" id="s11" aria-labelledby="t11">
+  <div class="chrome">
+    <span class="kicker">02 · El proyecto</span>
+    <span class="logo"><svg role="img" aria-label="Fundación VASS"><use href="#logo-fundacion-vass"/></svg></span>
+  </div>
+  <div class="inner">
+    <h2 id="t11">Dónde está hoy</h2>
+    <p class="lead" style="margin-bottom:1em">Construido y comprobado en laboratorio; no usado por ninguna maestra. Y entre lo construido y sentar a una maestra queda trabajo, que la lámina siguiente detalla.</p>
+    <div class="cols cols--even">
+      <div class="card">
+        <h3>Existe</h3>
+        <ul class="plain small tight">
+          <li>La aplicación de escritorio, construida, con una suite de pruebas automáticas que pasa sin conexión y sin ninguna clave de IA.</li>
+          <li>Las primeras llamadas a un proveedor real, en septiembre de 2026: una veintena de adaptaciones y dos lecturas de foto con la capa gratuita de un servicio, y el primer PDF real.</li>
+          <li>Salidas HTML y PDF, y el informe de decisiones.</li>
+          <li>Las salvaguardas de las dos láminas anteriores, cubiertas por pruebas.</li>
+          <li>Un documento de una página para dirección y DPO, pendiente de revisión por un DPO.</li>
+          <li>Coste estimado de adaptar una ficha con un proveedor comercial de IA: unos tres céntimos.</li>
+          <li>Una profesional de PT en ejercicio identificada y dispuesta a la primera sesión de observación (registro del proyecto, agosto de 2026).</li>
+        </ul>
+      </div>
+      <div class="card card--br">
+        <h3>No existe</h3>
+        <ul class="plain small tight">
+          <li>Ninguna maestra la ha usado todavía.</li>
+          <li>No hay instaladores firmados: Windows y macOS avisan al instalar.</li>
+          <li>Ninguna medición de tiempo, de calidad del resultado ni de la curva de aprendizaje.</li>
+          <li>Ningún centro comprometido.</li>
+          <li>Ninguna revisión de las recetas ni de la calibración de los ejes por maestras de PT ajenas al proyecto.</li>
+          <li>Ninguna evidencia sobre el alumnado, y el piloto tampoco la producirá.</li>
+        </ul>
+      </div>
+    </div>
+    <p style="margin-top:1em"><strong>Se pide financiar cerrar lo pendiente y averiguar si esto funciona, no un despliegue.</strong></p>
+  </div>
+  <footer class="slidefoot"><span>Rampa · propuesta de piloto · borrador</span><span>11 / 26</span></footer>
+</section>
+<!-- ================================================================ 12 · ANTES DEL PILOTO -->
+<section class="slide xdense" id="s12" aria-labelledby="t12">
+  <div class="chrome">
+    <span class="kicker">02 · El proyecto</span>
+    <span class="logo"><svg role="img" aria-label="Fundación VASS"><use href="#logo-fundacion-vass"/></svg></span>
+  </div>
+  <div class="inner">
+    <h2 id="t12">Antes del piloto: lo que hay que cerrar</h2>
+    <p class="lead" style="margin-bottom:1em">Decir «está construido» es cierto y no basta. El registro de validación del proyecto separa lo que comprueba una máquina de lo que solo comprueba una persona o una prueba con datos reales; de ahí sale esta lista. Se presupuesta como fase propia para que se pueda financiar sola o asumirla el equipo.</p>
+    <div class="cols cols--3">
+      <div class="card">
+        <h3>Desarrollo</h3>
+        <ul class="plain tight small">
+          <li>Instaladores firmados para Windows y macOS.</li>
+          <li>Conectar de verdad los seis servicios de IA: solo el gratuito se ha probado con una clave real. Clave caducada, sin crédito y fallo de red, solo simulados.</li>
+          <li>Lectura de fotos reales: medida sobre una foto sintética. Falta imprimir las fichas de prueba y fotografiarlas mal a propósito con un móvil.</li>
+          <li>Una de cada cinco adaptaciones reales falla la comprobación de procedencia; hay que decidir el reintento.</li>
+          <li>El aspecto de la hoja según la edad: hoy sale la misma para un niño de seis y para uno de diecisiete. Quien vio la primera impresa dijo que no se la daría a un niño de ocho años. Sin especificar.</li>
+          <li>El documento editable no respeta la presentación: un alumno con baja visión recibe 24 puntos en PDF y 12 en el editable.</li>
+        </ul>
+      </div>
+      <div class="card card--tr">
+        <h3>Calibración pedagógica</h3>
+        <ul class="plain tight small">
+          <li>Los descriptores de los diez ejes están escritos sin una maestra. Se cierran cuando una PT los recorra y discrepe en algo.</li>
+          <li>El fichero de expectativas por curso lo escribió un modelo de lenguaje y no lo ha revisado ninguna PT.</li>
+          <li>Faltan familias de recetas para acceso auditivo y regulación sensorial, y para reducir carga cognitiva en textos explicativos.</li>
+          <li>Las catorce medidas de examen que una orientadora pasó al proyecto están clasificadas, no incorporadas.</li>
+        </ul>
+      </div>
+      <div class="card card--br">
+        <h3>Verificación con datos reales</h3>
+        <ul class="plain tight small">
+          <li>Suelo del modelo: solo medido el peldaño gratuito (13 de 16 pasadas limpias). Los de pago, sin medir. Los costes por ficha siguen marcados como estimados.</li>
+          <li>Documento para el DPO y borrado por alumno: pendientes de revisión por un DPO o por legal.</li>
+          <li>Composición de material desde un objetivo y diagramas: nunca ejecutados contra un modelo real.</li>
+        </ul>
+      </div>
+    </div>
+    <p class="smaller muted" style="margin-top:.9em">Fuente: registro de validación y backlog del proyecto, septiembre de 2026. El chequeo de requisitos del repositorio da 3 abiertos de 639: lo que queda no son requisitos sin escribir, es verificación que ninguna máquina puede hacer sola.</p>
+  </div>
+  <footer class="slidefoot"><span>Rampa · propuesta de piloto · borrador</span><span>12 / 26</span></footer>
+</section>
+
+<!-- ================================================================ 13 · SEPARADOR 03 -->
+<section class="slide sep" id="s13" aria-labelledby="t13">
+  <div class="texture" aria-hidden="true"></div>
+  <svg class="wave" viewBox="0 0 800 600" preserveAspectRatio="none" aria-hidden="true">
+    <path d="M800,0 C560,40 520,260 640,380 C740,480 760,560 800,600 L800,0 Z"/>
+    <path class="w2" d="M800,80 C620,120 560,300 680,420 C760,500 780,560 800,600 L800,80 Z"/>
+  </svg>
+  <svg class="dots" viewBox="0 0 60 60" aria-hidden="true">
+    <circle cx="6" cy="6" r="4"/><circle cx="22" cy="6" r="4"/><circle cx="38" cy="6" r="4"/><circle cx="54" cy="6" r="4"/>
+    <circle cx="6" cy="22" r="4"/><circle cx="22" cy="22" r="4"/><circle cx="38" cy="22" r="4"/><circle cx="54" cy="22" r="4"/>
+    <circle cx="6" cy="38" r="4"/><circle cx="22" cy="38" r="4"/><circle cx="38" cy="38" r="4"/><circle cx="54" cy="38" r="4"/>
+    <circle cx="6" cy="54" r="4"/><circle cx="22" cy="54" r="4"/><circle cx="38" cy="54" r="4"/><circle cx="54" cy="54" r="4"/>
+  </svg>
+  <svg class="arrow" viewBox="0 0 140 60" aria-hidden="true"><path d="M10,30 H120 M96,10 L120,30 L96,50"/></svg>
+  <div class="chrome">
+    <span class="kicker">Sección</span>
+    <span class="logo"><svg role="img" aria-label="Fundación VASS"><use href="#logo-fundacion-vass"/></svg></span>
+  </div>
+  <div class="inner">
+    <div class="big-num" aria-hidden="true">03</div>
+    <h2 id="t13">El piloto y lo que pedimos</h2>
+    <p>Una pregunta que se contesta sí o no, y cuatro piezas a las que se puede decir sí por separado.</p>
+  </div>
+  <footer class="slidefoot"><span>Rampa · propuesta de piloto · borrador</span><span>13 / 26</span></footer>
+</section>
+
+<!-- ================================================================ 14 · LA PREGUNTA -->
+<section class="slide dense" id="s14" aria-labelledby="t14">
+  <div class="chrome">
+    <span class="kicker">03 · El piloto</span>
+    <span class="logo"><svg role="img" aria-label="Fundación VASS"><use href="#logo-fundacion-vass"/></svg></span>
+  </div>
+  <div class="inner">
+    <h2 id="t14">La pregunta del piloto</h2>
+    <div class="cols">
+      <div>
+        <p style="font:600 1.45em/1.3 var(--font-title);color:var(--fg)">¿Una maestra de PT, con una ficha suya y sin ayuda, obtiene una adaptación que llevaría a clase con retoques menores y en menos tiempo que a mano?</p>
+        <p><strong>Se responde sí o no.</strong></p>
+        <p class="small"><strong>Pregunta secundaria:</strong> ¿su tiempo por ficha baja entre la semana 1 y la 4? Es la tesis del bucle de corrección.</p>
+      </div>
+      <div class="card card--br">
+        <h3>Qué cuenta como sí</h3>
+        <p class="smaller muted">Umbrales fijados en la especificación de la Fase 0 del proyecto, antes de medir nada. Son criterios de diseño, no resultados.</p>
+        <ul class="plain small">
+          <li>El recorrido completo de una ficha de dos páginas, revisión incluida, dura menos de veinte minutos.</li>
+          <li>La maestra acepta al menos el ochenta por ciento de los bloques adaptados sin cambiar contenido.</li>
+          <li>Cero casos de contenido inventado, término curricular sustituido o bloque eliminado en silencio.</li>
+          <li>Dice, sin que se le pregunte, que le ahorró tiempo.</li>
+          <li>La revisión dura menos de cinco minutos, porque lee el informe y no relee la ficha.</li>
+          <li>En exámenes, el cien por cien de las adaptaciones conserva lo que se evalúa.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <footer class="slidefoot"><span>Rampa · propuesta de piloto · borrador</span><span>14 / 26</span></footer>
+</section>
+
+<!-- ================================================================ 15 · DISEÑO DEL PILOTO -->
+<section class="slide xdense" id="s15" aria-labelledby="t15">
+  <div class="chrome">
+    <span class="kicker">03 · El piloto</span>
+    <span class="logo"><svg role="img" aria-label="Fundación VASS"><use href="#logo-fundacion-vass"/></svg></span>
+  </div>
+  <div class="inner">
+    <h2 id="t15">Cómo se diseña el piloto</h2>
+    <div class="cols">
+      <div class="small">
+        <p><strong>Quién.</strong> Entre tres y cinco maestras de PT en ejercicio, en dos o tres centros públicos. Una sola sesión da una primera impresión; con tres a cinco se distingue un fallo de la herramienta de una circunstancia. No es un estudio estadístico: es la comprobación de si merece la pena seguir.</p>
+        <p><strong>Qué se observa.</strong> Si se llevaría la hoja a clase mañana. Cuánto cambia a mano, y si es de forma o de fondo. El tiempo desde que abre hasta que tiene el PDF. Si lee el informe o relee la ficha. Los primeros diez segundos delante de la interfaz, sin explicación.</p>
+        <p><strong>Qué cuenta como fallo, decidido antes.</strong> Pide ayuda para algo que no sea su clave de IA. Cambia algo de fondo a mano. No lee el informe. Tarda más que a mano.</p>
+        <p><strong>Lo que no se hace.</strong> Ningún caso real entra en ningún documento del piloto. Los informes describen resultados, nunca datos de alumnos. El material de la maestra no sale de su ordenador.</p>
+      </div>
+      <div>
+        <p class="badge">Estimación pendiente de validar</p>
+        <figure style="margin:0 0 .9em">
+          <ol class="timeline" aria-label="Fases del piloto sobre diecinueve semanas">
+            <li class="weeks" aria-hidden="true"><span>S1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span><span>10</span><span>11</span><span>12</span><span>13</span><span>14</span><span>15</span><span>16</span><span>17</span><span>18</span><span>19</span></li>
+            <li class="bar" style="--from:1;--to:7;--c:var(--ig-4)">0 · Cierre técnico y calibración<small>4 a 6 semanas</small></li>
+            <li class="bar" style="--from:7;--to:10;--c:var(--ig-1)">1 · Preparación<small>2 a 3 semanas</small></li>
+            <li class="bar" style="--from:10;--to:11;--c:var(--ig-2)">2 · Sesión<small>1</small></li>
+            <li class="bar" style="--from:11;--to:17;--c:var(--ig-5)">3 · Uso acompañado<small>4 a 6 semanas</small></li>
+            <li class="bar" style="--from:17;--to:20;--c:var(--ig-7)">4 · Análisis e informe<small>2 a 3 semanas</small></li>
+          </ol>
+          <figcaption class="visually-hidden">Línea de tiempo de diecinueve semanas: cierre técnico y calibración en las semanas 1 a 6, preparación del piloto en las semanas 7 a 9, primera sesión en la semana 10, uso acompañado de la semana 11 a la 16, y análisis e informe de la semana 17 a la 19. Los rangos son estimaciones.</figcaption>
+        </figure>
+        <ol class="plain small tight" start="0" style="counter-reset:n -1">
+          <li><strong>Cierre técnico y calibración · 4 a 6 semanas.</strong> La lista de la lámina anterior: instaladores, servicios de IA reales, fotos reales, aspecto por edad, ejes y recetas con una PT asesora, suelo del modelo, revisión por DPO. Los permisos de los centros se tramitan en paralelo.</li>
+          <li><strong>Preparación · 2 a 3 semanas.</strong> Captación de las maestras, permisos cerrados, ensayo interno de la sesión con el protocolo escrito.</li>
+          <li><strong>Primera sesión · 1 semana.</strong> Una hora por maestra, con su ficha y su alumno: no se explica la interfaz, no se justifica nada que salga mal, no se le pregunta si le gusta. Se le pregunta qué haría ahora con esa hoja.</li>
+          <li><strong>Uso acompañado · 4 a 6 semanas.</strong> Cada maestra adapta su material real de la semana. Se registran tiempo por ficha, correcciones y qué corrige a mano.</li>
+          <li><strong>Análisis e informe · 2 a 3 semanas.</strong> Resultados con las palabras de las docentes, incluido lo que no nos guste. Se escribe antes de arreglar nada.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  <footer class="slidefoot"><span>Rampa · propuesta de piloto · borrador</span><span>15 / 26</span></footer>
+</section>
+
+<!-- ================================================================ 16 · TIEMPO Y RECURSOS -->
+<section class="slide xdense" id="s16" aria-labelledby="t16">
+  <div class="chrome">
+    <span class="kicker">03 · El piloto</span>
+    <span class="logo"><svg role="img" aria-label="Fundación VASS"><use href="#logo-fundacion-vass"/></svg></span>
+  </div>
+  <div class="inner">
+    <h2 id="t16">Tiempo y recursos</h2>
+    <p class="badge">Estimación pendiente de validar</p>
+    <div class="cols">
+      <div>
+        <p class="small muted" style="margin-bottom:.9em">Rangos, no puntos. Incluye el cierre técnico y la calibración previos. Base de cálculo completa en el anexo A.</p>
+        <div class="stat"><span class="big">13 a 19</span><span class="label">semanas</span><span class="base">Suma de las cinco fases, con el cierre técnico delante.</span></div>
+        <div class="stat"><span class="big">470 a 880</span><span class="label">horas de personas</span><span class="base">Desarrollo, pedagogía, coordinación y observación.</span></div>
+        <div class="stat"><span class="big">19.000 a 68.000 €</span><span class="label">presupuesto total</span><span class="base">Lo mueven la tarifa por hora (o si las horas las aporta la empresa o la fundación sin coste) y si hacen falta portátiles prestados. En dos tramos: cierre técnico, 7.000 a 20.000 €; piloto con maestras, 12.000 a 48.000 €.</span></div>
+        <div class="stat"><span class="big">&lt; 200 €</span><span class="label">de consumo de IA</span><span class="base">Medición de los peldaños de pago más trescientas a mil adaptaciones a unos tres céntimos.</span></div>
+      </div>
+      <div>
+        <div class="tablewrap">
+          <table>
+            <caption>Recursos, con su base de cálculo</caption>
+            <thead><tr><th scope="col">Concepto</th><th scope="col">Rango</th><th scope="col">Base de cálculo</th></tr></thead>
+            <tbody>
+              <tr><th scope="row">Desarrollo</th><td>240 a 500 h</td><td>Cierre técnico: 0,8 a 1 jornada × 4 a 6 semanas. Durante el piloto: 0,3 a 0,5 de jornada × 9 a 13 semanas, para corregir lo que las sesiones encuentren.</td></tr>
+              <tr><th scope="row">Pedagogía</th><td>90 a 150 h</td><td>Una maestra de PT asesora, distinta de las participantes: recorre ejes y expectativas por curso antes, y revisa recetas e informes durante.</td></tr>
+              <tr><th scope="row">Coordinación</th><td>100 a 150 h</td><td>0,2 de jornada × 13 a 19 semanas: proyecto, centros, permisos, DPO.</td></tr>
+              <tr><th scope="row">Observación y análisis</th><td>40 a 80 h</td><td>Sesiones, seguimiento semanal y análisis para 3 a 5 maestras.</td></tr>
+              <tr><th scope="row">Consumo de IA</th><td>50 a 200 €</td><td>Medir los peldaños de pago del suelo del modelo, más 300 a 1.000 adaptaciones × unos 0,03 €.</td></tr>
+              <tr><th scope="row">Firma de instaladores</th><td>100 a 600 € al año</td><td>Certificados para Windows y macOS. <span class="pending">[PENDIENTE: precios vigentes con fuente]</span></td></tr>
+              <tr><th scope="row">Dispositivos</th><td>0 € o 1.800 a 4.500 €</td><td>Solo si las maestras no pueden instalar en el portátil del centro: 3 a 5 portátiles de 600 a 900 €.</td></tr>
+              <tr><th scope="row">Coordinación con centros</th><td>300 a 800 €</td><td>Desplazamientos e impresión.</td></tr>
+              <tr><th scope="row">Contingencia</th><td>10 a 15 %</td><td>Sobre el subtotal.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <h3 style="margin:.9em 0 .4em">Lo que no cuesta dinero y cuesta más</h3>
+        <ul class="plain small tight">
+          <li>Las horas de las maestras participantes: de ocho a doce por maestra fuera de su trabajo habitual, sobre todo en registrar lo que hace. Y una ficha suya cada semana, que adaptaría de todos modos.</li>
+          <li>Los permisos: dirección del centro, delegado de protección de datos y familias. De tres a seis semanas de trámite, en paralelo con el cierre técnico, y es el cuello de botella más probable.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <footer class="slidefoot"><span>Rampa · propuesta de piloto · borrador</span><span>16 / 26</span></footer>
+</section>
+
+<!-- ================================================================ 17 · QUÉ SE OBTIENE -->
+<section class="slide dense" id="s17" aria-labelledby="t17">
+  <div class="chrome">
+    <span class="kicker">03 · El piloto</span>
+    <span class="logo"><svg role="img" aria-label="Fundación VASS"><use href="#logo-fundacion-vass"/></svg></span>
+  </div>
+  <div class="inner">
+    <h2 id="t17">Qué se obtiene al terminar</h2>
+    <p class="lead" style="margin-bottom:1.4em">Una respuesta pública a la pregunta, con datos. Y si la respuesta es no, el proyecto se para y se explica por qué.</p>
+    <div class="cols cols--even">
+      <div class="card">
+        <h3>Entregables</h3>
+        <ul class="plain small tight">
+          <li>Un informe público de resultados: tiempos, correcciones, qué falló y qué no, con las palabras de las docentes.</li>
+          <li>La aplicación corregida con lo aprendido, con instaladores firmados, publicada.</li>
+          <li>Las recetas revisadas por maestras de PT, en el corpus abierto.</li>
+          <li>El documento para dirección y DPO revisado por un DPO en ejercicio.</li>
+          <li>Una decisión escrita: seguir, cambiar o parar.</li>
+        </ul>
+      </div>
+      <div class="card card--br">
+        <h3>Lo que haría parar el proyecto</h3>
+        <ul class="plain small tight">
+          <li>Que en la mayoría de las sesiones la maestra tarde más que a mano, o no se llevaría la hoja a clase.</li>
+          <li>Que aparezca contenido inventado o un término curricular sustituido que la revisión de la docente no detecte.</li>
+          <li>Que los centros no autoricen el tratamiento con ninguno de los proveedores de IA disponibles.</li>
+        </ul>
+        <p class="small" style="margin-top:.8em">Si pasa cualquiera de las tres: se publica el informe, el código y las recetas quedan disponibles para quien quiera continuar, y se dice por qué no seguir.</p>
+      </div>
+    </div>
+    <p class="note small" style="margin-top:1.4em"><strong>Lo que no se obtiene:</strong> evidencia sobre el aprendizaje del alumnado. Eso requeriría otro estudio, con otra metodología y otros permisos.</p>
+  </div>
+  <footer class="slidefoot"><span>Rampa · propuesta de piloto · borrador</span><span>17 / 26</span></footer>
+</section>
+
+<!-- ================================================================ 18 · RIESGOS -->
+<section class="slide xdense" id="s18" aria-labelledby="t18">
+  <div class="chrome">
+    <span class="kicker">03 · El piloto</span>
+    <span class="logo"><svg role="img" aria-label="Fundación VASS"><use href="#logo-fundacion-vass"/></svg></span>
+  </div>
+  <div class="inner">
+    <h2 id="t18">Riesgos y cómo se afrontan</h2>
+    <p class="lead" style="margin-bottom:1.2em">Los riesgos principales son de adopción y de permiso, no técnicos. Se conocen, y el piloto está diseñado para medirlos, no para esquivarlos.</p>
+    <div class="tablewrap">
+      <table class="smaller">
+        <caption>Riesgos identificados desde el punto de vista de la maestra</caption>
+        <thead><tr><th scope="col" style="width:42%">Riesgo</th><th scope="col">Cómo se afronta</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">El primer mal resultado acaba con la confianza; no hay segunda primera impresión</th><td>Salvaguardas antes que comodidad. La primera sesión se hace con material que trae la maestra. Lo que la aplicación no hizo va primero en el informe.</td></tr>
+          <tr><th scope="row">No cabe en un hueco de 45 minutos: la verificación obligatoria de lo leído cuesta tiempo</th><td>Se mide, no se asume. Es el dato principal del piloto.</td></tr>
+          <tr><th scope="row">El centro o el DPO no autorizan</th><td>Documento de una página revisado por un DPO antes del piloto. La maestra elige proveedor con los datos delante. Sin autorización, no hay piloto en ese centro.</td></tr>
+          <tr><th scope="row">Portátil del centro sin permisos de instalación</th><td>Instaladores firmados en la preparación. Portátiles prestados como variable del presupuesto.</td></tr>
+          <tr><th scope="row">Se imprime en blanco y negro en la fotocopiadora</th><td>La salida está diseñada para sobrevivir a la fotocopia y se comprueba en papel.</td></tr>
+          <tr><th scope="row">El material es una foto de pantalla, no un fichero</th><td>La entrada por foto es el camino principal, y la maestra verifica lo leído antes de adaptar.</td></tr>
+          <tr><th scope="row">Quién paga el modelo después del piloto</th><td>Hoy existe un proveedor con capa gratuita que no pide tarjeta. Si paga el centro, es compra pública y revisión de datos: pregunta abierta.</td></tr>
+          <tr><th scope="row">Un nombre escrito a mano en la foto llega al proveedor</th><td>Aviso antes de enviar y pauta interna del centro. No se puede borrar de una imagen, y se dice.</td></tr>
+          <tr><th scope="row">El vocabulario es técnico</th><td>La interfaz habla de fichas, alumnos y adaptaciones. Nunca de ejes, modelos ni tokens.</td></tr>
+          <tr><th scope="row">El proyecto depende de pocas personas</th><td>Código y contenido abiertos: nada de lo construido se pierde si el equipo cambia.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <footer class="slidefoot"><span>Rampa · propuesta de piloto · borrador</span><span>18 / 26</span></footer>
+</section>
+
+<!-- ================================================================ 19 · DESPUÉS -->
+<section class="slide dense" id="s19" aria-labelledby="t19">
+  <div class="chrome">
+    <span class="kicker">03 · El piloto</span>
+    <span class="logo"><svg role="img" aria-label="Fundación VASS"><use href="#logo-fundacion-vass"/></svg></span>
+  </div>
+  <div class="inner">
+    <h2 id="t19">Después: qué haría falta para sostenerlo</h2>
+    <div class="cols">
+      <div>
+        <p class="lead">Si el piloto responde sí, la sostenibilidad depende de decisiones que hoy están abiertas: quién mantiene, quién gobierna el corpus y quién paga el modelo.</p>
+        <p class="note small" style="margin-top:1.4em">Ninguna de estas decisiones hay que tomarla para financiar el piloto. Todas hay que tomarlas para seguir después.</p>
+      </div>
+      <div>
+        <ul class="plain">
+          <li><strong>Mantenimiento.</strong> Código, instaladores y certificados anuales. Los sistemas operativos cambian y alguien tiene que seguir.</li>
+          <li><strong>Gobernanza del corpus de recetas.</strong> Quién acepta contribuciones y cómo se revisan pedagógicamente antes de entrar.</li>
+          <li><strong>Quién paga el modelo de IA.</strong> La docente, el centro (compra pública y revisión de datos) o la administración educativa.</li>
+          <li><strong>Figura jurídica.</strong> Asociación, fundación existente o proyecto alojado en otra entidad. No está decidido y este documento no lo presupone.</li>
+          <li><strong>Encaje con las herramientas del centro.</strong> Plataformas de gestión y registros oficiales. Fuera de alcance hoy; no se diseña nada que lo impida.</li>
+          <li><strong>Evidencia sobre el alumnado.</strong> Si alguien la quiere, es un estudio aparte con metodología propia.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <footer class="slidefoot"><span>Rampa · propuesta de piloto · borrador</span><span>19 / 26</span></footer>
+</section>
+
+<!-- ================================================================ 20 · QUÉ PEDIMOS -->
+<section class="slide dense" id="s20" aria-labelledby="t20">
+  <div class="chrome">
+    <span class="kicker">03 · Lo que pedimos</span>
+    <span class="logo"><svg role="img" aria-label="Fundación VASS"><use href="#logo-fundacion-vass"/></svg></span>
+  </div>
+  <div class="inner">
+    <h2 id="t20">Qué pedimos</h2>
+    <p class="lead" style="margin-bottom:1.4em">Cuatro piezas independientes. Se puede decir sí a una sola sin decir sí a todo.</p>
+    <div class="ask">
+      <div class="card"><h3>Financiación</h3><p class="small">Entre diecinueve mil y sesenta y ocho mil euros, según tarifa y dispositivos, en dos tramos que se pueden financiar por separado: el cierre técnico y la calibración (siete mil a veinte mil) y el piloto con maestras (doce mil a cuarenta y ocho mil). Desglose en el anexo A.</p></div>
+      <div class="card card--tr"><h3>Contactos con centros</h3><p class="small">Dos o tres centros públicos con maestras de PT dispuestas, y acceso a su equipo directivo y a su delegado de protección de datos. Es el cuello de botella real del piloto.</p></div>
+      <div class="card card--bl"><h3>Acompañamiento metodológico</h3><p class="small">Una persona o entidad de pedagogía u orientación educativa (una facultad de educación, un equipo de orientación) que revise el diseño de la observación, las recetas y la calibración de los ejes.</p></div>
+      <div class="card card--br"><h3>Difusión</h3><p class="small">Presentar el proyecto a consejerías de educación, convocatorias públicas y obra social, y facilitar cartas de interés.</p></div>
+    </div>
+    <p style="margin-top:1.4em"><strong>Primer paso: una reunión de cuarenta y cinco minutos.</strong></p>
+    <p class="small">Contacto: <span class="pending">[PENDIENTE: persona de contacto y correo de la Fundación VASS]</span></p>
+  </div>
+  <footer class="slidefoot"><span>Rampa · propuesta de piloto · borrador</span><span>20 / 26</span></footer>
+</section>
+
+<!-- ================================================================ 21 · SEPARADOR ANEXOS -->
+<section class="slide sep" id="s21" aria-labelledby="t21">
+  <div class="texture" aria-hidden="true"></div>
+  <svg class="dots" viewBox="0 0 60 60" aria-hidden="true">
+    <circle cx="6" cy="6" r="4"/><circle cx="22" cy="6" r="4"/><circle cx="38" cy="6" r="4"/><circle cx="54" cy="6" r="4"/>
+    <circle cx="6" cy="22" r="4"/><circle cx="22" cy="22" r="4"/><circle cx="38" cy="22" r="4"/><circle cx="54" cy="22" r="4"/>
+    <circle cx="6" cy="38" r="4"/><circle cx="22" cy="38" r="4"/><circle cx="38" cy="38" r="4"/><circle cx="54" cy="38" r="4"/>
+    <circle cx="6" cy="54" r="4"/><circle cx="22" cy="54" r="4"/><circle cx="38" cy="54" r="4"/><circle cx="54" cy="54" r="4"/>
+  </svg>
+  <svg class="arrow" viewBox="0 0 140 60" aria-hidden="true"><path d="M10,30 H120 M96,10 L120,30 L96,50"/></svg>
+  <div class="chrome">
+    <span class="kicker">Sección</span>
+    <span class="logo"><svg role="img" aria-label="Fundación VASS"><use href="#logo-fundacion-vass"/></svg></span>
+  </div>
+  <div class="inner">
+    <h2 id="t21">Anexos</h2>
+    <p>Desglose económico · Marco normativo · Arquitectura · Glosario.</p>
+  </div>
+  <footer class="slidefoot"><span>Rampa · propuesta de piloto · borrador</span><span>21 / 26</span></footer>
+</section>
+
+<!-- ================================================================ 22 · ANEXO A -->
+<section class="slide xdense" id="s22" aria-labelledby="t22">
+  <div class="chrome">
+    <span class="kicker">Anexo A</span>
+    <span class="logo"><svg role="img" aria-label="Fundación VASS"><use href="#logo-fundacion-vass"/></svg></span>
+  </div>
+  <div class="inner">
+    <h2 id="t22">Desglose económico con base de cálculo</h2>
+    <p class="badge">Estimación pendiente de validar</p>
+    <div class="cols cols--even">
+      <div>
+        <div class="tablewrap">
+          <table>
+            <caption>Horas de personas</caption>
+            <thead><tr><th scope="col">Perfil</th><th scope="col">Dedicación</th><th scope="col">Horas</th></tr></thead>
+            <tbody>
+              <tr><th scope="row">Desarrollo, cierre técnico</th><td>0,8 a 1,0 de jornada × 4 a 6 semanas (jornada de 40 h)</td><td>130 a 240</td></tr>
+              <tr><th scope="row">Desarrollo, durante el piloto</th><td>0,3 a 0,5 de jornada × 9 a 13 semanas</td><td>110 a 260</td></tr>
+              <tr><th scope="row">Pedagogía (PT asesora)</th><td>30 a 50 h de calibración previa + 5 a 7 h por semana × 12 a 14 semanas de piloto</td><td>90 a 150</td></tr>
+              <tr><th scope="row">Coordinación</th><td>0,2 de jornada × 13 a 19 semanas: proyecto, centros, permisos, DPO</td><td>100 a 150</td></tr>
+              <tr><th scope="row">Observación y análisis</th><td>Por maestra: 1 h sesión + 1 h preparación + 4 a 6 h seguimiento + 4 a 6 h análisis; × 3 a 5 maestras</td><td>40 a 80</td></tr>
+              <tr><th scope="row"><strong>Total horas</strong></th><td></td><td><strong>470 a 880</strong></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="small" style="margin-top:.8em"><strong>Coste de personas:</strong> 470 a 880 h × 35 a 60 € por hora = <strong>16.450 a 52.800 €</strong>. La tarifa es un supuesto para perfiles contratados en España. Si las horas las aportan la empresa o la fundación sin coste, este bloque baja a cero.</p>
+        <p class="small"><strong>Los dos tramos.</strong> Cierre técnico y calibración: 190 a 340 h (desarrollo previo, calibración previa y su coordinación) más la medición del suelo del modelo, <strong>7.000 a 20.000 €</strong>. Piloto con maestras: el resto, <strong>12.000 a 48.000 €</strong>.</p>
+      </div>
+      <div>
+        <div class="tablewrap">
+          <table>
+            <caption>Gastos directos y total</caption>
+            <thead><tr><th scope="col">Concepto</th><th scope="col">Rango</th><th scope="col">Base</th></tr></thead>
+            <tbody>
+              <tr><th scope="row">Consumo de IA</th><td>50 a 200 €</td><td>Medir tres peldaños de pago × 3 pasadas × 16 fixtures, más 3 a 5 maestras × 2 a 4 fichas por semana × 4 a 6 semanas × 1 a 3 alumnos: 300 a 1.000 adaptaciones × unos 0,03 €. Si el suelo exige un peldaño más caro, sube y se dirá.</td></tr>
+              <tr><th scope="row">Firma de instaladores</th><td>100 a 600 € al año</td><td>Programa de desarrollador de Apple y certificado de firma de código para Windows. <span class="pending">[PENDIENTE: precios vigentes con fuente]</span></td></tr>
+              <tr><th scope="row">Dispositivos</th><td>0 € o 1.800 a 4.500 €</td><td>Depende de «¿puedes instalar software en el portátil del centro?». 3 a 5 portátiles × 600 a 900 €.</td></tr>
+              <tr><th scope="row">Coordinación con centros</th><td>300 a 800 €</td><td>Desplazamientos, impresión de material, fotocopias de prueba.</td></tr>
+              <tr><th scope="row">Subtotal</th><td>16.900 a 58.900 €</td><td>Con personas contratadas y con dispositivos.</td></tr>
+              <tr><th scope="row">Contingencia</th><td>10 a 15 %</td><td>1.700 a 8.800 €.</td></tr>
+              <tr><th scope="row"><strong>Total</strong></th><td><strong>19.000 a 68.000 €</strong></td><td>Redondeado. Sin dispositivos: 19.000 a 63.000 €. Sin coste de personas: 500 a 7.000 €.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="tablewrap" style="margin-top:.8em">
+          <table>
+            <caption>Coste que no es dinero</caption>
+            <thead><tr><th scope="col">Concepto</th><th scope="col">Estimación</th><th scope="col">Base</th></tr></thead>
+            <tbody>
+              <tr><th scope="row">Horas de las maestras participantes</th><td>8 a 12 h por maestra</td><td>1 h de sesión + 4 a 6 semanas × 1 a 1,5 h de registro. La ficha semanal la adaptaría de todos modos.</td></tr>
+              <tr><th scope="row">Permisos</th><td>3 a 6 semanas de trámite</td><td>Dirección, DPO y familias. En paralelo con el cierre técnico. Cuello de botella más probable.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+  <footer class="slidefoot"><span>Rampa · propuesta de piloto · borrador</span><span>22 / 26</span></footer>
+</section>
+
+<!-- ================================================================ 23 · ANEXO B -->
+<section class="slide xdense" id="s23" aria-labelledby="t23">
+  <div class="chrome">
+    <span class="kicker">Anexo B</span>
+    <span class="logo"><svg role="img" aria-label="Fundación VASS"><use href="#logo-fundacion-vass"/></svg></span>
+  </div>
+  <div class="inner">
+    <h2 id="t23">Marco normativo</h2>
+    <p class="note small" style="margin-bottom:1.4em"><strong>Aviso.</strong> Resumen de trabajo elaborado por no juristas a partir de fuentes públicas. No es un dictamen. Debe revisarlo asesoría jurídica y un delegado de protección de datos antes de apoyarse en él ante un centro o una administración.</p>
+    <div class="cols cols--even">
+      <div>
+        <ul class="plain small">
+          <li><strong>Protección de datos.</strong> Barreras funcionales de menores: datos de categoría especial (art. 9 RGPD) aunque viajen seudonimizados. Seudonimizado no es anónimo (considerando 26 RGPD): la docente conserva la correspondencia entre código y nombre. El responsable del tratamiento es el centro o la docente según el despliegue; el proveedor de IA actúa bajo el contrato que ya tienen con él; el proyecto no es parte y no recibe ni almacena nada.</li>
+          <li><strong>Propiedad intelectual.</strong> Adaptar una obra para una persona con discapacidad está amparado por el Tratado de Marrakech y por el art. 31 bis del texto refundido de la Ley de Propiedad Intelectual. Redistribuir la adaptación no lo está. Por eso el material fuente nunca sale del ordenador de la docente ni entra en el proyecto público.</li>
+        </ul>
+      </div>
+      <div>
+        <ul class="plain small">
+          <li><strong>Normativa educativa (referencia: Andalucía).</strong> La normativa distingue la adaptación curricular no significativa (cambia metodología, actividades, tiempos, materiales e instrumentos de evaluación sin afectar a competencias, objetivos ni criterios de evaluación) de la significativa (modifica objetivos y criterios, requiere evaluación psicopedagógica previa y la autoriza el equipo docente con orientación). Todo lo que Rampa hace hoy cae dentro de la no significativa; la significativa se escala y no se decide. El registro oficial es la plataforma de la administración, nunca la aplicación.</li>
+          <li><strong>Licencias del proyecto.</strong> Código Apache-2.0; contenido pedagógico CC BY-SA 4.0. Los pictogramas de terceros no se distribuyen con la aplicación: los aporta la docente y su atribución va en cada hoja.</li>
+        </ul>
+        <p class="smaller muted" style="margin-top:.8em">Fuentes de trabajo, para quien quiera verificar: RGPD (art. 9 y considerando 26); TRLPI art. 31 bis; Tratado de Marrakech; LOMLOE; Instrucciones de 8 de marzo de 2017 de la Dirección General de Participación y Equidad de la Junta de Andalucía. Otras comunidades autónomas tienen su propia regulación equivalente, no revisada aquí.</p>
+      </div>
+    </div>
+  </div>
+  <footer class="slidefoot"><span>Rampa · propuesta de piloto · borrador</span><span>23 / 26</span></footer>
+</section>
+
+<!-- ================================================================ 24 · ANEXO C -->
+<section class="slide dense" id="s24" aria-labelledby="t24">
+  <div class="chrome">
+    <span class="kicker">Anexo C</span>
+    <span class="logo"><svg role="img" aria-label="Fundación VASS"><use href="#logo-fundacion-vass"/></svg></span>
+  </div>
+  <div class="inner">
+    <h2 id="t24">Arquitectura, para quien pregunte</h2>
+    <div class="cols">
+      <div class="small">
+        <ul class="plain tight">
+          <li><strong>Aplicación de escritorio.</strong> Se instala en el ordenador de la docente. Interfaz en su vocabulario.</li>
+          <li><strong>Carpeta de la docente.</strong> Perfiles, notas, material y adaptaciones en texto plano, en una carpeta suya. Legible con cualquier editor. Copia de seguridad: copiar la carpeta.</li>
+          <li><strong>Núcleo sin red.</strong> Lectura del documento intermedio, selección de recetas por ejes, informe. No puede abrir conexiones ni leer claves; una prueba automática lo comprueba fichero a fichero.</li>
+          <li><strong>Único punto de salida.</strong> Todo lo que viaja al proveedor de IA pasa por un solo sitio que sustituye los nombres conocidos por códigos y bloquea el envío si alguno sobreviviera.</li>
+          <li><strong>Renderizador.</strong> Produce HTML y PDF a partir del documento adaptado. No recibe el perfil.</li>
+        </ul>
+        <p class="smaller muted" style="margin-top:.8em"><strong>Comprobaciones automáticas públicas que se ejecutan con cada cambio:</strong> el núcleo no tiene red ni acceso a claves; único punto de salida con sustitución de nombres y bloqueo; el nombre del alumno nunca se escribe en su perfil; el centro tampoco sale hacia el proveedor; el borrado por alumno borra y avisa si algo queda; el material que intenta dar órdenes no se obedece; no se distribuye contenido de terceros sin su licencia.</p>
+      </div>
+      <div>
+        <svg class="arch" viewBox="0 0 640 400" role="img" aria-labelledby="archT archD">
+          <title id="archT">Arquitectura de Rampa</title>
+          <desc id="archD">Un recuadro grande representa el ordenador de la docente y contiene cuatro bloques: la aplicación, la carpeta de la docente en texto plano, el núcleo sin acceso a red y el renderizador sin acceso al perfil. En el borde derecho del recuadro hay un bloque estrecho llamado único punto de salida, que sustituye nombres por códigos y bloquea el envío si alguno sobrevive. Fuera del recuadro, a la derecha, está el proveedor de IA de la docente. Una sola flecha une el punto de salida con el proveedor, rotulada material y perfil con código. Debajo se lee: no hay servidor, cuenta ni base de datos del proyecto.</desc>
+          <rect class="outer" x="14" y="24" width="428" height="300" rx="28" ry="28"/>
+          <text class="t b" x="34" y="52">Ordenador de la docente</text>
+          <rect class="box" x="34" y="72" width="180" height="70" rx="12"/>
+          <text class="t" x="48" y="98">Aplicación</text>
+          <text class="m" x="48" y="118">Interfaz en su vocabulario</text>
+          <rect class="box" x="232" y="72" width="180" height="70" rx="12"/>
+          <text class="t" x="246" y="98">Carpeta de la docente</text>
+          <text class="m" x="246" y="118">Texto plano, suya</text>
+          <rect class="box" x="34" y="164" width="180" height="70" rx="12"/>
+          <text class="t" x="48" y="190">Núcleo</text>
+          <text class="m" x="48" y="210">Sin red, sin claves</text>
+          <rect class="box" x="232" y="164" width="180" height="70" rx="12"/>
+          <text class="t" x="246" y="190">Renderizador</text>
+          <text class="m" x="246" y="210">No recibe el perfil</text>
+          <rect class="gate" x="352" y="252" width="82" height="60" rx="10"/>
+          <text class="t" x="362" y="274" style="font-size:12px">Único punto</text>
+          <text class="t" x="362" y="290" style="font-size:12px">de salida</text>
+          <text class="m" x="34" y="278">Sustituye nombres por códigos.</text>
+          <text class="m" x="34" y="296">Bloquea el envío si alguno sobrevive.</text>
+          <path class="flow" d="M436,282 H522"/>
+          <path class="flow" d="M510,270 L522,282 L510,294"/>
+          <text class="m b" x="446" y="266" style="font-size:11px">material + perfil</text>
+          <text class="m b" x="446" y="304" style="font-size:11px">con código</text>
+          <rect class="box" x="528" y="240" width="100" height="84" rx="12"/>
+          <text class="t" x="540" y="266" style="font-size:13px">Proveedor</text>
+          <text class="t" x="540" y="283" style="font-size:13px">de IA</text>
+          <text class="m" x="540" y="303">de la docente</text>
+          <text class="m" x="14" y="362">No hay servidor, cuenta ni base de datos del proyecto.</text>
+        </svg>
+      </div>
+    </div>
+  </div>
+  <footer class="slidefoot"><span>Rampa · propuesta de piloto · borrador</span><span>24 / 26</span></footer>
+</section>
+
+<!-- ================================================================ 25 · ANEXO D -->
+<section class="slide xdense" id="s25" aria-labelledby="t25">
+  <div class="chrome">
+    <span class="kicker">Anexo D</span>
+    <span class="logo"><svg role="img" aria-label="Fundación VASS"><use href="#logo-fundacion-vass"/></svg></span>
+  </div>
+  <div class="inner">
+    <h2 id="t25">Glosario</h2>
+    <div class="cols cols--even small">
+      <div>
+        <dl class="plain">
+          <dt><strong>PT (pedagogía terapéutica)</strong></dt><dd>Especialidad docente que atiende al alumnado con discapacidad y otras necesidades de apoyo educativo. La maestra o el maestro de PT es la persona que adapta material a diario.</dd>
+          <dt style="margin-top:.8em"><strong>ACI (adaptación curricular individualizada)</strong></dt><dd>Ajuste del currículo para un alumno concreto. La normativa distingue dos tipos.</dd>
+          <dt style="margin-top:.8em"><strong>No significativa (ACNS)</strong></dt><dd>Cambia el cómo: metodología, actividades, tiempos, materiales, instrumentos de evaluación. No toca objetivos ni criterios de evaluación. Es el terreno de Rampa.</dd>
+          <dt style="margin-top:.8em"><strong>Significativa (ACS)</strong></dt><dd>Cambia el qué: objetivos y criterios de evaluación. Requiere evaluación psicopedagógica previa y la decide el equipo docente con orientación. Rampa la escala; no la decide.</dd>
+          <dt style="margin-top:.8em"><strong>DIAC (documento individual de adaptación curricular)</strong></dt><dd>Documento oficial en el que se registra una adaptación significativa. Es el documento más sensible del sistema educativo sobre un alumno: la aplicación no lo produce ni lo almacena.</dd>
+        </dl>
+      </div>
+      <div>
+        <dl class="plain">
+          <dt><strong>DUA (diseño universal para el aprendizaje)</strong></dt><dd>Marco que propone múltiples formas de representar la información, de actuar y de implicarse. Las recetas de Rampa citan sus pautas cuando procede.</dd>
+          <dt style="margin-top:.8em"><strong>NEAE</strong></dt><dd>Término de la normativa para el alumnado con necesidades específicas de apoyo educativo. Se usa aquí solo como término legal.</dd>
+          <dt style="margin-top:.8em"><strong>DPO (delegado de protección de datos)</strong></dt><dd>Persona que supervisa el cumplimiento de protección de datos en el centro o en la administración. Su revisión es previa a cualquier uso con datos reales.</dd>
+          <dt style="margin-top:.8em"><strong>Tratado de Marrakech</strong></dt><dd>Tratado internacional que permite producir copias en formato accesible para personas con discapacidad sin autorización del titular. En España, art. 31 bis TRLPI.</dd>
+          <dt style="margin-top:.8em"><strong>Borrador y firma</strong></dt><dd>En Rampa, todo material sale marcado como borrador hasta que una docente lo revisa y firma. Solo esa acción quita la marca.</dd>
+          <dt style="margin-top:.8em"><strong>Receta</strong></dt><dd>Un criterio de adaptación escrito en texto legible, con ejemplos antes y después y antipatrones. Las recetas son el corpus pedagógico abierto del proyecto.</dd>
+        </dl>
+      </div>
+    </div>
+  </div>
+  <footer class="slidefoot"><span>Rampa · propuesta de piloto · borrador</span><span>25 / 26</span></footer>
+</section>
+
+<!-- ================================================================ 26 · SOBRE ESTE DOCUMENTO -->
+<section class="slide" id="s26" aria-labelledby="t26">
+  <div class="texture" aria-hidden="true"></div>
+  <div class="arc" aria-hidden="true"></div>
+  <div class="chrome">
+    <span class="kicker">Sobre este documento</span>
+    <span class="logo"><svg role="img" aria-label="Fundación VASS"><use href="#logo-fundacion-vass"/></svg></span>
+  </div>
+  <div class="inner">
+    <h2 id="t26">Sobre este documento</h2>
+    <div class="cols">
+      <div>
+        <ul class="plain small">
+          <li>Es un borrador para abrir conversaciones. Comunica una intención y una propuesta; no compromete jurídicamente a la Fundación VASS, a la empresa de la que sale el proyecto ni a quien lo firma. La figura jurídica y la gobernanza futuras están abiertas.</li>
+          <li>Las personas que aparecen son ficticias. No contiene ningún caso real ni ningún dato de menores.</li>
+          <li>Todas las cifras del piloto son estimaciones pendientes de validar, con su base de cálculo en el anexo A.</li>
+        </ul>
+      </div>
+      <div>
+        <ul class="plain small">
+          <li>No afirma resultados de aprendizaje ni nada clínico. Lo que afirma sobre el software está cubierto por pruebas automáticas públicas; lo que afirma sobre su uso real está pendiente de medir.</li>
+          <li>Está hecho para leerse con lector de pantalla y teclado: encabezados reales, contraste AA, texto real y no texto en imágenes, sin información transmitida solo por color, y respeta la preferencia de menos movimiento. En pantalla ancha cada lámina es un 16:9 fijo, como una presentación; en móvil se apila y el texto no baja de dieciséis píxeles. Un proyecto de accesibilidad se presenta con material accesible.</li>
+          <li>Código del proyecto: Apache-2.0. Contenido pedagógico: CC BY-SA 4.0.</li>
+        </ul>
+      </div>
+    </div>
+    <p class="muted small" style="margin-top:1.5em">Fundación VASS · Rampa, nombre provisional · Septiembre de 2026.</p>
+  </div>
+  <footer class="slidefoot"><span>Rampa · propuesta de piloto · borrador</span><span>26 / 26</span></footer>
+</section>
+
+</main>
+
+<script>
+(function () {
+  'use strict';
+  document.documentElement.classList.add('js');
+
+  var slides = Array.prototype.slice.call(document.querySelectorAll('.slide'));
+  var counter = document.getElementById('counter');
+  var prevBtn = document.getElementById('prev');
+  var nextBtn = document.getElementById('next');
+  var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var current = 0;
+
+  slides.forEach(function (s) { s.setAttribute('tabindex', '-1'); });
+
+  function setCurrent(i) {
+    current = i;
+    if (counter) counter.textContent = (i + 1) + ' / ' + slides.length;
+    prevBtn.disabled = (i === 0);
+    nextBtn.disabled = (i === slides.length - 1);
+    if (history.replaceState) history.replaceState(null, '', '#' + slides[i].id);
+  }
+
+  function go(i, focus) {
+    i = Math.max(0, Math.min(slides.length - 1, i));
+    var wide = window.matchMedia && window.matchMedia('(min-width: 700px)').matches;
+    slides[i].scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: wide ? 'center' : 'start' });
+    if (focus) slides[i].focus({ preventScroll: true });
+    setCurrent(i);
+  }
+
+  prevBtn.addEventListener('click', function () { go(current - 1, true); });
+  nextBtn.addEventListener('click', function () { go(current + 1, true); });
+
+  document.addEventListener('keydown', function (ev) {
+    if (ev.altKey || ev.ctrlKey || ev.metaKey) return;
+    var tag = (ev.target && ev.target.tagName) || '';
+    if (/^(INPUT|TEXTAREA|SELECT)$/.test(tag)) return;
+    switch (ev.key) {
+      case 'ArrowRight': case 'ArrowDown': case 'PageDown':
+        ev.preventDefault(); go(current + 1, true); break;
+      case ' ':
+        if (tag === 'BUTTON') return;
+        ev.preventDefault(); go(ev.shiftKey ? current - 1 : current + 1, true); break;
+      case 'ArrowLeft': case 'ArrowUp': case 'PageUp':
+        ev.preventDefault(); go(current - 1, true); break;
+      case 'Home':
+        ev.preventDefault(); go(0, true); break;
+      case 'End':
+        ev.preventDefault(); go(slides.length - 1, true); break;
+    }
+  });
+
+  function revealNear() {
+    var vh = window.innerHeight || document.documentElement.clientHeight;
+    slides.forEach(function (s) {
+      var r = s.getBoundingClientRect();
+      if (r.bottom > -vh * 0.25 && r.top < vh * 1.25) s.classList.add('is-visible');
+    });
+  }
+  revealNear();
+
+  if ('IntersectionObserver' in window) {
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (e.isIntersecting) e.target.classList.add('is-visible');
+        if (e.intersectionRatio >= 0.5) setCurrent(slides.indexOf(e.target));
+      });
+    }, { threshold: [0.15, 0.5] });
+    slides.forEach(function (s) { io.observe(s); });
+  } else {
+    slides.forEach(function (s) { s.classList.add('is-visible'); });
+    window.addEventListener('scroll', revealNear, { passive: true });
+  }
+
+  /* Red de seguridad: pase lo que pase con el observador, nada queda oculto. */
+  window.setTimeout(function () {
+    slides.forEach(function (s) { s.classList.add('is-visible'); });
+  }, 2500);
+
+  if (location.hash) {
+    var target = document.getElementById(location.hash.slice(1));
+    var idx = slides.indexOf(target);
+    if (idx >= 0) setCurrent(idx);
+  } else {
+    setCurrent(0);
+  }
+
+  window.addEventListener('beforeprint', function () {
+    slides.forEach(function (s) { s.classList.add('is-visible'); });
+  });
+})();
+</script>
+</body>
+</html>

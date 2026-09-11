@@ -18,6 +18,7 @@ Canonical legal text: <https://creativecommons.org/licenses/by-sa/4.0/legalcode>
 | `docs/**` | CC BY-SA 4.0 |
 | `scripts/**` | Apache-2.0 (see `LICENSE`) |
 | `app/ui/src/assets/fonts/**` | **Not ours.** SIL Open Font License 1.1 — see `app/ui/src/assets/fonts/OFL.txt` |
+| `outreach/**` | Apache-2.0. **Not pedagogical content** — it is fundraising material, and ShareAlike has nothing to do there. The VASS brand artwork inside it is **not ours and not licensed here** — see `NOTICE` |
 | everything else | Apache-2.0 (see `LICENSE`) |
 
 ## Why the split

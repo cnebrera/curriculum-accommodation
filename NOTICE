@@ -38,6 +38,24 @@ Third-party assets bundled with the application
     renderer build, and the licence sits beside them so it cannot be separated
     from what it licenses.
 
+Third-party marks in the outreach material
+------------------------------------------
+
+  * VASS and Fundación VASS word marks and logotype
+    Copyright and trade marks of Grupo VASS.
+
+    Files: outreach/fundacion/deck.html (the logotype is embedded in the page as
+           inline SVG, taken from the company's own brand material)
+
+    **Not licensed under this repository's licences.** Neither Apache-2.0 nor
+    CC BY-SA grants trade mark rights, and this notice says so explicitly rather
+    than leaving somebody to infer it: the artwork is Grupo VASS's, it is here
+    because this is their own outreach material, and reusing it needs their
+    permission and not ours.
+
+    The deck is fundraising material, not part of the product. See
+    outreach/fundacion/README.md.
+
 Not bundled, deliberately
 -------------------------
 
