@@ -75,6 +75,51 @@ for f in "${files[@]}"; do
         || fail "$f" "anti-patterns section is empty"
 done
 
+# ── Pass 3 ────────────────────────────────────────────────────────────────────
+# Every recipe cited anywhere in the corpus or in the IR contract exists, with the
+# version cited.
+#
+# The defect this closes (`039` FR-3710): `docs/ir.md` teaches the model the IR format,
+# and its worked example for `4a`/`4b` cited **`one-task-per-item@1`**, which has never
+# existed. So the contract taught the model to cite a recipe that leads nowhere — and a
+# citation that leads nowhere teaches the teacher that the report is decoration.
+#
+# Why this and not «check the report at runtime»: a broken citation is a property of the
+# corpus, and the corpus is written by people. Catching it here costs nothing and catches
+# it the day it is written, not the day a teacher reads a report.
+#
+# Only backticked `id@version` counts. Prose naming a recipe without a version is a
+# reference and not a citation, and a guard that fires on prose gets weakened to make a
+# commit pass — this file's own history says so.
+cited_in=(docs/ir.md)
+while IFS= read -r f; do cited_in+=("$f"); done < <(find instructions recipes -name '*.md')
+
+for f in "${cited_in[@]}"; do
+    [ -f "$f" ] || continue
+    while IFS= read -r ref; do
+        cid="${ref%@*}"
+        cver="${ref#*@}"
+        if ! printf '%s' "$ids" | tr ' ' '\n' | grep -qx "$cid"; then
+            fail "$f" "cites recipe '$cid' (as $ref) and no recipe declares that id"
+            continue
+        fi
+        have=$(grep -rl "^id:[[:space:]]*$cid\$" recipes --include='*.md' | head -1)
+        real=$(awk 'NR==1&&/^---$/{f=1;next} f&&/^---$/{exit} f' "$have" \
+            | sed -n 's/^version:[[:space:]]*//p' | tr -d ' ')
+        [ "$real" = "$cver" ] \
+            || fail "$f" "cites $ref but '$cid' is version $real"
+    done < <({
+        # Backticked prose: `one-task-per-page@1`.
+        grep -oE '`[a-z0-9]+(-[a-z0-9]+)*@[0-9]+`' "$f" 2>/dev/null | tr -d '`'
+        # And the attribute itself, which is where the defect actually was: the worked
+        # example in `docs/ir.md` carries `data-recipe="one-task-per-item@1"` inside a
+        # fenced block, so no backticks surround it. A list is allowed there, so split
+        # on commas (backlog G70).
+        grep -oE 'data-recipe="[^"]*"' "$f" 2>/dev/null \
+            | sed 's/data-recipe="//; s/"$//' | tr ',' '\n' | tr -d ' '
+    } | grep -E '^[a-z0-9]+(-[a-z0-9]+)*@[0-9]+$' | sort -u)
+done
+
 echo
 if [ "$errors" -eq 0 ]; then
     echo "✓ ${#files[@]} recipes, no structural problems."

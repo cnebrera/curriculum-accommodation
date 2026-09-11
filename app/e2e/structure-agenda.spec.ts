@@ -184,8 +184,26 @@ test.describe('the agenda, built where a PT builds it', () => {
     /*
      * And nothing about the child. The renderer takes an IR and no profile, so there is
      * no path — asserted anyway, because this is the document that leaves the building.
+     *
+     * ## Why this is not a plain `not.toContain`, measured (backlog G78)
+     *
+     * It was, and it was **flaky at about one run in five** — which is how it finally
+     * failed, in a full suite run on 2026-09-11, having been latent since it was written.
+     *
+     * A learner code is **one letter and two digits** (`vault/codes.ts:17`), and this
+     * document embeds Atkinson Hyperlegible as a `data:` URI: some 62,000 characters of
+     * base64. Measured over the real thing: **566 of the 2,600 possible codes — 21.8% —
+     * occur as a substring inside that blob.** With a letter/digit boundary around the
+     * needle: **0 of 2,600**, because the base64 alphabet is almost entirely alphanumeric
+     * so boundaries barely exist inside it.
+     *
+     * So the stylesheet comes out first and the needle carries a boundary — the same rule
+     * `checkOutput` uses, and for the same reason. The name needs neither: «Iván» is long
+     * enough that the measurement puts its collision rate below a tenth of a per cent.
      */
-    expect(html).not.toContain(code);
+    const markup = html.replace(/<style[\s\S]*?<\/style>/g, ' ');
+    expect(new RegExp(`(?<![\\p{L}\\p{N}])${code}(?![\\p{L}\\p{N}])`, 'u').test(markup),
+      `the code ${code} is on a strip that goes in a child's backpack`).toBe(false);
     expect(html).not.toContain('Iván');
 
     await app.close();

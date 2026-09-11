@@ -184,8 +184,17 @@ Four things that example is showing, and each one has been got wrong in a real r
   recipe's title, and never put a word there that is not one of those headings:
   `scaffold` is not a recipe id. A citation that leads nowhere teaches the teacher
   that the report is decoration.
-- **New content carries no `data-from` and is marked `.scaffold`.** The worked
-  example above is new, so it names a recipe and an axis but no origin.
+- **`.scaffold` is what makes a block new. Without it, a block with no `data-from`
+  is a block that changed and will not say where it came from — and that is
+  rejected outright, so nothing reaches the teacher.** The worked example above
+  names a recipe and an axis and no origin, and the class is what makes that
+  legal rather than a hole in the account.
+
+  This is the one that gets missed, measured over sixteen real runs: one in five
+  added a block with `data-recipe` and `data-axis`, correctly left `data-from`
+  off, and forgot the class. Half the rule is not the rule. Every block you write
+  either **came from one you were given** and says so with `data-from`, or is
+  **yours** and says so with `.scaffold`. There is no third kind.
 - **`data-number` is preserved.** The class works out loud on «el ejercicio cinco».
 
 Mirror the classes and attributes of the document you were given; it is written in

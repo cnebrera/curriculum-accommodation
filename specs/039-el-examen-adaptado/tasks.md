@@ -137,15 +137,23 @@ escribió `response-route.md`.
 
 ## Phase 5: User Story 3 - El fantasma del contrato (Priority: P3)
 
-- [ ] T017 [US3] Hacer que `validate-recipes` falle ante una cita a una receta inexistente.
+- [x] T017 [US3] Hacer que `validate-recipes` falle ante una cita a una receta inexistente.
       **Rojo primero**, porque hoy `docs/ir.md:118` cita `one-task-per-item@1` y pasa.
       (FR-3710, SC-3705)
-- [ ] T018 [US3] Escribir `app/corpus/recipes/core/one-task-per-item.md`, que implementa la
+      - **El primer intento pasó en verde, y por mirar el sitio equivocado.** Busqué citas
+        entre backticks, y la cita real del contrato no las lleva: está dentro de un bloque
+        cercado, como `data-recipe="one-task-per-item@1"`. El validador miraba la prosa y
+        el defecto estaba en el atributo.
+      - Ahora mira los dos, y sólo esos dos: prosa entre backticks y el atributo. **Prosa
+        suelta nombrando una receta sin versión no cuenta** — una guarda que salta con la
+        prosa se acaba debilitando para que pase un commit, y la historia de este mismo
+        fichero lo dice.
+- [x] T018 [US3] Escribir `app/corpus/recipes/core/one-task-per-item.md`, que implementa la
       regla dura 7. **Con `scope` que excluya la evaluación y declarando su conflicto con
       `exam-access-not-difficulty`**, igual que `one-task-per-page` ya lo declara y pierde
       contra ella por P27 — partir un ítem es exactamente lo que la guarda nombra como
       anti-patrón. (FR-3710, FR-3711)
-- [ ] T019 [P] [US3] Test de que partir un ítem extiende la numeración (`4a`, `4b`) y no
+- [x] T019 [P] [US3] Test de que partir un ítem extiende la numeración (`4a`, `4b`) y no
       renumera el resto. (FR-3711)
 
 ---
