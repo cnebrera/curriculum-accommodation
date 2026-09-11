@@ -10,36 +10,32 @@ Lo mueve la Fundación VASS.
 |---|---|
 | [`deck.html`](deck.html) | El deck. Un solo fichero autocontenido: se abre en cualquier navegador, se navega con teclado y con scroll, y se imprime a PDF con una lámina por página |
 | [`guion-deck.md`](guion-deck.md) | El contenido lámina a lámina, con notas de ponente, los supuestos que hay que validar y lo que falta para que el deck esté completo |
-| [`deck.pdf`](deck.pdf) | El mismo deck en PDF, 26 páginas 16:9, para adjuntar en un correo. **Derivado de `deck.html`**: si cambias el deck, regenéralo |
+| [`deck.pdf`](deck.pdf) | El deck en PDF, 26 páginas 16:9, **igual que en pantalla**: fondo negro. Es el que se adjunta en un correo |
+| [`deck-impresion.pdf`](deck-impresion.pdf) | El mismo deck con la paleta clara del manual, para quien lo imprima de verdad en papel |
 | `PROMPT-DECK-FUNDACION*.md` | El encargo con el que se generó, conservado para poder regenerarlo o discutirlo |
 
-## Regenerar el PDF
+## Regenerar los PDF
 
-El PDF no se construye solo. Sale de la hoja de impresión del propio deck, donde
-cada página es exactamente una lámina 16:9 sin márgenes:
+Los dos son derivados de `deck.html` y no se construyen solos. Si tocas el deck,
+regenéralos y míralos, que es donde se ven los defectos que ningún test detecta.
 
 ```bash
 cd outreach/fundacion
-"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" \
-  --headless=new --disable-gpu --no-pdf-header-footer \
-  --virtual-time-budget=20000 \
-  --print-to-pdf=deck.pdf "file://$PWD/deck.html"
+CHROME="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+
+# El que se envía: negro, igual que en pantalla
+"$CHROME" --headless=new --disable-gpu --no-pdf-header-footer \
+  --virtual-time-budget=20000 --print-to-pdf=deck.pdf "file://$PWD/deck.html"
+
+# El de papel: paleta clara, que la activa la clase `papel` en <html>
+sed 's|<html lang="es">|<html lang="es" class="papel">|' deck.html > /tmp/deck-papel.html
+"$CHROME" --headless=new --disable-gpu --no-pdf-header-footer \
+  --virtual-time-budget=20000 --print-to-pdf="$PWD/deck-impresion.pdf" /tmp/deck-papel.html
 ```
 
-Comprueba que salen 26 páginas y que el logotipo aparece en su versión positiva
-(negro y azul, no blanco), que es lo que la hoja de impresión cambia.
-
-## Por qué está aquí y no fuera
-
-El encargo original decía expresamente que no entrara en el repositorio, «porque
-el repositorio tiene sus propias reglas de contenido y de licencia». Esa decisión
-se revisó el 2026-09-11 y se cambió, a condición de dejar las dos reglas escritas:
-
-1. **No es contenido pedagógico.** No va bajo CC BY-SA 4.0. Vive bajo la licencia
-   por defecto del repositorio; ver [`LICENSE-CONTENT.md`](../../LICENSE-CONTENT.md).
-2. **La marca no es nuestra.** El logotipo de la Fundación VASS que el deck lleva
-   dentro es obra gráfica de Grupo VASS, no se licencia con este repositorio y no
-   se puede reutilizar sin su permiso. Está dicho en [`NOTICE`](../../NOTICE).
+Comprueba que cada uno sale con 26 páginas y que el logotipo va en la versión que
+toca: negativo (blanco y azul) en `deck.pdf`, positivo (negro y azul) en
+`deck-impresion.pdf`.
 
 ## Estado
 

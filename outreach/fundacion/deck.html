@@ -221,33 +221,42 @@ dl.plain{margin:0}dl.plain dd{margin:0 0 .4em}
 
 /* --- impresión: una lámina 16:9 por página A4 horizontal, paleta clara -------- */
 @media print{
-  :root{
-    --bg:#FFFFFF; --bg-2:#F4F4F6; --fg:#141414; --fg-2:#141414; --muted:#6B6771;
-    --blue:#067DB9; --blue-soft:rgba(6,125,185,.10); --line:rgba(20,20,20,.22);
-    /* versión positiva para papel; pendiente de confirmar contra el manual */
-    --logo-fg:#141414; --logo-accent:#067DB9;
-    /* la página ES la lámina: 16:9 al ancho de un A4 apaisado, sin márgenes,
-       para que no quede una franja en blanco debajo de cada una */
-    --sw:297mm;
-  }
+  /* La página ES la lámina: 16:9 al ancho de un A4 apaisado y sin márgenes.
+     Y el PDF es el deck: mismo negro, mismo azul. Esto se manda por correo y se
+     lee en pantalla, así que se imprime como se ve. La versión para papel es
+     opt-in, abajo. */
+  :root{ --sw:297mm; }
   @page{size:297mm 167.06mm;margin:0}
-  html{scroll-snap-type:none;background:#fff}
-  body{background:#fff;color:#141414;padding:0}
-  .slide,.slide.dense,.slide.xdense{margin:0 auto;break-after:page;page-break-after:always;box-shadow:none;border:0}
+  html{scroll-snap-type:none;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  body{padding:0;background:var(--bg)}
+  .slide,.slide.dense,.slide.xdense{margin:0 auto;background:var(--bg);
+    break-after:page;page-break-after:always;box-shadow:none;border:0}
   .slide + .slide{margin-top:0}
   .slide:last-of-type{break-after:auto;page-break-after:auto}
-  .nav,.skip,.texture,.arc,.wave{display:none!important}
+  .nav,.skip{display:none!important}
   .inner{opacity:1!important;transform:none!important}
-  .badge,.timeline li.bar,.funcs div,.dots circle,.arrow path{-webkit-print-color-adjust:exact;print-color-adjust:exact}
-  .badge{background:#FCC936;color:#141414}
-  .pending{color:#7a5a00;border-color:#7a5a00}
-  .timeline li.bar{border:1px solid rgba(20,20,20,.25)}
-  .logo{border-color:rgba(20,20,20,.4)}
-  .card{border-color:rgba(20,20,20,.18)}
-  .arch text{fill:#141414}.arch text.m{fill:#6B6771}.arch text.b{fill:#067DB9}
-  .arch .box{fill:#F4F4F6;stroke:rgba(20,20,20,.35)}
-  .arch .gate{fill:rgba(6,125,185,.12)}
-  a{color:#067DB9}
+
+  /* Para papel de verdad: `<html class="papel">`. La paleta clara del manual,
+     porque veintiséis páginas en negro no se imprimen en la fotocopiadora de un
+     centro. El comando que genera esa versión está en el README. */
+  html.papel{
+    --bg:#FFFFFF; --bg-2:#F4F4F6; --fg:#141414; --fg-2:#141414; --muted:#6B6771;
+    --blue:#067DB9; --blue-soft:rgba(6,125,185,.10); --line:rgba(20,20,20,.22);
+    /* versión positiva del logotipo; pendiente de confirmar contra el manual */
+    --logo-fg:#141414; --logo-accent:#067DB9;
+  }
+  html.papel .texture,html.papel .arc,html.papel .wave{display:none!important}
+  html.papel .badge{background:#FCC936;color:#141414}
+  html.papel .pending{color:#7a5a00;border-color:#7a5a00}
+  html.papel .timeline li.bar{border:1px solid rgba(20,20,20,.25)}
+  html.papel .logo{border-color:rgba(20,20,20,.4)}
+  html.papel .card{border-color:rgba(20,20,20,.18)}
+  html.papel .arch text{fill:#141414}
+  html.papel .arch text.m{fill:#6B6771}
+  html.papel .arch text.b{fill:#067DB9}
+  html.papel .arch .box{fill:#F4F4F6;stroke:rgba(20,20,20,.35)}
+  html.papel .arch .gate{fill:rgba(6,125,185,.12)}
+  html.papel a{color:#067DB9}
 }
 </style>
 </head>
