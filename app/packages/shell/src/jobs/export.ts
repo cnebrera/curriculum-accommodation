@@ -1,6 +1,7 @@
 import {
   renderHTML, renderODT, renderLinear, renderBrailleReady, parseAudioCorpus,
   parseIR, checkOutput, isSignedOff, RampaError, parsePicto, checkEssentialFigures,
+  presentationFor, AXES, axisLevelOf,
 } from '@rampa/core';
 import { resolveDocument, whyNoDocument } from '@rampa/core';
 import { currentVault } from '../ipc/vault.js';
@@ -81,9 +82,27 @@ export async function renderOdt(
   const pictogramImages = ids.length > 0 ? await pictogramImagesFor(ids) : undefined;
   const pictogramCredits = ids.length > 0 ? await pictogramCreditsFor() : undefined;
 
+  /*
+   * La presentación, resuelta **igual que en la vía de impresión** (`040` FR-3801).
+   *
+   * Hasta aquí este camino no resolvía ninguna, así que el estilo del cuerpo iba fijo a
+   * 12pt: un alumno `PER-V: 2` recibía 24pt en su hoja y **12pt en el documento editable
+   * del mismo material**. La mitad exacta, en el fichero que ella abre para cambiar dos
+   * palabras antes de imprimir.
+   *
+   * **Sólo niveles de eje cruzan**, como en `print.ts` y por el mismo motivo: el
+   * renderizador nunca recibe el perfil (`007` FR-506), y la defensa es que no lo tiene —
+   * una inyección no puede imprimir lo que nunca se le pasó.
+   */
+  const learner = found.learner ? await loadLearner(vault, found.learner) : null;
+  const levels = learner
+    ? Object.fromEntries(AXES.map((a) => [a, axisLevelOf(learner.profile, a)]))
+    : {};
+
   return {
     bytes: renderODT(doc, {
       signedOff: isSignedOff(doc),
+      presentation: presentationFor(levels),
       ...(pictogramImages ? { pictogramImages } : {}),
       ...(pictogramCredits ? { pictogramCredits } : {}),
     }),

@@ -1111,6 +1111,39 @@ Cinco cosas en tres días, cuatro invisibles para los 2.534 tests unitarios:
   repetiría a sabiendas el defecto de `037` — una receta prometiendo un renderizado que no
   existe.
 
+## Spec 040 US1 — el documento editable deja de ser menos accesible (T007)
+
+Un alumno `PER-V: 2` recibía **24pt en su hoja impresa y 12pt en el documento editable del
+mismo material**. La mitad exacta del cuerpo de letra, en el fichero que ella abre para
+cambiar dos palabras antes de imprimir — así que la accesibilidad que le llegaba dependía
+de por qué botón pasó ella. No era estética.
+
+### Lo que ahora llega al editable
+
+Cuerpo de letra, interlineado, aire entre párrafos, espaciado entre letras, tinta y una
+tarea por página. Nueve aserciones, incluida la que exige que un alumno **sin barreras**
+reciba el documento **idéntico al de antes**.
+
+### Lo que NO llega, declarado y no disimulado
+
+- **La longitud de línea.** Acortar un renglón en un procesador de textos se hace con los
+  márgenes de la página, y **este documento no define su página**: no lleva ningún
+  `page-layout`, toma la configuración de ella. Imponerle una sería pisarle su ajuste para
+  conseguir un efecto aproximado, en el fichero cuya razón de ser es que ella lo controle.
+  **La pérdida es real**: quien necesita línea corta la tiene impresa y no aquí.
+- **El espaciado entre palabras.** ODF no tiene la propiedad, y aproximarlo con espacios
+  corrompería el texto que ella edita.
+
+Las dos están asertadas **como decisión**, no como ausencia, para que quien las añada
+tenga que leer el motivo primero.
+
+### Y el hueco que sigue abierto
+
+**El editable no tiene superficie de revisión automática.** `038` FR-3617 lo dejó fuera del
+registro a propósito, y esta feature no lo cambia: las dieciséis hojas del registro son
+PDF y PNG. Así que esto se mira **abriendo un `.odt` a mano, una vez, en LibreOffice**, o
+no se mira. Que no haya instrumento es el hueco y queda escrito en vez de disimulado.
+
 ## Sigue sin verificar
 
 - **Ninguna maestra ha visto nada.** Sin cambios, y sigue siendo la línea que importa.

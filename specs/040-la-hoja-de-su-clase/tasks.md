@@ -12,22 +12,31 @@
 
 ## Phase 1: User Story 1 - La paridad del editable (Priority: P1) 🎯
 
-- [ ] T001 [US1] Escribir `app/packages/core/test/odt-presentation.test.ts` **en rojo**,
+- [x] T001 [US1] Escribir `app/packages/core/test/odt-presentation.test.ts` **en rojo**,
       con el caso `PER-V: 2` exigiendo 24pt y con el caso «sin barreras» exigiendo salida
       **idéntica a hoy**. (FR-3801, SC-3801)
-- [ ] T002 [US1] Dar a `OdtOptions` el campo `presentation`, **del mismo tipo** que usa el
+- [x] T002 [US1] Dar a `OdtOptions` el campo `presentation`, **del mismo tipo** que usa el
       otro renderizador. Dos tipos para una cosa serían dos sitios que discrepan. (FR-3801)
-- [ ] T003 [US1] Traducir la presentación a las propiedades ODF que la expresan: cuerpo,
+- [x] T003 [US1] Traducir la presentación a las propiedades ODF que la expresan: cuerpo,
       interlineado, aire entre párrafos, espaciado de letra, tinta y una tarea por página.
       (FR-3801)
-- [ ] T004 [US1] Declarar en el código, donde alguien iría a buscarlo, que **la longitud de
+- [x] T004 [US1] Declarar en el código, donde alguien iría a buscarlo, que **la longitud de
       línea y el espaciado entre palabras no llegan**, con sus motivos medidos. (FR-3801)
-- [ ] T005 [US1] En `app/packages/shell/src/jobs/export.ts`, resolver la misma presentación
+- [x] T005 [US1] En `app/packages/shell/src/jobs/export.ts`, resolver la misma presentación
       que resuelve la vía de impresión y pasarla. Sin esto lo anterior es una capacidad sin
       cablear. (FR-3801)
-- [ ] T006 [US1] Comprobar que `untrusted.test.ts` FR-506 sigue verde **sin tocarlo**.
+- [x] T006 [US1] Comprobar que `untrusted.test.ts` FR-506 sigue verde **sin tocarlo**.
       (FR-3806)
-- [ ] T007 [P] [US1] Anotar en `specs/006-desktop-app/validation.md` que el editable deja de
+      - Verde sin tocarlo, **y había que tocarlo igualmente**, por lo contrario de lo que
+        la tarea temía. El test lee sólo `jobs/print.ts`, y hasta hoy `jobs/export.ts` no
+        resolvía ninguna presentación —12pt fijos para todo el mundo— así que no tenía
+        perfil que cargar y nadie lo miraba. Ahora lo carga, y con eso **hereda el riesgo
+        exacto que ese bloque existe para cerrar**.
+      - Extendido a las dos salidas. Una invariante que vive en dos ficheros y se comprueba
+        en uno es una invariante que se pierde en el que no se mira — y es, además, la
+        misma forma del defecto que `040` vino a arreglar: una divergencia entre dos
+        salidas del mismo documento.
+- [x] T007 [P] [US1] Anotar en `specs/006-desktop-app/validation.md` que el editable deja de
       ser menos accesible, **y que sigue sin tener superficie de revisión**: el registro de
       `038` no lo fotografía y eso no cambia aquí. (FR-3801 · su límite declarado)
 

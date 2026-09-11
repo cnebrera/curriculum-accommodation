@@ -630,6 +630,27 @@ describe('FR-506 · the renderer receives no profile', () => {
     const print = stripComments(readFileSync(join(shellSrc, 'jobs', 'print.ts'), 'utf8'));
     expect(print).not.toMatch(/renderHTML\([^)]*learnerCode/);
   });
+
+  /**
+   * **Y la misma invariante en la segunda salida, desde `040` T005.**
+   *
+   * `jobs/export.ts` no resolvía ninguna presentación —el documento editable iba a 12pt
+   * fijos para todo el mundo— así que no tenía perfil que cargar y esta comprobación no
+   * lo miraba. Ahora sí lo carga, para darle a un alumno el mismo cuerpo de letra que en
+   * su hoja, y con eso hereda exactamente el riesgo que este bloque existe para cerrar.
+   *
+   * Una invariante que vive en dos ficheros y se comprueba en uno es una invariante que
+   * se pierde en el que no se mira. Es, además, la forma del defecto que `040` vino a
+   * arreglar: **una divergencia entre dos salidas del mismo documento**.
+   */
+  it('y tampoco en el documento editable, que ahora también resuelve presentación', () => {
+    const exp = stripComments(readFileSync(join(shellSrc, 'jobs', 'export.ts'), 'utf8'));
+    expect(exp, 'la presentación tiene que cruzar resuelta, no el perfil')
+      .toMatch(/renderODT\(doc,\s*\{[^}]*presentation/);
+    expect(exp).not.toMatch(/renderODT\([^)]*\bprofile\b/);
+    expect(exp).not.toMatch(/renderODT\([^)]*learner\.profile/);
+    expect(exp).not.toMatch(/renderODT\([^)]*learnerCode/);
+  });
 });
 
 describe('FR-507 · the output check fails the render', () => {

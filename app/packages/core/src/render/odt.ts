@@ -3,6 +3,7 @@ import { draftMark } from './draft.js';
 import { drawFigureBlock, isDrawnFigure } from './figures/render.js';
 import { learnerFacing } from '../ir/parse.js';
 import { zip, type ZipEntry } from './zip.js';
+import type { Presentation } from './html.js';
 import { parsePicto } from '../pictograms/apply.js';
 import { attributionFor, pictogramAlt, type Attribution } from './attribution.js';
 
@@ -281,21 +282,73 @@ const STYLE_FOR: Record<string, string> = {
   scaffold: 'Apoyo',
 };
 
-const STYLES_XML = `<?xml version="1.0" encoding="UTF-8"?>
+/**
+ * De una presentación a las propiedades ODF que la expresan (`040` FR-3801).
+ *
+ * ## Y las dos que no llegan, que son una decisión y no un olvido
+ *
+ * **La longitud de línea.** Acortar un renglón en un procesador de textos se hace con los
+ * márgenes de la página, y **este documento no define su página**: no lleva ningún
+ * `page-layout`, así que toma la configuración de ella. Imponerle una sería pisarle su
+ * propio ajuste para conseguir un efecto aproximado, en el fichero cuya razón de ser es
+ * que ella lo controle. La pérdida es real y está declarada: quien necesita línea corta
+ * la tiene en la hoja impresa y no aquí.
+ *
+ * **El espaciado entre palabras.** ODF no tiene una propiedad de texto para ello.
+ * Aproximarlo insertando espacios corrompería el texto que ella edita — y se rompería en
+ * cuanto cambiara una palabra, que es lo único que este fichero existe para permitir.
+ *
+ * El color del papel no hace falta: el único valor que `presentationFor` produce es
+ * blanco, que es el papel de una impresora.
+ */
+function odfFrom(p: Presentation | undefined): {
+  size: string; lineHeight: string; gap: string; spacing: string; color: string;
+} {
+  const pt = (v: string | undefined, fallback: number): number => {
+    const m = /^([0-9.]+)pt$/.exec(v ?? '');
+    return m ? Number(m[1]) : fallback;
+  };
+  const size = pt(p?.fontSize, 12);
+  /*
+   * `1.7` → `170%`. ODF quiere un porcentaje y la hoja usa una proporción; convertir aquí
+   * y no en el llamador mantiene una sola fuente para la decisión tipográfica.
+   */
+  const lh = Number(p?.lineHeight ?? '1.5');
+  /* De `em` a unidades absolutas, contra el cuerpo: ODF no entiende `em` aquí. */
+  const em = (v: string | undefined, fallback: number): number => {
+    const m = /^([0-9.]+)em$/.exec(v ?? '');
+    return (m ? Number(m[1]) : fallback) * size;
+  };
+  return {
+    size: `${size}pt`,
+    lineHeight: `${Math.round((Number.isFinite(lh) ? lh : 1.5) * 100)}%`,
+    // `paraGap` llega en `em`; el estilo lo quería en cm, así que se convierte por puntos.
+    gap: `${(em(p?.paraGap, 0.7) / 28.35).toFixed(2)}cm`,
+    spacing: `${em(p?.letterSpacing, 0).toFixed(2)}pt`,
+    color: (p?.ink ?? '#111111').length === 4
+      ? `#${(p?.ink ?? '#111')[1]!.repeat(2)}${(p?.ink ?? '#111')[2]!.repeat(2)}`
+        + `${(p?.ink ?? '#111')[3]!.repeat(2)}`
+      : (p?.ink ?? '#111111'),
+  };
+}
+
+const STYLES_XML = (p?: Presentation): string => { const o = odfFrom(p); return `<?xml version="1.0" encoding="UTF-8"?>
 <office:document-styles xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0"
   xmlns:style="urn:oasis:names:tc:opendocument:xmlns:style:1.0"
   xmlns:fo="urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0"
   xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0" office:version="1.3">
  <office:styles>
   <style:style style:name="Cuerpo" style:family="paragraph">
-   <style:paragraph-properties fo:margin-bottom="0.35cm" fo:line-height="150%"/>
-   <style:text-properties fo:font-size="12pt"/>
+   <style:paragraph-properties fo:margin-bottom="${o.gap}" fo:line-height="${o.lineHeight}"/>
+   <style:text-properties fo:font-size="${o.size}" fo:color="${o.color}"
+     fo:letter-spacing="${o.spacing}"/>
   </style:style>
   <style:style style:name="Instruccion" style:family="paragraph" style:parent-style-name="Cuerpo">
    <style:text-properties fo:font-weight="bold"/>
   </style:style>
   <style:style style:name="Ejercicio" style:family="paragraph" style:parent-style-name="Cuerpo">
-   <style:paragraph-properties fo:margin-top="0.5cm" fo:keep-together="always"/>
+   <style:paragraph-properties fo:margin-top="0.5cm" fo:keep-together="always"${
+     p?.oneTaskPerPage ? ' fo:break-before="page"' : ''}/>
   </style:style>
   <style:style style:name="RespuestaEtiqueta" style:family="paragraph" style:parent-style-name="Cuerpo">
    <style:paragraph-properties fo:margin-top="0.2cm" fo:margin-bottom="0cm"
@@ -344,7 +397,7 @@ const STYLES_XML = `<?xml version="1.0" encoding="UTF-8"?>
    <style:text-properties style:font-name="monospace"/>
   </style:style>
  </office:styles>
-</office:document-styles>`;
+</office:document-styles>`; };
 
 /**
  * The manifest, with an entry per picture (P47).
@@ -408,6 +461,25 @@ export interface OdtOptions {
   pictogramImages?: ReadonlyMap<string, string>;
   /** What each pictogram source says about itself (COD-08, P40). */
   pictogramCredits?: ReadonlyMap<string, Attribution>;
+  /**
+   * La misma presentación que recibe el otro renderizador (`040` FR-3801).
+   *
+   * ## Por qué existe, medido
+   *
+   * Hasta aquí este renderizador fijaba `12pt` y no había forma de pasarle nada, así que
+   * un alumno `PER-V: 2` recibía **24pt en su hoja impresa y 12pt en el documento
+   * editable del mismo material**. La mitad exacta del cuerpo de letra, y no en un caso
+   * raro: éste es el fichero que ella abre para cambiar dos palabras antes de imprimir,
+   * así que la accesibilidad que recibía el alumno dependía de por qué botón pasó ella.
+   *
+   * Eso es el Principio IV roto llegando como **divergencia** y no como código duplicado,
+   * que es la forma en que más cuesta verlo.
+   *
+   * **El mismo tipo que `RenderOptions`, a propósito.** Dos formas de decir «cómo se ve
+   * esto» serían dos sitios que acaban discrepando — que es exactamente el defecto que
+   * este campo viene a cerrar.
+   */
+  presentation?: Presentation;
 }
 
 /**
@@ -536,7 +608,7 @@ ${attribution}
     { path: 'mimetype', data: 'application/vnd.oasis.opendocument.text' },
     { path: 'META-INF/manifest.xml', data: manifestFor(pictures) },
     { path: 'content.xml', data: content },
-    { path: 'styles.xml', data: STYLES_XML },
+    { path: 'styles.xml', data: STYLES_XML(opts.presentation) },
     { path: 'meta.xml', data: META },
     // Sorted, so the package's bytes do not depend on map insertion order — the
     // same determinism argument the ZIP writer and `META` already make.
