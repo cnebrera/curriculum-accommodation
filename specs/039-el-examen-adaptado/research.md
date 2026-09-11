@@ -101,3 +101,72 @@ no suelto: partir un ítem en `4a`/`4b` es **exactamente** la medida que la guar
 examen nombra como anti-patrón. La receta nace, por tanto, con `scope` que excluya la
 evaluación y declarando su conflicto con la guarda — igual que `one-task-per-page` ya lo
 declara y pierde contra ella por la decisión P27.
+
+
+---
+
+## R5 · Lo que la receta ya prescribía y el diseño no recogía (T001)
+
+Leerla entera antes de tocar nada era una tarea, y ha valido las dos veces.
+
+### R5a · «Quitar el espacio del todo» es un anti-patrón, y `data-model.md` lo pedía
+
+La tabla decía «sin rayas, con la frase» para quien dicta. La receta dice otra cosa, y da
+el motivo:
+
+> **Removing the answer space entirely.** With no mark that an answer belongs there, a
+> corrected sheet cannot say whether the learner responded — and **in an exam that is a
+> question left unassessed**.
+
+Lo que pide es «a small marked space», y su propio ejemplo lo dibuja: la pregunta intacta,
+la frase *«Contesta en voz alta»*, y debajo **una casilla**. Tres rayas se convierten en
+una casilla que registra que se contestó, no en nada.
+
+**Corregido**: para una vía que no es escritura, el documento lleva la frase **y una marca
+de que ahí va una respuesta**. Nunca vacío.
+
+### R5b · La vía no puede salir de `MOT`, y eso **elimina** el knob que T005 iba a añadir
+
+La receta lo dice como anti-patrón, con el ejemplo:
+
+> **Choosing the route from the diagnosis.** The profile says `MOT: 2`; it does not say
+> why. A learner with cerebral palsy, one with a broken wrist and one with dysgraphia
+> **share the axis and share no solution**.
+
+O sea que `MOT` dice que **hay** una barrera y no **cuál** es la salida. La salida está en
+`profile.response`, escrita por quien le da clase. Y `profile.response` no puede cruzar al
+renderizador (`007` FR-506).
+
+**Y la salida a eso ya estaba construida, sólo que yo la había pasado por alto.** La vía
+llega al papel **por el documento**, no por la presentación:
+
+```
+profile.response  →  prompt/adapt.ts:318  →  el modelo, aplicando response-route.md
+                  →  data-response en el bloque  →  el renderizador
+```
+
+Cada eslabón existe menos el último. Así que **no hace falta ningún knob nuevo en
+`Presentation` y no hace falta que `MOT` llegue al renderizador**: el renderizador lee el
+documento y nada más.
+
+**Esto corrige a R2 y a la spec.** R2 concluía que `MOT` entraba como knob de presentación
+«por donde entran los otros cinco». Es posible y es innecesario, y lo innecesario aquí es
+peor que inútil: un knob derivado de `MOT` elegiría la salida desde el eje, que es
+exactamente el anti-patrón que la receta nombra. El diseño correcto es **más pequeño** que
+el que había planificado.
+
+Queda entonces así:
+
+| | Decide | Lo lee |
+|---|---|---|
+| Qué pide la tarea | el material original | el modelo, y lo escribe en `data-response` |
+| Cómo puede responder él | ella, en `profile.response` | el modelo, aplicando la receta |
+| **Cuánto espacio y de qué forma** | **el renderizador, desde `data-response`** | **es lo único que falta** |
+
+Principio I intacto y de forma más limpia: el juicio entero vive en el Markdown de la
+receta, y lo determinista es sólo «este valor produce esta forma».
+
+**Lo que se pierde y hay que decirlo.** Si el modelo no escribe `data-response`, no pasa
+nada: la hoja sale como hoy. El mecanismo no puede rescatar a una adaptación que no marcó
+la vía, y rescatarla sería adivinar la salida desde el eje — el anti-patrón otra vez. Lo
+que lo cubre es la puerta de siempre: ella mira la hoja.

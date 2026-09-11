@@ -172,6 +172,23 @@ const hasAnswerSpace = (b: Block): boolean =>
   || b.attrs['data-answer-space'] !== undefined
   || b.classes.includes('exercise') || b.classes.includes('assessment');
 
+/*
+ * **`data-response` no cambia nada aquí, y está decidido y no olvidado** (`039` FR-3703).
+ *
+ * La vía de respuesta gobierna *cuánto papel* y *de qué forma* — una raya, tres, un
+ * recuadro, una casilla. Nada de eso tiene equivalente en una modalidad que no tiene
+ * página: en audio o en texto lineal lo que hay que transmitir es **que hay una respuesta
+ * que dar**, y eso ya se transmite arriba para todo ejercicio.
+ *
+ * Los valores que en la hoja no producen espacio —`choice`, `match`, `fill`— tampoco son
+ * una excepción: la respuesta sigue existiendo, sólo que va dentro del contenido, así que
+ * silenciar el aviso aquí le quitaría a quien escucha la única señal de que le toca
+ * contestar.
+ *
+ * El Principio IV pide que una adaptación no viva en una sola salida. Ésta vive en las
+ * tres; lo que cambia es que en dos se mide en centímetros y en la tercera no se mide.
+ */
+
 export function renderLinear(doc: IRDocument, opts: LinearOptions): Linear {
   const out: LinearBlock[] = [];
   let order = 0;

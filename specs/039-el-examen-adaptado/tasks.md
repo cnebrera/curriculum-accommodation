@@ -13,13 +13,26 @@
 
 ## Phase 1: Setup
 
-- [ ] T001 Leer `recipes/core/response-route.md` entero antes de tocar nada, y anotar en
+- [x] T001 Leer `recipes/core/response-route.md` entero antes de tocar nada, y anotar en
       `research.md` cualquier prescripción suya que el diseño de `data-model.md` no cubra.
       La receta lleva escrita más tiempo que esta spec y es la autoridad sobre el juicio.
+      - **Valió las dos veces, y una de las dos invalidó un diseño ya aprobado.** Está en
+        `research.md` como R5.
+      - **R5a**: «quitar el espacio del todo» es un anti-patrón de la receta, y
+        `data-model.md` lo pedía para quien dicta. El motivo que da la receta es bueno —
+        «sin marca de que ahí va una respuesta, una hoja corregida no puede decir si
+        contestó, y **en un examen eso es una pregunta sin evaluar**». Va la frase **y una
+        casilla**.
+      - **R5b**: la vía no puede salir de `MOT`, y eso **elimina** el knob que T005 iba a
+        añadir. La receta lo nombra como anti-patrón: un alumno con parálisis cerebral, uno
+        con la muñeca rota y uno con disgrafía «comparten el eje y no comparten ninguna
+        solución». La salida la escribe ella en `profile.response`, el modelo la aplica, y
+        llega al papel **por el documento**. El diseño correcto es **más pequeño** que el
+        planificado: el renderizador lee el documento y nada más.
 
 ## Phase 2: Foundational
 
-- [ ] T002 En `docs/ir.md`, dejar dicho qué hace el renderizador con cada valor de
+- [x] T002 En `docs/ir.md`, dejar dicho qué hace el renderizador con cada valor de
       `data-response` — hoy el contrato enumera ocho valores y no dice qué producen, que es
       la razón de que nadie notara en meses que no los leía nadie. (FR-3701)
 
@@ -32,26 +45,50 @@
 **Independent Test**: adaptar un material con alumnos de vías distintas y comparar los
 documentos. Sin ninguna otra parte de esta spec, la hoja ya cambia.
 
-- [ ] T003 [US1] Escribir `app/packages/core/test/response-route.test.ts` **en rojo**, con
+- [x] T003 [US1] Escribir `app/packages/core/test/response-route.test.ts` **en rojo**, con
       la tabla de `data-model.md` como casos y con el caso «ausente» exigiendo salida
       **idéntica a hoy**. Ése es el que protege a todo el material que ya existe en el vault
       de alguien. (FR-3701, FR-3704)
-- [ ] T004 [US1] En `app/packages/core/src/render/html.ts`, que `answerSpace()` resuelva
+- [x] T004 [US1] En `app/packages/core/src/render/html.ts`, que `answerSpace()` resuelva
       desde `data-response` **y** desde la presentación, en vez de emitir dos rayas fijas.
       (FR-3701)
-- [ ] T005 [US1] Añadir el knob de vía de respuesta a `Presentation` y producirlo desde
-      `MOT` en `presentationFor`. **Niveles de eje y nada más** — es lo que mantiene `007`
-      FR-506 sin ningún canal nuevo. (FR-3701, FR-3704)
-- [ ] T006 [US1] La frase que dice cómo puede responder, en el idioma de instrucción del
+- [x] T005 [US1] ~~Añadir el knob de vía de respuesta a `Presentation` y producirlo desde
+      `MOT`~~ — **no se hace, y el motivo es R5b.** Un knob derivado de `MOT` elegiría la
+      salida desde el eje, que es exactamente el anti-patrón que la receta nombra. La vía
+      llega por el documento. `007` FR-506 queda intacto **por no haber añadido nada**, que
+      es más fuerte que haberlo añadido con cuidado. (FR-3701, FR-3704)
+- [x] T006 [US1] La frase que dice cómo puede responder, en el idioma de instrucción del
       alumno. Sale del corpus y no de una constante en el código: es lo que se le dice a un
       niño, o sea Principio I. (FR-3702)
-- [ ] T007 [P] [US1] La misma vía en `render/odt.ts`. (FR-3703, Principio IV)
-- [ ] T008 [P] [US1] La misma vía en `render/linear.ts`, o declarado aquí con su motivo qué
+      - **Hecho a medias, y lo digo aquí en vez de dejarlo parecer completo.** La frase
+        está, y está en castellano **en duro**, al lado de «Respuesta:» que ya lo estaba.
+      - El motivo: **este renderizador es monolingüe hoy.** `opts.lang` sólo llega al
+        atributo `lang` del `<html>`, y no existe ningún mecanismo para traducir una cadena
+        suya. Inventar aquí medio mecanismo dejaría dos formas de decir una cosa, que es el
+        generador de defectos de este repositorio.
+      - Queda como trabajo propio y nombrado: **localizar las cadenas del renderizador**.
+        Afecta a «Respuesta:», a esta frase y a «Contestado», y no es de `039`.
+- [x] T007 [P] [US1] La misma vía en `render/odt.ts`. (FR-3703, Principio IV)
+- [x] T008 [P] [US1] La misma vía en `render/linear.ts`, o declarado aquí con su motivo qué
       no aplica en una modalidad que no tiene página. (FR-3703)
-- [ ] T009 [US1] Comprobar que `untrusted.test.ts` FR-506 sigue verde **sin tocarlo**. Si
+      - **Declarado, no implementado, y escrito en `linear.ts` donde alguien iría a
+        buscarlo.** La vía gobierna *cuánto papel* y *de qué forma*, y nada de eso tiene
+        equivalente donde no hay página. Lo que hay que transmitir en audio es **que hay
+        una respuesta que dar**, y eso ya se transmite para todo ejercicio.
+      - Y los valores que en la hoja no producen espacio —`choice`, `match`, `fill`—
+        tampoco se silencian aquí: la respuesta sigue existiendo, sólo que va en el
+        contenido, y callar el aviso le quitaría a quien escucha la única señal de que le
+        toca contestar.
+- [x] T009 [US1] Comprobar que `untrusted.test.ts` FR-506 sigue verde **sin tocarlo**. Si
       hubo que tocarlo, el diseño se rompió y hay que volver a T005. (FR-3704)
-- [ ] T010 [US1] Añadir la hoja de examen del registro de `038` a la revisión: sus cuatro
+- [x] T010 [US1] Añadir la hoja de examen del registro de `038` a la revisión: sus cuatro
       `data-response` salen hoy iguales y después no. Mirarlo. (SC-3701, SC-3702)
+      - **Mirado, y se ve.** La 1 (`short`) lleva una raya; la 2 (`choice`) **ninguna**,
+        porque la respuesta son las opciones; la 3 (`long`) lleva más sitio. Antes de esto
+        las cuatro salían idénticas — sin espacio ninguno, que es el anti-patrón de la
+        receta y lo que llevaba pasando en toda hoja adaptada.
+      - La fixture tenía las cuatro vías escritas desde `038` T013, **antes de que nada las
+        leyera**. Por eso sirve ahora: no se escribió con la forma del arreglo.
 
 **Checkpoint**: US1 sola cierra la promesa que el corpus lleva haciendo desde que se
 escribió `response-route.md`.

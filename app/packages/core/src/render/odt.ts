@@ -219,6 +219,40 @@ function renderBlock(
  * already has its own space on the page it came from.
  */
 function answerSpace(b: Block): string[] {
+  /*
+   * La vía de respuesta llega también aquí, y no por simetría: el Principio IV existe
+   * porque una adaptación que sólo vive en una salida es una tubería paralela, y ésta es
+   * **el fichero que ella abre para cambiar dos palabras antes de imprimir**. Si el PDF
+   * le quita a un chico las rayas que no puede usar y el editable se las devuelve, la
+   * adaptación depende de por qué botón pasó ella (`039` FR-3703).
+   */
+  const declared = b.attrs['data-response'];
+  if (declared === 'choice' || declared === 'match' || declared === 'fill') return [];
+  if (declared === 'oral') {
+    /*
+     * Ni rayas ni nada: la frase y una casilla. Sin marca, una hoja corregida no puede
+     * decir si contestó — «in an exam that is a question left unassessed», dice la receta.
+     *
+     * La casilla es el carácter `☐` y no un dibujo, porque esto es un documento que ella
+     * va a editar: un carácter se copia, se mueve y sobrevive a que cambie el estilo.
+     */
+    return [
+      '<text:p text:style-name="RespuestaEtiqueta">Contesta en voz alta.</text:p>',
+      '<text:p text:style-name="RespuestaEtiqueta">☐ Contestado</text:p>',
+    ];
+  }
+  if (declared === 'draw' || declared === 'manipulative') {
+    return ['<text:p text:style-name="RespuestaEtiqueta">Respuesta:</text:p>',
+      '<text:p text:style-name="RespuestaRecuadro"/>'];
+  }
+  if (declared === 'long') {
+    return ['<text:p text:style-name="RespuestaEtiqueta">Respuesta:</text:p>',
+      '<text:p text:style-name="RespuestaLineaLarga"/>'];
+  }
+  if (declared === 'short') {
+    return ['<text:p text:style-name="RespuestaEtiqueta">Respuesta:</text:p>',
+      '<text:p text:style-name="RespuestaLinea"/>'];
+  }
   if (!b.attrs['data-answer-space']) return [];
   /*
    * **One line, not two** — and this is what printing the page taught (T024).
@@ -274,6 +308,22 @@ const STYLES_XML = `<?xml version="1.0" encoding="UTF-8"?>
   <style:style style:name="RespuestaLinea" style:family="paragraph" style:parent-style-name="Cuerpo">
    <style:paragraph-properties fo:margin-top="0.9cm" fo:margin-bottom="0.45cm"
      fo:keep-together="always" fo:border-bottom="0.02cm solid #000000"/>
+  </style:style>
+  <!-- Una respuesta larga necesita más sitio, y aquí «más sitio» es **una línea más
+       alta** y no más líneas: lo midió T024 de la spec 027, donde dos párrafos rayados por
+       pregunta mandaban un examen de cinco a una segunda página cuyo único contenido era
+       una raya suelta. El mismo sitio para escribir, en un párrafo que no se puede partir
+       de su pregunta. -->
+  <style:style style:name="RespuestaLineaLarga" style:family="paragraph" style:parent-style-name="Cuerpo">
+   <style:paragraph-properties fo:margin-top="2.4cm" fo:margin-bottom="0.45cm"
+     fo:keep-together="always" fo:border-bottom="0.02cm solid #000000"/>
+  </style:style>
+  <!-- Para dibujar o manipular: un recuadro de verdad. Uno de dos centímetros diría
+       «cabe poco», y eso es una instrucción que nadie escribió. -->
+  <style:style style:name="RespuestaRecuadro" style:family="paragraph" style:parent-style-name="Cuerpo">
+   <style:paragraph-properties fo:margin-top="0.2cm" fo:margin-bottom="0.45cm"
+     fo:padding="0.2cm" fo:keep-together="always"
+     fo:border="0.02cm solid #000000" style:min-height="6cm"/>
   </style:style>
   <style:style style:name="Apoyo" style:family="paragraph" style:parent-style-name="Cuerpo">
    <style:paragraph-properties fo:margin-left="0.6cm"/>

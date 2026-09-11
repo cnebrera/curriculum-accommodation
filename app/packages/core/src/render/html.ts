@@ -136,6 +136,18 @@ figure.figure svg{max-width:100%;height:auto}
 .answer-space{margin-top:1em}
 .answer-label{display:block;font-size:.85em;letter-spacing:.03em;margin-bottom:.5em}
 .answer-space .rule{display:block;border-bottom:1px solid var(--rule);height:1.9em}
+/* Las otras dos formas de contestar (039 FR-3701).
+   El recuadro es para dibujar o manipular: alto de verdad, porque un recuadro de
+   dos centímetros dice «cabe poco» y eso es una instrucción que nadie escribió.
+   La casilla es para quien contesta hablando — ni rayas que no va a usar ni nada,
+   que dejaría una hoja corregida sin poder decir si contestó. */
+.answer-space .answer-box{display:block;border:1px solid var(--rule);border-radius:6px;
+  height:7em;margin-top:.4em}
+.answer-oral{display:flex;align-items:center;gap:.5em;flex-wrap:wrap}
+.answer-oral .answer-label{font-style:italic}
+.answer-space .answer-mark{display:inline-block;width:1em;height:1em;
+  border:1px solid var(--rule);border-radius:3px;vertical-align:-.1em}
+.answer-mark-label{font-size:.9em}
 .assessment{border-color:var(--accent)}
 .scaffold{background:#f4f7f7;border-radius:10px;padding:1.2em 1.4em;margin:1.4em 0}
 .unsupported{border:2px dashed #8a2f2c;padding:1em 1.2em;margin:1.4em 0}
@@ -354,7 +366,7 @@ function renderDrawnFigure(b: Block, blocks: readonly Block[]): string {
 }
 
 /**
- * Somewhere to write, for a block that asked for one (027 T014, FR-2503).
+ * Somewhere to answer, shaped by **what the task asks for** (`039` FR-3701, `027` FR-2503).
  *
  * Ruled lines and a label, and **no answer** — which is the whole point of an exam
  * question. `aria-hidden` on the rules because empty lines read aloud are noise; the
@@ -363,12 +375,98 @@ function renderDrawnFigure(b: Block, blocks: readonly Block[]): string {
  * Keyed on `data-answer-space` and not on the `assessment` class: an ingested exam
  * already has its own space on the page it came from, and a second one under every
  * question would be this renderer inventing paper.
+ *
+ * ## El eslabón que faltaba, medido
+ *
+ * `docs/ir.md` documenta `data-response` con ocho valores desde hace mucho y **no lo leía
+ * nadie**: cero referencias en todo `app/packages/` fuera de tests. El espacio salía sólo
+ * de `data-answer-space`, que **únicamente escribe `compose/sheet.ts`** — así que una hoja
+ * **adaptada** no llevaba espacio de respuesta en absoluto, y `recipes/core/response-route.md`
+ * le decía al modelo «quita las rayas» cuando no había rayas que quitar. Un no-op desde que
+ * se escribió la receta.
+ *
+ * ## Por qué esto no mira ningún eje, que es la parte que importa
+ *
+ * `MOT` dice que **hay** una barrera; no dice **cuál es la salida**. La receta lo nombra
+ * como anti-patrón y da el ejemplo: un alumno con parálisis cerebral, uno con la muñeca
+ * rota y uno con disgrafía «comparten el eje y no comparten ninguna solución».
+ *
+ * La salida la escribe ella en `profile.response`, el modelo la aplica al adaptar, y llega
+ * aquí **por el documento**. Así que esta función lee el documento y nada más — que además
+ * es la forma más barata de que `007` FR-506 siga siendo verdad: no hay nada nuevo que
+ * impedirle ver al renderizador.
+ *
+ * Si el modelo no marcó la vía, aquí no pasa nada y la hoja sale como salía. Adivinarla
+ * desde el eje sería el anti-patrón otra vez, y lo que cubre ese hueco es la puerta de
+ * siempre: ella mira la hoja.
  */
+type AnswerShape =
+  | { kind: 'rules'; lines: number }
+  | { kind: 'mark'; says: string }
+  | { kind: 'box' }
+  | { kind: 'none' };
+
+/**
+ * Lo que cada vía produce. Una tabla y no una cadena de `if`, porque es exactamente eso:
+ * una correspondencia entre un vocabulario que el contrato ya fija y una forma.
+ *
+ * `choice`, `match` y `fill` no llevan espacio **a propósito**: la respuesta está en el
+ * contenido — se rodea una opción, se une con una flecha, se escribe en el hueco de la
+ * frase. Rayas debajo de una lista de opciones son «llenar la página de líneas por si
+ * acaso», que es el primer anti-patrón de la receta y la barrera que el eje señala.
+ */
+const ANSWER_SHAPES: Readonly<Record<string, AnswerShape>> = {
+  short: { kind: 'rules', lines: 1 },
+  long: { kind: 'rules', lines: 3 },
+  /*
+   * Ni vacío ni rayas. La receta lo dice con su motivo: «With no mark that an answer
+   * belongs there, a corrected sheet cannot say whether the learner responded — and **in
+   * an exam that is a question left unassessed**». Su ejemplo dibuja una casilla.
+   */
+  oral: { kind: 'mark', says: 'Contesta en voz alta.' },
+  draw: { kind: 'box' },
+  manipulative: { kind: 'box' },
+  choice: { kind: 'none' },
+  match: { kind: 'none' },
+  fill: { kind: 'none' },
+};
+
 function answerSpace(b: Block): string {
-  if (!b.attrs['data-answer-space']) return '';
+  const declared = b.attrs['data-response'];
+  /*
+   * Un valor que no conoce se trata como ausente. El vocabulario puede crecer en
+   * `docs/ir.md` antes de que esta tabla lo alcance, y una hoja rota por un valor nuevo
+   * sería un fallo peor que una hoja sin espacio.
+   */
+  const shape = declared !== undefined ? ANSWER_SHAPES[declared] : undefined;
+  if (!shape) {
+    // Sin vía declarada, el comportamiento de siempre, byte a byte.
+    if (!b.attrs['data-answer-space']) return '';
+    return '<div class="answer-space"><span class="answer-label">Respuesta:</span>'
+      + '<span class="rule" aria-hidden="true"></span>'
+      + '<span class="rule" aria-hidden="true"></span></div>';
+  }
+
+  if (shape.kind === 'none') return '';
+  if (shape.kind === 'box') {
+    return '<div class="answer-space"><span class="answer-label">Respuesta:</span>'
+      + '<span class="answer-box" aria-hidden="true"></span></div>';
+  }
+  if (shape.kind === 'mark') {
+    /*
+     * La frase va en castellano, como «Respuesta:» justo arriba: **este renderizador es
+     * monolingüe hoy**. `opts.lang` sólo llega al atributo `lang` del `<html>`, y no hay
+     * ningún mecanismo para traducir una cadena suya. Localizarlo es trabajo propio y
+     * está anotado en las tareas de `039`; inventar aquí medio mecanismo dejaría dos
+     * formas de decir una cosa.
+     */
+    return '<div class="answer-space answer-oral">'
+      + `<span class="answer-label">${esc(shape.says)}</span>`
+      + '<span class="answer-mark" aria-hidden="true"></span>'
+      + '<span class="answer-mark-label">Contestado</span></div>';
+  }
   return '<div class="answer-space"><span class="answer-label">Respuesta:</span>'
-    + '<span class="rule" aria-hidden="true"></span>'
-    + '<span class="rule" aria-hidden="true"></span></div>';
+    + '<span class="rule" aria-hidden="true"></span>'.repeat(shape.lines) + '</div>';
 }
 
 /**
