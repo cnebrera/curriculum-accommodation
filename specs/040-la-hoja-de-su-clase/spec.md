@@ -34,6 +34,22 @@ Esta feature es compatible con eso y hay que escribir por qué, o se pierde:
 uno de diecisiete. O sea que el principio que `018` dejó escrito **se está incumpliendo hoy
 por la ausencia de esta feature**, no por añadirla.
 
+## Clarifications
+
+### Session 2026-09-11
+
+- Q: ¿Se responde D1 —qué bandas hay y qué cambia en cada una— antes de planificar?
+  → A: **No. Se aplaza y se construye US1**, que no depende de ella. Decisión de Carlos.
+- Q: ¿Qué se lleva al documento editable y qué no? → A: **Lo que el formato expresa sin
+  inventar nada**, y lo demás se declara. En concreto se llevan el cuerpo de letra, el
+  interlineado, el aire entre párrafos, el espaciado de letra, la tinta y una tarea por
+  página. Se declaran fuera la **longitud de línea** y el **espaciado entre palabras**, con
+  sus motivos — medidos, no supuestos.
+- Q: ¿Por qué la longitud de línea no? → A: **Porque este documento no define su página.**
+  No hay ningún `page-layout` en él: toma la configuración del procesador de textos de
+  ella, y eso es parte de que sea editable. Acortar la línea exigiría imponerle una
+  página, que es pisarle su propia configuración para conseguir un efecto aproximado.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - El documento editable deja de ser menos accesible que el PDF (Priority: P1)
