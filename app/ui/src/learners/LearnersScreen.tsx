@@ -17,6 +17,7 @@ import { filterRoster, searchRoster, facetsOf, groupRoster, type RosterFilter }
 import { useEducationSystems } from '../data/corpus.js';
 import { useCaseloadFacts } from '../data/record.js';
 import { Loaded } from '../data/Loaded.js';
+import { Icon } from '../components/Icon.js';
 
 /**
  * Her caseload (spec 010 T015).
@@ -54,8 +55,9 @@ function LearnerCard({ row, made, year, halfDone, onOpen }: {
 }) {
   return (
     <button className="card card-action stack gap2" onClick={() => onOpen(row.code)}>
-      <div className="row" style={{ justifyContent: 'space-between', alignItems: 'baseline' }}>
-        <span className="row gap2" style={{ alignItems: 'baseline' }}>
+      <Icon name="chevron-right" className="card-chevron" />
+      <div className="row row-split row-baseline">
+        <span className="row gap2 row-baseline">
           {/*
             «Sin nombre todavía» rather than the code repeated.
 
@@ -140,8 +142,7 @@ function OrphanWork({ rows, onContinue }: {
         <strong>no vuelvo a leerlo</strong>, eso ya está pagado.
       </p>
       {orphans.map((j) => (
-        <div className="row gap2" key={j.jobId}
-             style={{ justifyContent: 'space-between', flexWrap: 'wrap' }}>
+        <div className="row gap2 row-split" key={j.jobId}>
           <span className="small">
             {j.confirmed} de {j.pages} páginas confirmadas
             <span className="meta"> · {j.jobId}</span>
@@ -347,7 +348,7 @@ export function LearnersScreen({ onOpen, onNew, onContinue }: {
         empty={{
           title: 'Todavía no hay ningún alumno',
           body: 'Empieza por el que más trabajo te dé. No hace falta ningún diagnóstico: con lo que ves en clase es suficiente.',
-          action: <button className="btn btn-primary" onClick={onNew}>Añadir un alumno</button>,
+          action: <button className="btn btn-primary" onClick={onNew}><Icon name="plus" /> Añadir un alumno</button>,
         }}
       >
         {(rows) => (
@@ -417,7 +418,7 @@ export function LearnersScreen({ onOpen, onNew, onContinue }: {
             <Actions
               primary={
                 <button className="btn btn-primary" onClick={onNew}>
-                  Añadir un alumno
+                  <Icon name="plus" /> Añadir un alumno
                 </button>
               }>
               {/* Two ways of looking, and no third. There is deliberately no

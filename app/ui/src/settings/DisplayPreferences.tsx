@@ -88,7 +88,7 @@ export function DisplayPreferences() {
               <span className="sub">Quita las transiciones. No se pierde nada: ninguna dice nada.</span></span>
           </label>
 
-          <p className="small" style={{ margin: 0 }}>
+          <p className="small">
             Esto es solo para ti y para este ordenador. No viaja con tus alumnos
             ni con lo que compartes.
           </p>

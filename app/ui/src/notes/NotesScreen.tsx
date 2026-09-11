@@ -70,9 +70,9 @@ export function NotesScreen() {
           this the textarea had no accessible name at all — a critical axe
           violation, and for a screen-reader user simply an unnamed box.
         */}
-        <textarea className="textarea" value={house} aria-labelledby="house-h"
+        <textarea className="textarea textarea-canvas" value={house} aria-labelledby="house-h"
                   aria-describedby="house-help"
-                  onChange={(e) => setHouse(e.target.value)} style={{ minHeight: 240 }} />
+                  onChange={(e) => setHouse(e.target.value)} />
       </div>
       <div className="row">
         <button className="btn btn-primary" onClick={() => void save()}>Guardar</button>
@@ -88,9 +88,9 @@ export function NotesScreen() {
             {index.split(/\n(?=## )/).filter((s) => s.startsWith('## ')).map((sec, i) => {
               const [head, ...items] = sec.split('\n');
               return (
-                <div className="card" key={i}>
-                  <strong style={{ fontSize: 'var(--text-sm)' }}>{(head ?? '').replace(/^##\s*/, '')}</strong>
-                  <ul className="stack gap1" style={{ margin: 'var(--s2) 0 0', paddingLeft: '1.1em' }}>
+                <div className="card card-object stack gap2" key={i}>
+                  <strong className="progress-label">{(head ?? '').replace(/^##\s*/, '')}</strong>
+                  <ul className="bullets">
                     {items.filter((l) => l.trim().startsWith('-')).map((l, j) => (
                       <li className="small" key={j}>{l.replace(/^\s*-\s*/, '')}</li>
                     ))}

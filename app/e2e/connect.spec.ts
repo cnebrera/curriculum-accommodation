@@ -110,7 +110,7 @@ test.describe('the connection step', () => {
      * exactly while `route.reconnecting` is set, so it means «the wizard is on screen»
      * at every stage, which is what this test is actually about.
      */
-    const wizard = page.getByRole('button', { name: '← Dejarlo como está' });
+    const wizard = page.getByRole('button', { name: /^(← )?Dejarlo como está$/  });
     await wizard.waitFor({ timeout: 10000 });
 
     /* One · she can leave on purpose. */

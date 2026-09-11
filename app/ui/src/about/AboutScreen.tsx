@@ -53,7 +53,7 @@ export function AboutScreen() {
 
       <section className="stack gap3">
         <h2>Lo que hace, y lo que no</h2>
-        <ul className="stack gap2" style={{ margin: 0, paddingLeft: '1.2em' }}>
+        <ul className="bullets">
           <li>Adapta la vía, nunca el contenido: no inventa datos ni cambia lo que enseña la ficha.</li>
           <li>No decide adaptaciones significativas. Eso es del equipo docente y del expediente.</li>
           <li>Un examen adaptado que además es más fácil es otro examen. No lo hace.</li>
@@ -86,15 +86,15 @@ export function AboutScreen() {
           siendo de la comunidad.
         </p>
         {version && (
-          <div className="card">
-            <dl className="stack gap2" style={{ margin: 0 }}>
-              <div className="row" style={{ justifyContent: 'space-between' }}>
+          <div className="card stack gap4">
+            <dl className="stack gap2 flush">
+              <div className="row row-split">
                 <dt className="small"><strong>Reglas actualizadas</strong></dt>
-                <dd className="meta" style={{ margin: 0 }}>{String(version['bundledAt'] ?? '—').slice(0, 10)}</dd>
+                <dd className="meta flush">{String(version['bundledAt'] ?? '—').slice(0, 10)}</dd>
               </div>
-              <div className="row" style={{ justifyContent: 'space-between' }}>
+              <div className="row row-split">
                 <dt className="small"><strong>Atribución</strong></dt>
-                <dd className="meta" style={{ margin: 0 }}>{String(version['attribution'] ?? '—')}</dd>
+                <dd className="meta flush">{String(version['attribution'] ?? '—')}</dd>
               </div>
             </dl>
 
@@ -106,7 +106,7 @@ export function AboutScreen() {
               ordenador con datos de menores, en un horario que nadie ha
               autorizado. Así que se lo decimos antes de que pulse.
             */}
-            <div className="stack gap2" style={{ marginTop: 'var(--s4)' }}>
+            <div className="stack gap2">
               <div className="row gap2">
                 <button className="btn btn-sm" disabled={checking} aria-busy={checking}
                         onClick={() => {
@@ -115,7 +115,7 @@ export function AboutScreen() {
                   {checking ? 'Comprobando…' : '¿Hay una versión más nueva?'}
                 </button>
               </div>
-              <p className="small" style={{ margin: 0 }}>
+              <p className="small">
                 Sólo cuando lo pulses, salvo que abajo digas que puedo mirarlo al abrir.
                 No envía nada tuyo: pregunta qué versión hay publicada y ya está. Y
                 <strong> no descarga ni instala nada</strong>: te doy el enlace y lo
@@ -179,9 +179,9 @@ export function AboutScreen() {
                   appeared either way.
                 */}
                 {updateCheck.error ? (
-                  <p className="small" style={{ margin: 0 }}>{updateCheck.error.message}</p>
+                  <p className="small">{updateCheck.error.message}</p>
                 ) : update ? (
-                  <p className="small" style={{ margin: 0 }}>
+                  <p className="small">
                     {update.problem === 'not-published'
                       ? `Todavía no hay ninguna versión publicada. La tuya es la ${update.current}.`
                       : update.problem === 'offline'
@@ -222,8 +222,8 @@ export function AboutScreen() {
           </div>
         )}
         {lic?.notice && (
-          <details className="card card-plain">
-            <summary style={{ cursor: 'pointer', fontWeight: 700, fontSize: 'var(--text-sm)' }}>
+          <details className="details">
+            <summary>
               Aviso de licencias completo
             </summary>
             {/* A licence is legitimately preformatted text: its line breaks are
@@ -232,7 +232,9 @@ export function AboutScreen() {
                 the other is the log's tail, for the same reason — each line is one
                 record. Corrected here rather than left saying «the one», because a
                 comment that has stopped being true is what `036` exists about. */}
-            <pre className="licence">{lic.notice}</pre>
+            <div className="details-body">
+              <pre className="licence">{lic.notice}</pre>
+            </div>
           </details>
         )}
       </section>

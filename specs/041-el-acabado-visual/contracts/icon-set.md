@@ -47,9 +47,9 @@ is where it is written.**
 | `circle-check` | callout `ok` («Hecho»), signed bar |
 | `circle-help` | callout `decide` («Necesita tu decisión») |
 | `refresh-cw` | «Volver a intentarlo» |
-| `chevron-down` | `.select` (replaces the inline `data:` SVG) |
+| `chevron-down` | `.select`, as the `--select-chevron` background token (a `<select>` has no children) — the same lucide path, one per palette |
 | `chevron-right` | object card affordance (the learner card, the service card) |
-| `loader-circle` | `aria-busy` (replaces the drawn `::after`) |
+| `loader-circle` | the loading line of `Loaded`, the «work» badge. The busy **button** keeps its drawn ring (`.btn[aria-busy]::after`): it is a stroke, not a glyph, and it works where a child element cannot |
 
 ## Adding one
 

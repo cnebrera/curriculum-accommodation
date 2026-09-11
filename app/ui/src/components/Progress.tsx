@@ -10,8 +10,8 @@
 export function Stages({ stages, current }: { stages: readonly string[]; current: number }) {
   return (
     <div className="stack gap2">
-      <div className="row" style={{ justifyContent: 'space-between' }}>
-        <strong style={{ fontSize: 'var(--text-sm)' }}>{stages[current] ?? ''}</strong>
+      <div className="row row-split">
+        <strong className="progress-label">{stages[current] ?? ''}</strong>
         <span className="meta">{current + 1} de {stages.length}</span>
       </div>
       <div className="progress-steps" aria-hidden="true">
@@ -30,8 +30,8 @@ export function Stream({ label, chars }: { label: string; chars: number }) {
   const pct = Math.min(92, Math.round((chars / 6000) * 100));
   return (
     <div className="stack gap2">
-      <div className="row" style={{ justifyContent: 'space-between' }}>
-        <strong style={{ fontSize: 'var(--text-sm)' }}>{label}</strong>
+      <div className="row row-split">
+        <strong className="progress-label">{label}</strong>
         <span className="meta">{chars.toLocaleString('es-ES')} caracteres</span>
       </div>
       <div className="progress" role="progressbar" aria-label={label}>

@@ -53,9 +53,9 @@ export function Logo({ size = 32, tone = 'accent', title }: {
 export function Wordmark({ size = 22 }: { size?: number }) {
   const w = size * 7;
   return (
-    <span className="row gap2" style={{ alignItems: 'flex-end' }}>
+    <span className="row gap2 row-bottom wordmark">
       <Logo size={size * 1.15} title="Rampa" />
-      <span className="stack" style={{ gap: 3 }}>
+      <span className="stack gap1">
         <span style={{
           fontSize: size, fontWeight: 700, letterSpacing: '-0.025em', lineHeight: 1,
         }}>Rampa</span>

@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { Callout } from '../components/Callout.js';
+import { Icon } from '../components/Icon.js';
 import { EmptyState } from '../components/EmptyState.js';
 import { isEmpty, type Async } from './async.js';
 
@@ -42,7 +43,11 @@ export function Loaded<T>({ from, children, empty, busyLabel }: {
      * is not neutral, and a loading indicator that has to be suppressed in that
      * mode is a loading indicator that mode has no replacement for.
      */
-    return <p className="meta" role="status">{busyLabel ?? 'Un momento…'}</p>;
+    return (
+      <p className="small muted row gap2" role="status">
+        <Icon name="loader-circle" className="icon-spin" />{busyLabel ?? 'Un momento…'}
+      </p>
+    );
   }
 
   if (from.state === 'error') {
@@ -53,7 +58,7 @@ export function Loaded<T>({ from, children, empty, busyLabel }: {
             the vault was on a share that woke up late. A dead end would send her
             to restart the application to find out. */}
         <div className="row">
-          <button className="btn btn-sm" onClick={from.retry}>Volver a intentarlo</button>
+          <button className="btn btn-sm" onClick={from.retry}><Icon name="refresh-cw" /> Volver a intentarlo</button>
         </div>
       </Callout>
     );

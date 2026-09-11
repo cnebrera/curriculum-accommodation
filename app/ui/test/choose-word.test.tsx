@@ -145,7 +145,14 @@ describe('the state is visible, not only announced', () => {
      */
     const rule = /\.picto-choice-on\s*\{([^}]*)\}/.exec(css)?.[1] ?? '';
     expect(rule).toMatch(/border-width/);
-    expect(css).toMatch(/\.picto-choice-on::after\s*\{[^}]*content/);
+    /*
+     * The check is an `<Icon name="check">` the component places when chosen (`041`
+     * FR-3918) — it was a `content: '✓'` pseudo-element, a glyph that differed per
+     * operating system. Same property: a mark, not a colour.
+     */
+    const source = readFileSync(join(uiRoot, 'src', 'pictograms', 'ChooseWord.tsx'), 'utf8');
+    expect(source).toMatch(/c\.id === current \? <Icon name="check" className="door-check"/);
+    expect(css).toMatch(/\.picto-choice-on \.door-check\s*\{/);
   });
 
   it('uses only classes the stylesheets define', () => {

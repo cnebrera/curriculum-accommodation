@@ -50,7 +50,7 @@ export function SecondLook({ jobId, learner, onCorrections }: {
           <p className="small">
             {already.by} la miró el {already.date}, sobre la revisión {already.revision}.
           </p>
-          <ul style={{ margin: 0 }}>
+          <ul className="flush">
             {already.corrections.map((c) => <li key={c} className="small">{c}</li>)}
           </ul>
           <div>
@@ -61,10 +61,10 @@ export function SecondLook({ jobId, learner, onCorrections }: {
         </>
       ) : null}
 
-      <div className="row gap2" style={{ flexWrap: 'wrap', alignItems: 'flex-end' }}>
-        <label className="stack" style={{ gap: '.2rem' }}>
+      <div className="row gap2 row-bottom">
+        <label className="stack gap1">
           <span className="small">Tu papel, para quien la reciba</span>
-          <input className="input" style={{ maxWidth: '14em' }} value={role}
+          <input className="input input-sm" value={role}
                  placeholder="PT, tutora…"
                  onChange={(e) => setRole(e.target.value)} />
         </label>
@@ -105,7 +105,7 @@ export function SecondLook({ jobId, learner, onCorrections }: {
           <p className="small">
             {incoming.role} dice, sobre la revisión {incoming.revision}:
           </p>
-          <ul style={{ margin: 0 }}>
+          <ul className="flush">
             {incoming.corrections.map((c) => <li key={c} className="small">{c}</li>)}
           </ul>
           <div className="row gap2">

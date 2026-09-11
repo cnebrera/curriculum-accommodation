@@ -40,7 +40,7 @@ export function LearnerNotes({ code, name }: { code: string; name?: string }) {
         ) : (
           <div className="stack gap3">
             {rows.map((n) => (
-              <div className="card stack gap2" key={n.path}>
+              <div className="card card-object stack gap2" key={n.path}>
                 <span className="small">
                   {/*
                     La fecha delante, porque una nota sin cuándo no se puede pesar contra

@@ -11,6 +11,7 @@ import { DraftMark } from '../components/DraftMark.js';
 import { ScopeQuestion } from './ScopeQuestion.js';
 import { SecondLook } from '../coordination/SecondLook.js';
 import { ConversationPanel } from './ConversationPanel.js';
+import { Icon } from '../components/Icon.js';
 
 /**
  * Leads with the risky decisions, per checklists/review.md. The teacher reviews
@@ -164,9 +165,9 @@ export function ReviewScreen({ jobId, learner, recipes, back }: {
         a mis alumnos», for the same reason.
       */}
       {back ? (
-        <button className="btn btn-ghost btn-sm" style={{ alignSelf: 'flex-start' }}
+        <button className="btn btn-ghost btn-sm btn-back"
                 onClick={back.go}>
-          {back.label}
+          <Icon name="arrow-left" /> {back.label}
         </button>
       ) : null}
 
@@ -181,7 +182,7 @@ export function ReviewScreen({ jobId, learner, recipes, back }: {
       {undescribed.length ? (
         <Callout intent="decide" title="Una figura imprescindible no tiene descripción">
           <ul>{undescribed.map((u, i) => <li key={i}>{u}</li>)}</ul>
-          <p className="small" style={{ margin: 0 }}>
+          <p className="small">
             En papel sale igual: la imagen se ve. Pero para escuchar o para braille
             no puedo darte esta hoja hasta que la describas, porque ahí el dibujo no
             está y el ejercicio se queda sin respuesta dentro.
@@ -198,11 +199,11 @@ export function ReviewScreen({ jobId, learner, recipes, back }: {
       {error ? <Callout intent="danger">{error}</Callout> : null}
 
       {checklist ? (
-        <details className="card card-plain">
-          <summary style={{ cursor: 'pointer', fontWeight: 700, fontSize: 'var(--text-sm)' }}>
+        <details className="details">
+          <summary>
             Lista de comprobación
           </summary>
-          <div className="stack gap2" style={{ marginTop: 'var(--s3)' }}>
+          <div className="stack gap2">
             {checklist.split('\n').filter((l) => l.trim().startsWith('- [')).map((l, i) => (
               <label className="check" key={i}>
                 <input type="checkbox" />
@@ -243,8 +244,8 @@ export function ReviewScreen({ jobId, learner, recipes, back }: {
       {corrections.length ? (
         <div className="card stack">
           <strong>Lo que me has corregido</strong>
-          <ul style={{ margin: 0 }}>{corrections.map((c, i) => <li key={i}>{c.text}</li>)}</ul>
-          <p className="small muted" style={{ margin: 0 }}>
+          <ul className="flush">{corrections.map((c, i) => <li key={i}>{c.text}</li>)}</ul>
+          <p className="small muted">
             Ya lo he apuntado, así que la próxima ficha saldrá teniéndolo en cuenta.
             Si quieres, rehago <em>esta</em> ahora mismo.
           </p>
@@ -266,7 +267,7 @@ export function ReviewScreen({ jobId, learner, recipes, back }: {
         <button className="btn" onClick={() => void openForEditing.run(jobId, learner)}>
           Corregir a mano
         </button>
-        <button className="btn" onClick={() => void render()}>{es.adapt.print}</button>
+        <button className="btn" onClick={() => void render()}><Icon name="file-down" /> {es.adapt.print}</button>
         {/*
           The editable export (019 US1). Beside the PDF rather than instead of it:
           the PDF is what she photocopies, and this is what she corrects — and a
@@ -297,7 +298,7 @@ export function ReviewScreen({ jobId, learner, recipes, back }: {
           Para braille
         </button>
         {!signedOff
-          ? <button className="btn btn-primary" onClick={() => void sign()}>{es.review.signOff}</button>
+          ? <button className="btn btn-primary" onClick={() => void sign()}><Icon name="check" /> {es.review.signOff}</button>
           : <span className="badge badge-accent">{es.review.signedOff}</span>}
       </div>
 

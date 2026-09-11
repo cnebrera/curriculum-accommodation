@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Callout } from '../components/Callout.js';
 import { useCurrentSet } from '../data/pictograms.js';
+import { Icon } from '../components/Icon.js';
 
 /**
  * Pictograms, on a learner's page (025 T011, FR-2302/2303).
@@ -134,7 +135,7 @@ export function LearnerPictograms({
           */}
           {!missing ? (
           <details className="field">
-            <summary style={{ cursor: 'pointer' }}>
+            <summary>
               Dibujos suyos para palabras concretas
               {Object.keys(overrides).length ? ` (${Object.keys(overrides).length})` : ''}
             </summary>
@@ -147,8 +148,8 @@ export function LearnerPictograms({
               <ul className="pick-list" role="list">
                 {Object.entries(overrides).sort(([a], [b]) => a.localeCompare(b))
                   .map(([w, picture]) => (
-                  <li key={w} className="row" style={{ justifyContent: 'space-between' }}>
-                    <span className="small"><strong>{w}</strong> → <code>{picture}</code></span>
+                  <li key={w} className="row row-split">
+                    <span className="small"><strong>{w}</strong> <Icon name="chevron-right" /> <code>{picture}</code></span>
                     <button type="button" className="btn btn-sm" onClick={() => remove(w)}>
                       Quitar
                     </button>
@@ -157,7 +158,7 @@ export function LearnerPictograms({
               </ul>
             ) : null}
 
-            <div className="row gap2" style={{ flexWrap: 'wrap' }}>
+            <div className="row gap2">
               <input className="input" aria-label="Palabra" placeholder="palabra"
                      value={word} onChange={(e) => setWord(e.target.value)} />
               <input className="input" aria-label="Número del dibujo" placeholder="nº del dibujo"
@@ -185,7 +186,7 @@ export function LearnerPictograms({
               </p>
               <div className="row">
                 <button type="button" className="btn" onClick={onConfigure}>
-                  Traer los pictogramas →
+                  Traer los pictogramas <Icon name="chevron-right" />
                 </button>
               </div>
             </Callout>

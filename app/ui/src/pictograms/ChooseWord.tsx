@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Callout } from '../components/Callout.js';
 import { useCandidates, useChooseWord, type WordChoice } from '../data/pictograms.js';
+import { Icon } from '../components/Icon.js';
 
 /**
  * The word with four pictures (024 T018, FR-2214/2216/2217).
@@ -96,7 +97,9 @@ export function ChooseWord({ words, language = 'es', onChosen }: {
                    */
                   aria-pressed={c.id === current}
                   onClick={() => void choose(choice, c.id)}
+                  data-chosen={c.id === current ? '' : undefined}
                   disabled={pick.busy}>
+                  {c.id === current ? <Icon name="check" className="door-check" /> : null}
                   {c.image
                     ? <img src={c.image} alt={`dibujo ${c.id} para «${choice.word}»`} />
                     /* The image has not arrived yet — `018` FR-1616's named gap, here

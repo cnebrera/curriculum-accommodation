@@ -97,8 +97,8 @@ export function ConnectionScreen({ onReconnect, onEnsayo }: {
             const s = byId(conn.serviceId);
             const isActive = conn.serviceId === active;
             return (
-              <div className="card stack gap3" key={conn.serviceId}>
-                <div className="row" style={{ justifyContent: 'space-between' }}>
+              <div className="card card-object stack gap3" key={conn.serviceId}>
+                <div className="row row-split row-top">
                   <div className="stack gap1">
                     <span className="svc-name">{s?.label ?? conn.serviceId}</span>
                     <span className="meta">

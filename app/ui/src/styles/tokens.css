@@ -208,6 +208,35 @@
   --radius-box: 12px;
   --radius-pill: 999px;
 
+  /* ── Control height · from the text, not from a number (041 FR-3907) ─────
+     Was `44px`, fixed, on every button, input and rail item. Two things wrong
+     with a fixed number: it did not grow with the text preference (the padding
+     grew and the label got cropped), and at 44px with a 17px body every screen
+     read as a stack of bars. 2.35 × the body is 40px at the default size — the
+     large control of macOS and Windows 11 — and 47px / 56px at «grande» /
+     «muy grande», which is where somebody who needs a bigger target has already
+     said so. WCAG 2.2 SC 2.5.8 asks 24×24; `e2e/layout.spec.ts` asserts it.
+     `010` FR-804's 44 is superseded here, on purpose and with this reason. */
+  --control-h:    calc(var(--text-base) * 2.35);
+  --control-h-sm: calc(var(--text-base) * 1.9);
+
+  /* ── Weight · the second axis of hierarchy (041 FR-3905) ───────────────────
+     Every heading was 700, so size alone carried the hierarchy — and between
+     21px and 27px size alone barely reads. The page title keeps bold; sections,
+     third-level headings and field labels share one semibold, so a screen cannot
+     pick 500 by eye. In high contrast the legibility face has only 400 and 700,
+     so 600 resolves to 700 there: that mode wants fewer nuances, and gets them. */
+  --weight-title:   700;
+  --weight-heading: 600;
+  --weight-label:   600;
+
+  /* ── The one icon that cannot be inline (041 icon-set.md) ────────────────
+     A `<select>` has no children to hold an `<svg>`, so its chevron is a CSS
+     background — lucide's `chevron-down`, drawn in each palette's `--ink-soft`.
+     Redefined in every palette below: a token added to one theme is a token
+     missing from the others. */
+  --select-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2348484f' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+
   /* ── Depth · real elevation, in NEUTRAL ink. v2 tinted every shadow with the
      brand teal; on the (then green) ground that read as light, on a neutral
      grey ground it reads as mould. A shadow is the absence of light, and light
@@ -299,6 +328,7 @@
     --inset-well-deep: inset 0 1px 3px rgba(0, 0, 0, 0.55);
     --sheen: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.16), transparent);
     --focus-glow: 0 0 0 6px rgba(111, 208, 247, 0.26);
+    --select-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23aaaab2' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
   }
 }
 
@@ -334,9 +364,13 @@
   --inset-well-deep: inset 0 1px 3px rgba(0, 0, 0, 0.55);
   --sheen: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.16), transparent);
   --focus-glow: 0 0 0 6px rgba(111,208,247,.26);
+  --select-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23aaaab2' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
 }
 :root[data-theme="light"] {
-  --paper: var(--n-25); --surface: var(--n-50); --surface-2: var(--n-100);
+  /* `--n-0`, the same white as the system-light `:root` above. It was `--n-25`
+     here and nowhere else, so «Claro» chosen by hand and «Como el sistema» on a
+     light machine painted two different panels (041 FR-3915). */
+  --paper: var(--n-0); --surface: var(--n-50); --surface-2: var(--n-100);
   --ink: var(--n-900); --ink-soft: var(--n-600); --ink-faint: var(--n-500);
   --line: var(--n-200); --line-strong: var(--n-300);
   --accent: var(--blue-600); --accent-hover: var(--blue-700);
@@ -349,8 +383,10 @@
 }
 
 /* ── Her preferences · adjustments on a default that already meets AA ───── */
-:root[data-text="large"]  { --text-base: 1.25rem; --text-sm: 1.0625rem; --text-lg: 1.5rem;  --text-xl: 1.875rem; }
-:root[data-text="xlarge"] { --text-base: 1.5rem;  --text-sm: 1.25rem;   --text-lg: 1.75rem; --text-xl: 2.125rem; }
+/* `--text-xs` moves too (041): it did not, so a badge, a date and the locale
+   select stayed at 13px beside 24px body text at «muy grande». */
+:root[data-text="large"]  { --text-xs: 0.9375rem; --text-base: 1.25rem; --text-sm: 1.0625rem; --text-lg: 1.5rem;  --text-xl: 1.875rem; }
+:root[data-text="xlarge"] { --text-xs: 1.0625rem; --text-base: 1.5rem;  --text-sm: 1.25rem;   --text-lg: 1.75rem; --text-xl: 2.125rem; }
 
 /* High contrast pushes toward AAA and drops the decoration — the one place
    where the palette does get quieter, and only because she asked. */
@@ -370,6 +406,14 @@
   --ink: #000; --ink-soft: #212126; --ink-faint: #3a3a41;
   --line: #98989f; --line-strong: #67676f;
   --accent: var(--blue-800); --accent-ink: var(--blue-900);
+  /* The BRIGHT end goes dark here. Callout stripes, the progress bar and the
+     draft dot are drawn in `--*-bright`, and in the mode whose whole purpose is
+     to remove decoration they were still there at 1.8–2.9:1 on their soft
+     grounds. Pointed at the DEEP colour they measure 5.7 / 6.3 / 5.3 / 5.0 /
+     4.8:1 on those grounds — and the palette gains no new hex (041 FR-3910). */
+  --accent-bright: var(--accent); --decide-bright: var(--decide);
+  --draft-bright: var(--draft); --ok-bright: var(--ok); --work-bright: var(--work);
+  --select-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23212126' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
   --shadow-sm: none; --shadow-md: none; --shadow-lg: none; --shadow-accent: none;
   --shadow-accent-hi: none; --inset-press: none;
   --inset-well: none; --inset-well-deep: none;
@@ -385,6 +429,13 @@
   --ink: #fff; --ink-soft: #dcdce0; --ink-faint: #b9b9c0;
   --line: #4b4b53; --line-strong: #70707a;
   --accent: var(--blue-200); --accent-ink: var(--blue-100);
+  /* Same move as the light one above: brights become the (dark-palette) deep
+     colours, which on dark are already the bright family — so this is the one
+     palette where the two ends were already the same hue, and it is written
+     out anyway so the four blocks stay parallel. */
+  --accent-bright: var(--accent); --decide-bright: var(--decide);
+  --draft-bright: var(--draft); --ok-bright: var(--ok); --work-bright: var(--work);
+  --select-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23dcdce0' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
 }
 
 @media (prefers-reduced-motion: reduce) { :root { --dur: 0ms; --dur-slow: 0ms } }
@@ -401,11 +452,23 @@ body {
   line-height: var(--leading-body); -webkit-font-smoothing: antialiased;
 }
 h1, h2, h3, h4 { margin: 0; line-height: var(--leading-tight); text-wrap: balance; }
-h1 { font-size: var(--text-2xl); letter-spacing: var(--tracking-tight); }
-h2 { font-size: var(--text-xl); letter-spacing: -0.015em; }
-h3 { font-size: var(--text-lg); }
-h4 { font-size: var(--text-base); }
-p { margin: 0; }
+h1 { font-size: var(--text-2xl); letter-spacing: var(--tracking-tight); font-weight: var(--weight-title); }
+/* ONE second-level heading (041 FR-3902). This said `--text-xl` while
+   `composition.css` said `--text-lg` for the same element inside a `Section`,
+   so a screen that wrote an `<h2>` outside one got a title 6px larger than its
+   neighbours — «Conectar otro» at 27px over «Enseñárselo a alguien» at 21px in
+   one column. Two copies of one truth, the way every defect here has lived.
+   `--text-xl` is no longer a heading size; it stays in the scale for the lede
+   of a first-run screen if one ever needs it. */
+h2 { font-size: var(--text-lg); letter-spacing: -0.014em; font-weight: var(--weight-heading); font-family: var(--font-display); }
+/* A third level that is visible: base size, heading weight. Before this h3 was
+   `--text-lg` — the same as h2 now — so the rung did not exist. */
+h3 { font-size: var(--text-base); font-weight: var(--weight-heading); }
+h4 { font-size: var(--text-base); font-weight: var(--weight-heading); }
+/* `pretty` (Chromium 117+) keeps «hecho.» from standing alone on a second line.
+   Balance is for headings; prose wants its last line to hold a few words. */
+p { margin: 0; text-wrap: pretty; }
+summary { cursor: pointer; }
 a { color: var(--accent-ink); text-underline-offset: 3px; }
 a:hover { color: var(--accent); }
 

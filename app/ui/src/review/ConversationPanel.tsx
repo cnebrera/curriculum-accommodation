@@ -65,7 +65,7 @@ export function ConversationPanel({ jobId, learner }: {
                */
               <div className="stack gap2">
                 {conversation.turns.map((t, i) => (
-                  <div className="card stack gap2" key={i}>
+                  <div className="card card-object stack gap2" key={i}>
                     <strong>{t.text}</strong>
                     {t.outcome.kind === 'refusal' ? (
                       /*
@@ -79,11 +79,11 @@ export function ConversationPanel({ jobId, learner }: {
                     ) : t.outcome.kind === 'no-change' ? (
                       <p className="small">No he cambiado nada: ya estaba como me pedías.</p>
                     ) : (
-                      <ul className="bullets" style={{ margin: 0 }}>
+                      <ul className="bullets">
                         {t.changed.map((c, j) => <li key={j}>{c}</li>)}
                       </ul>
                     )}
-                    <p className="small muted" style={{ margin: 0 }}>
+                    <p className="small muted">
                       {whenSpanish(t.at)} · {t.costCents === null
                         ? 'no sé lo que ha costado'
                         : `${t.costCents} céntimo${t.costCents === 1 ? '' : 's'}`}
@@ -151,7 +151,7 @@ function RevisionList({ revisions, onRestore, busy }: {
   return (
     <div className="stack gap2">
       <strong>Las versiones que hay</strong>
-      <ul className="bullets" style={{ margin: 0 }}>
+      <ul className="bullets">
         {revisions.map((r) => (
           <li key={r.n}>
             Versión {r.n}

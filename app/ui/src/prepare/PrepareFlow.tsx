@@ -178,7 +178,7 @@ function Framed({ flow, onLeave, children }: {
 }) {
   return (
     <div className="stack gap4">
-      <div className="row gap2" style={{ justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap' }}>
+      <div className="row gap2 row-split">
         <StepStrip flow={flow} />
         {/*
           Irse siempre se puede (FR-1808), y lo que ya se haya gastado lo dice la propia

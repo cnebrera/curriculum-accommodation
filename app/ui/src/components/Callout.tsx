@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { Icon, type IconName } from './Icon.js';
 
 /**
  * One shape, four intents (spec 010 FR-824). Replaces `Notice`.
@@ -17,6 +18,11 @@ const KIND: Record<Intent, string> = {
   decide: 'Necesita tu decisión',
   danger: 'Atención',
   ok: 'Hecho',
+};
+
+/** Beside the title, never instead of it: the word still says the kind (FR-812). */
+const ICON: Record<Intent, IconName> = {
+  info: 'info', decide: 'circle-help', danger: 'circle-alert', ok: 'circle-check',
 };
 
 export function Callout({ intent = 'info', title, children }: {
@@ -42,9 +48,14 @@ export function Callout({ intent = 'info', title, children }: {
         Found on 2026-09-01, from a duplicated «Atención» in text Carlos pasted: the
         `sr-only` node is hidden from the eye but travels with the clipboard.
       */}
-      <strong>{title ?? KIND[intent]}</strong>
+      <strong><Icon name={ICON[intent]} />{title ?? KIND[intent]}</strong>
       {title ? <span className="sr-only">{KIND[intent]}</span> : null}
-      <div>{children}</div>
+      {/*
+        `.callout-body`, so the small size reaches it (`041` FR-3910). The rule was
+        `.callout p` and the body is a `<div>` — so every callout whose caller passed
+        bare text rendered at 17px, heavier than the content beside it.
+      */}
+      <div className="callout-body">{children}</div>
     </div>
   );
 }

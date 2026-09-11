@@ -113,6 +113,21 @@ const PAIRINGS: readonly Pairing[] = [
   { fg: '--work',   bg: '--work-soft',   min: AA_TEXT, why: 'in-progress badge' },
 
   { fg: '--line-strong', bg: '--paper', min: AA_NON_TEXT, why: 'control borders' },
+
+  /*
+   * The nine pairs `041` added, each one a role that the acabado visual puts
+   * somewhere it had not been measured (docs/design/sistema-2026-09-11.md §9).
+   */
+  { fg: '--ink-soft',   bg: '--rail-ground',  min: AA_TEXT,     why: 'a rail item at rest' },
+  { fg: '--accent',     bg: '--rail-ground',  min: AA_NON_TEXT, why: 'the bar beside the current rail item' },
+  { fg: '--on-accent',  bg: '--accent-hover', min: AA_TEXT,     why: 'the primary button while hovered' },
+  { fg: '--line-strong', bg: '--surface',     min: AA_NON_TEXT, why: 'a control border inside a grouping card' },
+  { fg: '--ink-soft',   bg: '--accent-soft',  min: AA_TEXT,     why: 'the body of an info callout' },
+  { fg: '--ink-soft',   bg: '--decide-soft',  min: AA_TEXT,     why: 'the body of a «you decide» callout' },
+  { fg: '--ink-soft',   bg: '--draft-soft',   min: AA_TEXT,     why: 'the body of an error callout' },
+  { fg: '--ink-soft',   bg: '--ok-soft',      min: AA_TEXT,     why: 'the body of a done callout' },
+  { fg: '--work',       bg: '--surface-2',    min: AA_NON_TEXT, why: 'the progress bar fill on its well — a graphical object, so the whole length clears 3:1' },
+  { fg: '--accent',     bg: '--accent-soft',  min: AA_NON_TEXT, why: 'the focus ring over the current rail item, and the callout stripe in high contrast' },
 ] as const;
 
 describe.each(Object.entries(PALETTES))('contrast · %s palette', (name, palette) => {

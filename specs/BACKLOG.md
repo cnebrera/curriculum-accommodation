@@ -439,6 +439,35 @@ every moment should have a spec. What it added beyond the seams pass:
    journey sentence → T094). Handover *import* (004 US2) recorded as deliberately
    deferred rather than silently missing.
 
+## G83 · Dos `Field` con la misma cara y distinta API — *ABIERTO 2026-09-11*
+
+`shell/Page.tsx` tiene un `Field` de composición (label, control, ayuda, medida) y
+`components/Field.tsx` otro de validación (estado, mensaje, `aria-describedby`, con
+render-prop). Los dos pintan `.field`, así que los dos heredan la medida, y por eso `041`
+no los fundió: no había defecto que arreglar, solo dos nombres para casi la misma cosa.
+Es un seguimiento de `013`, y el día que uno gane una prop que el otro necesite, será el
+momento. Contrato: `specs/041-el-acabado-visual/contracts/shell-additions.md`.
+
+## G82 · El aviso de la hoja de ejemplo parte una frase por la mitad — *ABIERTO 2026-09-11*
+
+`corpus/sample/ensayo/material/ensayo-1/E00/adapted.md` lleva un salto de línea duro
+dentro de «…es la que trae Rampa para / que veas cómo adapta», y el renderizador lo
+respeta, así que la hoja de ejemplo —la primera que ve quien abre el ensayo— sale con
+una frase rota (`docs/screenshots/latest/hoja--ficha--sin-barreras--borrador.png`).
+Capa de contenido: fuera del alcance de `041`, que lo vio de paso.
+
+## G81 · El informe del ensayo enseña nombres de receta con acentos graves — *ABIERTO 2026-09-11*
+
+En `x-ensayo-2.png` (`docs/screenshots/diagnostico-2026-09-11/`) el informe del ensayo
+dice «Receta: `explicit-steps@1` — …» con los acentos graves y el identificador tal
+cual: jerga del repositorio delante de la maestra (AGENTS.md, regla 7, y `013`'s own
+«no IR, corpus, axis, vault»). El informe lo escribe el corpus del ensayo
+(`corpus/sample/ensayo/…`), no la interfaz, así que es capa de contenido y `041` no lo
+tocó. La pantalla de revisión real muestra las recetas como `.tag`, que es otra forma
+de lo mismo con menos ruido; la pregunta de fondo —si la maestra debe ver el
+identificador de una receta o su nombre en sus palabras— es de `007` (procedencia) y
+sigue sin decidirse.
+
 ## G80 · El barrido de accesibilidad de la hoja corría sobre una hoja menos adaptada que la de cualquier alumno — *ARREGLADO 2026-09-10*
 
 **Anotado y arreglado 2026-09-10** en `038` T005, y va al BACKLOG aunque no falló nada

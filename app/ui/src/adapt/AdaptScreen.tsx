@@ -590,7 +590,7 @@ export function AdaptScreen({
             <Callout intent="decide" title="Antes de gastar: lo que sé de este alumno">
               {profileGate.gaps.map(({ learner, gap }) => (
                 <div className="stack gap2" key={learner}>
-                  <p style={{ margin: 0 }}>
+                  <p>
                     <strong>{nameOf(learner)}</strong>{' — '}
                     {gap.willApply === 0
                       ? 'no tengo ninguna adaptación que aplicarle.'
@@ -602,19 +602,19 @@ export function AdaptScreen({
                   </p>
                   {gap.unobserved.length ? (
                     <>
-                      <p className="small" style={{ margin: 0 }}>
+                      <p className="small">
                         Sin observar:{' '}
                         {gap.unobserved.map((u) => u.name).join(' · ')}
                       </p>
-                      <details className="small">
-                        <summary style={{ cursor: 'pointer' }}>
+                      <details className="small stack gap2">
+                        <summary>
                           Qué mirar en clase para completarlo
                         </summary>
-                        <div className="stack gap2" style={{ marginTop: 'var(--s2)' }}>
+                        <div className="stack gap2">
                           {gap.unobserved.map((u) => (
                             <div key={u.axis}>
                               <strong>{u.name}</strong>
-                              <ul className="bullets" style={{ margin: 0 }}>
+                              <ul className="bullets">
                                 {u.levels.map((l, i) => <li key={i}>{l}</li>)}
                               </ul>
                             </div>
@@ -801,8 +801,8 @@ export function AdaptScreen({
 
             <div className="stack gap3">
               {outcome.results.map((r) => (
-                <div className="card stack gap2" key={r.learner}>
-                  <div className="row" style={{ justifyContent: 'space-between' }}>
+                <div className="card card-object stack gap2" key={r.learner}>
+                  <div className="row row-split">
                     <strong>{nameOf(r.learner)}</strong>
                     <Badge>
                       {!r.ok ? 'No ha salido' : signed[r.learner] ? 'Firmada' : 'Sin firmar'}
@@ -841,7 +841,7 @@ export function AdaptScreen({
                         nombre en tus notas: Marta» and this line turned it into «puede
                         que haya un nombre».
                       */}
-                      <p className="small" style={{ margin: 0 }}>
+                      <p className="small">
                         {describe({ message: r.message, kind: r.kind }).message}
                       </p>
 

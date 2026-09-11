@@ -1,4 +1,4 @@
-import { Notice } from './Notice.js';
+import { Callout } from './Callout.js';
 
 /**
  * 006 FR-410. A hand-edit that breaks the structure is our defect, so the tone
@@ -7,11 +7,11 @@ import { Notice } from './Notice.js';
 export function RepairNotice({ repairs }: { repairs: Array<{ message: string }> }) {
   if (repairs.length === 0) return null;
   return (
-    <Notice kind="info" title="He arreglado un par de cosas del formato">
-      <ul style={{ margin: '8px 0 0', paddingLeft: '1.2em' }}>
+    <Callout intent="info" title="He arreglado un par de cosas del formato">
+      <ul className="bullets">
         {repairs.map((r, i) => <li key={i}>{r.message}</li>)}
       </ul>
-      <p className="small" style={{ margin: '10px 0 0' }}>No he cambiado nada de lo que escribiste.</p>
-    </Notice>
+      <p className="small">No he cambiado nada de lo que escribiste.</p>
+    </Callout>
   );
 }

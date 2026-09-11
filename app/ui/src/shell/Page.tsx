@@ -34,14 +34,19 @@ export function Page({ title, banner, lede, variant, actions, children }: {
   /**
    * `wide` for the two-column comparison work, where the comparison IS the
    * feature (008's verification screen). A variant, not an exception.
+   *
+   * `narrow` for one column of one question: the first-run steps (041 T021).
+   * `App.tsx` used to build that page by hand with inline styles — the contract
+   * of `Page` with a variant that did not exist, which is the definition of a
+   * fact about the shell.
    */
-  variant?: 'wide';
+  variant?: 'wide' | 'narrow';
   /** The screen's actions, if they belong at the foot rather than in a section. */
   actions?: ReactNode;
   children: ReactNode;
 }) {
   return (
-    <div className={variant === 'wide' ? 'page page-wide' : 'page'}>
+    <div className={variant === 'wide' ? 'page page-wide' : variant === 'narrow' ? 'page page-narrow' : 'page'}>
       {banner}
       <header className="page-head">
         <h1>{title}</h1>

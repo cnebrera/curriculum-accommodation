@@ -44,6 +44,15 @@
   /* Wide enough for a table, narrow enough that nothing strands at the left of
      a 1366px window. */
   max-width: 60rem;
+  /* Centred, and the full height of the content area (041 FR-3922). Left-hugging
+     it left 680px of bare ground at 1920, and hugging its content it made a short
+     screen — the empty record, «Borrar» — a 350px card afloat on 340px of grey,
+     which is a web page's card and not an application's panel. The rehearsal
+     frame already centred itself and said so; this is the same decision, taken
+     for every screen. `min-height: 100%` asks `.main`, whose height is the
+     window's minus the padding. */
+  margin-inline: auto;
+  min-height: 100%;
 
   background: var(--paper);
   border: 1px solid var(--line);
@@ -56,6 +65,17 @@
    A variant, not an exception: a screen escaping the shell is a fact about the
    shell. */
 .page-wide { max-width: none; }
+/* One column of one question: the first-run steps (041 T021). `App.tsx` used to
+   build this page by hand — `maxWidth: 680, margin: '0 auto'` inline — which is
+   the contract of `Page` with a variant that did not exist. Now it exists. */
+.page-narrow { max-width: 42rem; }
+/* Above the title, centred: the wordmark and the step indicator of the first
+   run. `banner` is the slot; this is what the onboarding puts in it. */
+.page-brand { display: flex; flex-direction: column; align-items: center; text-align: center;
+  gap: var(--s3); padding-bottom: var(--s2); }
+.page-brand .page-brand-line { font-size: var(--text-base); font-weight: var(--weight-heading); }
+.page-brand .page-brand-sub { font-size: var(--text-sm); color: var(--ink-soft); }
+.page-steps { display: flex; flex-direction: column; gap: var(--s2); width: 100%; }
 
 /* At the largest text scale the panel's own padding is space the content needs
    more than the frame does. */
@@ -93,7 +113,11 @@
   font-size: var(--text-base);
   line-height: var(--leading-body);
   color: var(--ink-soft);
-  max-width: var(--measure-prose);
+  /* 52ch at 17px is what 62ch measures at 15px: the lede and the section prose
+     now end at the same pixel, and `pretty` keeps «hecho.» from standing alone
+     on a second line — which it did on three screens of the record (041). */
+  max-width: 52ch;
+  text-wrap: pretty;
 }
 
 /* ── Sections and fields ──────────────────────────────────────────────────── */
@@ -106,13 +130,11 @@
 
 /* A section heading is a step down from the page title, not a rival to it. The
    first version used the same weight and nearly the same size, so the page read
-   as two titles. */
-.section > h2 {
-  margin: 0;
-  font-family: var(--font-display);
-  font-size: var(--text-lg);
-  letter-spacing: -0.014em;
-}
+   as two titles. Size, weight and family now come from the base `h2` in
+   `tokens.css` — this rule used to set the size again, and the base set a
+   different one, which is how an `<h2>` outside a Section came out 6px larger
+   than one inside (041 FR-3902). Nothing left to say here but the margin. */
+.section > h2 { margin: 0; }
 
 .section-lede {
   margin: 0;
@@ -133,8 +155,8 @@
    house-style editor. Wide on purpose, and the only thing that is. */
 .field-canvas { max-width: var(--measure-prose); }
 
-.field > label { font-weight: 600; font-size: var(--text-sm); }
-.field-help { margin: 0; font-size: var(--text-sm); color: var(--ink-soft); }
+.field > label { font-weight: var(--weight-label); font-size: var(--text-sm); }
+.field-help { margin: 0; font-size: var(--text-sm); color: var(--ink-soft); text-wrap: pretty; }
 
 /* Anything inside a field fills it, so a control never has to say how wide it
    is and no screen has to remember. */
@@ -192,12 +214,7 @@
 
 .fieldset-bare > legend { padding: 0; }
 
-.fieldset-bare > legend h2 {
-  margin: 0;
-  font-family: var(--font-display);
-  font-size: var(--text-lg);
-  letter-spacing: -0.014em;
-}
+.fieldset-bare > legend h2 { margin: 0; }
 
 /* ── The rail's foot ──────────────────────────────────────────────────────
    Was two controls pinned to the floor with a `grow` above them. Now a block
@@ -211,7 +228,28 @@
   border-top: 1px solid var(--line);
 }
 
-.rail-foot .select { font-size: var(--text-xs); min-height: 34px; }
+.rail-foot .select { font-size: var(--text-xs); min-height: var(--control-h-sm); }
+
+/* «Cómo se ve», opened: a panel over the rail, not a card squeezed into it
+   (041 T026). Inside the 200px column the three-way «Colores» control did not
+   fit and «Más contraste» wrapped to two lines with its help on five. The rail
+   keeps its width; the panel takes the width it needs and floats over the
+   content at level 2 of elevation. Anchored to the foot, so it opens upward from
+   the bottom of the column — and downward from the strip, where the foot sits at
+   the top of the window. */
+/* Anchored, not absolutely positioned inside the rail: the rail scrolls
+   (`overflow-y: auto`, for the text scales at which its content exceeds the
+   window), and an `absolute` child of a scrolling box is clipped to it — the
+   first version showed the left 200px of the panel and a scrollbar under the
+   rail. `position: fixed` escapes the clip, and CSS anchor positioning
+   (Chromium 125+; Electron 33 is 130) puts it back beside the foot without a
+   line of JavaScript. */
+.rail-foot { anchor-name: --rail-foot; }
+.rail-foot .card { position: fixed; z-index: 30;
+  position-anchor: --rail-foot;
+  bottom: anchor(top); left: anchor(left);
+  width: max-content; min-width: 22rem; max-width: calc(100vw - var(--s6)); margin-bottom: var(--s2);
+  background: var(--paper); box-shadow: var(--shadow-md); }
 
 /* And the same block turned ninety degrees, for the strip layout the shell
    collapses to on a narrow window (013 FR-1115). Vertically it is a block under
@@ -233,8 +271,20 @@
     padding: 0 0 0 var(--s3);
     border-top: 0;
     border-left: 1px solid var(--line);
+    flex: none;
   }
+  /* In the row the locale select is as wide as its word, not as the column. */
+  .rail-foot .select { width: auto; }
+  /* From the strip the panel opens downward, and from the right edge, where the
+     foot is. */
+  .rail-foot .card { bottom: auto; top: anchor(bottom); left: auto; right: anchor(right);
+    margin-bottom: 0; margin-top: var(--s2); }
 }
+
+/* The wordmark is one drawing: mark, word and rule never wrap onto each other,
+   whatever the rail's shape (041; it broke into three layouts across widths once
+   `.row` wrapped by default). */
+.wordmark { flex-wrap: nowrap; white-space: nowrap; }
 
 /* ── Density ──────────────────────────────────────────────────────────────
    At the largest text scale the rhythms would push a form off a 768px-tall
@@ -260,19 +310,23 @@
    layout or accessibility test. */
 .rail-back { color: var(--accent-ink); font-size: var(--text-sm);
   text-align: left; padding: var(--s2); border: 0; background: transparent;
-  border-radius: var(--radius-control); cursor: pointer; min-height: 44px;
-  display: flex; align-items: center; width: 100%; }
+  border-radius: var(--radius-control); cursor: pointer; min-height: var(--control-h);
+  display: flex; align-items: center; gap: var(--s2); width: 100%; }
+.rail-back svg { width: 1em; height: 1em; flex: none; }
 .rail-back:hover { background: var(--surface-2); }
 
-.rail-who { font-size: var(--text-base); font-weight: 700; line-height: 1.2;
-  margin: var(--s2) 0 var(--s3); padding: 0 var(--s2); }
+.rail-who { font-size: var(--text-base); font-weight: var(--weight-heading); line-height: 1.2;
+  margin: var(--s2) 0 var(--s3); padding: 0 var(--s3); }
 /* The code under the name, in mono, because it is an identifier and not a word —
    and because it is what she will find in her folder. */
 /* `--ink-soft` (8.0:1), not `--ink-faint`: the faint token is rated on paper and on
    `--surface-2`, and the rail's own ground is darker than both — axe caught it at
    13px, where 4.5:1 is the floor. A code she cannot read is a code she cannot match
    to the folder on her disk. */
-.rail-who span { display: block; font-family: var(--font-mono);
+/* The code in the interface face with tabular figures, not mono (041 FR-3906):
+   it is what she matches to a folder name, and a legible code is one whose
+   digits line up, not one in Courier. */
+.rail-who span { display: block; font-variant-numeric: tabular-nums;
   font-size: var(--text-xs); font-weight: 400; color: var(--ink-soft); }
 
 .rail hr { border: 0; border-top: 1px solid var(--line);
@@ -299,9 +353,67 @@
 
      Found by looking at the screenshot, which is the entire reason FR-1118 exists.
   */
-  .rail hr { flex-basis: 100%; border-top: 1px solid var(--line); border-left: 0;
-    margin: var(--s2) 0 var(--s1); }
+  /* In a single row the rule between the four sections and the two lifecycle
+     ones is a short vertical hairline — the same thing the foot's own rule is.
+     It used to break the line so that «Borrar todo lo suyo» never sat beside a
+     section; in one row the gap and the rule still say «these two are apart». */
+  .rail hr { flex: none; width: 0; height: 1.6em; border-top: 0;
+    border-left: 1px solid var(--line); margin: 0 var(--s2); }
 }
+
+/* ── What the shell gained so a screen never writes `style={{}}` (041 T014) ──
+   143 inline styles, in 25 files, each a layout decision taken outside the shell
+   and outside `styles.test.tsx`'s sight — one of them a token that did not exist
+   (`--rule`), so a separator silently did not draw. Grouped by intention they
+   were 25 kinds; these are the classes that absorb them. Named for what they
+   mean, not for the CSS they set, so the next screen finds them by asking
+   «what is this?» rather than «what property do I need?».
+   Contract: specs/041-el-acabado-visual/contracts/shell-additions.md. */
+
+/* A row whose two ends matter: a title and its badge, a label and its count. */
+.row-split { justify-content: space-between; }
+/* A row whose children do not centre on each other. */
+.row-baseline { align-items: baseline; }
+.row-top { align-items: flex-start; }
+.row-bottom { align-items: flex-end; }
+/* No margin, for the element the UA gives one to inside a stack that already
+   spaces it: a list, a definition list, a first paragraph. */
+.flush { margin: 0; }
+/* The way out, standing alone at the start of the panel: a ghost, small, with
+   the arrow as an icon rather than a character that changes shape per system. */
+.btn-back { align-self: flex-start; }
+/* Three widths for a short control, replacing seven values chosen by eye
+   (6, 7, 8, 14, 18, 22 and 24 em). Numbers · a word · a phrase. */
+.input-xs { max-width: 7rem; }
+.input-sm { max-width: 14rem; }
+.input-md { max-width: 22rem; }
+/* The level's name under an axis title: reserved height, so the four cards of a
+   row stay level whether the text is «sin observar» or two lines long. */
+.axis-level { min-height: 2.6em; }
+/* The house-style editor: a surface she writes in, tall enough to see a page. */
+.textarea-canvas { min-height: 240px; }
+/* A block separated from the one above by a rule, not by a void. */
+.divided-top { border-top: 1px solid var(--line); padding-top: var(--s4); }
+/* A list that is a row of things, not a list of bullets. */
+.list-bare { list-style: none; padding: 0; margin: 0; }
+/* A list whose items are each a small decision, with air between them. */
+.list-roomy { margin: 0; padding-left: var(--s5); }
+.list-roomy > li + li { margin-top: var(--s3); }
+/* Preformatted text that wraps: a quoted file, a preview. Framed like the
+   licence and the log, which are its siblings. */
+.pre-soft { white-space: pre-wrap; overflow-x: auto; overflow-wrap: anywhere; min-width: 0;
+  font-size: var(--text-sm); margin: 0; background: var(--surface); border: 1px solid var(--line);
+  border-radius: var(--radius-control); padding: var(--s3); }
+/* The body of an opened <details>, which otherwise ends flush on its frame. */
+.details-body { padding-bottom: var(--s4); }
+/* Rendered prose — the rehearsal's report — reads as paragraphs. */
+.prose p + p { margin-top: .6em; }
+/* The label over a progress bar: small and firm, like a field label. */
+.progress-label { font-size: var(--text-sm); font-weight: var(--weight-label); }
+/* A correction she has struck out: the row fades and its text is crossed. A
+   state class, because a boolean is a state and not a number. */
+.is-out { opacity: .5; }
+.is-out .is-out-text { text-decoration: line-through; }
 
 /* ── The document viewer (021 T014) ────────────────────────────────────────
    A panel over the section, not a modal over the application: she is looking at

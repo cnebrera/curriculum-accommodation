@@ -1,4 +1,5 @@
 import { useId, type ReactNode } from 'react';
+import { Icon } from './Icon.js';
 
 /**
  * A form field with its label, help and message (spec 010 FR-814, T008).
@@ -33,7 +34,7 @@ export function Field({ label, help, state = 'idle', message, children }: {
       {help && <span className="help" id={helpId}>{help}</span>}
       {message && (
         <span className="msg" id={msgId}>
-          <span className="ic" aria-hidden="true">{state === 'error' ? '✕' : '✓'}</span>
+          <span className="ic"><Icon name={state === 'error' ? 'x' : 'check'} /></span>
           <span>
             {/* Spoken, so the state is not carried by colour and a glyph alone. */}
             <span className="sr-only">{state === 'error' ? 'Error: ' : 'Correcto: '}</span>

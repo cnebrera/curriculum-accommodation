@@ -6,6 +6,7 @@ import { useAcceptedFormats, usePhotoWarningSeen, usePendingIngest, useIngestPro
 import { useStrings } from '../i18n/context.js';
 import { Callout } from '../components/Callout.js';
 import { Counted } from '../components/Progress.js';
+import { Icon } from '../components/Icon.js';
 
 /**
  * Where the material comes in (008 T018, US1).
@@ -138,7 +139,7 @@ export function IngestScreen({ onIngested, onResume, onAlreadyText, forLearner }
         <div className="card stack gap3">
           <span className="small"><strong>Tenías esto a medias</strong></span>
           {pending.map((j) => (
-            <div className="row" key={j.jobId} style={{ justifyContent: 'space-between' }}>
+            <div className="row row-split" key={j.jobId}>
               <span className="small">
                 {j.confirmed} de {j.pages} páginas confirmadas
                 <span className="meta"> · {j.jobId}</span>
@@ -150,8 +151,8 @@ export function IngestScreen({ onIngested, onResume, onAlreadyText, forLearner }
       ) : null}
 
       <div className="stack gap3">
-        <button className="btn btn-primary btn-lg" onClick={() => void choose()} disabled={running}>
-          Elegir la ficha
+        <button className="btn btn-primary" onClick={() => void choose()} disabled={running}>
+          <Icon name="folder" /> Elegir la ficha
         </button>
         {accepted ? <p className="small">{accepted.description}</p> : null}
         {/*
@@ -172,7 +173,7 @@ export function IngestScreen({ onIngested, onResume, onAlreadyText, forLearner }
       {paths.length ? (
         <div className="card stack gap3">
           <span className="small"><strong>{paths.length} fichero(s)</strong></span>
-          <ol className="stack gap1" style={{ margin: 0, paddingLeft: '1.4em' }}>
+          <ol className="bullets">
             {paths.map((p) => <li key={p} className="small">{p.split('/').pop()}</li>)}
           </ol>
           {paths.length > 1 ? (
@@ -190,7 +191,7 @@ export function IngestScreen({ onIngested, onResume, onAlreadyText, forLearner }
       */}
       {needsWarning ? (
         <Callout intent="decide" title="Antes de mandar las fotos">
-          <p style={{ marginTop: 0 }}>
+          <p>
             Rampa cambia los nombres de tus alumnos por códigos en todo lo que escribes.
             Lo que no puede cambiar es lo que va <strong>dentro de una foto</strong>: si en
             la hoja hay un nombre escrito a mano, ese nombre llega a tu servicio de IA
@@ -216,7 +217,7 @@ export function IngestScreen({ onIngested, onResume, onAlreadyText, forLearner }
       */}
       {estimate?.unusual && !costAccepted && paths.length ? (
         <Callout intent="decide" title="Esto costaría más de lo normal">
-          <p style={{ marginTop: 0 }}>
+          <p>
             Serían unos <strong>{estimate.formatted}</strong> por {estimate.pages} página(s),
             más que tus fichas de siempre. Tú decides.
           </p>

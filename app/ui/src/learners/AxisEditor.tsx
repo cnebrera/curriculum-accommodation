@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Callout } from '../components/Callout.js';
 import { useStrings } from '../i18n/context.js';
 import { nearDuplicate } from '../../../packages/core/src/vault/areas.js';
 
@@ -55,7 +56,7 @@ export function AxisEditor({ axes, onChange, curAreas, onCurAreasChange, knownAr
         {AXES.map((a) => (
           <div className="axis-cell" key={a.key}>
             <strong>{a.name}</strong>
-            <div className="small muted" style={{ minHeight: '2.6em' }}>
+            <div className="small muted axis-level">
               {axes[a.key] === undefined ? es.learner.unobserved : a.levels[axes[a.key]!]}
             </div>
             <div className="levels">
@@ -152,8 +153,10 @@ function CurByArea({ areas, onChange, known }: {
 
   return (
     <div className="stack gap2">
-      <strong>Nivel curricular por área</strong>
-      <p className="small muted" style={{ margin: 0 }}>
+      {/* A heading, not a bold span: it is the title of this block and the
+          heading order (h2 «Qué le cuesta» → h3) is what a screen reader walks. */}
+      <h3>Nivel curricular por área</h3>
+      <p className="small muted">
         Si no dices nada de un área, vale el nivel curricular general de arriba. Poner un
         área aquí sólo cambia esa.
       </p>
@@ -174,7 +177,7 @@ function CurByArea({ areas, onChange, known }: {
           {/* Plain text: a subject suggested from the record was read out of a document
               somebody else wrote (Principio IX). */}
           <strong>{area}</strong>
-          <div className="small muted" style={{ minHeight: '2.6em' }}>
+          <div className="small muted axis-level">
             {level === undefined
               /* What governs it until she says. Never «0» standing in for «no lo sé». */
               ? 'Sin decir: vale el general'
@@ -221,7 +224,7 @@ function CurByArea({ areas, onChange, known }: {
         yet is a plain input with nothing hidden behind it.
       */}
       {known.filter((k) => !named.includes(k)).length ? (
-        <div className="row gap2" style={{ flexWrap: 'wrap', alignItems: 'center' }}>
+        <div className="row gap2">
           <span className="small muted">De las que ya usas:</span>
           {known.filter((k) => !named.includes(k)).map((k) => (
             <button type="button" className="btn btn-sm" key={k} onClick={() => add(k)}>
@@ -239,8 +242,8 @@ function CurByArea({ areas, onChange, known }: {
           worse: two controls with one name, one a textbox and one a button, in the same
           group. Typing and adding are two acts and they say so.
         */}
-        <input className="input" value={typed} placeholder="…o escribe otra"
-               aria-label="Escribe un área nueva" style={{ maxWidth: '22em' }}
+        <input className="input input-md" value={typed} placeholder="…o escribe otra"
+               aria-label="Escribe un área nueva"
                onChange={(e) => setTyped(e.target.value)} />
         {/*
           Named, because it is not the only «Añadir» on this screen: `033`'s language
@@ -254,13 +257,13 @@ function CurByArea({ areas, onChange, known }: {
       </div>
 
       {close ? (
-        <p className="small">
-          Ya tienes <strong>{close}</strong>. Si «{typed.trim()}» es lo mismo, usa el que
-          ya tienes; si es otra área, añádela igualmente.{' '}
+        <Callout intent="decide" title={`Ya tienes ${close}`}>
+          Si «{typed.trim()}» es lo mismo, usa el que ya tienes; si es otra área, añádela
+          igualmente.{' '}
           <button type="button" className="btn btn-sm" onClick={() => add(close)}>
             Usar «{close}»
           </button>
-        </p>
+        </Callout>
       ) : null}
     </div>
   );

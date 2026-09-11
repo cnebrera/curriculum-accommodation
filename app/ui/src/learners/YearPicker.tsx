@@ -1,4 +1,5 @@
 import { useEducationSystems } from '../data/corpus.js';
+import { Field } from '../shell/Page.js';
 import { useSystemChoice } from '../data/education-choice.js';
 import { stalenessOf, stalenessNotice }
   from '../../../packages/core/src/education/lookup.js';
@@ -102,22 +103,24 @@ export function YearPicker({ value, onChange }: {
         The system, from the second one onward. One option is not a question.
       */}
       {systems.length > 1 ? (
-        <div className="stack gap2">
-          <label htmlFor="system"><strong>¿Qué sistema educativo?</strong></label>
+        <Field label="¿Qué sistema educativo?" htmlFor="system"
+               help="Se queda guardado: te lo pregunto una vez, no cada vez.">
           <select className="select" id="system" value={system.id}
                   onChange={(e) => setChosenId(e.target.value)}>
             {systems.map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}
           </select>
-          <p className="small">
-            Se queda guardado: te lo pregunto una vez, no cada vez.
-          </p>
-        </div>
+        </Field>
       ) : null}
 
       {stale ? <p className="small" role="status">{stale}</p> : null}
 
-      <div className="stack gap2">
-        <label htmlFor="year"><strong>¿En qué curso está?</strong></label>
+      {/*
+        Fields, so the measure applies (`013` FR-1102, `041` T020). Written as bare
+        `<label><strong>` + control, this select took the whole column: 1040px of
+        «5.º de Primaria», which is the exact 1000px input ADR 0009 named.
+      */}
+      <Field label="¿En qué curso está?" htmlFor="year"
+             {...(found?.stage.note ? { help: found.stage.note } : {})}>
         <select className="select" id="year" value={value.year ?? ''}
                 onChange={(e) => pickYear(e.target.value)}>
           <option value="">— sin especificar —</option>
@@ -129,14 +132,14 @@ export function YearPicker({ value, onChange }: {
             </optgroup>
           ))}
         </select>
-        {found?.stage.note ? <p className="small">{found.stage.note}</p> : null}
-      </div>
+      </Field>
 
-      <div className="stack gap2">
-        <label htmlFor="age"><strong>¿Cuántos años tiene?</strong></label>
-        <div className="row gap2">
-          <input className="input" id="age" type="number" min={3} max={99}
-                 style={{ maxWidth: '7rem' }}
+      <Field label="¿Cuántos años tiene?" htmlFor="age"
+             help={found && found.year.typicalAge === null
+               ? 'En esta etapa el curso no dice nada de la edad, así que apúntala tú si la sabes.'
+               : 'Sale sola del curso. Cámbiala si no es la que toca — pasa a menudo y no es un error.'}>
+        <div className="row gap2 row-top">
+          <input className="input input-xs" id="age" type="number" min={3} max={99}
                  value={value.age ?? ''}
                  onChange={(e) => onChange({
                    ...value,
@@ -159,12 +162,7 @@ export function YearPicker({ value, onChange }: {
             </span>
           ) : null}
         </div>
-        <p className="small">
-          {found && found.year.typicalAge === null
-            ? 'En esta etapa el curso no dice nada de la edad, así que apúntala tú si la sabes.'
-            : 'Sale sola del curso. Cámbiala si no es la que toca — pasa a menudo y no es un error.'}
-        </p>
-      </div>
+      </Field>
     </div>
   );
 }

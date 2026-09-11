@@ -1,4 +1,4 @@
-import { Notice } from './Notice.js';
+import { Callout } from './Callout.js';
 import { useIgnoreWord } from '../data/names.js';
 
 /**
@@ -16,7 +16,7 @@ export function NameWarning({ flagged, onAddName, onSendAnyway }: {
   const ignore = useIgnoreWord();
   if (flagged.length === 0) return null;
   return (
-    <Notice kind="warn" title="Creo que ahí hay un nombre">
+    <Callout intent="danger" title="Creo que ahí hay un nombre">
       <p>
         He visto {flagged.length === 1 ? 'esto' : 'esto'}: <strong>{flagged.join(', ')}</strong>.
         Si es el nombre de un alumno, dímelo y lo sustituyo por su código antes de enviar nada.
@@ -31,6 +31,6 @@ export function NameWarning({ flagged, onAddName, onSendAnyway }: {
           onSendAnyway();
         }}>No es un nombre, sigue</button>
       </div>
-    </Notice>
+    </Callout>
   );
 }

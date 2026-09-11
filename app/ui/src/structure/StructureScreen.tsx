@@ -3,6 +3,7 @@ import { Page, Section, Field, Actions } from '../shell/Page.js';
 import { Callout } from '../components/Callout.js';
 import { useSaveStructure, useWriteStory, type StructureKind } from '../data/structure.js';
 import { useCurrentSet } from '../data/pictograms.js';
+import { Icon } from '../components/Icon.js';
 
 /**
  * The day on a strip, and a routine in steps (028 T011/T013/T014, FR-2601/2606/2612/2613).
@@ -169,6 +170,7 @@ export function StructureScreen({ learnerCode, learnerName, onMade }: {
                       className={k.id === kind ? 'door door-on' : 'door'}
                       aria-pressed={k.id === kind}
                       onClick={() => setKind(k.id)}>
+                {k.id === kind ? <Icon name="check" className="door-check" /> : null}
                 <strong>{k.label}</strong>
                 <span className="small">{k.lede}</span>
               </button>
@@ -218,7 +220,7 @@ export function StructureScreen({ learnerCode, learnerName, onMade }: {
                lede="Una cosa por línea, en el orden en que pasan. No lo ordeno yo: sale como lo escribas.">
         <Field label="Cómo se llama" htmlFor="titulo"
                help="Opcional. Por ejemplo: «Los lunes por la mañana».">
-          <input className="input" id="titulo" type="text" style={{ maxWidth: '24em' }}
+          <input className="input input-md" id="titulo" type="text"
                  value={title} onChange={(e) => setTitle(e.target.value)} />
         </Field>
 

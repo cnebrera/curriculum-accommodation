@@ -1,4 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
+import { Page, Section, Field, Actions } from '../shell/Page.js';
+import { Icon } from '../components/Icon.js';
 import { useRecommendService } from '../data/corpus.js';
 import { useKeyShapeCheck, useValidateKey, useSaveKey } from '../data/providers.js';
 import { useStrings } from '../i18n/context.js';
@@ -41,8 +43,12 @@ type Verdict =
   | { ok: true; costCents: number }
   | { ok: false; text: string; switchTo?: Service };
 
-export function ConnectStep({ onDone, serviceId }: {
+export function ConnectStep({ onDone, serviceId, banner, aside }: {
   onDone: (providerId: string) => void;
+  /** The first run's wordmark and step indicator, above the title (`041` T021). */
+  banner?: ReactNode;
+  /** The other door — «Probar con un ejemplo» — under the question and the recommendation. */
+  aside?: ReactNode;
   /**
    * The service she has already named, when there is one (`009` FR-719).
    *
@@ -184,16 +190,18 @@ export function ConnectStep({ onDone, serviceId }: {
 
   /* ── One question ─────────────────────────────────────────────────────── */
   if (stage === 'question') {
+    /*
+     * A `Page` per stage (`041` T022, FR-3901): each stage is a screen with its own
+     * question, so each gets the title. The framed `.fieldset` with its legend on the
+     * border goes — `composition.css` already said it «reads as broken» — for the bare
+     * one: the semantics of a fieldset, the appearance of a section.
+     */
     return (
-      <div className="stack gap5">
-        <div className="stack gap2">
-          <h2>{es.onboarding.connectTitle}</h2>
-          <p className="lede">{es.onboarding.connectWhy}</p>
-        </div>
-
-        <fieldset className="fieldset">
-          <legend><h3>{c.cardQuestion}</h3></legend>
-          <p className="small">{c.cardWhy}</p>
+      <Page variant="narrow" {...(banner ? { banner } : {})}
+            title={es.onboarding.connectTitle} lede={es.onboarding.connectWhy}>
+        <fieldset className="fieldset-bare">
+          <legend><h2>{c.cardQuestion}</h2></legend>
+          <p className="field-help">{c.cardWhy}</p>
           <div className="row gap2">
             {/*
               Neither answer is endorsed, and that is the point (backlog G60).
@@ -204,14 +212,14 @@ export function ConnectStep({ onDone, serviceId }: {
               free tier. This is a question about her school's rules, not an action with
               a better and a worse option.
             */}
-            <button className="btn btn-lg" onClick={() => void answer(true, location)}>
+            <button className="btn" onClick={() => void answer(true, location)}>
               {c.cardYes}
             </button>
-            <button className="btn btn-lg" onClick={() => void answer(false, location)}>
+            <button className="btn" onClick={() => void answer(false, location)}>
               {c.cardNo}
             </button>
           </div>
-          <p className="small">{c.cardNoHint}</p>
+          <p className="field-help">{c.cardNoHint}</p>
         </fieldset>
 
         {/*
@@ -222,7 +230,7 @@ export function ConnectStep({ onDone, serviceId }: {
         */}
         <details className="details">
           <summary>{c.locationQuestion}</summary>
-          <div className="stack gap3" style={{ paddingBottom: 'var(--s4)' }}>
+          <div className="stack gap3 details-body">
             <p className="small">{c.locationWhy}</p>
             <div className="segmented" role="group" aria-label={c.locationQuestion}>
               <button type="button" aria-pressed={location === 'eu'} onClick={() => setLocation('eu')}>
@@ -236,7 +244,8 @@ export function ConnectStep({ onDone, serviceId }: {
             <p className="small">{c.residual}</p>
           </div>
         </details>
-      </div>
+        {aside}
+      </Page>
     );
   }
 
@@ -256,12 +265,13 @@ export function ConnectStep({ onDone, serviceId }: {
     const recommended = services.find((s) => s.id === reco?.serviceId);
 
     return (
-      <div className="stack gap5">
-        <h2>{reco?.ok ? c.recommendTitle : c.conflictTitle}</h2>
+      <Page variant="narrow" {...(banner ? { banner } : {})}
+            title={reco?.ok ? c.recommendTitle : c.conflictTitle}>
 
         {reco?.ok && recommended ? (
           <>
-            <div className="card card-plain stack gap4">
+            {/* An object card: the service she is being offered is a thing she picks. */}
+            <div className="card card-object stack gap4">
               <div className="stack gap1">
                 <span className="svc-name">{recommended.label}</span>
                 <span className="meta">{recommended.vendor}</span>
@@ -270,7 +280,7 @@ export function ConnectStep({ onDone, serviceId }: {
               <div className="stack gap2">
                 <span className="small"><strong>{c.recommendWhy}</strong></span>
                 {/* Generated by the rule, so it cannot drift from the decision. */}
-                <p style={{ margin: 0 }}>{reco.reason}</p>
+                <p>{reco.reason}</p>
               </div>
 
               <dl className="facts">
@@ -290,37 +300,40 @@ export function ConnectStep({ onDone, serviceId }: {
 
               <span className="meta">
                 {recommended.freshness === 'ageing'
-                  ? `⚠ ${c.checkedAgo(recommended.monthsSinceChecked)}`
+                  ? <><Icon name="triangle-alert" /> {c.checkedAgo(recommended.monthsSinceChecked)}</>
                   : c.checkedOn(formatDate(recommended.lastChecked))}
               </span>
             </div>
 
-            <div className="row gap2">
-              <button className="btn btn-primary btn-lg" onClick={() => pick(recommended.id)}>
-                {c.recommendUse}
+            <Actions primary={
+              <button className="btn btn-primary" onClick={() => pick(recommended.id)}>
+                <Icon name="plug" /> {c.recommendUse}
               </button>
+            }>
               <button className="btn btn-ghost" onClick={() => setStage('compare')}>
                 {c.recommendCompare}
               </button>
-            </div>
+            </Actions>
           </>
         ) : (
           <>
             {/* FR-713: a dead end is never the last thing she reads. */}
             <Callout intent="decide" title={reco?.message ?? ''}>{reco?.suggestion ?? ''}</Callout>
-            <div className="row gap2">
+            <Actions primary={
               <button className="btn btn-primary" onClick={() => setStage('compare')}>
                 {c.recommendCompare}
               </button>
+            }>
               <button className="btn btn-ghost" onClick={() => { setStage('question'); setReco(null); }}>
                 Cambiar mi respuesta
               </button>
-            </div>
+            </Actions>
           </>
         )}
 
         <p className="small">{c.residual}</p>
-      </div>
+        {aside}
+      </Page>
     );
   }
 
@@ -331,20 +344,27 @@ export function ConnectStep({ onDone, serviceId }: {
   }
 
   return (
-    <Walkthrough service={service} onBack={() => setStage(reco ? 'recommendation' : 'question')}>
-      <div className="card stack gap3">
-        <label htmlFor="key"><strong>{c.pasteLabel}</strong></label>
-        <input className="input" id="key" type="password" value={key}
-               autoComplete="off" spellCheck={false} aria-describedby="key-hint"
-               onChange={(e) => { setKey(e.target.value); setVerdict(null); }} />
-        <p className="small" id="key-hint">{c.pasteHint}</p>
+    <Walkthrough service={service} {...(banner ? { banner } : {})}
+                 onBack={() => setStage(reco ? 'recommendation' : 'question')}>
+      <Section>
+        {/*
+          The paste box, as the `Field` it always was by hand — label, control, hint,
+          `aria-describedby` — and in `.input-key`, the class `010` wrote for exactly
+          this and nothing ever used: a key is a machine string, and mono is what makes
+          a truncated paste visible (`041` T022).
+        */}
+        <Field label={c.pasteLabel} htmlFor="key" help={<span id="key-hint">{c.pasteHint}</span>}>
+          <input className="input input-key" id="key" type="password" value={key}
+                 autoComplete="off" spellCheck={false} aria-describedby="key-hint"
+                 onChange={(e) => { setKey(e.target.value); setVerdict(null); }} />
+        </Field>
 
-        <div className="row">
+        <Actions primary={
           <button className="btn btn-primary" disabled={checking || !key} aria-busy={checking}
                   onClick={() => void check()}>
             {checking ? c.checking : es.onboarding.connectCheck}
           </button>
-        </div>
+        } />
 
         {/*
           `role="status"` rather than a bare `aria-live` div: `aria-label` on a
@@ -369,7 +389,7 @@ export function ConnectStep({ onDone, serviceId }: {
             <Callout intent="danger" title="No he podido conectar">
               {verdict.text}
               {verdict.switchTo ? (
-                <div className="row" style={{ marginTop: 'var(--s3)' }}>
+                <div className="row">
                   <button className="btn btn-sm" onClick={() => pick(verdict.switchTo!.id)}>
                     {c.errSwitchTo(verdict.switchTo.label)}
                   </button>
@@ -378,7 +398,7 @@ export function ConnectStep({ onDone, serviceId }: {
             </Callout>
           ) : null}
         </div>
-      </div>
+      </Section>
     </Walkthrough>
   );
 }

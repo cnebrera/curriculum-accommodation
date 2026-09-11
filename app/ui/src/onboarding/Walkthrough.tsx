@@ -1,5 +1,6 @@
 import { useStrings } from '../i18n/context.js';
 import { useOpenKeyPage } from '../data/corpus.js';
+import { Page, Section } from '../shell/Page.js';
 import { Callout } from '../components/Callout.js';
 import type { Service } from '../data/services.js';
 
@@ -15,10 +16,12 @@ import type { Service } from '../data/services.js';
  * that a card is required is the specific failure that field exists to stop.
  */
 export function Walkthrough({
-  service, onBack, children,
+  service, onBack, children, banner,
 }: {
   service: Service;
   onBack: () => void;
+  /** The first run's wordmark and step indicator, above the title (`041` T021). */
+  banner?: React.ReactNode;
   /** The paste box. Passed in so this component owns no credential state. */
   children: React.ReactNode;
 }) {
@@ -26,22 +29,25 @@ export function Walkthrough({
   const { t: es } = useStrings();
   const c = es.connect;
 
+  /*
+   * A `Page` (`041` T022). And «Abrir la página» stops being a primary: the screen's
+   * one strong control is «Comprobar la clave», which is what she came to do — this
+   * opens a browser on the way there (`013` FR-1105, one primary per screen).
+   */
   return (
-    <div className="stack gap5">
-      <div className="stack gap2">
-        <h2>{c.walkthroughTitle(service.label)}</h2>
-        {service.intro ? <p className="lede">{service.intro}</p> : null}
-      </div>
-
+    <Page variant="narrow" {...(banner ? { banner } : {})}
+          title={c.walkthroughTitle(service.label)}
+          {...(service.intro ? { lede: service.intro } : {})}>
       {service.signupFirst ? (
         <Callout intent="decide" title={c.beforeYouStart}>{service.signupFirst}</Callout>
       ) : null}
 
-      <div className="stack gap3">
-        <button className="btn btn-primary btn-lg"
-                onClick={() => void openKeyPage.run(service.id)}>
-          {c.openPage}
-        </button>
+      <Section>
+        <div className="row">
+          <button className="btn" onClick={() => void openKeyPage.run(service.id)}>
+            {c.openPage}
+          </button>
+        </div>
         {/*
           The id, not the URL. The main process looks the destination up in the
           catalogue, so this button cannot be made to open anything else.
@@ -51,10 +57,9 @@ export function Walkthrough({
           seen one do that.
         */}
         <p className="small">{c.openPageHint}</p>
-      </div>
+      </Section>
 
-      <div className="stack gap3">
-        <h3>{c.stepsTitle}</h3>
+      <Section title={c.stepsTitle}>
         <ol className="steps">
           {service.steps.map((step, i) => (
             // The text is the corpus author's, rendered as text and never as
@@ -62,7 +67,7 @@ export function Walkthrough({
             <li key={i}>{step}</li>
           ))}
         </ol>
-      </div>
+      </Section>
 
       {children}
 
@@ -78,6 +83,6 @@ export function Walkthrough({
       <div className="row">
         <button className="btn btn-ghost" onClick={onBack}>{c.otherService}</button>
       </div>
-    </div>
+    </Page>
   );
 }

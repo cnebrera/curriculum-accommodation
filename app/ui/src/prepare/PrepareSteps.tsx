@@ -5,6 +5,7 @@ import { useMaterialKinds } from '../data/corpus.js';
 import { useLearners } from '../data/learners.js';
 import { usePendingIngest } from '../data/ingest.js';
 import { whatIsMissing, type Flow, type RouteAction } from '../nav/route.js';
+import { Icon } from '../components/Icon.js';
 
 /**
  * Los cinco pasos, dentro del alumno (020 US2, FR-1812…1816).
@@ -112,7 +113,7 @@ export function ChooseBranch({ code, name, onStart, onResume }: {
             La lectura ya está pagada: continuar la retoma donde estaba.
           */}
           {his.map((j) => (
-            <div className="row" key={j.jobId} style={{ justifyContent: 'space-between' }}>
+            <div className="row row-split" key={j.jobId}>
               <span className="small">
                 {j.confirmed} de {j.pages} páginas confirmadas
                 <span className="meta"> · {j.jobId}</span>
@@ -154,7 +155,7 @@ export function StepStrip({ flow }: { flow: Flow }) {
   const steps = STEPS[flow.of];
   const at = steps.findIndex((s) => s.step === flow.step);
   return (
-    <ol className="row gap2 small" style={{ flexWrap: 'wrap', listStyle: 'none', padding: 0 }}>
+    <ol className="row gap2 small list-bare">
       {steps.map((s, i) => (
         <li key={s.step} {...(i === at ? { 'aria-current': 'step' as const } : {})}>
           {i === at ? <strong>{i + 1}. {s.label}</strong> : <span className="muted">{i + 1}. {s.label}</span>}
@@ -213,6 +214,7 @@ export function ChooseKind({ flow, go, onNext }: {
                 <button key={k.id} className={chosen === k.id ? 'door door-on' : 'door'}
                         aria-pressed={chosen === k.id}
                         onClick={() => go({ type: 'flow/kind', kind: k.id })}>
+                  {chosen === k.id ? <Icon name="check" className="door-check" /> : null}
                   <strong>{k.label}</strong>
                   {k.before ? <span className="small">{k.before}</span> : null}
                 </button>
@@ -273,7 +275,7 @@ export function WhoElse({ code, flow, also, go, onNext }: {
       <Section>
         <Loaded from={learners}>
           {(all) => (
-            <ul style={{ listStyle: 'none', padding: 0 }}>
+            <ul className="list-bare">
               {all.map((row) => (
                 <li key={row.code}>
                   <label className="check">

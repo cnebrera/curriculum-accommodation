@@ -14,6 +14,7 @@ import { InjectionNotice } from '../components/InjectionNotice.js';
 import { useCompose, type ComposeResult } from '../data/compose.js';
 import { useJobProgress } from '../data/jobs.js';
 import { useOnline } from '../hooks/useOnline.js';
+import { Icon } from '../components/Icon.js';
 
 /**
  * Material for something he has to learn (016 T012, `002`).
@@ -233,6 +234,7 @@ export function ComposeScreen({ learners, onComposed, onBack }: {
                           className={kind === k.id ? 'door door-on' : 'door'}
                           aria-pressed={kind === k.id}
                           onClick={() => setKind(k.id)}>
+                    {kind === k.id ? <Icon name="check" className="door-check" /> : null}
                     <strong>{k.label}</strong>
                     {/*
                       What composing this kind means, from the corpus — «te voy a proponer
@@ -270,8 +272,7 @@ export function ComposeScreen({ learners, onComposed, onBack }: {
         {countsSomething ? (
           <Field label={quantity?.label ?? 'Cuántos de cada cosa'} htmlFor="cuantos"
                  {...(quantity?.help ? { help: quantity.help } : {})}>
-            <input className="input" id="cuantos" type="number" min={1} max={40}
-                   style={{ maxWidth: '8rem' }}
+            <input className="input input-xs" id="cuantos" type="number" min={1} max={40}
                    value={howMany ?? quantity?.default ?? 10}
                    onChange={(e) => setHowMany(Number(e.target.value) || 1)} />
           </Field>
@@ -288,8 +289,8 @@ export function ComposeScreen({ learners, onComposed, onBack }: {
         */}
         <Field label="¿De qué asignatura es?" htmlFor="asignatura"
                help="Opcional. Si la dices, uso su nivel curricular de esa área en vez del general.">
-          <input className="input" id="asignatura"
-                 style={{ maxWidth: '22em' }} value={subject}
+          <input className="input input-md" id="asignatura"
+                 value={subject}
                  onChange={(e) => { setSubject(e.target.value); setLevel(''); }} />
           {/*
             Buttons, never a `<datalist>`: typing one real key into a datalist-linked
@@ -301,7 +302,7 @@ export function ComposeScreen({ learners, onComposed, onBack }: {
             somebody else wrote (Principio IX).
           */}
           {(areas.state === 'ready' ? areas.value : []).length ? (
-            <div className="row gap2" style={{ flexWrap: 'wrap', alignItems: 'center' }}>
+            <div className="row gap2">
               <span className="small muted">Las que ya usas:</span>
               {(areas.state === 'ready' ? areas.value : []).map((a) => (
                 <button type="button" className="btn btn-sm" key={a}
@@ -332,13 +333,13 @@ export function ComposeScreen({ learners, onComposed, onBack }: {
                help={countsSomething
                  ? 'Se apunta en el material, y el borrador de su adaptación lo usa para la temporalización.'
                  : 'Con esto ajusto la extensión del texto. Es una estimación mía: cuánto tarda él en una página lo sabes tú.'}>
-          <div className="row gap2" style={{ alignItems: 'center' }}>
-            <input className="input" id="sesiones" type="number" min={1} max={20}
-                   style={{ maxWidth: '6rem' }} value={sessions}
+          <div className="row gap2">
+            <input className="input input-xs" id="sesiones" type="number" min={1} max={20}
+                   value={sessions}
                    onChange={(e) => setSessions(Number(e.target.value) || 1)} />
             <span className="small">de</span>
-            <input className="input" id="minutos" type="number" min={5} max={240} step={5}
-                   style={{ maxWidth: '6rem' }} value={minutes}
+            <input className="input input-xs" id="minutos" type="number" min={5} max={240} step={5}
+                   value={minutes}
                    aria-label="Minutos por sesión"
                    onChange={(e) => setMinutes(Number(e.target.value) || 5)} />
             <span className="small">minutos cada una</span>
@@ -448,7 +449,7 @@ export function ComposeSummary({ result, learners, jobId, onAdapt, onDiscard }: 
         the thing.
       */}
       <Section title="Míralo" lede="Está en tu carpeta, y lo puedes ver aquí mismo.">
-        <div className="row gap2" style={{ flexWrap: 'wrap' }}>
+        <div className="row gap2">
           <button className="btn" onClick={() => void openDocument()}>
             Ver lo que he preparado
           </button>
@@ -479,7 +480,7 @@ export function ComposeSummary({ result, learners, jobId, onAdapt, onDiscard }: 
           learner={learners[0] ?? ''}
           onCaptured={(c) => setCorrections((prev) => [...prev, c.text])} />
         {corrections.length ? (
-          <div className="row gap2" style={{ flexWrap: 'wrap' }}>
+          <div className="row gap2">
             <button className="btn btn-primary" disabled={correct.busy}
                     onClick={() => void correct.run(jobId, corrections)}>
               {correct.busy ? 'Rehaciéndolo…' : 'Prepararlo otra vez con esto'}
@@ -586,8 +587,7 @@ function LevelAnswer({ because, value, onChange }: {
       {/* Her own recorded observation, said back to her. The sentence comes from the same
           `explainTarget` the report prints, so the screen and the file cannot disagree. */}
       {because ? <p className="small">{because}</p> : null}
-      <select className="select" id="nivel" value={value}
-              style={{ maxWidth: '22em' }}
+      <select className="select input-md" id="nivel" value={value}
               onChange={(e) => onChange(e.target.value)}>
         <option value="">Su curso (nadie lo elige)</option>
         {years.map((y) => (

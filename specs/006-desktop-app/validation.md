@@ -1144,6 +1144,105 @@ registro a propósito, y esta feature no lo cambia: las dieciséis hojas del reg
 PDF y PNG. Así que esto se mira **abriendo un `.odt` a mano, una vez, en LibreOffice**, o
 no se mira. Que no haya instrumento es el hueco y queda escrito en vez de disimulado.
 
+## Spec 041 — el acabado visual: el sistema gobierna toda la pantalla (T032–T034)
+
+Verificado el 2026-09-11 sobre el build de `app/out/` tras la última tarea.
+
+### Lo que se comprueba, y con qué números
+
+| Puerta | Antes (baseline 2026-09-11) | Después |
+|---|---|---|
+| `npm test` | 176 ficheros · 2576 tests | 177 ficheros · **2583** tests, en verde |
+| `npm run test:e2e` | 278 en 4,0 min | **279** en 5,0 min, en verde |
+| `contrast.test.ts` | 19 parejas × 4 paletas | **29** parejas × 4 paletas, sin retocar ningún hex |
+| `a11y.spec.ts` | 4 cruces (tema × texto) | **8** cruces (× contraste) |
+| `styles.test.tsx` | clases usadas ⊂ definidas | + plantillas `className={`…`}`, + `var(--x)` definidas, + estilos en línea prohibidos salvo 3 |
+| `layout.spec.ts` | ≥ 24×24, sin desbordar, ≤ ventana | + el carril es **una fila** a 560 y 880 y la sección activa está a la vista |
+| `npm run shots` | 25 capturas de la aplicación, 2 modos | **50** capturas: + revisión borrador/firmada, foco, hover ×2, «Cómo se ve» abierto, 8 cruces |
+
+Lo que había y ya no hay, afirmado por test: `Notice` con tres clases que ningún CSS
+definía (diez usos); `var(--rule)`, un token inexistente; 143 estilos en línea, de los que
+quedan 3 y el test los nombra con su razón; dos tamaños de `h2`; cuatro componentes con
+contenido de pantalla fuera de `Page`.
+
+### El antes y el después, mirados
+
+`docs/screenshots/041-antes/` (53 ficheros) contra `docs/screenshots/latest/`, pantalla a
+pantalla, con los dos abiertos:
+
+- **«Quién es»** (`6-alumno-quien-es.png`): era la peor pantalla —sin panel, selector de
+  1040 px, cuatro dígitos separados 250 px, «Le pongo un código…» como texto plano en una
+  tarjeta gris porque su `Notice` no tenía estilo—. Ahora es un panel con el nombre como
+  título, el aviso como entradilla, cada pregunta con el ancho de una pregunta y los
+  niveles en un control que cabe en la mano.
+- **Onboarding** (`1-onboarding.png`): era una página web centrada con dos títulos y un
+  separador que no se dibujaba. Ahora es el mismo panel que el resto, con la marca y el
+  indicador de pasos arriba del único `h1`, que es la pregunta del paso.
+- **«Mis alumnos»** (`2-mis-alumnos.png`): el carril activo ya no es un bloque sólido
+  igual al primario; la tarjeta del alumno es blanca y elevada en vez de un `fieldset` gris
+  con sombra; el panel está centrado y llega al pie; el primario lleva icono.
+- **«Tu servicio de IA»** (`4-servicio.png`): «Conectar otro» y «Enseñárselo a alguien»
+  miden lo mismo; la fecha ya no va en Courier.
+- **Ventana estrecha** (`alumno-w-560.png`): cuatro filas de carril (28 % de la ventana)
+  → una fila que se desplaza, con la sección activa a la vista.
+- **«Cómo se ve»** (`e-como-se-ve.png`): el desplegable cabía en 200 px y partía cada
+  etiqueta; ahora es un panel anclado al pie del carril con los tres segmentos enteros.
+- **Los ocho cruces** (`m-*-*-*.png`): la misma pantalla en claro/oscuro × normal/alto
+  contraste × normal/muy grande. Ningún token faltó en ninguno; en alto contraste la franja
+  de los avisos es profunda, no brillante.
+- **La revisión** (`7-revision-borrador.png`, `7-revision-firmada.png`): fotografiada por
+  primera vez. La marca de borrador sigue siendo lo más ruidoso de la pantalla: todo lo
+  demás perdió sombra o relleno y ella no perdió ni el color ni la trama.
+
+### Lo que la revisión de ojos frescos encontró (T033)
+
+Un agente sin contexto de la implementación comparó las capturas contra
+`contracts/states.md` y la spec, y señaló trece defectos. **Nueve se arreglaron en la
+misma tanda** y se ven en el registro final: el ítem activo del carril quedaba fuera de
+la franja al estrechar la ventana (ahora se trae a la vista también al redimensionar, y
+el test de layout lo comprueba en la última sección, no en la primera); el logotipo se
+rompía en tres composiciones distintas según el ancho (`.row` envuelve por defecto y el
+wordmark no debe); el ítem activo se partía en dos líneas al activarse porque ganaba peso
+(ya no cambia de peso: fondo, color y barra son tres señales); los inputs medían 46 px
+junto a botones de 40; **la franja de color de los avisos nunca había sido brillante** —
+desde `010`, `border-color` después de `border-left-color` la pisaba, y nadie había mirado
+tan cerca—; el `<summary>` con `display: flex` había perdido el triángulo de despliegue
+(ahora lleva el chevrón del conjunto); la tarjeta de alumno no tenía el chevrón que el
+contrato le pedía; el badge «En uso» no estaba en la línea del título; y `--text-xs` no
+crecía con la preferencia de texto, así que el badge, la fecha y el selector de idioma se
+quedaban a 13 px junto a un cuerpo de 24.
+
+**Dos se dejan como están, con motivo**: el panel reduce su relleno a `xlarge` por una
+regla de `013` que dice por qué (el espacio es del contenido); y el aviso del onboarding
+a 768 px de alto corta el tercer botón porque la página se desplaza, que es lo que debe
+hacer.
+
+**Dos quedan abiertos**: el estado vacío de «Lo que le he preparado» no ofrece la acción
+que `contracts/states.md` pide («action present») porque la acción sería una frase nueva
+y el copy no es de esta feature; y en `e-como-se-ve` dos etiquetas del segmentado parten
+en dos líneas a tamaño normal en un panel que ya no las estrecha — se mira en la siguiente
+tanda visual.
+
+### NOT verificado, y nombrado
+
+- **Estados sin captura**, además del error y la carga: el foco sobre un botón, una
+  tarjeta o un ítem del carril (`e-foco` enfoca el selector de idioma); el puntero sobre el
+  carril, un input o un secundario; las puertas y los niveles 0–3 seleccionados (la
+  captura de «Quién es» corta antes del control); un aviso `danger`; un checkbox marcado.
+  Existen en CSS y `e2e` los recorre; que se *vean* bien lo afirma un test de propiedad,
+  no una foto. Es la mitad de SC-3905 que sigue sin registro.
+- **El estado de error y el de carga de `Loaded` no están fotografiados.** El guion lo
+  intenta de dos formas y dice al correr que no pudo: `contextBridge` congela el puente,
+  así que `learners.list` no se deja sustituir por una promesa que falla o que nunca
+  responde; y apuntar la carpeta a una ruta imposible no llega a producir el error en
+  pantalla. Los dos estados existen (`data/Loaded.tsx`) y `e2e` los recorre; que se *vean*
+  bien es una afirmación sin captura. Es el hueco de SC-3905.
+- **El estado «cargando» de un botón** (`aria-busy`) tampoco está fotografiado: requiere
+  un proveedor real.
+- **SC-3901 es un juicio de Carlos**, no un test: las capturas de antes y después están
+  las dos en el registro para que lo haga.
+- **Ninguna maestra ha visto nada.** Sin cambios.
+
 ## Sigue sin verificar
 
 - **Ninguna maestra ha visto nada.** Sin cambios, y sigue siendo la línea que importa.

@@ -60,8 +60,8 @@ export function VehicularMark({ value, onChange }: {
 
   return (
     <div className="stack gap2">
-      <strong>{def.name}</strong>
-      <p className="small muted" style={{ margin: 0 }}>
+      <h3>{def.name}</h3>
+      <p className="small muted">
         Para un alumno que está aprendiendo el idioma del aula. <strong>No es una
         dificultad de lenguaje</strong>: es una barrera que se irá, y por eso está aquí y
         no entre los ejes. Si además tiene un trastorno del lenguaje, eso va en «Entender
@@ -69,7 +69,7 @@ export function VehicularMark({ value, onChange }: {
       </p>
 
       <div className="axis-cell">
-        <div className="small muted" style={{ minHeight: '2.6em' }}>
+        <div className="small muted axis-level">
           {value === undefined ? 'Sin observar' : def.levels[value.intensity]}
         </div>
         <div className="levels">
@@ -83,7 +83,7 @@ export function VehicularMark({ value, onChange }: {
       {value !== undefined ? (
         <Field label="¿Qué idiomas habla?" htmlFor="veh-idioma"
                help="Los pones tú. No los deduzco de dónde viene ni de cómo se llama: acertaría a menudo, y cuando fallara sería una afirmación sobre él que no ha hecho nadie.">
-          <div className="row gap2" style={{ flexWrap: 'wrap', alignItems: 'center' }}>
+          <div className="row gap2">
             {languages.map((l) => (
               <button key={l} type="button" className="btn btn-sm"
                       aria-label={`Quitar ${l}`}
@@ -97,7 +97,7 @@ export function VehicularMark({ value, onChange }: {
             ))}
           </div>
           <div className="row gap2">
-            <input className="input" id="veh-idioma" style={{ maxWidth: '18em' }}
+            <input className="input input-sm" id="veh-idioma"
                    value={typed} onChange={(e) => setTyped(e.target.value)} />
             {/* Named: the área control on this same screen has an «Añadir» too. */}
             <button type="button" className="btn" disabled={!typed.trim()}

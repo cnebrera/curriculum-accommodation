@@ -1,12 +1,18 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
+import { Page, Section, Field, Actions } from '../shell/Page.js';
 import { useChooseVault, useUseVault, useDefaultVaultPath } from '../data/vault.js';
 import { useLookForCorpus, useAcceptCorpus } from '../data/corpus-update.js';
 import { useNameStatusCheck } from '../data/names.js';
 import { useStrings } from '../i18n/context.js';
-import { Notice } from '../components/Notice.js';
+import { Callout } from '../components/Callout.js';
+import { Icon } from '../components/Icon.js';
 
 /** A default she can accept without making a decision (006 FR-402). */
-export function VaultStep({ onDone }: { onDone: (root: string) => void }) {
+export function VaultStep({ onDone, banner }: {
+  onDone: (root: string) => void;
+  /** The first run's wordmark and step indicator, above the title (`041` T021). */
+  banner?: ReactNode;
+}) {
   const { t: es } = useStrings();
   const [busy, setBusy] = useState(false);
   const chooseVault = useChooseVault();
@@ -50,25 +56,33 @@ export function VaultStep({ onDone }: { onDone: (root: string) => void }) {
     } finally { setBusy(false); }
   };
 
+  /*
+   * A `Page` like every other screen (`041` T021, FR-3901): the step's question is the
+   * title, its reason the lede, the folder a read-only field, and the two answers an
+   * `Actions` with one primary. It was a bare `stack` with an `<h2>` under the
+   * onboarding's own `<h1>` — two titles, no panel, no measure.
+   */
   return (
-    <div className="stack">
-      <h2>{es.onboarding.vaultTitle}</h2>
-      <p>{es.onboarding.vaultWhy}</p>
-      {/* `030` FR-2812: the absence, said where somebody would otherwise pick a shared
-          OneDrive folder. There is no shared-vault mode to offer, and this is why. */}
-      <p className="small">{es.onboarding.vaultAlone}</p>
-      <div className="card">
-        <code>{suggested || '…'}</code>
-      </div>
-      {encryption && !encryption.available ? (
-        <Notice kind="warn" title="Aviso sobre los nombres">{encryption.message}</Notice>
-      ) : null}
-      <div className="row">
+    <Page variant="narrow" {...(banner ? { banner } : {})}
+          title={es.onboarding.vaultTitle} lede={es.onboarding.vaultWhy}>
+      <Section>
+        {/* `030` FR-2812: the absence, said where somebody would otherwise pick a shared
+            OneDrive folder. There is no shared-vault mode to offer, and this is why. */}
+        <p className="small">{es.onboarding.vaultAlone}</p>
+        <Field canvas>
+          <code className="pre-soft">{suggested || '…'}</code>
+        </Field>
+        {encryption && !encryption.available ? (
+          <Callout intent="danger" title="Aviso sobre los nombres">{encryption.message}</Callout>
+        ) : null}
+      </Section>
+      <Actions primary={
         <button className="btn btn-primary" disabled={busy || !suggested} onClick={() => void accept(suggested)}>
-          {es.onboarding.vaultAccept}
+          <Icon name="folder" /> {es.onboarding.vaultAccept}
         </button>
+      }>
         <button className="btn" disabled={busy} onClick={() => void accept()}>{es.onboarding.vaultChoose}</button>
-      </div>
+      </Actions>
 
       {/*
         El criterio pedagógico, aquí y no en un paso propio (`034`, decisión de Carlos:
@@ -86,21 +100,14 @@ export function VaultStep({ onDone }: { onDone: (root: string) => void }) {
         y sigue**: Rampa ya lleva un criterio dentro, así que esto es «traerte lo más
         nuevo», nunca «sin esto no funciono».
       */}
-      <div className="stack gap2">
-        <div className="row gap2" style={{ alignItems: 'center' }}>
-          <button className="btn" disabled={busy || corpus.busy}
+      <Section lede="Las recetas y las instrucciones con las que adapto ya vienen dentro de Rampa. Esto se conecta al repositorio del proyecto y trae la versión más nueva si la hay. Puedes hacerlo ahora o luego, en Configuración.">
+        <Actions {...(corpusSaid ? { note: corpusSaid } : {})}>
+          <button className="btn" disabled={busy || corpus.busy} aria-busy={corpus.busy}
                   onClick={() => void corpus.run().then((r) => setCorpusSaid(said(r)))}>
             {corpus.busy ? 'Trayendo el criterio…' : 'Traer el criterio más nuevo'}
           </button>
-          {corpusSaid ? <span className="small">{corpusSaid}</span> : null}
-        </div>
-        <p className="field-help">
-          Las recetas y las instrucciones con las que adapto ya vienen dentro de Rampa.
-          Esto se conecta al repositorio del proyecto y trae la versión más nueva si la
-          hay. Puedes hacerlo ahora o luego, en Configuración.
-        </p>
-      </div>
-
-    </div>
+        </Actions>
+      </Section>
+    </Page>
   );
 }

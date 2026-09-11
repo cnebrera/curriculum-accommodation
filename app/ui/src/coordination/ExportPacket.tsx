@@ -54,11 +54,11 @@ export function ExportPacketSection({ code }: { code: string }) {
                lede="No va tu nombre: va el papel que dices tener, y quien lo recibe ya
                      sabe quién eres.">
         <Field label="Tu papel" htmlFor="coord-role">
-          <input className="input" id="coord-role" style={{ maxWidth: '18em' }}
+          <input className="input input-sm" id="coord-role"
                  placeholder="PT, tutora, orientadora…"
                  value={role} onChange={(e) => setRole(e.target.value)} />
         </Field>
-        <div className="row gap2" style={{ flexWrap: 'wrap' }}>
+        <div className="row gap2">
           <Field label="Desde" htmlFor="coord-from"
                  help="Si lo dejas en blanco, desde el último paquete que le mandaste.">
             <input className="input" id="coord-from" type="date"
@@ -89,7 +89,7 @@ export function ExportPacketSection({ code }: { code: string }) {
           <ul>
             {result.items.map((item, i) => (
               <li key={`${i}-${describe(item)}`}>
-                <label className="row gap2" style={{ alignItems: 'flex-start' }}>
+                <label className="row gap2 row-top">
                   <input type="checkbox" checked={!dropped.has(i)} onChange={() => toggle(i)} />
                   <span>{describe(item)}</span>
                 </label>

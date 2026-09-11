@@ -5,8 +5,8 @@ import { useStrings } from '../i18n/context.js';
 import { AxisEditor } from './AxisEditor.js';
 import { VehicularMark } from './VehicularMark.js';
 import { YearPicker, type Who } from './YearPicker.js';
-import { Notice } from '../components/Notice.js';
 import { LearnerPictograms } from '../pictograms/LearnerPictograms.js';
+import { Section, Field, Actions } from '../shell/Page.js';
 import { RepairNotice } from '../components/RepairNotice.js';
 
 export function ProfileEditor({ code, onSaved, onConfigure }: {
@@ -227,63 +227,69 @@ export function ProfileEditor({ code, onSaved, onConfigure }: {
     onSaved(current);
   };
 
+  /*
+   * Sections and fields, never a page (`041` T019, FR-3901).
+   *
+   * The page is the parent's: «Quién es» inside the learner, «Un alumno nuevo» from the
+   * caseload, «Tu primer alumno» in the first run — three titles for one form. Before
+   * this the form was a bare `stack` with a grey card, an `<h3>`, four `<div><label>`
+   * pairs and 1040px selects: every symptom ADR 0009 listed, on the screen with the
+   * most work in the product. The placeholders that carried the help are help now —
+   * a placeholder is a hint that disappears the moment she starts typing.
+   */
   return (
-    <div className="stack">
+    <>
       <RepairNotice repairs={repairs} />
 
-      <div className="card stack">
-        <Notice kind="info">{es.learner.codeExplain}</Notice>
+      <Section lede={es.learner.codeExplain}>
         <div className="row">
           <span className="badge badge-accent">{current || '…'}</span>
-          {!code ? <button className="btn" onClick={() => void newCode.run().then((c) => { if (c) setCurrent(c); })}>
+          {!code ? <button className="btn btn-sm" onClick={() => void newCode.run().then((c) => { if (c) setCurrent(c); })}>
             {es.learner.newCode}</button> : null}
         </div>
-        <div>
-          <label htmlFor="name">{es.learner.nameLabel}</label>
+        <Field label={es.learner.nameLabel} htmlFor="name">
           <input className="input" id="name" type="text" value={name} onChange={(e) => setName(e.target.value)} />
-        </div>
-      </div>
+        </Field>
+      </Section>
 
-      <h3>{es.learner.axesTitle}</h3>
       {/*
         Before the axes, deliberately. Who he is comes before what he finds hard —
         both in how a teacher thinks about a child and in what she can answer
         without stopping to consider.
       */}
-      <YearPicker value={who} onChange={setWho} />
+      <Section title={es.learner.axesTitle}>
+        <YearPicker value={who} onChange={setWho} />
 
-      {/*
-        Beside the axes, in its own block (`033` T014). Rendered after them because it is
-        the less common case, and never inside the grid — see `VehicularMark`.
-      */}
-      <VehicularMark value={vehicular} onChange={setVehicular} />
+        {/*
+          Beside the axes, in its own block (`033` T014). Rendered after them because it is
+          the less common case, and never inside the grid — see `VehicularMark`.
+        */}
+        <VehicularMark value={vehicular} onChange={setVehicular} />
 
-      <AxisEditor axes={axes} onChange={setAxes}
-                  curAreas={curAreas} onCurAreasChange={setCurAreas}
-                  knownAreas={areaVocabulary.state === 'ready' ? areaVocabulary.value : []} />
+        <AxisEditor axes={axes} onChange={setAxes}
+                    curAreas={curAreas} onCurAreasChange={setCurAreas}
+                    knownAreas={areaVocabulary.state === 'ready' ? areaVocabulary.value : []} />
+      </Section>
 
-      <div>
-        <label htmlFor="works">{es.learner.works}</label>
-        <textarea className="textarea" id="works" value={works} onChange={(e) => setWorks(e.target.value)}
-                  placeholder={'Una cosa por línea\nPor ejemplo: con el primer ejercicio hecho arranca sola'} />
-      </div>
-      <div>
-        <label htmlFor="avoid">{es.learner.avoid}</label>
-        <textarea className="textarea" id="avoid" value={avoid} onChange={(e) => setAvoid(e.target.value)}
-                  placeholder={'Una cosa por línea\nPor ejemplo: nada con reloj'} />
-      </div>
-
-      <div>
-        <label htmlFor="interests">Le interesa</label>
-        <input className="input" id="interests" type="text" value={interests}
-               onChange={(e) => setInterests(e.target.value)}
-               placeholder="Separado por comas. Por ejemplo: dinosaurios, fútbol" />
-      </div>
-      <div>
-        <label htmlFor="response">Cómo puede responder</label>
-        <textarea className="textarea" id="response" value={response} onChange={(e) => setResponse(e.target.value)}
-                  placeholder={'Una por línea, con dos puntos\nPor ejemplo: escritura: dicta y un adulto transcribe'} />
-      </div>
+      <Section>
+        <Field label={es.learner.works} htmlFor="works"
+               help="Una cosa por línea. Por ejemplo: con el primer ejercicio hecho arranca sola">
+          <textarea className="textarea" id="works" value={works} onChange={(e) => setWorks(e.target.value)} />
+        </Field>
+        <Field label={es.learner.avoid} htmlFor="avoid"
+               help="Una cosa por línea. Por ejemplo: nada con reloj">
+          <textarea className="textarea" id="avoid" value={avoid} onChange={(e) => setAvoid(e.target.value)} />
+        </Field>
+        <Field label="Le interesa" htmlFor="interests"
+               help="Separado por comas. Por ejemplo: dinosaurios, fútbol">
+          <input className="input" id="interests" type="text" value={interests}
+                 onChange={(e) => setInterests(e.target.value)} />
+        </Field>
+        <Field label="Cómo puede responder" htmlFor="response"
+               help="Una por línea, con dos puntos. Por ejemplo: escritura: dicta y un adulto transcribe">
+          <textarea className="textarea" id="response" value={response} onChange={(e) => setResponse(e.target.value)} />
+        </Field>
+      </Section>
 
       {/*
         The one decision in this form that is about how a child is seen rather than
@@ -306,14 +312,15 @@ export function ProfileEditor({ code, onSaved, onConfigure }: {
         onOverrides={(overrides) => setPictos((p) => ({ ...p, overrides }))}
         onConfigure={onConfigure} />
 
-      <div className="row">
+      <Actions primary={
         <button className="btn btn-primary" disabled={!current || saveLearner.busy}
                 aria-busy={saveLearner.busy} onClick={() => void save()}>{es.learner.save}</button>
-        {saved && !failure ? <span className="badge badge-accent">Guardado</span> : null}
+      }>
+        {saved && !failure ? <span className="badge badge-ok">Guardado</span> : null}
         {/* And when it did not save, she is told so instead of being told the
             opposite. */}
         {failure ? <span className="small" role="alert">{failure.message}</span> : null}
-      </div>
-    </div>
+      </Actions>
+    </>
   );
 }

@@ -60,7 +60,7 @@ function CurriculumSection({ code, name, onGuide }: {
           lede="Lo oficial: lo que te hayan dado, y lo que puedo ordenarte a partir de lo que ya llevas hecho.">
       <Section title="Si te han dado el documento"
                lede="Me quedo con sus medidas y las aplico a todo lo que adapte para él. El diagnóstico no lo guardo.">
-        <div className="row gap2" style={{ flexWrap: 'wrap' }}>
+        <div className="row gap2">
           <button className="btn btn-primary" onClick={() => onGuide('guide')}>
             Traer el documento que me han dado
           </button>
@@ -161,12 +161,18 @@ export function LearnerSection({
        * and clearly second — the form is what she came to edit — and it is read-only:
        * her memory is hers to write (Principle VIII).
        */
+      /*
+       * And a `Page` (`041` T019, FR-3901): this was the one section of the learner
+       * rendered as a bare fragment, so it had no panel, no `h1` and no measure — the
+       * form spilled to 1040px while every sibling section sat in its panel. The title
+       * is her name for him, like the other sections'.
+       */
       return (
-        <>
+        <Page title={name ?? code}>
           <ProfileEditor code={code} onConfigure={onConfigure}
                          onSaved={() => { /* the list reloads on return */ }} />
           <LearnerNotes code={code} {...(name ? { name } : {})} />
-        </>
+        </Page>
       );
 
     case 'prepare':

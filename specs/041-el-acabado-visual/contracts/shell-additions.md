@@ -5,7 +5,7 @@ That contract said a screen may not choose a max width, a gap, a spinner or a se
 primary. It did not say a screen may not write `style={{…}}` — and 143 of them did,
 each a layout decision the shell should have owned. This is the list of what was
 missing. **After this feature, `ui/test/styles.test.tsx` asserts that no `style={{`
-exists in `ui/src` outside the four named exceptions.**
+exists in `ui/src` outside the three named exceptions.**
 
 ## `Page`
 
@@ -49,6 +49,11 @@ Unchanged in API. Two facts become explicit:
 | `.progress-label` | `font-size: var(--text-sm); font-weight: 600` | 2 inline |
 | `.is-out` | `opacity: .5` on the row, `text-decoration: line-through` on its text | 2 conditional inline |
 | `summary` (base) | `cursor: pointer` | 4 inline |
+| `.page-brand`, `.page-steps` | the first run's wordmark, welcome line and step indicator, for `Page`'s `banner` slot | the hand-built onboarding `<main>` |
+| `.icon-spin` | the turning `loader-circle`; slower under reduced motion, never still | — |
+| `.door-check` | the `check` icon a chosen `.door`/`.pick`/`.picto-choice` places | `content: '✓'` pseudo-elements |
+| `.callout-body` | the callout's body at `text-sm` | the `<div>` the `p` rule never reached |
+| `.rail-foot .card` | «Cómo se ve» as a fixed, anchor-positioned panel beside the foot | the card clipped inside the scrolling rail |
 
 ## Classes that change meaning (`components.css`)
 
@@ -86,6 +91,6 @@ Exactly these `style={{}}` remain, and `styles.test.tsx` names them:
 | File | Why it is data |
 |---|---|
 | `components/Progress.tsx` (2) | `width: ${pct}%` — a measurement |
-| `components/Logo.tsx` (2) | the wordmark's size from its `size` prop — a drawing, not a layout |
+| `components/Logo.tsx` (1) | the wordmark's size from its `size` prop — a drawing, not a layout |
 
 Anything else is a failing test.

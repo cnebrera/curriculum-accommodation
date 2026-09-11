@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Icon } from '../components/Icon.js';
 import { Page, Section, Actions } from '../shell/Page.js';
 import { Callout } from '../components/Callout.js';
 import { Loaded } from '../data/Loaded.js';
@@ -171,7 +172,7 @@ function BringOne({ onDone }: { onDone: () => void }) {
         primary={
           <button className="btn" disabled={choose.busy}
                   onClick={() => void choose.run().then((f) => setFile(f ?? null))}>
-            Elegir el fichero
+            <Icon name="folder" /> Elegir el fichero
           </button>
         } />
 
@@ -208,7 +209,7 @@ function BringOne({ onDone }: { onDone: () => void }) {
           */}
           <details>
             <summary>Ver el fichero entero</summary>
-            <pre className="small" style={{ whiteSpace: 'pre-wrap', overflowX: 'auto' }}>
+            <pre className="pre-soft">
               {file.raw}
             </pre>
           </details>

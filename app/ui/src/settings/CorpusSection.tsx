@@ -150,11 +150,11 @@ export function CorpusSection() {
                   <details open>
                     <summary className="small"><code>{reading.path}</code></summary>
                     <p className="small"><strong>Lo que dice ahora:</strong></p>
-                    <pre className="small" style={{ whiteSpace: 'pre-wrap', overflowX: 'auto' }}>
+                    <pre className="pre-soft">
                       {reading.now ?? '(no lo tenías)'}
                     </pre>
                     <p className="small"><strong>Lo que diría:</strong></p>
-                    <pre className="small" style={{ whiteSpace: 'pre-wrap', overflowX: 'auto' }}>
+                    <pre className="pre-soft">
                       {reading.next ?? '(vacío)'}
                     </pre>
                   </details>
@@ -185,7 +185,7 @@ export function CorpusSection() {
               <Section title="Volver atrás"
                        lede="Cada versión que has aceptado se queda guardada. Volver es un
                              cambio de puntero, no una reinstalación.">
-                <div className="row gap2" style={{ flexWrap: 'wrap' }}>
+                <div className="row gap2">
                   {now.accepted.map((v) => (
                     <button key={v} className="btn btn-sm" disabled={revert.busy || now.version === v}
                             onClick={() => void revert.run(v).then(() => state.reload())}>

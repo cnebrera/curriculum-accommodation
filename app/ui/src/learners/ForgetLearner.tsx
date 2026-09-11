@@ -91,7 +91,7 @@ export function ForgetLearner({ code, name, onDone }: {
                    : `He borrado todo lo de ${label}`}>
           {result.remaining.length ? (
             <>
-              <p style={{ marginTop: 0 }}>
+              <p>
                 Quedan {result.remaining.length} sitio(s) donde todavía aparece. Es un
                 fallo mío, no tuyo — dímelo y lo arreglo:
               </p>
@@ -100,7 +100,7 @@ export function ForgetLearner({ code, name, onDone }: {
               </ul>
             </>
           ) : (
-            <p style={{ margin: 0 }}>
+            <p>
               {result.removed.length} fichero(s) y carpeta(s). Queda constancia de que
               lo borraste, con la fecha y sin nada suyo dentro.
             </p>
@@ -141,11 +141,11 @@ export function ForgetLearner({ code, name, onDone }: {
       {/* FR-215 · the list, before anything. */}
       <div className="card stack gap2">
         <span className="small"><strong>{plan.paths.length} sitio(s) en tu carpeta</strong></span>
-        <ul className="stack gap1" style={{ margin: 0, paddingLeft: '1.4em' }}>
+        <ul className="bullets">
           {plan.paths.map((p) => <li key={p} className="small"><code>{p}</code></li>)}
         </ul>
         {plan.paths.length === 0 ? (
-          <p className="small muted" style={{ margin: 0 }}>
+          <p className="small muted">
             No encuentro ficheros suyos. Puede que ya los borraras.
           </p>
         ) : null}
@@ -159,7 +159,7 @@ export function ForgetLearner({ code, name, onDone }: {
         {plan.entries.length ? (
           <>
             <span className="small"><strong>Y de dentro de dos ficheros</strong></span>
-            <ul className="stack gap1" style={{ margin: 0, paddingLeft: '1.4em' }}>
+            <ul className="bullets">
               {plan.entries.map((e) => (
                 <li key={e.of} className="small">
                   {ENTRY_SAYS[e.of]} <code>{e.where}</code>
@@ -188,7 +188,7 @@ export function ForgetLearner({ code, name, onDone }: {
                 : `${plan.sharedKept.length} materiales se quedan, y por qué`}
             </strong>
           </span>
-          <ul className="stack gap1" style={{ margin: 0, paddingLeft: '1.4em' }}>
+          <ul className="bullets">
             {plan.sharedKept.map((k) => (
               <li key={k.job} className="small">
                 <code>{k.job}</code>{' — '}
@@ -204,14 +204,14 @@ export function ForgetLearner({ code, name, onDone }: {
 
       {/* FR-218 · what does not come back. */}
       <Callout intent="decide" title="Esto no se retira">
-        <ul className="stack gap2" style={{ margin: 0, paddingLeft: '1.2em' }}>
+        <ul className="bullets">
           {plan.survives.map((s, i) => <li key={i}>{s}</li>)}
         </ul>
       </Callout>
 
       {/* FR-220 · what is not mine to delete. */}
       <Callout intent="danger" title="Esto no lo puedo borrar yo">
-        <ul className="stack gap2" style={{ margin: 0, paddingLeft: '1.2em' }}>
+        <ul className="bullets">
           {plan.outOfReach.map((s, i) => <li key={i}>{s}</li>)}
         </ul>
       </Callout>

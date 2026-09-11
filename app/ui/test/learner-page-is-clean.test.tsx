@@ -72,7 +72,8 @@ describe('what is not on it any more', () => {
      * that matters is the next one: there is exactly one button, and no progress bar
      * can appear here because nothing here can start a download.
      */
-    expect(html).toContain('Traer los pictogramas →');
+    // The arrow is an icon since `041` (FR-3918): the pointer is still a pointer.
+    expect(html).toMatch(/Traer los pictogramas <svg[^>]*data-icon="chevron-right"/);
     expect(html).not.toMatch(/Trayéndolos/);
   });
 
@@ -113,7 +114,8 @@ describe('what is on it', () => {
     const html = render(true, false);
     expect(html).toContain('No tienes el juego de pictogramas');
     expect([...html.matchAll(/<button/g)]).toHaveLength(1);
-    expect(html).toContain('Traer los pictogramas →');
+    // The arrow is an icon since `041` (FR-3918): the pointer is still a pointer.
+    expect(html).toMatch(/Traer los pictogramas <svg[^>]*data-icon="chevron-right"/);
   });
 
   /**

@@ -47,8 +47,11 @@ test.describe('the first ten minutes', () => {
     const body = await page.textContent('body');
     expect(body?.trim().length ?? 0).toBeGreaterThan(20);
 
-    await expect(page.getByRole('heading', { name: /Vamos a dejarlo listo/i })).toBeVisible();
-    await expect(page.getByRole('heading', { name: /¿Dónde guardo tus cosas\?/i })).toBeVisible();
+    // The welcome is a line above the step, not a heading (`041` T021): one `h1` per
+    // screen, and the screen's question is the `h1`. The property this asserts — that
+    // the first step is on screen and not a blank page — is unchanged.
+    await expect(page.getByText(/Vamos a dejarlo listo/i)).toBeVisible();
+    await expect(page.getByRole('heading', { name: /¿Dónde guardo tus cosas\?/i, level: 1 })).toBeVisible();
 
     // No project jargon in front of her (006 FR-406).
     for (const word of ['IR', 'corpus', 'vault', 'axis', 'prompt', 'token']) {

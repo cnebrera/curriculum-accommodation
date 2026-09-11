@@ -148,9 +148,9 @@ export function EnsayoScreen({ startedAt, onLeave }: {
                       `::: {#b1 .instruction}`: on the first screen of her first night,
                       that teaches her that what Rampa makes is a soup of syntax.
                     */}
-                    <div className="material" lang="es">
+                    <div className="material prose" lang="es">
                       {(value?.blocks ?? []).map((b) => (
-                        <p key={b.id} style={{ margin: '0 0 .6em' }}>{plain(b.text)}</p>
+                        <p key={b.id}>{plain(b.text)}</p>
                       ))}
                     </div>
                   </>
@@ -216,9 +216,9 @@ export function EnsayoScreen({ startedAt, onLeave }: {
                      lede="Ésta es la hoja que le darías. Fíjate en que dice que es un ejemplo: eso lo lleva el documento, así que también sale impreso.">
               <Loaded from={adaptation}>
                 {(value) => (
-                  <div className="material" lang="es">
+                  <div className="material prose" lang="es">
                     {(value?.blocks ?? []).map((b) => (
-                      <p key={b.id} style={{ margin: '0 0 .6em' }}>{plain(b.text)}</p>
+                      <p key={b.id}>{plain(b.text)}</p>
                     ))}
                   </div>
                 )}
@@ -249,7 +249,7 @@ export function EnsayoScreen({ startedAt, onLeave }: {
             */}
             <Section title="Lo último: firmarla e imprimirla"
                      lede="En Rampa una firma quiere decir que alguien la ha leído. Aquí es la misma firma de verdad, sobre la hoja de ejemplo.">
-              <div className="row gap2" style={{ flexWrap: 'wrap' }}>
+              <div className="row gap2">
                 <button className="btn" disabled={sign.busy || signed}
                         onClick={() => void sign.run(startedAt, 'la PT').then((r) => {
                           if (r) setSigned(true);

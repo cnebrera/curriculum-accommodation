@@ -319,7 +319,7 @@ test.describe('one worksheet, several learners', () => {
         .toBeVisible({ timeout: 20000 });
 
       /* And a way out, which this screen did not have at all (FLU-01). */
-      await page.getByRole('button', { name: '← Volver a lo que le he preparado' }).click();
+      await page.getByRole('button', { name: /^(← )?Volver a lo que le he preparado$/ }).click();
       await page.getByRole('heading', { name: /Lo que he preparado para/ }).waitFor();
       await page.getByText('Un momento, que miro qué hay…').waitFor({ state: 'detached' });
       await expect(page.getByText('Firmada').first()).toBeVisible();

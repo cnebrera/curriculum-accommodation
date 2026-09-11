@@ -337,11 +337,11 @@ export function AcnsDraftScreen({ learnerCode, learnerName, onBack }: {
       <Section title="¿De qué área?"
                lede="La normativa hace uno por área. Si me la dices, cito lo que tengas apuntado de esa; si no, el nivel general.">
         <Field label="Área" htmlFor="acns-area">
-          <input className="input" id="acns-area" style={{ maxWidth: '22em' }}
+          <input className="input input-md" id="acns-area"
                  value={subject} onChange={(e) => setSubject(e.target.value)} />
           {/* Buttons, never a `<datalist>` — see the note in `AxisEditor.tsx`. */}
           {(areas.state === 'ready' ? areas.value : []).length ? (
-            <div className="row gap2" style={{ flexWrap: 'wrap', alignItems: 'center' }}>
+            <div className="row gap2">
               <span className="small muted">Las que ya usas:</span>
               {(areas.state === 'ready' ? areas.value : []).map((a) => (
                 <button type="button" className="btn btn-sm" key={a}
@@ -444,7 +444,7 @@ function AcnsDocumentSection({ learnerCode }: { learnerCode: string }) {
 
       {problem ? <Callout intent="danger">{problem.message}</Callout> : null}
 
-      <div className="row gap2" style={{ flexWrap: 'wrap' }}>
+      <div className="row gap2">
         <button className="btn" disabled={save.busy} aria-busy={save.busy}
                 onClick={() => void doSave()}>
           {exists ? 'Guardarla otra vez' : 'Guardarla en mi carpeta'}

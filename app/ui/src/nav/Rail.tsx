@@ -1,5 +1,6 @@
-import type { ReactNode } from 'react';
+import { useEffect, useRef, type ReactNode } from 'react';
 import { Wordmark } from '../components/Logo.js';
+import { Icon, type IconName } from '../components/Icon.js';
 import {
   MAIN_TABS, settingsPanes,
   type LearnerTab, type Route, type RouteAction, type SettingsPane,
@@ -55,6 +56,20 @@ const TAB_LABEL: Record<LearnerTab, string> = {
  */
 const FOOT_TABS: LearnerTab[] = ['handover', 'erase'];
 
+/**
+ * One icon per destination, by key (`041` T029). By key and not by label because the
+ * labels above are what she reads and these are what she scans; the two must never be
+ * the same list twice. Always beside the label, never instead of it (FR-3917).
+ */
+const TAB_ICON: Record<LearnerTab, IconName> = {
+  who: 'user-round', prepare: 'file-pen-line', structure: 'calendar-days',
+  made: 'folder-open', curriculum: 'book-open', handover: 'package', erase: 'trash-2',
+};
+const PANE_ICON: Record<SettingsPane, IconName> = {
+  pictograms: 'image', normative: 'scale', house: 'pen-line',
+  criterio: 'graduation-cap', service: 'plug', about: 'info',
+};
+
 export function Rail({ route, go, learnerName, labels, foot }: {
   route: Route;
   go: (action: RouteAction) => void;
@@ -79,6 +94,23 @@ export function Rail({ route, go, learnerName, labels, foot }: {
   const inside = route.at === 'learner';
   const inSettings = route.at === 'settings';
 
+  /*
+   * The current section, brought into view (`041` T030, FR-3923). In the narrow
+   * window the rail is one scrolling row, and the section she just chose can be past
+   * its right edge; `nearest` on both axes so this never scrolls the page itself, and
+   * a no-op in the column, where everything is already visible.
+   */
+  const nav = useRef<HTMLElement>(null);
+  useEffect(() => {
+    const show = () => nav.current?.querySelector<HTMLElement>('[aria-current]')
+      ?.scrollIntoView({ inline: 'nearest', block: 'nearest' });
+    show();
+    // And when the window is dragged narrower: the column becomes the row with the
+    // current item wherever it was, which at 880px was past the right edge.
+    window.addEventListener('resize', show);
+    return () => window.removeEventListener('resize', show);
+  }, [route]);
+
   /**
    * Configuración's sections, labelled from the locale.
    *
@@ -98,7 +130,7 @@ export function Rail({ route, go, learnerName, labels, foot }: {
     <button key={p}
             {...(inSettings && route.pane === p ? { 'aria-current': 'page' as const } : {})}
             onClick={() => go({ type: 'settings', pane: p })}>
-      {paneLabel[p]}
+      <Icon name={PANE_ICON[p]} size={20} />{paneLabel[p]}
     </button>
   );
 
@@ -106,7 +138,7 @@ export function Rail({ route, go, learnerName, labels, foot }: {
     <button key={t}
             {...(inside && route.tab === t ? { 'aria-current': 'page' as const } : {})}
             onClick={() => go({ type: 'learner/tab', tab: t })}>
-      {TAB_LABEL[t]}
+      <Icon name={TAB_ICON[t]} size={20} />{TAB_LABEL[t]}
     </button>
   );
 
@@ -119,6 +151,7 @@ export function Rail({ route, go, learnerName, labels, foot }: {
 
   return (
     <nav
+      ref={nav}
       className="rail"
       /*
        * The name follows the contents, because a region whose label says «Secciones de
@@ -142,11 +175,11 @@ export function Rail({ route, go, learnerName, labels, foot }: {
           {route.from ? (
             <button className="rail-back"
                     onClick={() => go({ type: 'learner/open', code: route.from!.code })}>
-              ← {learnerName ?? route.from.code}
+              <Icon name="arrow-left" /> {learnerName ?? route.from.code}
             </button>
           ) : (
             <button className="rail-back" onClick={() => go({ type: 'caseload' })}>
-              ← {labels.learners}
+              <Icon name="arrow-left" /> {labels.learners}
             </button>
           )}
           {/* A `<p>`, for the reason on the learner's one above. */}
@@ -160,7 +193,7 @@ export function Rail({ route, go, learnerName, labels, foot }: {
             says where it leads is one she can use without remembering how she arrived.
           */}
           <button className="rail-back" onClick={() => go({ type: 'caseload' })}>
-            ← {labels.learners}
+            <Icon name="arrow-left" /> {labels.learners}
           </button>
           {/*
             Who this is, at the top of their own rail (FR-1806, `005` FR-513). The name
@@ -196,7 +229,7 @@ export function Rail({ route, go, learnerName, labels, foot }: {
           <button
             aria-current={route.at === 'caseload' || route.at === 'newLearner' ? 'page' : undefined}
             onClick={() => go({ type: 'caseload' })}>
-            {labels.learners}
+            <Icon name="users" size={20} />{labels.learners}
           </button>
           {/*
             **Dos, exactamente dos** (FR-1802, T037).
@@ -227,7 +260,9 @@ export function Rail({ route, go, learnerName, labels, foot }: {
             a guarantee. Inside Configuración the rail shows its own sections, and each
             of those carries the `aria-current`.
           */}
-          <button onClick={() => go({ type: 'settings' })}>{labels.settings}</button>
+          <button onClick={() => go({ type: 'settings' })}>
+            <Icon name="settings" size={20} />{labels.settings}
+          </button>
         </>
       )}
       <div className="grow" />

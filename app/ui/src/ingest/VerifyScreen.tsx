@@ -122,7 +122,7 @@ export function VerifyScreen({ jobId, onVerified, next }: {
 
       {failed.length ? (
         <Callout intent="danger" title={`${failed.length} página(s) no he podido leerlas`}>
-          <ul className="stack gap2" style={{ margin: 0 }}>
+          <ul className="stack gap2 flush">
             {failed.map((p) => (
               <li key={p.page}>
                 <strong>Página {p.page}:</strong> {p.problems.join(' ')}
@@ -190,7 +190,7 @@ export function VerifyScreen({ jobId, onVerified, next }: {
 
         return (
           <section className="stack gap4" key={p.page}>
-            <div className="row" style={{ justifyContent: 'space-between' }}>
+            <div className="row row-split">
               <h2>Página {p.page}</h2>
               {p.verified ? <Badge tone="ok">Confirmada</Badge> : <Badge tone="draft">Sin confirmar</Badge>}
             </div>
@@ -271,7 +271,7 @@ export function VerifyScreen({ jobId, onVerified, next }: {
         FR-608 · the gate. Adaptation refuses until every page is confirmed, and
         this button says so rather than being mysteriously disabled.
       */}
-      <div className="card card-plain stack gap3">
+      <div className="card stack gap3">
         {extraction.verified ? (
           <>
             <Callout intent="ok" title="Todo confirmado">
@@ -284,7 +284,7 @@ export function VerifyScreen({ jobId, onVerified, next }: {
             </div>
           </>
         ) : (
-          <p className="small" style={{ margin: 0 }}>
+          <p className="small">
             Falta confirmar{' '}
             {readable.filter((p) => !p.verified).length + failed.length} página(s).
             Hasta entonces no puedo adaptar: un error aquí se cuela en todas las hojas.

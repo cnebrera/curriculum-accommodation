@@ -88,6 +88,24 @@ for (const file of tsxFiles) {
       record(lit[1] ?? lit[2] ?? lit[3] ?? '');
     }
   }
+  /*
+   * And the literal segments of a template — `className={`notice ${kind}`}`.
+   *
+   * ## Why this third pass exists (041, research R2)
+   *
+   * `Notice.tsx` rendered `notice ${kind}` for two years, and **none of those classes
+   * existed in any stylesheet**: `.notice`, `.info`, `.warn`. Ten notices across the
+   * interface painted as bare text — the learner's code explanation on «Quién es» was
+   * one — and this file said nothing, because the `[^}]*` above stops at the `}` inside
+   * `${kind}` and the template never reached the ternary matcher. The interpolated part
+   * cannot be checked statically; the literal words around it can, and `notice` was one.
+   */
+  for (const m of code.matchAll(/className=\{`([^`]*)`\}/g)) {
+    // `callout-${intent}`: the prefix before an interpolation is not a class, the
+    // words beside it are.
+    const literal = m[1]!.replace(/[\w-]*\$\{[^}]*\}[\w-]*/g, ' ');
+    record(literal);
+  }
 }
 
 describe('components and stylesheets agree on class names', () => {
@@ -105,6 +123,76 @@ describe('components and stylesheets agree on class names', () => {
     expect(defined.size).toBeGreaterThan(40);
     // And the class it was written for is genuinely gone.
     expect(defined.has('primary')).toBe(false);
+  });
+});
+
+/**
+ * What a component may not decide for itself (041 FR-3903, FR-3904).
+ *
+ * 143 `style={{…}}` lived in 25 files: each a layout decision taken outside the shell
+ * and outside this file's sight, and one of them — `borderTop: '1px solid var(--rule)'`
+ * in `App.tsx` — named a token that no stylesheet defines, so a separator silently did
+ * not draw. Every one of them mapped to a class the shell was missing
+ * (`specs/041-el-acabado-visual/contracts/shell-additions.md`), so the shell gained the
+ * classes and this test keeps the count at the handful that are **data**: a width that is
+ * a percentage, a size that is a prop. Anything else is a fact about the shell.
+ */
+describe('components decide what they are, not how they are laid out', () => {
+  const tsx = tsxFiles.map((f) => ({
+    file: f.replace(uiRoot + '/', ''),
+    code: readFileSync(f, 'utf8').replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, ''),
+  }));
+
+  /**
+   * The exceptions, each with the reason it is a value rather than a decision. A file
+   * here may carry exactly the number of inline styles named; one more is a failure,
+   * so an exception cannot quietly grow into a habit.
+   */
+  const DATA_STYLES: Record<string, { count: number; why: string }> = {
+    'src/components/Progress.tsx': { count: 2, why: 'width: pct% — a measurement of how far the work has got' },
+    'src/components/Logo.tsx':     { count: 1, why: 'the wordmark drawn at the size its prop asks; a drawing, not a layout' },
+  };
+
+  it('writes no inline style except the ones that are data', () => {
+    const offences: string[] = [];
+    for (const { file, code } of tsx) {
+      const n = (code.match(/style=\{\{/g) ?? []).length;
+      const allowed = DATA_STYLES[file]?.count ?? 0;
+      if (n > allowed) offences.push(`${file}: ${n} inline style(s), ${allowed} allowed`);
+    }
+    expect(offences).toEqual([]);
+  });
+
+  it('keeps the exception list honest', () => {
+    for (const [file, { count }] of Object.entries(DATA_STYLES)) {
+      const found = tsx.find((t) => t.file === file);
+      expect(found, `${file} is in the exception list and does not exist`).toBeDefined();
+      const n = (found!.code.match(/style=\{\{/g) ?? []).length;
+      // Fewer is fine — the exception then shrinks here. Zero means the row is stale.
+      expect(n, `${file} carries ${n} inline styles, listed as ${count}`).toBeGreaterThan(0);
+      expect(n).toBeLessThanOrEqual(count);
+    }
+  });
+
+  it('references no custom property the token files do not define', () => {
+    const tokenCss = walk(join(uiRoot, 'src', 'styles'), '.css').map((f) => readFileSync(f, 'utf8')).join('\n');
+    const definedVars = new Set<string>();
+    for (const m of tokenCss.matchAll(/(--[\w-]+)\s*:/g)) definedVars.add(m[1]!);
+    // Per-component custom properties set on the element itself (`--btn-h`) count too.
+    const offences: string[] = [];
+    const sources = [
+      ...tsx,
+      ...walk(join(uiRoot, 'src', 'styles'), '.css').map((f) => ({
+        file: f.replace(uiRoot + '/', ''),
+        code: readFileSync(f, 'utf8').replace(/\/\*[\s\S]*?\*\//g, ''),
+      })),
+    ];
+    for (const { file, code } of sources) {
+      for (const m of code.matchAll(/var\((--[\w-]+)/g)) {
+        if (!definedVars.has(m[1]!)) offences.push(`${file}: var(${m[1]}) is defined nowhere`);
+      }
+    }
+    expect([...new Set(offences)]).toEqual([]);
   });
 });
 

@@ -2,7 +2,7 @@ import { test, expect, _electron as electron, type Page, type ElectronApplicatio
 import { mkdtemp, mkdir } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { throughPrepareToAdapt, SCREENS, toScreen } from './nav.js';
+import { throughPrepareToAdapt, SCREENS, toScreen, intoLearner, toTab } from './nav.js';
 
 /**
  * Layout, on the screen she actually has (spec 010 T017/T030, SC-802/SC-804).
@@ -61,12 +61,24 @@ async function horizontalOverflow(page: Page): Promise<string[]> {
     const out: string[] = [];
     const docWidth = document.documentElement.clientWidth;
     if (document.documentElement.scrollWidth > docWidth + 1) out.push('<html> scrolls horizontally');
+    /*
+     * An element allowed to scroll inside itself is fine; the page is not. And what
+     * lives INSIDE a horizontally scrolling box is that box's business, not the page's
+     * (`041` T030): the rail in a narrow window is one row that scrolls sideways, and
+     * its last button standing past the window's edge is the strip working — the row
+     * itself ends at the edge. The `<html>` check above is what says the page does not
+     * scroll; this loop says no element leaks past it on its own.
+     */
+    const scrollsX = (el: Element | null): boolean => {
+      for (let e = el; e && e !== document.body; e = e.parentElement) {
+        if (['auto', 'scroll'].includes(getComputedStyle(e).overflowX)) return true;
+      }
+      return false;
+    };
     for (const el of Array.from(document.querySelectorAll<HTMLElement>('body *'))) {
       const r = el.getBoundingClientRect();
       if (r.width === 0 && r.height === 0) continue;
-      // An element allowed to scroll inside itself is fine; the page is not.
-      const scrolls = ['auto', 'scroll'].includes(getComputedStyle(el).overflowX);
-      if (!scrolls && r.right > docWidth + 1) {
+      if (!scrollsX(el) && r.right > docWidth + 1) {
         out.push(`${el.tagName.toLowerCase()}.${el.className || '(no class)'} right=${Math.round(r.right)} > ${docWidth}`);
       }
     }
@@ -380,6 +392,45 @@ test.describe('every width the window can be', () => {
     }
 
     await page.evaluate(() => document.documentElement.setAttribute('data-text', 'normal'));
+    await app.close();
+  });
+
+  /**
+   * The strip is one row (`041` FR-3923, T031).
+   *
+   * Wrapping, the learner's nine controls took four rows at 560px — 220px of chrome, a
+   * third of an 800px window — and this suite approved it, because nothing overflowed
+   * and nothing was clipped. A property was missing: the rail's height. One row means
+   * at most one control tall plus its padding; the bound below is two control heights,
+   * which a second row cannot fit under.
+   */
+  test('in a narrow window the rail is one row and the current section is in view', async () => {
+    const { app, page, vault } = await launch();
+    await seed(page, vault);
+    await intoLearner(page);
+    // The last section, not the first: the first is always in view.
+    await toTab(page, 'curriculum');
+    for (const width of [560, 880]) {
+      await page.setViewportSize({ width, height: 800 });
+      await page.waitForFunction(
+        () => getComputedStyle(document.querySelector('.rail')!).flexDirection === 'row',
+        undefined, { timeout: 5000 });
+      const m = await page.evaluate(() => {
+        const rail = document.querySelector<HTMLElement>('.rail')!;
+        const control = rail.querySelector<HTMLElement>('button')!;
+        const current = rail.querySelector<HTMLElement>('[aria-current]');
+        const r = rail.getBoundingClientRect();
+        const c = current?.getBoundingClientRect();
+        return {
+          railHeight: r.height, controlHeight: control.getBoundingClientRect().height,
+          currentVisible: c ? c.left >= r.left - 1 && c.right <= r.right + 1 : null,
+          pageScrollsSideways: document.documentElement.scrollWidth > document.documentElement.clientWidth + 1,
+        };
+      });
+      expect(m.railHeight, `${width}px: rail is ${m.railHeight}px tall`).toBeLessThan(m.controlHeight * 2);
+      expect(m.currentVisible, `${width}px: the current section is inside the strip`).toBe(true);
+      expect(m.pageScrollsSideways, `${width}px: the page scrolls sideways`).toBe(false);
+    }
     await app.close();
   });
 

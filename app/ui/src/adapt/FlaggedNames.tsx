@@ -65,7 +65,7 @@ export function FlaggedNames({ learner, onResolved }: {
       </span>
       <div className="stack gap2">
         {words.map((w) => (
-          <div className="row gap2" key={w} style={{ alignItems: 'center', flexWrap: 'wrap' }}>
+          <div className="row gap2" key={w}>
             <strong>{w}</strong>
             <button className="btn btn-sm" disabled={ignore.busy}
                     onClick={() => void dismiss(w)}>
@@ -79,7 +79,7 @@ export function FlaggedNames({ learner, onResolved }: {
         is not Rampa's to do (`003`), and pretending otherwise would be worse than being
         clear about it.
       */}
-      <p className="small" style={{ margin: 0 }}>
+      <p className="small">
         Si <strong>sí</strong> es un alumno tuyo, cámbialo por su código en tus notas
         —&nbsp;están en tu carpeta, en <code>profiles/</code>&nbsp;— y vuelve a intentarlo.
         No te las reescribo yo: son tuyas.

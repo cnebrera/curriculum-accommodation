@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useStrings } from '../i18n/context.js';
-import { Notice } from '../components/Notice.js';
+import { Callout } from '../components/Callout.js';
 import { useNameCheck } from '../data/names.js';
 import { useCaptureNote } from '../data/notes.js';
 
@@ -57,7 +57,7 @@ export function ScopeQuestion({ learner, recipes, onCaptured }: {
     onCaptured(captured);
   };
 
-  if (done) return <Notice kind="info">{es.review.captured}</Notice>;
+  if (done) return <Callout intent="info">{es.review.captured}</Callout>;
 
   return (
     <div className="card stack">
@@ -69,7 +69,7 @@ export function ScopeQuestion({ learner, recipes, onCaptured }: {
       {text.trim() ? (
         <div className="stack">
           <strong>{es.review.scopeQuestion}</strong>
-          <p className="small muted" style={{ margin: 0 }}>{es.review.scopeWhy}</p>
+          <p className="small muted">{es.review.scopeWhy}</p>
           {/*
             `.segmented`, which already paints `[aria-pressed="true"]`.
 
@@ -101,7 +101,7 @@ export function ScopeQuestion({ learner, recipes, onCaptured }: {
                 <button aria-pressed={destination === 'note'}
                         onClick={() => setDestination('note')}>Solo como nota</button>
               </div>
-              <p className="small muted" style={{ margin: 0 }}>
+              <p className="small muted">
                 Lo que va al perfil cambia las adaptaciones de la próxima ficha. Una nota
                 se queda como historia por si luego decides fijarla.
               </p>
@@ -115,15 +115,15 @@ export function ScopeQuestion({ learner, recipes, onCaptured }: {
             failed to save simply did not save, silently, and she found out the
             next time she adapted a worksheet and the correction was not there.
           */}
-          {captureNote.error ? <Notice kind="warn" title="No he podido apuntarlo">{captureNote.error.message}</Notice> : null}
-          {nameCheck.error ? <Notice kind="warn" title="No he podido comprobarlo">{nameCheck.error.message}</Notice> : null}
+          {captureNote.error ? <Callout intent="danger" title="No he podido apuntarlo">{captureNote.error.message}</Callout> : null}
+          {nameCheck.error ? <Callout intent="danger" title="No he podido comprobarlo">{nameCheck.error.message}</Callout> : null}
 
           {nameWarning.length ? (
-            <Notice kind="warn" title="Creo que ahí hay un nombre">
+            <Callout intent="danger" title="Creo que ahí hay un nombre">
               He visto <strong>{nameWarning.join(', ')}</strong>. Esto se guarda y luego se
               envía, así que mejor sin nombres: quítalo y vuelve a darle, o dale otra vez
               para guardarlo tal cual.
-            </Notice>
+            </Callout>
           ) : null}
 
           <div>

@@ -81,11 +81,24 @@ async function seedExtraction(page: Page): Promise<void> {
   });
 }
 
+/**
+ * The eight crossings, not four (`041` T005, FR-3920).
+ *
+ * Contrast was the one preference this sweep never turned on, so the mode whose whole
+ * purpose is legibility was the one axe never read. `041` found the stripe of every
+ * callout at 1.9:1 in exactly that mode — decoration, so not a violation, but the shape
+ * of the gap is the point: a token defined in three palettes and forgotten in the
+ * fourth is invisible to a sweep that never enters the fourth.
+ */
 const MODES = [
-  { name: 'claro · normal',     theme: null,     text: null },
-  { name: 'oscuro · normal',    theme: 'dark',   text: null },
-  { name: 'claro · muy grande', theme: 'light',  text: 'xlarge' },
-  { name: 'oscuro · muy grande', theme: 'dark',  text: 'xlarge' },
+  { name: 'claro · normal',                  theme: null,    contrast: null,   text: null },
+  { name: 'oscuro · normal',                 theme: 'dark',  contrast: null,   text: null },
+  { name: 'claro · muy grande',              theme: 'light', contrast: null,   text: 'xlarge' },
+  { name: 'oscuro · muy grande',             theme: 'dark',  contrast: null,   text: 'xlarge' },
+  { name: 'claro · contraste · normal',      theme: 'light', contrast: 'high', text: null },
+  { name: 'oscuro · contraste · normal',     theme: 'dark',  contrast: 'high', text: null },
+  { name: 'claro · contraste · muy grande',  theme: 'light', contrast: 'high', text: 'xlarge' },
+  { name: 'oscuro · contraste · muy grande', theme: 'dark',  contrast: 'high', text: 'xlarge' },
 ] as const;
 
 /**
@@ -123,15 +136,16 @@ const MODES = [
  * attributes too, and two writers is a second race waiting to be found.
  */
 async function setMode(page: Page, m: typeof MODES[number]): Promise<void> {
-  await page.evaluate(({ theme, text }) => window.rampa.settings.setDisplay({
-    theme: theme ?? 'system', text: text ?? 'normal',
-  }), { theme: m.theme, text: m.text });
+  await page.evaluate(({ theme, text, contrast }) => window.rampa.settings.setDisplay({
+    theme: theme ?? 'system', text: text ?? 'normal', contrast: contrast ?? 'normal',
+  }), { theme: m.theme, text: m.text, contrast: m.contrast });
 
-  await page.evaluate(({ theme, text }) => {
+  await page.evaluate(({ theme, text, contrast }) => {
     const r = document.documentElement;
     if (theme) r.setAttribute('data-theme', theme); else r.removeAttribute('data-theme');
     if (text) r.setAttribute('data-text', text); else r.removeAttribute('data-text');
-  }, { theme: m.theme, text: m.text });
+    if (contrast) r.setAttribute('data-contrast', contrast); else r.removeAttribute('data-contrast');
+  }, { theme: m.theme, text: m.text, contrast: m.contrast });
 
   const applied = await page.evaluate(async ({ theme, text }) => {
     // A frame first, so the transitions the attribute change starts actually exist.
@@ -152,12 +166,14 @@ async function setMode(page: Page, m: typeof MODES[number]): Promise<void> {
     return {
       theme: r.getAttribute('data-theme') ?? '',
       text: r.getAttribute('data-text') ?? '',
+      contrast: r.getAttribute('data-contrast') ?? '',
       base: getComputedStyle(r).getPropertyValue('--text-base').trim(),
     };
   }, { theme: m.theme, text: m.text });
 
   expect(applied.theme, `${m.name}: data-theme`).toBe(m.theme ?? '');
   expect(applied.text, `${m.name}: data-text`).toBe(m.text ?? '');
+  expect(applied.contrast, `${m.name}: data-contrast`).toBe(m.contrast ?? '');
   // And the tokens really did recompute, which is what axe is about to read.
   expect(applied.base, `${m.name}: --text-base`).not.toBe('');
 }

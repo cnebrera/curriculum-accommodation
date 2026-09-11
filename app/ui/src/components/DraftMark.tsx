@@ -12,11 +12,13 @@
  *
  * `role="status"` rather than `alert`: it is the document's state, not a fault.
  */
+import { Icon } from './Icon.js';
+
 export function DraftMark({ signedOff, signedOn }: { signedOff: boolean; signedOn?: string }) {
   if (signedOff) {
     return (
       <div className="signedbar" role="status">
-        <span aria-hidden="true" style={{ color: 'var(--ok)', fontWeight: 700, fontSize: '1.1rem' }}>✓</span>
+        <Icon name="circle-check" size={22} className="ic" />
         <div>
           <div className="txt">Firmada por ti{signedOn ? ` · ${signedOn}` : ''}</div>
           <div className="sub">Ya no lleva marca de borrador. Lista para clase.</div>

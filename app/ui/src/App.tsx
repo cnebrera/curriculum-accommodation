@@ -22,6 +22,7 @@ import { ProfileEditor } from './learners/ProfileEditor.js';
 import { Page } from './shell/Page.js';
 import { CostBadge } from './components/CostBadge.js';
 import { Logo, Wordmark } from './components/Logo.js';
+import { Icon } from './components/Icon.js';
 import { DisplayPreferences } from './settings/DisplayPreferences.js';
 import { applyStoredPreferences } from './data/preferences.js';
 import { detectStep, loadState, saveState, type Step } from './data/onboarding.js';
@@ -122,8 +123,8 @@ export function App() {
            * tampoco hay que elegir entre dos frases.
            */
           label: back.tab === 'prepare'
-            ? '← Volver a lo que estaba preparando'
-            : '← Volver a lo que le he preparado',
+            ? 'Volver a lo que estaba preparando'
+            : 'Volver a lo que le he preparado',
           go: () => goBack(back),
         },
       }
@@ -139,10 +140,12 @@ export function App() {
 
   if (step === null) {
     return (
-      <div className="main stack gap4" style={{ alignItems: 'center', paddingTop: 'var(--s8)' }}>
-        <Logo size={44} />
-        <p className="small" aria-live="polite">Abriendo…</p>
-      </div>
+      <main className="main">
+        <div className="page page-narrow page-brand">
+          <Logo size={44} />
+          <p className="small" aria-live="polite">Abriendo…</p>
+        </div>
+      </main>
     );
   }
 
@@ -167,61 +170,73 @@ export function App() {
 
   if (step !== 'done') {
     const order: Step[] = ['vault', 'connect', 'learner'];
-    return (
-      <main className="main stack gap5" style={{ maxWidth: 680, margin: '0 auto', paddingTop: 'var(--s7)' }}>
-        <div className="stack gap4" style={{ alignItems: 'center', textAlign: 'center' }}>
+      /*
+       * The same shell as every other screen (`041` T021, FR-3901).
+       *
+       * This `<main>` used to rebuild `Page` by hand — `maxWidth: 680, margin: '0 auto'`
+       * inline, an `<h1>` of its own and then an `<h2>` per step — and the separator
+       * before «¿Prefieres verlo antes de decidir?» named a token that did not exist
+       * (`--rule`), so it never drew. Now: `.main`, a narrow `Page` per step whose
+       * title is the step's own question, and the wordmark, the welcome and the step
+       * indicator in the `banner` slot — above the title because they outrank it, the
+       * way the draft mark does on the review screen. The welcome is a line, not a
+       * heading: one `h1` per screen, and the step is what she is answering.
+       */
+      const brand = (
+        <div className="page-brand">
           <Wordmark size={26} />
-          <div className="stack gap2">
-            <h1>{es.onboarding.welcome}</h1>
-            <p className="small">{es.onboarding.intro}</p>
-          </div>
-        </div>
-        <div className="stack gap2">
-          <div className="progress-steps" aria-hidden="true">
-            {order.map((s, i) => <i key={s} {...(i <= order.indexOf(step) ? { 'data-done': '' } : {})} />)}
-          </div>
-          <span className="meta" aria-live="polite">
-            Paso {order.indexOf(step) + 1} de {order.length}
-          </span>
-        </div>
-        {step === 'vault' ? (
-          <VaultStep onDone={(root) => { saveState({ step: 'connect', vaultRoot: root }); setStep('connect'); }} />
-        ) : step === 'connect' ? (
-          <div className="stack gap4">
-            <ConnectStep onDone={(id) => { saveState({ step: 'learner', providerId: id }); setStep('learner'); }} />
-            {/*
-              The other door. Below the connect step and not above it, because she came
-              here to set the thing up — but visible without scrolling past anything, and
-              worded as what it is rather than as a consolation.
-            */}
-            <div className="stack gap2" style={{ borderTop: '1px solid var(--rule)', paddingTop: 'var(--s4)' }}>
-              <strong>¿Prefieres verlo antes de decidir?</strong>
-              <p className="small">
-                Puedo enseñarte lo que hago con un ejemplo inventado: una hoja, un alumno
-                que no existe, de principio a fin. No hace falta que conectes nada, no
-                cuesta dinero y no sale nada de tu ordenador.
-              </p>
-              <div className="row">
-                <button className="btn" disabled={startEnsayo.busy}
-                        onClick={() => {
-                          const now = new Date().toISOString();
-                          void startEnsayo.run(now).then((ok) => { if (ok) setRehearsing(now); });
-                        }}>
-                  Probar con un ejemplo
-                </button>
-              </div>
+          <p className="page-brand-line">{es.onboarding.welcome}</p>
+          <p className="page-brand-sub">{es.onboarding.intro}</p>
+          <div className="page-steps">
+            <div className="progress-steps" aria-hidden="true">
+              {order.map((s, i) => <i key={s} {...(i <= order.indexOf(step) ? { 'data-done': '' } : {})} />)}
             </div>
+            <span className="meta" aria-live="polite">
+              Paso {order.indexOf(step) + 1} de {order.length}
+            </span>
           </div>
-        ) : (
-          <div className="stack">
-            <h2>{es.onboarding.learnerTitle}</h2>
-            <p>{es.onboarding.learnerWhy}</p>
-            <ProfileEditor code={null} onConfigure={() => go({ type: 'settings' })}
-                           onSaved={() => { saveState({ step: 'done' }); setStep('done'); go({ type: 'caseload' }); }} />
-          </div>
-        )}
-      </main>
-    );
+        </div>
+      );
+      return (
+        <main className="main">
+          {step === 'vault' ? (
+            <VaultStep banner={brand}
+                       onDone={(root) => { saveState({ step: 'connect', vaultRoot: root }); setStep('connect'); }} />
+          ) : step === 'connect' ? (
+            <ConnectStep banner={brand}
+                         onDone={(id) => { saveState({ step: 'learner', providerId: id }); setStep('learner'); }}
+                         aside={
+              /*
+                The other door. Below the connect step and not above it, because she came
+                here to set the thing up — but visible without scrolling past anything, and
+                worded as what it is rather than as a consolation.
+              */
+              <div className="stack gap2 divided-top">
+                <strong>¿Prefieres verlo antes de decidir?</strong>
+                <p className="small">
+                  Puedo enseñarte lo que hago con un ejemplo inventado: una hoja, un alumno
+                  que no existe, de principio a fin. No hace falta que conectes nada, no
+                  cuesta dinero y no sale nada de tu ordenador.
+                </p>
+                <div className="row">
+                  <button className="btn" disabled={startEnsayo.busy}
+                          onClick={() => {
+                            const now = new Date().toISOString();
+                            void startEnsayo.run(now).then((ok) => { if (ok) setRehearsing(now); });
+                          }}>
+                    Probar con un ejemplo
+                  </button>
+                </div>
+              </div>
+            } />
+          ) : (
+            <Page variant="narrow" banner={brand} title={es.onboarding.learnerTitle} lede={es.onboarding.learnerWhy}>
+              <ProfileEditor code={null} onConfigure={() => go({ type: 'settings' })}
+                             onSaved={() => { saveState({ step: 'done' }); setStep('done'); go({ type: 'caseload' }); }} />
+            </Page>
+          )}
+        </main>
+      );
   }
 
   return (
@@ -407,10 +422,11 @@ export function App() {
         {route.at === 'newLearner' ? (
           <Page title="Un alumno nuevo"
                 lede="Con lo que ves en clase es suficiente. No hace falta ningún diagnóstico, y su nombre no llega a ningún fichero.">
-            <button className="btn btn-ghost btn-sm" style={{ alignSelf: 'flex-start' }}
-                    onClick={() => go({ type: 'caseload' })}>
-              ← Mis alumnos
-            </button>
+            {/*
+              No «← Mis alumnos» inside the panel any more (`041` T019): the rail's «Mis
+              alumnos» is current and 90px to the left, and two controls with one name on
+              one screen is a list of identical rows for anybody navigating by role.
+            */}
             {/*
               Saved, and she is now inside the learner she just created — «Quién es»,
               where she can keep going with his axes.
@@ -582,9 +598,9 @@ export function App() {
                   The wizard itself is untouched (FR-2307 moved it unchanged); leaving is
                   the shell's business, and this is the shell.
                 */}
-                <button className="btn btn-ghost btn-sm" style={{ alignSelf: 'flex-start' }}
+                <button className="btn btn-ghost btn-sm btn-back"
                         onClick={() => go({ type: 'settings', pane: 'service' })}>
-                  ← Dejarlo como está
+                  <Icon name="arrow-left" /> Dejarlo como está
                 </button>
                 <ConnectStep serviceId={route.reconnecting}
                              onDone={() => go({ type: 'settings', pane: 'service' })} />

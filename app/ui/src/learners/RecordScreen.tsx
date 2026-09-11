@@ -6,6 +6,7 @@ import { Callout } from '../components/Callout.js';
 import { useRecord, useRebuildRecord, type RecordEntry } from '../data/record.js';
 import { useOpenInVault } from '../data/vault.js';
 import { useRender, usePdf } from '../data/jobs.js';
+import { Icon } from '../components/Icon.js';
 
 /**
  * Everything ever made for one learner (014 T014-T018).
@@ -83,9 +84,9 @@ function Entry({ entry, onOpen, onReuse, onReview, onPrint, printing }: {
   const brought = entry.source.of === 'file' ? entry.source.paths[0] : undefined;
 
   return (
-    <div className="card stack gap3">
-      <div className="row" style={{ justifyContent: 'space-between', alignItems: 'flex-start' }}>
-        <span className="stack" style={{ gap: 2 }}>
+    <div className="card card-object stack gap3">
+      <div className="row row-split row-top">
+        <span className="stack gap1">
           <strong>{human(entry.date)} · {KIND[entry.kind] ?? 'Material'}</strong>
           {/* Text, never markup — see the note above. */}
           {entry.subject ? <span className="small">{entry.subject}</span> : null}
@@ -175,7 +176,7 @@ function Entry({ entry, onOpen, onReuse, onReview, onPrint, printing }: {
         </span>
       ) : null}
 
-      <div className="row gap2" style={{ flexWrap: 'wrap' }}>
+      <div className="row gap2">
         {/*
           First in the row, because on an unsigned sheet it is the thing she came for.
           Not `btn-primary`: a list of eight rows would then hold eight primary
@@ -211,7 +212,7 @@ function Entry({ entry, onOpen, onReuse, onReview, onPrint, printing }: {
         {onPrint && entry.documents.adapted && !gone(entry.documents.adapted) ? (
           <button className="btn btn-sm" disabled={printing} aria-busy={printing}
                   onClick={() => onPrint(entry.jobId, entry.learner)}>
-            {rendered ? 'Volver a imprimirlo' : 'Guardar como PDF'}
+            <Icon name={rendered ? 'printer' : 'file-down'} /> {rendered ? 'Volver a imprimirlo' : 'Guardar como PDF'}
           </button>
         ) : null}
 
@@ -277,12 +278,12 @@ function Entry({ entry, onOpen, onReuse, onReview, onPrint, printing }: {
       </div>
 
       {entry.source.of === 'composed' ? (
-        <p className="small" style={{ margin: 0 }}>
+        <p className="small">
           Lo pedí así: {entry.source.objectives.join('; ')}
           {entry.source.anchor ? ` · ${entry.source.anchor}` : ''}
         </p>
       ) : entry.source.of === 'structure' ? (
-        <p className="small" style={{ margin: 0 }}>
+        <p className="small">
           {entry.source.kind === 'secuencia' ? 'Una secuencia de pasos'
             : entry.source.kind === 'historia' ? 'Una historia social'
             : 'Una agenda'} que hiciste tú. No se adapta: se imprime.
@@ -294,7 +295,7 @@ function Entry({ entry, onOpen, onReuse, onReview, onPrint, printing }: {
         keep the list tidy — which is the opposite of what she opens it for.
       */}
       {entry.missing.length ? (
-        <p className="small" role="status" style={{ margin: 0 }}>
+        <p className="small" role="status">
           {entry.missing.length === 1 ? 'Un documento ya no está' : `${entry.missing.length} documentos ya no están`}
           {' '}en la carpeta. Puede que los movieras o los borraras tú.
         </p>
@@ -357,8 +358,8 @@ export function RecordScreen({ code, name, onBack, onReuse, onReview }: {
     <Page title={`Lo que he preparado para ${name ?? code}`}
           lede="Todo lo que ha salido de aquí para este alumno, y de qué salió.">
       {onBack ? (
-        <button className="btn btn-ghost btn-sm" style={{ alignSelf: 'flex-start' }} onClick={onBack}>
-          ← Volver a mis alumnos
+        <button className="btn btn-ghost btn-sm btn-back" onClick={onBack}>
+          <Icon name="arrow-left" /> Volver a mis alumnos
         </button>
       ) : null}
 

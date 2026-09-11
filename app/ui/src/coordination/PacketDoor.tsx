@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Icon } from '../components/Icon.js';
 import { Section, Field, Actions } from '../shell/Page.js';
 import { Callout } from '../components/Callout.js';
 import { InjectionNotice } from '../components/InjectionNotice.js';
@@ -71,7 +72,7 @@ export function PacketDoorSections({ learners }: { learners: string[] }) {
                 onClick={() => void open.run().then((f) => {
                   setFile(f ?? null); setHeld(null); setLinked(''); setDone(new Set());
                 })}>
-          Elegir el paquete
+          <Icon name="folder" /> Elegir el paquete
         </button>
       </div>
 
@@ -161,9 +162,9 @@ export function PacketDoorSections({ learners }: { learners: string[] }) {
 
           <Section title="Lo que trae"
                    lede="Una cosa cada vez. Lo que no aceptes no deja rastro.">
-            <ul>
+            <ul className="list-roomy">
               {packet.items.map((item, i) => (
-                <li key={`${i}-${label(item)}`} style={{ marginBottom: '.8rem' }}>
+                <li key={`${i}-${label(item)}`}>
                   <p>{label(item)}</p>
                   {flagsFor(i).length ? (
                     <p className="small">

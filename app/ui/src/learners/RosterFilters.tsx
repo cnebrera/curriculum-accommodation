@@ -74,7 +74,7 @@ export function RosterFilters({
 
   return (
     <div className="roster-bar stack gap3">
-      <div className="field" style={{ maxWidth: '22rem' }}>
+      <div className="field input-md">
         <label htmlFor={searchId}><strong>Buscar</strong></label>
         <input className="input" id={searchId} type="search" value={query}
                placeholder="Su nombre, o el código de la hoja"

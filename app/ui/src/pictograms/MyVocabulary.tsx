@@ -3,6 +3,7 @@ import {
   useChosenSoFar, useChooseWord, useUnchooseWord, useAffectedSheets,
 } from '../data/pictograms.js';
 import { useState } from 'react';
+import { Icon } from '../components/Icon.js';
 
 /**
  * What she has chosen (025 T008, FR-2308 — finishing `024` FR-2214).
@@ -141,6 +142,7 @@ export function MyVocabulary({ language = 'es' }: { language?: string }) {
                   aria-pressed={c.id === current}
                   onClick={() => void choose(choice.word, c.id)}
                   disabled={pick.busy}>
+                  {c.id === current ? <Icon name="check" className="door-check" /> : null}
                   {c.image
                     ? <img src={c.image} alt={`dibujo ${c.id} para «${choice.word}»`} />
                     : <span className="picto-choice-gap">falta el dibujo · {c.id}</span>}

@@ -56,12 +56,12 @@ export function HandoverReview({ code, onDone }: {
     return (
       <div className="stack gap4">
         <Callout intent="ok" title="Listo para enviar">
-          <p style={{ marginTop: 0 }}>
+          <p>
             Está en <code>{written.path}</code>, dentro de tu carpeta. Es un fichero de
             texto: ábrelo, léelo una última vez y adjúntalo.
           </p>
           {written.dropped > 0 ? (
-            <p style={{ margin: 0 }}>
+            <p>
               Quité {written.dropped} cosa(s) que marcaste. No están en el documento.
             </p>
           ) : null}
@@ -108,7 +108,7 @@ export function HandoverReview({ code, onDone }: {
         <label htmlFor="summary">
           <strong>Lo que le contarías tomando un café</strong>
         </label>
-        <p className="small" style={{ margin: 0 }}>
+        <p className="small">
           Esto es lo primero que va a leer, y suele ser lo único que se recuerda.
           Escríbelo tú: no lo saco de tus notas porque un volcado de un año de
           notas es exactamente la etiqueta que estamos evitando.
@@ -122,7 +122,7 @@ export function HandoverReview({ code, onDone }: {
       {draft ? (
         <div className="stack gap3">
           <h3>Lo que iría en el documento</h3>
-          <p className="small" style={{ margin: 0 }}>
+          <p className="small">
             Quita lo que ya no valga o lo que prefieras contar en persona.
             {' '}{keep.length} de {draft.packet.claims.length} van a ir.
           </p>
@@ -130,10 +130,9 @@ export function HandoverReview({ code, onDone }: {
             {draft.packet.claims.map((c) => {
               const out = dropped.has(c.text);
               return (
-                <div className="row card" key={c.text}
-                     style={{ justifyContent: 'space-between', opacity: out ? 0.5 : 1 }}>
+                <div className={out ? 'row row-split card is-out' : 'row row-split card'} key={c.text}>
                   <div className="stack gap1">
-                    <span style={{ textDecoration: out ? 'line-through' : 'none' }}>{c.text}</span>
+                    <span className={out ? 'is-out-text' : undefined}>{c.text}</span>
                     <span className="meta">
                       {EVIDENCE[c.evidence] ?? c.evidence}
                       {' · '}

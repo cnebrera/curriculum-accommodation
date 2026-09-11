@@ -93,7 +93,7 @@ for (const [file, label] of [
   await page.waitForTimeout(700);
   await page.screenshot({ path: join(out, `${file}.png`) });
 }
-await page.getByRole('button', { name: '← Mis alumnos' }).click();
+await page.getByRole('button', { name: /^(← )?Mis alumnos$/ }).first().click();
 await page.waitForTimeout(400);
 
 /*
@@ -131,6 +131,85 @@ await page.setViewportSize({ width: 1366, height: 768 });
 await page.waitForTimeout(300);
 
 /*
+ * ─────────────────────────────────────────────────────────────────────────────
+ * Lo que el registro no fotografiaba (`041` T002–T004, FR-3919).
+ *
+ * Veinte pantallas y ninguna era la de **revisión**, que es la del Principio VII: la
+ * marca de borrador es «lo más ruidoso de la pantalla» por contrato del shell, y nadie
+ * la había visto en el registro. Ni un estado: ni foco, ni puntero, ni error, ni carga.
+ * Y de los ocho cruces tema × contraste × texto, dos. `041` baja el ruido de todo lo
+ * demás, así que **antes** de tocar nada esto tenía que estar en el antes.
+ * ─────────────────────────────────────────────────────────────────────────────
+ */
+
+/*
+ * La revisión, borrador y firmada. Una hoja escrita a mano en el vault de la niña (la
+ * misma que usa la parte de hojas de abajo), y la puerta que `RecordScreen` ya ofrece a
+ * cualquier borrador sin firmar: «Revisar y firmar». Se firma por IPC y se vuelve a
+ * entrar por «Verla otra vez», porque el estado firmado de la pantalla es el del vault.
+ */
+const learnerNav = page.getByRole('navigation', { name: /^Apartados de/ });
+{
+  const body = readFileSync(
+    join(process.cwd(), 'corpus', 'sample', 'ensayo', 'material', 'ensayo-1', 'E00', 'adapted.md'),
+    'utf8');
+  const job = 'hoja-registro';
+  await page.evaluate(([j, c, doc]) =>
+    window.rampa.vault.write(`material/${j}/${c}/adapted.md`, doc), [job, code, body]);
+  await learnerNav.getByRole('button', { name: 'Lo que le he preparado', exact: true }).click();
+  await page.waitForTimeout(900);
+  await page.screenshot({ path: join(out, '6b-alumno-preparado-con-hoja.png') });
+  await page.getByRole('button', { name: 'Revisar y firmar' }).first().click();
+  await page.waitForTimeout(1500);
+  await page.screenshot({ path: join(out, '7-revision-borrador.png') });
+  await page.evaluate(([j, c]) => window.rampa.job.signOff(j, c, 'PT'), [job, code]);
+  await page.getByRole('button', { name: /^(← )?Mis alumnos$/ }).first().click();
+  await page.waitForTimeout(400);
+  await page.locator('.card-action').first().click();
+  await page.waitForTimeout(700);
+  await learnerNav.getByRole('button', { name: 'Lo que le he preparado', exact: true }).click();
+  await page.waitForTimeout(900);
+  await page.getByRole('button', { name: 'Verla otra vez' }).first().click();
+  await page.waitForTimeout(1500);
+  await page.screenshot({ path: join(out, '7-revision-firmada.png') });
+  /*
+   * La revisión es una ruta `legacy`: el carril ahí no es el de la niña, así que la
+   * vuelta a «Quién es» pasa por el alumnado y su tarjeta, no por el carril.
+   */
+  await page.getByRole('button', { name: /^(← )?Mis alumnos$/ }).first().click();
+  await page.waitForTimeout(400);
+  await page.locator('.card-action').first().click();
+  await page.waitForTimeout(700);
+  await learnerNav.getByRole('button', { name: 'Quién es', exact: true }).click();
+  await page.waitForTimeout(700);
+}
+
+/*
+ * Los ocho cruces, sobre «Quién es»: es la pantalla con más clases de control a la vez
+ * (selector, entrada, segmentado de niveles, tarjetas de eje, botón primario), así que
+ * si un token falta en una paleta es aquí donde se ve. Sustituye a los dos `m-*.png`
+ * que había: dos de ocho no es «los modos».
+ */
+for (const theme of ['claro', 'oscuro']) {
+  for (const contrast of ['normal', 'alto']) {
+    for (const text of ['normal', 'xlarge']) {
+      await page.evaluate(([t, c, x]) => {
+        const r = document.documentElement;
+        r.setAttribute('data-theme', t === 'oscuro' ? 'dark' : 'light');
+        if (c === 'alto') r.setAttribute('data-contrast', 'high'); else r.removeAttribute('data-contrast');
+        if (x === 'xlarge') r.setAttribute('data-text', 'xlarge'); else r.removeAttribute('data-text');
+      }, [theme, contrast, text]);
+      await page.waitForTimeout(350);
+      await page.screenshot({ path: join(out, `m-${theme}-${contrast}-${text}.png`) });
+    }
+  }
+}
+await page.evaluate(() => {
+  for (const a of ['data-theme', 'data-contrast', 'data-text']) document.documentElement.removeAttribute(a);
+});
+await page.waitForTimeout(300);
+
+/*
  * Back out to the caseload first: inside a learner the rail is **theirs**, so the
  * top-level controls are not on screen at all. That is option A working, and it is
  * also why this walk needs the step — the previous version of this script timed out
@@ -165,23 +244,77 @@ for (const width of [560, 700, 880, 892, 1024, 1280, 1920]) {
 await page.setViewportSize({ width: 1366, height: 768 });
 
 /*
- * And the two modes, because the panel work claims the mode mechanism finally
- * does something — dark is a designed palette, high contrast is the austere one
- * the default used to be. Both are claims about how it looks, so both belong in
- * the record rather than in a sentence.
- *
- * The dark shot is here because it had to be: `--ground` and `--rail-ground`
- * were added to `:root` and to no other theme, so the rail kept a pale green
- * under pale text and the navigation was unreadable. Nothing looked at it.
+ * Los estados, sobre el alumnado (`041` T003). Un estado que existe en el árbol de
+ * accesibilidad y no en la pantalla es el defecto de 2026-09-01; la única forma de saber
+ * que un estado se ve es verlo.
  */
-for (const [attr, value, file] of [
-  ['data-theme', 'dark', 'm-oscuro.png'],
-  ['data-contrast', 'high', 'm-alto-contraste.png'],
-]) {
-  await page.evaluate(([a, v]) => document.documentElement.setAttribute(a, v), [attr, value]);
-  await page.waitForTimeout(400);
-  await page.screenshot({ path: join(out, file) });
-  await page.evaluate((a) => document.documentElement.removeAttribute(a), attr);
+await page.keyboard.press('Tab'); await page.keyboard.press('Tab'); await page.keyboard.press('Tab');
+await page.waitForTimeout(200);
+await page.screenshot({ path: join(out, 'e-foco.png') });
+await page.locator('.card-action').first().hover();
+await page.waitForTimeout(300);
+await page.screenshot({ path: join(out, 'e-hover-tarjeta.png') });
+await page.getByRole('button', { name: 'Añadir un alumno' }).hover();
+await page.waitForTimeout(300);
+await page.screenshot({ path: join(out, 'e-hover-primario.png') });
+await page.mouse.move(2, 2);
+await page.getByRole('button', { name: /Cómo se ve/ }).click();
+await page.waitForTimeout(400);
+await page.screenshot({ path: join(out, 'e-como-se-ve.png') });
+await page.getByRole('button', { name: /Cómo se ve/ }).click();
+await page.waitForTimeout(200);
+
+/*
+ * El error y la carga son estados de `Loaded`, y se provocan por donde `Loaded` los
+ * recibe: la capa de datos. Se sustituye una función del puente por una que nunca
+ * responde (carga) o que falla (error), se recarga la pantalla y se fotografía. Si el
+ * puente no se deja sustituir —`contextBridge` puede congelarlo— se dice y no se finge.
+ */
+for (const [file, mode] of [['e-carga', 'hang'], ['e-error', 'fail']]) {
+  const patched = await page.evaluate((m) => {
+    try {
+      const l = window.rampa.learners;
+      const orig = l.list;
+      l.list = () => m === 'hang'
+        ? new Promise(() => {})
+        : Promise.reject(new Error('vault-unreadable'));
+      return typeof l.list === 'function' && l.list !== orig;
+    } catch { return false; }
+  }, mode);
+  if (!patched) { console.log(`${file}: el puente no se deja sustituir; sin captura`); continue; }
+  await page.getByRole('button', { name: 'Configuración' }).click();
+  await page.waitForTimeout(300);
+  await page.getByRole('button', { name: /^(← )?Mis alumnos$/ }).first().click();
+  await page.waitForTimeout(mode === 'hang' ? 400 : 900);
+  await page.screenshot({ path: join(out, `${file}.png`) });
+  await page.reload();
+  await page.waitForLoadState('domcontentloaded');
+  await page.waitForTimeout(1200);
+}
+
+/*
+ * El error, por la otra puerta: `contextBridge` congela el puente, así que el estado de
+ * error de `Loaded` se provoca con lo que sí se puede cambiar — la carpeta. Una ruta bajo
+ * `/dev/null` no puede crearse ni leerse, y el alumnado falla al cargar. Después se vuelve
+ * al vault de la sesión, y se comprueba que la niña sigue ahí.
+ */
+{
+  const before = await page.evaluate(() => window.rampa.learners.list().then((l) => l.length).catch(() => -1));
+  try {
+    await page.evaluate(() => window.rampa.vault.use('/dev/null/imposible'));
+  } catch { /* la propia llamada puede rechazar; lo que importa es lo que la pantalla enseña */ }
+  await page.reload();
+  await page.waitForLoadState('domcontentloaded');
+  await page.waitForTimeout(1500);
+  const danger = await page.locator('.callout-danger').count();
+  if (danger > 0) await page.screenshot({ path: join(out, 'e-error.png') });
+  else console.log('e-error: la carpeta imposible no produjo un error visible; sin captura');
+  await page.evaluate((r) => window.rampa.vault.use(r), vault);
+  await page.reload();
+  await page.waitForLoadState('domcontentloaded');
+  await page.waitForTimeout(1500);
+  const after = await page.evaluate(() => window.rampa.learners.list().then((l) => l.length).catch(() => -1));
+  if (after !== before) throw new Error(`el vault no volvió: ${before} alumnos antes, ${after} después`);
 }
 
 /*

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useConsolidateNotes, useCaptureNote, useArchiveNote } from '../data/notes.js';
-import { Notice } from '../components/Notice.js';
+import { Callout } from '../components/Callout.js';
 
 interface Theme {
   text: string;
@@ -65,21 +65,21 @@ export function ConsolidateSection({ names }: { names: Record<string, string> })
       </p>
 
       {busy && !p ? <p className="muted">Mirando…</p> : null}
-      {nothing ? <Notice kind="info">Nada que consolidar por ahora.</Notice> : null}
+      {nothing ? <Callout intent="info">Nada que consolidar por ahora.</Callout> : null}
 
       {p?.houseOverflowing ? (
-        <Notice kind="warn" title="Tus notas de cómo trabajas se han hecho largas">
+        <Callout intent="decide" title="Tus notas de cómo trabajas se han hecho largas">
           Van {p.houseChars} caracteres. Esto era una guía de estilo y se está
           convirtiendo en un diario: si la resumes, te sirve más.
-        </Notice>
+        </Callout>
       ) : null}
 
       {p?.learnerThemes.map(({ code, themes }) => (
-        <div className="card stack" key={code}>
+        <div className="card card-object stack" key={code}>
           <strong>{show(code)} · esto se repite</strong>
           {themes.map((t, i) => (
             <div key={i} className="stack">
-              <p style={{ margin: 0 }}>{t.text}</p>
+              <p>{t.text}</p>
               <details>
                 <summary className="small muted">
                   {t.occurrences.length} veces — ver cuándo
@@ -106,7 +106,7 @@ export function ConsolidateSection({ names }: { names: Record<string, string> })
       {p?.archive.length ? (
         <div className="card stack">
           <strong>Notas que ya han cumplido su función</strong>
-          <p className="small muted" style={{ margin: 0 }}>
+          <p className="small muted">
             No se borran: se guardan aparte, por si algún día hay que mirar de dónde
             salió una regla.
           </p>
@@ -125,7 +125,7 @@ export function ConsolidateSection({ names }: { names: Record<string, string> })
       ) : null}
 
       {p?.retention.length ? (
-        <Notice kind="warn" title="Hace mucho que no tocas estos alumnos">
+        <Callout intent="decide" title="Hace mucho que no tocas estos alumnos">
           <ul>
             {p.retention.map((r) => (
               <li key={r.code}>
@@ -134,14 +134,14 @@ export function ConsolidateSection({ names }: { names: Record<string, string> })
               </li>
             ))}
           </ul>
-          <p className="small" style={{ margin: '8px 0 0' }}>
+          <p className="small">
             No borro nada por mi cuenta. Solo te lo recuerdo.
           </p>
-        </Notice>
+        </Callout>
       ) : null}
 
       {applied.length ? (
-        <Notice kind="info">Hecho. {applied.length} cambio(s) aplicados con tu confirmación.</Notice>
+        <Callout intent="info">Hecho. {applied.length} cambio(s) aplicados con tu confirmación.</Callout>
       ) : null}
     </div>
   );
