@@ -59,17 +59,17 @@ Pie de portada:
 
 Marta es maestra de pedagogía terapéutica en un colegio público. Atiende a veinticuatro alumnos repartidos en varios grupos y trabaja en huecos de cuarenta y cinco minutos entre clases. El portátil es del centro. Imprime en blanco y negro en la fotocopiadora del pasillo.
 
-Este martes tiene una ficha de Naturales y tres alumnos que la necesitan de tres formas distintas: uno no arranca si la página está llena, otra no ve la letra pequeña y el tercero lee con pictogramas. Hoy eso son tres versiones a mano, de cuarenta minutos a una hora cada una. La semana que viene, otra ficha y otra vez desde el principio.
+Este martes tiene una ficha de Naturales y tres alumnos que la necesitan de tres formas distintas: Hugo no arranca si la página está llena, Vega no ve la letra pequeña e Iván lee con pictogramas. Hoy eso son tres versiones a mano, de cuarenta minutos a una hora cada una. La semana que viene, otra ficha y otra vez desde el principio.
 
 Lo que corrigió la vez anterior no vuelve: cada adaptación empieza en blanco. Y hay una segunda pérdida, más lenta. Lo que Marta sabe de cada alumno no está escrito en ningún sitio que le sirva al docente siguiente. Cada septiembre se reconstruye.
 
-Etiqueta bajo el texto: Marta es un personaje ficticio, compuesto a partir del análisis de adopción del proyecto. Ningún caso real.
+Etiqueta bajo el texto: Marta, Hugo, Vega e Iván son personajes ficticios, compuestos a partir del análisis de adopción del proyecto. Ningún caso real, ningún dato de ningún menor.
 
 Hueco: `[PENDIENTE: cita de una PT real sobre cuánto tiempo le lleva adaptar una ficha]`
 
 **Notas de ponente.** La idea que se lleva quien lee es una sola: el trabajo se repite y no acumula. Los cuarenta a sesenta minutos por ficha y los veinticuatro alumnos salen del escenario compuesto del repositorio, no de una medición; si alguien pregunta, decirlo. La segunda pérdida (lo que se sabe del alumno no viaja) prepara la lámina 7.
 
-**Figura.** Tres tarjetas con una esquina redondeada, una por alumno ficticio, cada una con la barrera en texto: «No arranca si la página está llena», «No ve la letra pequeña», «Lee con pictogramas». Debajo, una línea: «Tres versiones a mano · cada semana · desde cero». Construida en HTML, texto real.
+**Figura.** Tres tarjetas de la misma altura, una por alumno, con el nombre en azul y la barrera debajo: Hugo, «no arranca si la página está llena»; Vega, «no ve la letra pequeña»; Iván, «lee con pictogramas». Los nombres son los del escenario del propio proyecto, para que el deck y el repositorio hablen de las mismas personas ficticias. Debajo, una línea: «Tres versiones a mano · cada semana · desde cero». Construida en HTML, texto real.
 
 ---
 
@@ -149,7 +149,7 @@ Hay una segunda consecuencia. Lo que Marta sabe de cada alumno queda escrito, co
 
 **Notas de ponente.** Aquí está la diferencia real y hay que decirla con calma: no es «usa IA», es que la corrección de la profesional no se pierde. Y decir en voz alta que no está medido.
 
-**Figura.** Cuatro nodos dispuestos en círculo (adaptar → revisar → recordar → adaptar mejor) con flechas curvas que los unen en sentido horario y cierran el ciclo. Nodos en HTML con texto real; el anillo y las flechas en SVG decorativo. Bajo la figura, una línea: «Lo que se mide: tiempo por ficha, semana 1 frente a semana 4».
+**Figura.** Cuatro pasos apilados en vertical y numerados, cada uno en su tarjeta: 1 adaptar, 2 revisar, 3 recordar, 4 adaptar mejor, con una punta de flecha azul entre uno y el siguiente. Debajo, una línea con una flecha de retorno: «y vuelve a empezar: el paso 4 es el paso 1 de la semana siguiente». Y bajo la figura: «Lo que se mide: tiempo por ficha, semana 1 frente a semana 4». Todo en HTML con texto real; las flechas son bordes CSS y un SVG pequeño, nada estirado.
 
 ---
 
@@ -237,7 +237,7 @@ Aviso al pie: La figura jurídica que sostenga el proyecto y la gobernanza del c
 
 **Notas de ponente.** La objeción habitual es «si es gratis, ¿quién lo mantiene?». La respuesta está en la lámina 19; adelantarla en una frase si surge.
 
-**Figura.** Dos bloques con una esquina redondeada, «Código» y «Contenido», con la licencia de cada uno en grande y su consecuencia en una línea. HTML.
+**Figura.** Dos tarjetas apiladas en vertical, no en paralelo: «Apache-2.0» y «CC BY-SA 4.0», cada una con el nombre de la licencia en grande y su consecuencia debajo en una o dos líneas. Apiladas porque en una columna estrecha, dos tarjetas contiguas dejan el texto en columnas de cuatro palabras.
 
 ---
 
@@ -660,6 +660,7 @@ Confirmación de lo que se ha aplicado en `deck.html` y se puede señalar en el 
 - HTML semántico: un `h1` en portada, un `h2` por lámina, `h3` para subsecciones; cada lámina es un `section` con `aria-labelledby` apuntando a su título; las tablas llevan `caption` y `th` con `scope`.
 - Contraste comprobado sobre negro `#141414`: blanco 17:1, gris claro `#E9E9E9` 15:1, gris medio `#8A8691` 5,2:1, azul `#4BBCEE` 8,5:1. Todos por encima de AA para texto normal. En impresión, la paleta cambia a fondo blanco con azul `#067DB9` (4,5:1) y gris `#6B6771` (5,5:1), siguiendo la paleta clara del manual.
 - Formato de lámina fijo 16:9 en pantalla ancha, con todas las medidas internas relativas al ancho de la lámina, de modo que la composición es idéntica a cualquier tamaño; en móvil las láminas se apilan y el texto no baja de 16 píxeles. Cuerpo de texto de unos 16 píxeles a 1.280 de ancho y unos 25 a 1.920, interlineado 1,5. Las láminas más densas bajan el cuerpo hasta un 20 por ciento para caber en el 16:9; se ha comprobado que ninguna lámina desborda su rectángulo a 1.280 × 720 y a 1.440 × 900.
+- **Una sola esquina redondeada, y siempre la misma.** La firma de la marca es la forma con una esquina a radio grande y el resto a noventa grados. Todas las cajas del deck (tarjetas, pasos, barras de la línea de tiempo, el rótulo de estimación) la llevan en la **inferior derecha**. Variar la esquina caja por caja convierte un sistema en ruido, que es lo que pasaba antes. Las tarjetas en paralelo comparten además altura.
 - Texto real en todas partes. Ningún texto dentro de imágenes. Los diagramas están construidos en HTML con conectores SVG decorativos, o en SVG en línea con `role="img"`, `<title>` y `<desc>`.
 - Ninguna información transmitida solo por color: las barras de la línea de tiempo llevan texto; las etiquetas «Existe / No existe» y «Estimación pendiente de validar» son palabras.
 - Navegación con teclado: flechas, Página arriba/abajo, Inicio y Fin; botones anterior/siguiente con `aria-label`; enlace para saltar a la primera lámina; foco visible.

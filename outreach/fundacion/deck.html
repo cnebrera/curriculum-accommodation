@@ -87,18 +87,17 @@ a{color:var(--blue)}
 .cols{display:grid;grid-template-columns:minmax(0,40fr) minmax(0,55fr);column-gap:5%;row-gap:1.2em;flex:1;align-items:start;min-height:0}
 .cols--even{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
 .cols--3{grid-template-columns:repeat(3,minmax(0,1fr));column-gap:3%}
+/* Tarjetas en paralelo: misma altura. `.cols` alinea arriba para el texto,
+   pero dos tarjetas contiguas de alturas distintas se leen como un descuido. */
+.cols--even > .card,.cols--3 > .card{align-self:stretch}
 @media (max-width:699px){.cols,.cols--even,.cols--3{grid-template-columns:minmax(0,1fr)}}
 .slidefoot{display:flex;justify-content:space-between;gap:1em;margin-top:auto;padding-top:1em;font:400 .62em/1.3 var(--font-body);color:var(--muted);letter-spacing:.03em}
 .inner{transition:opacity .55s ease, transform .55s ease;display:flex;flex-direction:column;flex:1;min-height:0}
 .js .slide:not(.is-visible) .inner{opacity:0;transform:translateY(14px)}
 
 /* --- componentes ----------------------------------------------------------- */
-.card{background:var(--bg-2);border:1px solid var(--line);border-radius:3.2em 0 0 0;padding:1.1em 1.3em}
-.card--br{border-radius:0 0 3.2em 0}
-.card--tr{border-radius:0 3.2em 0 0}
-.card--bl{border-radius:0 0 0 3.2em}
+.card{background:var(--bg-2);border:1px solid var(--line);border-radius:0 0 3.2em 0;padding:1.1em 1.3em}
 .card h3{margin-bottom:.5em}
-.card + .card{margin-top:.8em}
 ul.plain,ol.plain{list-style:none;padding:0;margin:0}
 ul.plain li,ol.plain li{position:relative;padding-left:1.25em;margin:0 0 .55em}
 ul.plain li::before{content:"";position:absolute;left:0;top:.6em;width:.45em;height:.45em;border-radius:50%;background:var(--blue)}
@@ -110,7 +109,7 @@ ol.plain li::before{content:counter(n, decimal-leading-zero);position:absolute;l
 .smaller{font-size:.82em}
 .muted{color:var(--muted)}
 .note{border-left:2px solid var(--blue);padding:.15em 0 .15em .9em;color:var(--fg-2)}
-.badge{display:inline-block;align-self:flex-start;font:700 .6em/1 var(--font-title);letter-spacing:.12em;text-transform:uppercase;color:var(--bg);background:var(--ig-2);padding:.7em 1.1em;border-radius:1em 0 0 0;margin:0 0 .9em}
+.badge{display:inline-block;align-self:flex-start;font:700 .6em/1 var(--font-title);letter-spacing:.12em;text-transform:uppercase;color:var(--bg);background:var(--ig-2);padding:.7em 1.1em;border-radius:0 0 1em 0;margin:0 0 .9em}
 .pending{font:400 .88em var(--font-body);color:var(--ig-2);border:1px dashed rgba(252,201,54,.55);padding:.05em .4em;border-radius:.25em}
 .tablewrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
 table{width:100%;border-collapse:collapse;font-size:.84em}
@@ -165,21 +164,19 @@ dl.plain{margin:0}dl.plain dd{margin:0 0 .4em}
 .pipe-return svg path{stroke:var(--blue);stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
 @media (max-width:699px){.pipe{grid-template-columns:1fr 1fr}.pipe li::after{display:none}}
 
-.loop{position:relative;display:grid;grid-template-columns:1fr 1fr;gap:.8em;max-width:30em;margin:0 auto}
-.loop .ring{position:absolute;inset:0;width:100%;height:100%;z-index:0;pointer-events:none}
-.loop .ring path{stroke:var(--blue);stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round;opacity:.7}
-.loop .node{position:relative;z-index:1;background:var(--bg-2);border:1px solid var(--line);padding:.8em 1em;min-height:5.6em}
-.loop .node:nth-child(2){border-radius:1.4em 0 0 0}
-.loop .node:nth-child(3){border-radius:0 1.4em 0 0}
-.loop .node:nth-child(4){border-radius:0 0 0 1.4em}
-.loop .node:nth-child(5){border-radius:0 0 1.4em 0}
-.loop .node b{display:block;font:700 1.05em var(--font-title);color:var(--fg)}
-.loop .node span{display:block;font-size:.84em;color:var(--fg-2);margin-top:.2em}
-.loop .node i{font:200 1.5em/1 var(--font-title);color:var(--blue);font-style:normal}
+.flow{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:.75em}
+.flow li{position:relative;background:var(--bg-2);border:1px solid var(--line);border-radius:0 0 1.4em 0;padding:.7em .95em}
+.flow li b{display:block;font:700 1em var(--font-title);color:var(--fg)}
+.flow li i{font:200 1.2em/1 var(--font-title);color:var(--blue);font-style:normal;margin-right:.4em}
+.flow li span{display:block;font-size:.86em;color:var(--fg-2);margin-top:.15em}
+.flow li:not(:last-child)::after{content:"";position:absolute;left:1.5em;bottom:-.66em;width:.5em;height:.5em;border-right:2px solid var(--blue);border-bottom:2px solid var(--blue);transform:rotate(45deg)}
+.flow-return{display:flex;align-items:center;gap:.5em;margin-top:.8em;color:var(--blue);font:400 .85em var(--font-body)}
+.flow-return svg{width:2.2em;height:1.4em;flex:none}
+.flow-return svg path{stroke:var(--blue);stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
 
 .cards3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.7em}
 .cards3 .card{padding:.9em 1em;font-size:.88em}
-.cards3 .card b{display:block;font:700 .68em var(--font-title);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:.35em}
+.cards3 .card b{display:block;font:700 1.15em var(--font-title);color:var(--blue);margin-bottom:.3em}
 @media (max-width:699px){.cards3{grid-template-columns:1fr}}
 
 .funcs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:.7em;margin-bottom:1em}
@@ -189,13 +186,12 @@ dl.plain{margin:0}dl.plain dd{margin:0 0 .4em}
 
 .timeline{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(19,1fr);gap:.4em .1em}
 .timeline .weeks{grid-column:1 / -1;display:grid;grid-template-columns:repeat(19,1fr);font:400 .6em var(--font-body);color:var(--muted);text-align:center;margin-bottom:.15em}
-.timeline li.bar{grid-column:var(--from) / var(--to);background:var(--c);color:#141414;border-radius:0 .8em 0 0;padding:.45em .55em;font:500 .78em/1.25 var(--font-body);min-height:3.2em}
+.timeline li.bar{grid-column:var(--from) / var(--to);background:var(--c);color:#141414;border-radius:0 0 .8em 0;padding:.45em .55em;font:500 .78em/1.25 var(--font-body);min-height:3.2em}
 .timeline li.bar small{display:block;font-weight:400;font-size:.9em;opacity:.9}
 @media (max-width:699px){.timeline{display:block}.timeline .weeks{display:none}.timeline li.bar{display:block;margin-bottom:.4em}}
 
-.lic{display:grid;grid-template-columns:1fr 1fr;gap:.8em}
-.lic .card .big{font-size:1.9em}
-@media (max-width:699px){.lic{grid-template-columns:1fr}}
+.lic{display:grid;grid-template-columns:minmax(0,1fr);gap:.8em}
+.lic .card .big{font-size:1.7em;display:block;margin-bottom:.15em}
 
 .ask{display:grid;grid-template-columns:1fr 1fr;gap:.8em;counter-reset:a}
 .ask .card{counter-increment:a;padding-top:.9em}
@@ -335,15 +331,15 @@ dl.plain{margin:0}dl.plain dd{margin:0 0 .4em}
     <div class="cols">
       <div>
         <p>Marta es maestra de pedagogía terapéutica en un colegio público. Atiende a veinticuatro alumnos repartidos en varios grupos y trabaja en huecos de cuarenta y cinco minutos entre clases. El portátil es del centro. Imprime en blanco y negro en la fotocopiadora del pasillo.</p>
-        <p>Este martes tiene una ficha de Naturales y tres alumnos que la necesitan de tres formas distintas: uno no arranca si la página está llena, otra no ve la letra pequeña y el tercero lee con pictogramas. Hoy eso son tres versiones a mano, de cuarenta minutos a una hora cada una. La semana que viene, otra ficha y otra vez desde el principio.</p>
+        <p>Este martes tiene una ficha de Naturales y tres alumnos que la necesitan de tres formas distintas: Hugo no arranca si la página está llena, Vega no ve la letra pequeña e Iván lee con pictogramas. Hoy eso son tres versiones a mano, de cuarenta minutos a una hora cada una. La semana que viene, otra ficha y otra vez desde el principio.</p>
         <p>Lo que corrigió la vez anterior no vuelve: cada adaptación empieza en blanco. Y hay una segunda pérdida, más lenta. Lo que Marta sabe de cada alumno no está escrito en ningún sitio que le sirva al docente siguiente. Cada septiembre se reconstruye.</p>
-        <p class="smaller muted">Marta es un personaje ficticio, compuesto a partir del análisis de adopción del proyecto. Ningún caso real.</p>
+        <p class="smaller muted">Marta, Hugo, Vega e Iván son personajes ficticios, compuestos a partir del análisis de adopción del proyecto. Ningún caso real, ningún dato de ningún menor.</p>
       </div>
       <div>
         <div class="cards3" role="group" aria-label="Tres alumnos ficticios, tres barreras distintas">
-          <div class="card"><b>Alumno ficticio 1</b>No arranca si la página está llena.</div>
-          <div class="card card--tr"><b>Alumna ficticia 2</b>No ve la letra pequeña.</div>
-          <div class="card card--br"><b>Alumno ficticio 3</b>Lee con pictogramas.</div>
+          <div class="card"><b>Hugo</b>No arranca si la página está llena.</div>
+          <div class="card"><b>Vega</b>No ve la letra pequeña.</div>
+          <div class="card"><b>Iván</b>Lee con pictogramas.</div>
         </div>
         <p style="margin-top:1em"><span class="big" style="font-size:1.7em">Tres versiones a mano · cada semana · desde cero</span></p>
         <p class="note small"><span class="pending">[PENDIENTE: cita de una PT real sobre cuánto tiempo le lleva adaptar una ficha]</span></p>
@@ -467,22 +463,13 @@ dl.plain{margin:0}dl.plain dd{margin:0 0 .4em}
       </div>
       <div>
         <figure style="margin:0">
-          <div class="loop" role="group" aria-label="El bucle: adaptar, revisar, recordar, adaptar mejor">
-            <svg class="ring" viewBox="0 0 400 300" preserveAspectRatio="none" aria-hidden="true">
-              <path d="M200,22 C300,22 340,80 350,150"/>
-              <path d="M350,150 C340,220 300,278 200,278"/>
-              <path d="M200,278 C100,278 60,220 50,150"/>
-              <path d="M50,150 C60,80 100,22 200,22"/>
-              <path d="M338,138 L350,150 L362,138"/>
-              <path d="M212,266 L200,278 L212,290"/>
-              <path d="M62,162 L50,150 L38,162"/>
-              <path d="M188,34 L200,22 L188,10"/>
-            </svg>
-            <div class="node"><i>1</i><b>Adaptar</b><span>Según el perfil y las recetas.</span></div>
-            <div class="node"><i>2</i><b>Revisar</b><span>La docente lee el informe, corrige y firma.</span></div>
-            <div class="node"><i>4</i><b>Adaptar mejor</b><span>La siguiente ficha sale con la corrección aplicada.</span></div>
-            <div class="node"><i>3</i><b>Recordar</b><span>La corrección se guarda donde ella decide: alumno, su forma de trabajar o la regla.</span></div>
-          </div>
+          <ol class="flow" aria-label="El bucle, en cuatro pasos">
+            <li><b><i>1</i>Adaptar</b><span>Según el perfil de barreras y las recetas.</span></li>
+            <li><b><i>2</i>Revisar</b><span>La docente lee el informe, corrige lo que haga falta y firma.</span></li>
+            <li><b><i>3</i>Recordar</b><span>La corrección se guarda donde ella decide: este alumno, su forma de trabajar o la regla general.</span></li>
+            <li><b><i>4</i>Adaptar mejor</b><span>La ficha siguiente sale ya con la corrección aplicada.</span></li>
+          </ol>
+          <p class="flow-return"><svg viewBox="0 0 44 28" aria-hidden="true"><path d="M40,22 H12 A6,6 0 0 1 6,16 V6 M2,10 L6,6 L10,10"/></svg>Y vuelve a empezar: el paso 4 es el paso 1 de la semana siguiente.</p>
           <figcaption class="small muted" style="margin-top:.9em">Lo que se mide: tiempo por ficha, semana 1 frente a semana 4.</figcaption>
         </figure>
       </div>
@@ -504,7 +491,7 @@ dl.plain{margin:0}dl.plain dd{margin:0 0 .4em}
         <p class="lead">En este proyecto, lo que no hace genera más confianza que cualquier lista de funcionalidades. Estas reglas están construidas, no prometidas.</p>
         <p class="note small" style="margin-top:1.4em">Las dos reglas centrales, no cambiar lo que se enseña y no facilitar exámenes, no las hace cumplir el código: las hace cumplir la revisión de la docente. El código hace visible cada cambio, con la receta que lo produjo y el motivo, para que su firma signifique algo.</p>
       </div>
-      <div class="card card--br">
+      <div class="card">
         <ul class="plain small">
           <li><strong>No decide nada definitivo.</strong> Todo sale marcado como borrador hasta que una docente firma. Hay una sola acción que quita esa marca.</li>
           <li><strong>No cambia el contenido.</strong> No inventa datos, no sustituye términos curriculares por sinónimos fáciles, no elimina nada en silencio. Lo que no pudo hacer aparece primero en el informe.</li>
@@ -569,7 +556,7 @@ dl.plain{margin:0}dl.plain dd{margin:0 0 .4em}
       <div>
         <div class="lic">
           <div class="card"><span class="big">Apache-2.0</span><p class="small" style="margin-top:.5em"><strong>Código.</strong> Licencia permisiva. Un centro, una consejería o una editorial pueden integrarlo sin revisión legal ni pagar licencias.</p></div>
-          <div class="card card--br"><span class="big">CC BY-SA 4.0</span><p class="small" style="margin-top:.5em"><strong>Contenido pedagógico.</strong> Recetas, instrucciones y documentación. Quien las mejore tiene que compartir la mejora con la misma licencia. El común pedagógico sigue siendo común.</p></div>
+          <div class="card"><span class="big">CC BY-SA 4.0</span><p class="small" style="margin-top:.5em"><strong>Contenido pedagógico.</strong> Recetas, instrucciones y documentación. Quien las mejore tiene que compartir la mejora con la misma licencia. El común pedagógico sigue siendo común.</p></div>
         </div>
         <p class="small muted" style="margin-top:1em">Es una decisión ya tomada y forma parte de la propuesta.</p>
       </div>
@@ -610,7 +597,7 @@ dl.plain{margin:0}dl.plain dd{margin:0 0 .4em}
           <li>Una profesional de PT en ejercicio identificada y dispuesta a la primera sesión de observación (registro del proyecto, agosto de 2026).</li>
         </ul>
       </div>
-      <div class="card card--br">
+      <div class="card">
         <h3>No existe</h3>
         <ul class="plain small tight">
           <li>Ninguna maestra la ha usado todavía.</li>
@@ -647,7 +634,7 @@ dl.plain{margin:0}dl.plain dd{margin:0 0 .4em}
           <li>El documento editable no respeta la presentación: un alumno con baja visión recibe 24 puntos en PDF y 12 en el editable.</li>
         </ul>
       </div>
-      <div class="card card--tr">
+      <div class="card">
         <h3>Calibración pedagógica</h3>
         <ul class="plain tight small">
           <li>Los descriptores de los diez ejes están escritos sin una maestra. Se cierran cuando una PT los recorra y discrepe en algo.</li>
@@ -656,7 +643,7 @@ dl.plain{margin:0}dl.plain dd{margin:0 0 .4em}
           <li>Las catorce medidas de examen que una orientadora pasó al proyecto están clasificadas, no incorporadas.</li>
         </ul>
       </div>
-      <div class="card card--br">
+      <div class="card">
         <h3>Verificación con datos reales</h3>
         <ul class="plain tight small">
           <li>Suelo del modelo: solo medido el peldaño gratuito (13 de 16 pasadas limpias). Los de pago, sin medir. Los costes por ficha siguen marcados como estimados.</li>
@@ -710,7 +697,7 @@ dl.plain{margin:0}dl.plain dd{margin:0 0 .4em}
         <p><strong>Se responde sí o no.</strong></p>
         <p class="small"><strong>Pregunta secundaria:</strong> ¿su tiempo por ficha baja entre la semana 1 y la 4? Es la tesis del bucle de corrección.</p>
       </div>
-      <div class="card card--br">
+      <div class="card">
         <h3>Qué cuenta como sí</h3>
         <p class="smaller muted">Umbrales fijados en la especificación de la Fase 0 del proyecto, antes de medir nada. Son criterios de diseño, no resultados.</p>
         <ul class="plain small">
@@ -834,7 +821,7 @@ dl.plain{margin:0}dl.plain dd{margin:0 0 .4em}
           <li>Una decisión escrita: seguir, cambiar o parar.</li>
         </ul>
       </div>
-      <div class="card card--br">
+      <div class="card">
         <h3>Lo que haría parar el proyecto</h3>
         <ul class="plain small tight">
           <li>Que en la mayoría de las sesiones la maestra tarde más que a mano, o no se llevaría la hoja a clase.</li>
@@ -919,9 +906,9 @@ dl.plain{margin:0}dl.plain dd{margin:0 0 .4em}
     <p class="lead" style="margin-bottom:1.4em">Cuatro piezas independientes. Se puede decir sí a una sola sin decir sí a todo.</p>
     <div class="ask">
       <div class="card"><h3>Financiación</h3><p class="small">Entre diecinueve mil y sesenta y ocho mil euros, según tarifa y dispositivos, en dos tramos que se pueden financiar por separado: el cierre técnico y la calibración (siete mil a veinte mil) y el piloto con maestras (doce mil a cuarenta y ocho mil). Desglose en el anexo A.</p></div>
-      <div class="card card--tr"><h3>Contactos con centros</h3><p class="small">Dos o tres centros públicos con maestras de PT dispuestas, y acceso a su equipo directivo y a su delegado de protección de datos. Es el cuello de botella real del piloto.</p></div>
-      <div class="card card--bl"><h3>Acompañamiento metodológico</h3><p class="small">Una persona o entidad de pedagogía u orientación educativa (una facultad de educación, un equipo de orientación) que revise el diseño de la observación, las recetas y la calibración de los ejes.</p></div>
-      <div class="card card--br"><h3>Difusión</h3><p class="small">Presentar el proyecto a consejerías de educación, convocatorias públicas y obra social, y facilitar cartas de interés.</p></div>
+      <div class="card"><h3>Contactos con centros</h3><p class="small">Dos o tres centros públicos con maestras de PT dispuestas, y acceso a su equipo directivo y a su delegado de protección de datos. Es el cuello de botella real del piloto.</p></div>
+      <div class="card"><h3>Acompañamiento metodológico</h3><p class="small">Una persona o entidad de pedagogía u orientación educativa (una facultad de educación, un equipo de orientación) que revise el diseño de la observación, las recetas y la calibración de los ejes.</p></div>
+      <div class="card"><h3>Difusión</h3><p class="small">Presentar el proyecto a consejerías de educación, convocatorias públicas y obra social, y facilitar cartas de interés.</p></div>
     </div>
     <p style="margin-top:1.4em"><strong>Primer paso: una reunión de cuarenta y cinco minutos.</strong></p>
     <p class="small">Contacto: <span class="pending">[PENDIENTE: persona de contacto y correo de la Fundación VASS]</span></p>
