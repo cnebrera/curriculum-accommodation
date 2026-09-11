@@ -44,7 +44,7 @@ a{color:var(--blue)}
 .visually-hidden{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap}
 
 /* --- enlace para saltar y navegación (no escalan con la lámina) ------------- */
-.skip{position:absolute;left:1em;top:-4em;background:var(--blue);color:var(--bg);padding:.6em 1em;border-radius:0 0 16px 0;font:700 .9em var(--font-title);z-index:50;text-decoration:none}
+.skip{position:absolute;left:1em;top:-4em;background:var(--blue);color:var(--bg);padding:.6em 1em;font:700 .9em var(--font-title);z-index:50;text-decoration:none}
 .skip:focus{top:0}
 .nav{position:fixed;right:1em;bottom:1em;z-index:40;display:flex;align-items:center;gap:.35em;background:rgba(20,20,20,.88);border:1px solid var(--line);border-radius:999px;padding:.3em .45em;backdrop-filter:blur(6px);font-size:16px}
 .nav button{appearance:none;border:0;background:transparent;color:var(--fg);width:2.75em;height:2.75em;border-radius:50%;cursor:pointer;display:grid;place-items:center}
@@ -87,8 +87,12 @@ a{color:var(--blue)}
 .cols{display:grid;grid-template-columns:minmax(0,40fr) minmax(0,55fr);column-gap:5%;row-gap:1.2em;flex:1;align-items:start;min-height:0}
 .cols--even{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
 .cols--3{grid-template-columns:repeat(3,minmax(0,1fr));column-gap:3%}
-/* Tarjetas en paralelo: misma altura. `.cols` alinea arriba para el texto,
-   pero dos tarjetas contiguas de alturas distintas se leen como un descuido. */
+/* Cajas de contenido: esquinas rectas, todas. La firma de una sola esquina
+   redondeada que usa la marca es para formas grandes con imagen; en una caja de
+   tres líneas de texto no aporta nada y multiplicada por veintiséis láminas se
+   lee como ruido. Decisión deliberada, anotada en el guion.
+   Tarjetas en paralelo: misma altura, porque `.cols` alinea arriba para el texto
+   y dos tarjetas contiguas de alturas distintas se leen como un descuido. */
 .cols--even > .card,.cols--3 > .card{align-self:stretch}
 @media (max-width:699px){.cols,.cols--even,.cols--3{grid-template-columns:minmax(0,1fr)}}
 .slidefoot{display:flex;justify-content:space-between;gap:1em;margin-top:auto;padding-top:1em;font:400 .62em/1.3 var(--font-body);color:var(--muted);letter-spacing:.03em}
@@ -96,7 +100,7 @@ a{color:var(--blue)}
 .js .slide:not(.is-visible) .inner{opacity:0;transform:translateY(14px)}
 
 /* --- componentes ----------------------------------------------------------- */
-.card{background:var(--bg-2);border:1px solid var(--line);border-radius:0 0 3.2em 0;padding:1.1em 1.3em}
+.card{background:var(--bg-2);border:1px solid var(--line);padding:1.1em 1.3em}
 .card h3{margin-bottom:.5em}
 ul.plain,ol.plain{list-style:none;padding:0;margin:0}
 ul.plain li,ol.plain li{position:relative;padding-left:1.25em;margin:0 0 .55em}
@@ -109,8 +113,8 @@ ol.plain li::before{content:counter(n, decimal-leading-zero);position:absolute;l
 .smaller{font-size:.82em}
 .muted{color:var(--muted)}
 .note{border-left:2px solid var(--blue);padding:.15em 0 .15em .9em;color:var(--fg-2)}
-.badge{display:inline-block;align-self:flex-start;font:700 .6em/1 var(--font-title);letter-spacing:.12em;text-transform:uppercase;color:var(--bg);background:var(--ig-2);padding:.7em 1.1em;border-radius:0 0 1em 0;margin:0 0 .9em}
-.pending{font:400 .88em var(--font-body);color:var(--ig-2);border:1px dashed rgba(252,201,54,.55);padding:.05em .4em;border-radius:.25em}
+.badge{display:inline-block;align-self:flex-start;font:700 .6em/1 var(--font-title);letter-spacing:.12em;text-transform:uppercase;color:var(--bg);background:var(--ig-2);padding:.7em 1.1em;margin:0 0 .9em}
+.pending{font:400 .88em var(--font-body);color:var(--ig-2);border:1px dashed rgba(252,201,54,.55);padding:.05em .4em}
 .tablewrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
 table{width:100%;border-collapse:collapse;font-size:.84em}
 caption{text-align:left;font:700 .68em/1.2 var(--font-title);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);padding:0 0 .7em}
@@ -154,7 +158,7 @@ dl.plain{margin:0}dl.plain dd{margin:0 0 .4em}
 
 /* --- figuras en HTML --------------------------------------------------------- */
 .pipe{list-style:none;padding:0;margin:0;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:.55em}
-.pipe li{position:relative;background:var(--bg-2);border:1px solid var(--line);border-radius:0 0 1.4em 0;padding:.75em .8em;font-size:.76em;line-height:1.35}
+.pipe li{position:relative;background:var(--bg-2);border:1px solid var(--line);padding:.75em .8em;font-size:.76em;line-height:1.35}
 .pipe li b{display:block;font:700 .95em var(--font-title);color:var(--fg);margin-bottom:.25em}
 .pipe li small{display:block;color:var(--muted);margin-top:.3em;font-size:.9em}
 .pipe li::after{content:"";position:absolute;right:-.5em;top:50%;width:.45em;height:.45em;border-top:2px solid var(--blue);border-right:2px solid var(--blue);transform:translateY(-50%) rotate(45deg)}
@@ -165,7 +169,7 @@ dl.plain{margin:0}dl.plain dd{margin:0 0 .4em}
 @media (max-width:699px){.pipe{grid-template-columns:1fr 1fr}.pipe li::after{display:none}}
 
 .flow{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:.75em}
-.flow li{position:relative;background:var(--bg-2);border:1px solid var(--line);border-radius:0 0 1.4em 0;padding:.7em .95em}
+.flow li{position:relative;background:var(--bg-2);border:1px solid var(--line);padding:.7em .95em}
 .flow li b{display:block;font:700 1em var(--font-title);color:var(--fg)}
 .flow li i{font:200 1.2em/1 var(--font-title);color:var(--blue);font-style:normal;margin-right:.4em}
 .flow li span{display:block;font-size:.86em;color:var(--fg-2);margin-top:.15em}
@@ -186,7 +190,7 @@ dl.plain{margin:0}dl.plain dd{margin:0 0 .4em}
 
 .timeline{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(19,1fr);gap:.4em .1em}
 .timeline .weeks{grid-column:1 / -1;display:grid;grid-template-columns:repeat(19,1fr);font:400 .6em var(--font-body);color:var(--muted);text-align:center;margin-bottom:.15em}
-.timeline li.bar{grid-column:var(--from) / var(--to);background:var(--c);color:#141414;border-radius:0 0 .8em 0;padding:.45em .55em;font:500 .78em/1.25 var(--font-body);min-height:3.2em}
+.timeline li.bar{grid-column:var(--from) / var(--to);background:var(--c);color:#141414;padding:.45em .55em;font:500 .78em/1.25 var(--font-body);min-height:3.2em}
 .timeline li.bar small{display:block;font-weight:400;font-size:.9em;opacity:.9}
 @media (max-width:699px){.timeline{display:block}.timeline .weeks{display:none}.timeline li.bar{display:block;margin-bottom:.4em}}
 

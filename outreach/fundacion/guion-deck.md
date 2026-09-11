@@ -175,7 +175,7 @@ Nota al pie de la lámina: Las dos reglas centrales, no cambiar lo que se enseñ
 
 **Notas de ponente.** La nota al pie es la afirmación más honesta del deck y hay que leerla tal cual si se presenta. Un parser no distingue una frase simplificada de una exigencia rebajada; una maestra sí.
 
-**Figura.** Sin figura. La lista va en una tarjeta con una esquina redondeada.
+**Figura.** Sin figura. La lista va en una tarjeta.
 
 ---
 
@@ -307,7 +307,7 @@ Pie: Fuente: registro de validación y backlog del proyecto, septiembre de 2026.
 
 **Notas de ponente.** Quien financia proyectos técnicos agradece esta lámina más que la anterior: es la prueba de que el equipo sabe qué le falta. Cada punto tiene una entrada en el registro de validación (`specs/006-desktop-app/validation.md`) o en el backlog (`specs/BACKLOG.md`: G2, G16, G19, G20, G71, G73, G77) del repositorio. Si alguien pregunta por la cifra de requisitos, el matiz importa y conviene decirlo: los requisitos escritos están prácticamente todos cumplidos, y lo que queda pendiente es justo lo que ningún contador de requisitos mide, que es comprobarlo con datos reales y con personas.
 
-**Figura.** Tres tarjetas con una esquina redondeada, una por columna. Sin diagrama.
+**Figura.** Tres tarjetas de la misma altura, una por columna. Sin diagrama.
 
 ---
 
@@ -517,7 +517,7 @@ Contacto: `[PENDIENTE: persona de contacto y correo de la Fundación VASS]`
 
 **Notas de ponente.** Cerrar preguntando a cuál de las cuatro piezas puede decir sí quien escucha. No pedir las cuatro.
 
-**Figura.** Cuatro tarjetas numeradas con una esquina redondeada, una por pieza.
+**Figura.** Cuatro tarjetas numeradas, una por pieza, en dos filas de dos.
 
 ---
 
@@ -660,7 +660,7 @@ Confirmación de lo que se ha aplicado en `deck.html` y se puede señalar en el 
 - HTML semántico: un `h1` en portada, un `h2` por lámina, `h3` para subsecciones; cada lámina es un `section` con `aria-labelledby` apuntando a su título; las tablas llevan `caption` y `th` con `scope`.
 - Contraste comprobado sobre negro `#141414`: blanco 17:1, gris claro `#E9E9E9` 15:1, gris medio `#8A8691` 5,2:1, azul `#4BBCEE` 8,5:1. Todos por encima de AA para texto normal. En impresión, la paleta cambia a fondo blanco con azul `#067DB9` (4,5:1) y gris `#6B6771` (5,5:1), siguiendo la paleta clara del manual.
 - Formato de lámina fijo 16:9 en pantalla ancha, con todas las medidas internas relativas al ancho de la lámina, de modo que la composición es idéntica a cualquier tamaño; en móvil las láminas se apilan y el texto no baja de 16 píxeles. Cuerpo de texto de unos 16 píxeles a 1.280 de ancho y unos 25 a 1.920, interlineado 1,5. Las láminas más densas bajan el cuerpo hasta un 20 por ciento para caber en el 16:9; se ha comprobado que ninguna lámina desborda su rectángulo a 1.280 × 720 y a 1.440 × 900.
-- **Una sola esquina redondeada, y siempre la misma.** La firma de la marca es la forma con una esquina a radio grande y el resto a noventa grados. Todas las cajas del deck (tarjetas, pasos, barras de la línea de tiempo, el rótulo de estimación) la llevan en la **inferior derecha**. Variar la esquina caja por caja convierte un sistema en ruido, que es lo que pasaba antes. Las tarjetas en paralelo comparten además altura.
+- **Todas las cajas con esquinas rectas.** Es una desviación deliberada del manual, que fija como firma de marca «formas con una sola esquina redondeada, radio grande, en una esquina y el resto a noventa grados». Esa firma está pensada para formas grandes con imagen; en una caja de tres líneas de texto no aporta nada, y repetida en veintiséis láminas se lee como ruido en vez de como sistema. La identidad la sostienen el negro, el azul, la tipografía y el aire. Quien revise contra el manual debe saber que fue una decisión, no un descuido: revertirlo es una línea de CSS. Los únicos elementos redondeados que quedan son círculos (viñetas, botones de navegación, el arco de marca), que no son cajas.
 - Texto real en todas partes. Ningún texto dentro de imágenes. Los diagramas están construidos en HTML con conectores SVG decorativos, o en SVG en línea con `role="img"`, `<title>` y `<desc>`.
 - Ninguna información transmitida solo por color: las barras de la línea de tiempo llevan texto; las etiquetas «Existe / No existe» y «Estimación pendiente de validar» son palabras.
 - Navegación con teclado: flechas, Página arriba/abajo, Inicio y Fin; botones anterior/siguiente con `aria-label`; enlace para saltar a la primera lámina; foco visible.
@@ -701,12 +701,13 @@ Cifras primero. Todo lo de esta lista lo ha asumido quien redacta; nada de ello 
 23. **Que el deck lo mueve la Fundación VASS y que existe un contacto** es el supuesto del encargo. La persona de contacto está marcada como pendiente.
 24. **Que las salvaguardas «están construidas»** se apoya en los hechos verificados del encargo y en las pruebas automáticas que el repositorio describe. El deck no afirma que hayan sido auditadas por un tercero, porque no lo han sido.
 25. **La coherencia visual con el manual de marca VASS 2025** se ha aplicado a partir de la descripción textual del encargo, sin leer el manual. Quien lo tenga debe revisar tipografías, colores y retícula.
-26. **El logotipo es el oficial de la Fundación VASS**, extraído en vector de la presentación corporativa «VASS Propuesta de Valor 2025_ES» que hay en la carpeta de marca de la empresa. No está recreado con ninguna tipografía: es la obra gráfica original. En la carpeta solo existe la **versión negativa** (Fundación en blanco, VASS en azul), que es la que el deck usa en pantalla. **Para impresión sobre blanco se ha compuesto una versión positiva** cambiando el blanco por el negro VASS `#141414` y el azul por `#067DB9`, sin tocar la geometría. Hay que confirmar contra el manual de la Fundación que esa es su versión positiva oficial; si no lo es, se sustituye cambiando dos variables CSS.
-27. **Se ha decidido imprimir sobre fondo blanco** con la paleta clara del manual (azul `#067DB9`) para evitar páginas enteras en negro. En pantalla el deck es negro. Si la fundación prefiere imprimir en negro, es un cambio de una regla CSS.
-28. **La lista de la lámina 12** es una selección de quien redacta a partir del registro de validación y del backlog del repositorio a 10 de septiembre de 2026, con criterio de «afecta a que una maestra pueda usarlo en el piloto». No es la lista completa de trabajo abierto, y el equipo debe confirmarla y priorizarla. Tres cifras de esa lámina son fotos con fecha: «una de cada cinco adaptaciones falla la procedencia» (3 de 16 pasadas, 9 de septiembre), «13 de 16 pasadas limpias» del peldaño gratuito, y «3 requisitos abiertos de 639», que es lo que devuelve `scripts/check-fr-coverage.sh` el 11 de septiembre y se mueve con cada cambio.
-29. **Las especificaciones 039, 040 y 041** que el escenario del repositorio cita (medidas de examen, aspecto por edad, repertorio visual) no existen todavía como directorios de especificación; el deck las trata como trabajo pendiente, no como hecho.
+26. **Las cajas van con esquinas rectas y no con la esquina redondeada de la marca.** Decisión de quien redacta, explicada en la sección de accesibilidad y sistema visual. Si la Fundación o marketing quieren la firma del manual, se recupera cambiando una regla de CSS.
+27. **El logotipo es el oficial de la Fundación VASS**, extraído en vector de la presentación corporativa «VASS Propuesta de Valor 2025_ES» que hay en la carpeta de marca de la empresa. No está recreado con ninguna tipografía: es la obra gráfica original. En la carpeta solo existe la **versión negativa** (Fundación en blanco, VASS en azul), que es la que el deck usa en pantalla. **Para impresión sobre blanco se ha compuesto una versión positiva** cambiando el blanco por el negro VASS `#141414` y el azul por `#067DB9`, sin tocar la geometría. Hay que confirmar contra el manual de la Fundación que esa es su versión positiva oficial; si no lo es, se sustituye cambiando dos variables CSS.
+28. **Se ha decidido imprimir sobre fondo blanco** con la paleta clara del manual (azul `#067DB9`) para evitar páginas enteras en negro. En pantalla el deck es negro. Si la fundación prefiere imprimir en negro, es un cambio de una regla CSS.
+29. **La lista de la lámina 12** es una selección de quien redacta a partir del registro de validación y del backlog del repositorio a 10 de septiembre de 2026, con criterio de «afecta a que una maestra pueda usarlo en el piloto». No es la lista completa de trabajo abierto, y el equipo debe confirmarla y priorizarla. Tres cifras de esa lámina son fotos con fecha: «una de cada cinco adaptaciones falla la procedencia» (3 de 16 pasadas, 9 de septiembre), «13 de 16 pasadas limpias» del peldaño gratuito, y «3 requisitos abiertos de 639», que es lo que devuelve `scripts/check-fr-coverage.sh` el 11 de septiembre y se mueve con cada cambio.
+30. **Las especificaciones 039, 040 y 041** que el escenario del repositorio cita (medidas de examen, aspecto por edad, repertorio visual) no existen todavía como directorios de especificación; el deck las trata como trabajo pendiente, no como hecho.
 
-30. **La fecha del documento** es septiembre de 2026, la fecha de redacción.
+31. **La fecha del documento** es septiembre de 2026, la fecha de redacción.
 
 ---
 
