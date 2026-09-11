@@ -27,12 +27,16 @@ import type { Axis } from '../vault/schema.js';
  * `presentations.test.ts` asserts over this file's own source that no knob name appears
  * in it. The guarantee is what the type does not have.
  *
- * ## What `040` does with it
+ * ## Why the shape, and not just the list
  *
- * An appearance band is another kind of input. When bands exist they compose with these
- * levels through the same call, so band × axis presentations are produced rather than
- * written out — which is what `038` FR-3615 asks for, satisfied by this shape rather
- * than by any band existing yet.
+ * `038` FR-3615 asks that this stay open to a second source of presentation — an
+ * appearance band, say — without the record growing a written-out table of
+ * combinations. It does, and by construction rather than by intent: a band would be
+ * another kind of *input*, composed with these levels through the same
+ * `presentationFor` call, so the values would still be produced and never stated here.
+ *
+ * That is a property of this module as it stands today. Nothing here depends on such a
+ * source existing, and none does.
  */
 export interface SheetPresentation {
   /**
