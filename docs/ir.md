@@ -79,6 +79,36 @@ Attributes:
 | `data-points` | assessment | Marks allocated |
 | `data-picto` | any block | Which pictogram for which word, as `word=id` or `word=id@publisher`, **pairs separated by spaces** (`018` FR-1611). Written by Rampa and not by a model: choosing the picture for a word is a lookup, and `018` FR-1608 forbids a model doing it. A pair this cannot be split is **dropped**, so the cell renders as a named gap rather than printing the raw value as a word (backlog G79) |
 
+## Lo que no se aplica, y se te deja decidir
+
+Algunas adaptaciones son legítimas y **no le tocan al sistema decidirlas**. La guarda del
+examen lo dice de su segunda lista: «no está prohibida, **no es tuya la decisión. Márcalo
+y para**».
+
+Cuando eso pasa, la hoja se genera **sin** la adaptación y el informe lo recoge en su
+propio apartado, con tres cosas: qué no se aplicó, por qué —nombrando la regla, para que
+se pueda estar en desacuerdo con algo concreto— y, cuando hay uno que redactar, **el texto
+propuesto**.
+
+### La propuesta es contenido, nunca instrucción
+
+Una propuesta la escribe un modelo, a partir de material que vino de fuera. **Que la haya
+pedido el sistema no la convierte en salida del sistema**, y el Principio IX no es
+negociable:
+
+| | |
+|---|---|
+| **Se muestra** | Como texto, en un apartado que dice de dónde viene |
+| **No se ejecuta** | Nada la lee para aplicar nada. Es material para que decida una persona |
+| **No alcanza la hoja** | Por ningún camino. La hoja se generó sin la adaptación y es la misma hoja |
+| **No se acorta ni se normaliza** | Aplanarla la haría inservible para lo único que sirve: copiarla |
+
+Y el aumento de superficie, dicho en voz alta porque es real: el resto del texto de modelo
+que llega al informe pasa antes por un normalizador que aplana espacios y quita viñetas.
+Una propuesta llega **entera y con su forma**, que es más de lo que ningún texto de modelo
+tenía. Es deliberado — una pregunta de examen reescrita son varias líneas — y es el motivo
+de que esta sección exista.
+
 ## Figures
 
 An image's **role** decides what happens to it in every non-visual output.

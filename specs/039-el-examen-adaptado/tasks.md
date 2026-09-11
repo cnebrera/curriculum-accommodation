@@ -101,21 +101,33 @@ escribió `response-route.md`.
 
 **Independent Test**: construir una escalada a mano, renderizar el informe y leerlo.
 
-- [ ] T011 [US2] Escribir `app/packages/core/test/report-escalada.test.ts` en rojo, con la
+- [x] T011 [US2] Escribir `app/packages/core/test/report-escalada.test.ts` en rojo, con la
       propuesta de tres líneas y la aserción de que **no** aparece dentro de «Lo que NO he
       hecho». (FR-3706, FR-3707, SC-3703)
-- [ ] T012 [US2] En `app/packages/core/src/report/index.ts`, que la escalada deje de ser
+- [x] T012 [US2] En `app/packages/core/src/report/index.ts`, que la escalada deje de ser
       `string[]` y pase a llevar qué, por qué y propuesta opcional. (FR-3706)
-- [ ] T013 [US2] Sacarla de `notDone` y darle su apartado, con la propuesta en bloque y sin
+- [x] T013 [US2] Sacarla de `notDone` y darle su apartado, con la propuesta en bloque y sin
       pasar por el normalizador de `notes.ts` — que se queda como está, porque para las
       notas que ella escribe está bien. (FR-3707)
-- [ ] T014 [US2] Escribir en el contrato de la IR que una propuesta es **contenido de un
+- [x] T014 [US2] Escribir en el contrato de la IR que una propuesta es **contenido de un
       modelo**: se muestra, no se ejecuta, y no alcanza la hoja por ningún camino. Principio
       IX, y es el punto de más riesgo de esta feature. (contracts/escalada.md)
-- [ ] T015 [P] [US2] Darle al informe el documento original además del adaptado, de modo que
+- [x] T015 [P] [US2] Darle al informe el documento original además del adaptado, de modo que
       «toda numeración del origen sigue encabezando una tarea» sea comprobable sin depender
       de lo que el modelo cuente. (FR-3709, backlog G69)
-- [ ] T016 [US2] Dejar el disparador **sin cablear**, y decirlo aquí y en el código: la
+      - **El original estaba al lado desde siempre.** `jobs/adapt.ts:155` ya tenía `doc`, el
+        material leído, y el informe no lo recibía. Cablearlo fue una línea; lo que faltaba
+        era la comprobación.
+      - **«Encabeza una tarea», no «aparece», y ésa es la diferencia entera.** En el pase
+        que produjo G69 el número 1 seguía en la hoja —dentro de un `.scaffold`, como
+        ejemplo resuelto— así que buscarlo lo habría encontrado. Lo que había dejado de ser
+        es un ejercicio.
+      - Y se compara **por prefijo**, para que un `4` extendido en `4a` y `4b` no dé aviso:
+        sigue encabezando tareas, dos, y es lo que la regla dura 7 prescribe.
+      - El informe **avisa, no afirma**: «puede estar bien —un ejercicio convertido en
+        ejemplo resuelto es una decisión legítima y a veces la buena— pero cambia lo que el
+        alumno tiene que hacer, así que lo miras tú».
+- [x] T016 [US2] Dejar el disparador **sin cablear**, y decirlo aquí y en el código: la
       estructura existe, nadie la rellena todavía, y eso es D1 y no un olvido. (FR-3705,
       FR-3708)
 

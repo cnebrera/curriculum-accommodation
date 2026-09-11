@@ -11,6 +11,32 @@ import { phraseOf } from '../guide/corpus.js';
  * pages — that is what makes the time saving real, and it is where the errors
  * that matter get caught.
  */
+/**
+ * Los números del original que ya no encabezan una tarea en el adaptado.
+ *
+ * Una tarea es un `.exercise` o un `.assessment`. Un `.scaffold` no lo es, y ésa es la
+ * distinción que hace falta: en el pase de G69 el «1» seguía en la hoja, dentro de un
+ * ejemplo resuelto.
+ *
+ * La comparación es **por prefijo** para que `4` siga contando como encabezado cuando se
+ * ha extendido en `4a` y `4b` — que es lo que la regla dura 7 prescribe y no un defecto.
+ */
+function numbersNoLongerHeadingATask(
+  original: IRDocument | undefined, adapted: IRDocument,
+): string[] {
+  if (!original) return [];
+  const isTask = (b: { classes: string[] }): boolean =>
+    b.classes.includes('exercise') || b.classes.includes('assessment');
+  const heading = new Set(adapted.blocks.filter(isTask)
+    .map((b) => b.attrs['data-number']).filter((n): n is string => typeof n === 'string'));
+  const kept = (n: string): boolean =>
+    heading.has(n) || [...heading].some((h) => h.startsWith(n));
+  return [...new Set(original.blocks.filter(isTask)
+    .map((b) => b.attrs['data-number'])
+    .filter((n): n is string => typeof n === 'string' && n.trim() !== ''))]
+    .filter((n) => !kept(n));
+}
+
 export interface Decision {
   title: string;
   recipe: string;
@@ -20,6 +46,19 @@ export interface Decision {
 
 export interface ReportInput {
   adapted: IRDocument;
+  /**
+   * El documento **original**, para que la numeración se pueda comprobar (`039` FR-3709,
+   * backlog G69).
+   *
+   * Opcional porque hay caminos que no tienen uno —una composición se escribe desde cero—
+   * y porque todo informe escrito antes de esto se generó sin él. Ausente significa
+   * «no hay nada contra lo que comprobar», que es distinto de «está bien».
+   *
+   * El pase real que lo hizo necesario: un informe decía «no he tocado la numeración
+   * original» sobre una hoja donde el ejercicio 1 había dejado de ser un ejercicio y salía
+   * ya resuelto. La afirmación se quitó —era media cosa— y ésta es la otra media.
+   */
+  original?: IRDocument;
   selection?: Selection;
   dropped?: Array<{ id: string; why: string }>;
   undescribedFigures?: string[];
@@ -31,7 +70,36 @@ export interface ReportInput {
    * a second place that has to learn about a fourth kind.
    */
   bridgeAbsences?: readonly string[];
-  flaggedSignificant?: string[];
+  /**
+   * Lo que no se aplicó porque **no le toca decidirlo al sistema** (`039` FR-3705…FR-3708).
+   *
+   * ## Por qué tres campos y no una cadena
+   *
+   * Esto era `flaggedSignificant?: string[]`, y estaba **declarado, renderizado y sin
+   * ningún llamador de producción**: el canal existía dos veces y sólo la mitad conectada.
+   * `exam-access-not-difficulty.md` dice de su segunda lista «no está prohibida, **no es
+   * tuya la decisión. Márcalo y para**», y no había dónde marcar.
+   *
+   * Tres campos porque el informe tiene que poder presentarlos **distinto**: el qué y el
+   * porqué los produce el sistema; la propuesta es **texto que escribió un modelo**.
+   * Mezclados en una cadena, esa distinción se pierde el día que alguien cambie el formato,
+   * y es la distinción que el Principio IX vuelve no negociable.
+   *
+   * ## La propuesta es contenido, no instrucción
+   *
+   * Que la haya pedido el sistema no la convierte en salida del sistema. Se **muestra**, no
+   * se ejecuta, y **no alcanza la hoja por ningún camino**: la hoja se generó sin la
+   * adaptación y es la misma hoja. Está en `contracts/escalada.md` con el aumento de
+   * superficie dicho en voz alta — es el único texto de modelo que llega al informe
+   * **entero y con su forma**, porque aplanarlo lo haría inservible para lo único que
+   * sirve, copiarlo a un examen.
+   *
+   * ## Y es opcional, a propósito
+   *
+   * Hay adaptaciones que se escalan y no se pueden redactar: «reducir el número de ítems»
+   * no tiene un texto que proponer. Una propuesta obligatoria invitaría a inventar una.
+   */
+  escalated?: readonly { what: string; why: string; proposal?: string }[];
   /**
    * The journal entries **loaded** for this run, by recipe id (003 FR-210).
    *
@@ -172,7 +240,6 @@ export function buildReport(input: ReportInput): Report {
 
   for (const d of input.dropped ?? []) notDone.push(`Quité el bloque "${d.id}": ${d.why}`);
   for (const f of input.undescribedFigures ?? []) notDone.push(f);
-  for (const s of input.flaggedSignificant ?? []) notDone.push(`Adaptación significativa, no la he hecho: ${s}`);
   for (const c of input.selection?.resolved ?? []) {
     notDone.push(`Conflicto entre "${c.kept}" y "${c.dropped}": me quedé con "${c.kept}" porque ${c.because}.`);
   }
@@ -287,6 +354,30 @@ export function buildReport(input: ReportInput): Report {
     }
   }
 
+  /*
+   * Y ahora **la comprobación**, cuando hay con qué hacerla (FR-3709).
+   *
+   * «Encabeza una tarea» y no «aparece», que es la diferencia entera: en el pase que
+   * produjo G69 el número 1 seguía en la hoja — dentro de un `.scaffold`, como ejemplo
+   * resuelto— y buscarlo lo habría encontrado. Lo que había dejado de ser es un ejercicio.
+   *
+   * Un número que se extiende en `4a`/`4b` no es un aviso: sigue encabezando tareas, dos,
+   * y es exactamente lo que la regla dura 7 prescribe. Por eso se compara por prefijo.
+   */
+  const lost = numbersNoLongerHeadingATask(input.original, input.adapted);
+  if (lost.length) {
+    md.push('## La numeración', '',
+      `${lost.length === 1 ? 'El número' : 'Los números'} `
+      + `${lost.map((n) => `**${n}**`).join(', ')} `
+      + `${lost.length === 1 ? 'dejó' : 'dejaron'} de encabezar una tarea: `
+      + 'en el material original era una y en el adaptado ya no.',
+      '',
+      'Puede estar bien —un ejercicio convertido en ejemplo resuelto es una decisión '
+      + 'legítima y a veces la buena— pero cambia lo que el alumno tiene que hacer, '
+      + 'así que lo miras tú.',
+      '');
+  }
+
   if (kindDisagreement) {
     md.push('## Una cosa sobre lo que es este material', '', kindDisagreement, '');
   }
@@ -295,6 +386,34 @@ export function buildReport(input: ReportInput): Report {
     md.push('## Lo que NO he hecho', '');
     for (const n of notDone) md.push(`- ${n}`);
     md.push('');
+  }
+
+  /*
+   * Su propio apartado, y **nunca dentro del de arriba** (FR-3707).
+   *
+   * Los dos hechos son verdad y no son el mismo hecho: «no he hecho X» es una acción que
+   * no ocurrió; «esto lo decides tú, y aquí tienes el texto» es una decisión pendiente con
+   * material para tomarla. Una propuesta impresa entre las primeras se lee como hecha.
+   *
+   * La propuesta va en bloque y **no pasa por `parseReportNotes`**, cuyo normalizador
+   * aplana espacios y quita viñetas. Ese normalizador está bien para lo suyo —las notas
+   * que ella escribe a mano— y aquí destruiría el único valor que tiene el texto.
+   */
+  const escalated = input.escalated ?? [];
+  if (escalated.length) {
+    md.push('## Esto lo decides tú', '');
+    for (const e of escalated) {
+      md.push(`### ${e.what}`, '', e.why, '');
+      if (e.proposal !== undefined && e.proposal.trim() !== '') {
+        md.push('Si decides hacerlo, te lo dejo escrito:', '');
+        /*
+         * Tal cual, con sus saltos. Como cita, para que se vea de un golpe que es una
+         * propuesta y no algo que esté en la hoja — la hoja se generó sin esto.
+         */
+        for (const line of e.proposal.split('\n')) md.push(`> ${line}`);
+        md.push('');
+      }
+    }
   }
 
   if (notices.length) {

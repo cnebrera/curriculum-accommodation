@@ -490,6 +490,32 @@ export async function runAdaptation(
 
   const report = buildReport({
     adapted, selection,
+    /*
+     * El original, para que la numeración se pueda **comprobar** (`039` FR-3709, G69).
+     *
+     * Estaba aquí al lado desde siempre —`doc`, el material que se leyó— y el informe no
+     * lo recibía, así que afirmaba «no he tocado la numeración original» sin nada contra
+     * lo que comprobarlo. En un pase real lo afirmó sobre una hoja en la que el ejercicio
+     * 1 había dejado de ser un ejercicio y salía ya resuelto.
+     */
+    original: doc,
+    /*
+     * **Nadie pasa `escalated` todavía, y es una decisión y no un olvido** (`039` D1,
+     * FR-3705/FR-3708).
+     *
+     * El canal está entero: el tipo lleva qué, por qué y una propuesta opcional; el
+     * informe le da su propio apartado, fuera de «Lo que NO he hecho»; y la propuesta
+     * llega con sus saltos de línea sin pasar por el normalizador de notas.
+     *
+     * Lo que falta es **qué lo dispara**, y eso es criterio pedagógico. Cuatro medidas de
+     * un material que una PT en ejercicio pasó chocan de frente con la segunda lista de
+     * `exam-access-not-difficulty.md`, y dos de ellas están nombradas allí literalmente
+     * como anti-patrones. Escribir aquí un disparador antes de que esa pregunta se
+     * responda sería el sistema decidiendo justo lo que la guarda dice que no es suyo.
+     *
+     * Cuando se responda, lo que cambia es una receta y una tabla del corpus. Nada de
+     * este fichero.
+     */
     wording: {
       generic: genericPhrases,
       ...(normative.of === 'corpus' ? { phrases: normative.corpus.phrases } : {}),
