@@ -503,7 +503,12 @@ body { container: window / inline-size; }
   border-right: 1px solid var(--line);
   /* The column is the window's height and its content can exceed it at the
      larger text scales — the foot was being clipped. */
-  height: 100vh; position: sticky; top: 0; overflow-y: auto; }
+  height: 100vh; position: sticky; top: 0; overflow-y: auto;
+  /* Above the content: the rail's «Cómo se ve» panel floats over `.main`, and a
+     positioned card in the page (`.card-action`) was painting over it and
+     swallowing the clicks — found by `a11y.spec.ts`'s preferences test the
+     moment the card gained `position: relative` for its chevron. */
+  z-index: 1; }
 
 /* `.main` is the ground the content sits on, not the content. The first attempt
    made it white and capped it at 1100px, which left the ground showing as a thin

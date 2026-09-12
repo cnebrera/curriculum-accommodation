@@ -207,7 +207,8 @@ export function LearnerSection({
        */
       return (
         <RecordScreen code={code} {...(name ? { name } : {})}
-                      onReuse={onReuse} onReview={onReview} />
+                      onReuse={onReuse} onReview={onReview}
+                      onPrepare={() => onPrepare('adapt')} />
       );
 
     case 'curriculum':

@@ -304,9 +304,15 @@ function Entry({ entry, onOpen, onReuse, onReview, onPrint, printing }: {
   );
 }
 
-export function RecordScreen({ code, name, onBack, onReuse, onReview }: {
+export function RecordScreen({ code, name, onBack, onReuse, onReview, onPrepare }: {
   code: string;
   name?: string;
+  /**
+   * The empty record's one action (`041` G84, `contracts/states.md`: «action present»).
+   * Goes to «Preparar» — the same door the rail offers, one click nearer. The label is
+   * the rail's own word, so no new copy was written for it.
+   */
+  onPrepare?: () => void;
   /**
    * Optional since `020`: inside a learner, the way back is their own heading, and a
    * second «← Volver a mis alumnos» under the title would be two controls doing one
@@ -369,6 +375,11 @@ export function RecordScreen({ code, name, onBack, onReuse, onReview }: {
         empty={{
           title: 'Todavía no has preparado nada para este alumno',
           body: 'En cuanto adaptes una ficha aparecerá aquí, con lo que trajiste y lo que salió.',
+          ...(onPrepare ? {
+            action: <button className="btn btn-primary" onClick={onPrepare}>
+              <Icon name="file-pen-line" /> Preparar
+            </button>,
+          } : {}),
         }}
       >
         {(entries) => {

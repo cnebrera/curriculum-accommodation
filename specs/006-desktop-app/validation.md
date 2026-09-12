@@ -1217,9 +1217,9 @@ regla de `013` que dice por qué (el espacio es del contenido); y el aviso del o
 a 768 px de alto corta el tercer botón porque la página se desplaza, que es lo que debe
 hacer.
 
-**Uno queda abierto**: el estado vacío de «Lo que le he preparado» no ofrece la acción
-que `contracts/states.md` pide («action present») porque la acción sería una frase nueva
-y el copy no es de esta feature (BACKLOG G84). El otro —dos etiquetas del segmentado
+**Ninguno queda abierto.** El estado vacío de «Lo que le he preparado» ofrece ahora
+«Preparar» —la palabra del carril, sin copy nuevo— y lleva a la puerta (G84, cerrado el
+2026-09-12). El otro —dos etiquetas del segmentado
 partidas en «Cómo se ve»— se cerró al dar al panel el ancho de su contenido, acotado a
 30rem para que la frase de cierre siga envolviendo.
 
