@@ -248,7 +248,10 @@
 .rail-foot .card { position: fixed; z-index: 30;
   position-anchor: --rail-foot;
   bottom: anchor(top); left: anchor(left);
-  width: max-content; min-width: 22rem; max-width: calc(100vw - var(--s6)); margin-bottom: var(--s2);
+  /* As wide as its segments need and no wider than a paragraph wants: at
+     `max-content` alone the closing sentence stretched the panel to 680px. */
+  width: max-content; min-width: 22rem; max-width: min(30rem, calc(100vw - var(--s6)));
+  margin-bottom: var(--s2);
   background: var(--paper); box-shadow: var(--shadow-md); }
 
 /* And the same block turned ninety degrees, for the strip layout the shell

@@ -4,7 +4,7 @@
 
 **Created**: 2026-09-11
 
-**Status**: Draft — clarificada el 2026-09-11; lista para `/speckit-plan`
+**Status**: Implementada el 2026-09-11 (35/35 tareas); SC-3901 juzgado por Carlos el 2026-09-12
 
 **Input**: «El producto funciona y la capa de contenido está cuidada, pero la interfaz es
 visualmente pobre: parece una herramienta interna sin terminar, no un producto que

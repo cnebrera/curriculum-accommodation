@@ -439,6 +439,16 @@ every moment should have a spec. What it added beyond the seams pass:
    journey sentence → T094). Handover *import* (004 US2) recorded as deliberately
    deferred rather than silently missing.
 
+## G84 · El expediente vacío no ofrece qué hacer — *ABIERTO 2026-09-12*
+
+`contracts/states.md` de `041` dice que un estado vacío lleva su acción («action
+present»), y «Lo que le he preparado» sin hojas (`6b-alumno-preparado.png`) no la lleva:
+`RecordScreen` pasa a `Loaded` un `empty` sin `action`. La acción natural es ir a
+«Preparar», que está a un clic en el carril, y el botón necesitaría una frase que hoy no
+existe en `i18n/es.ts` («Prepararle algo» o parecida). Es copy, y el copy es de Carlos;
+la decisión pendiente es esa frase, y el cableado son cinco líneas
+(`LearnerSections` ya tiene `go`).
+
 ## G83 · Dos `Field` con la misma cara y distinta API — *ABIERTO 2026-09-11*
 
 `shell/Page.tsx` tiene un `Field` de composición (label, control, ayuda, medida) y

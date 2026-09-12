@@ -1217,11 +1217,11 @@ regla de `013` que dice por qué (el espacio es del contenido); y el aviso del o
 a 768 px de alto corta el tercer botón porque la página se desplaza, que es lo que debe
 hacer.
 
-**Dos quedan abiertos**: el estado vacío de «Lo que le he preparado» no ofrece la acción
+**Uno queda abierto**: el estado vacío de «Lo que le he preparado» no ofrece la acción
 que `contracts/states.md` pide («action present») porque la acción sería una frase nueva
-y el copy no es de esta feature; y en `e-como-se-ve` dos etiquetas del segmentado parten
-en dos líneas a tamaño normal en un panel que ya no las estrecha — se mira en la siguiente
-tanda visual.
+y el copy no es de esta feature (BACKLOG G84). El otro —dos etiquetas del segmentado
+partidas en «Cómo se ve»— se cerró al dar al panel el ancho de su contenido, acotado a
+30rem para que la frase de cierre siga envolviendo.
 
 ### NOT verificado, y nombrado
 
@@ -1239,8 +1239,9 @@ tanda visual.
   bien es una afirmación sin captura. Es el hueco de SC-3905.
 - **El estado «cargando» de un botón** (`aria-busy`) tampoco está fotografiado: requiere
   un proveedor real.
-- **SC-3901 es un juicio de Carlos**, no un test: las capturas de antes y después están
-  las dos en el registro para que lo haga.
+- ~~SC-3901 es un juicio de Carlos~~ **Juzgado el 2026-09-12**: Carlos miró el antes y el
+  después lado a lado y lo dio por bueno («se ve bien»). Es el único criterio de esta
+  spec que no es un test, y está cumplido por la única persona que podía cumplirlo.
 - **Ninguna maestra ha visto nada.** Sin cambios.
 
 ## Sigue sin verificar
